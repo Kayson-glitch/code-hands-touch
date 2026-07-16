@@ -2,22 +2,41 @@ import { useEffect, useRef } from "react";
 import handGodAsset from "@/assets/hand-god.png.asset.json";
 import handAdamAsset from "@/assets/hand-adam.png.asset.json";
 
-const GLYPHS = "{}[]()/\\|<>?+-~;:,._YZXCVUJKLMNOP0123456789abcdefmnrst*^!";
-const DENSE_GLYPHS = "#@%▓█&$";
+// Density ramp — dark → bright. Each bucket is a set of glyphs of roughly
+// the same visual weight. Cells pick their bucket from silhouette luminance.
+const RAMP: string[] = [
+  ".,'`\"    ", //  bucket 0 — deepest shadow
+  ":;-~_    ", //  1
+  "+=<>|/\\ ", //  2
+  "cvxzjrft ", //  3
+  "uonymPCV ", //  4  midtone
+  "YZXUJK0 ", //   5
+  "abdegh# ", //   6
+  "%$8&B@# ", //   7  highlight
+];
 
 type Cell = {
-  x: number; // pixel position within canvas
+  x: number;
   y: number;
+  b: number; // 0..1 luminance from source
+  bucket: number; // ramp index derived from b
   ch: string;
-  b: number; // brightness 0..1 from source silhouette
 };
 
-const CELL_W = 8;
-const CELL_H = 11;
-const INFLUENCE_RADIUS = 140;
+const CELL_W = 7;
+const CELL_H = 10;
+const INFLUENCE_RADIUS = 130;
 
-function randGlyph(set: string) {
-  return set.charAt(Math.floor(Math.random() * set.length));
+function pickFrom(set: string) {
+  // Ramp buckets are padded with spaces so brighter buckets pick fewer spaces
+  // by chance — gives a natural falloff without special-casing.
+  const trimmed = set.trimEnd() || " ";
+  return trimmed.charAt(Math.floor(Math.random() * trimmed.length));
+}
+
+function bucketFor(b: number) {
+  const idx = Math.floor(b * RAMP.length);
+  return Math.min(RAMP.length - 1, Math.max(0, idx));
 }
 
 async function loadImage(src: string): Promise<HTMLImageElement> {
@@ -57,14 +76,16 @@ function sampleImage(
   for (let j = 0; j < rows; j++) {
     for (let i = 0; i < cols; i++) {
       const idx = (j * cols + i) * 4;
-      // silhouette is white on black -> use red channel as brightness
-      const b = data[idx] / 255;
-      if (b > 0.35) {
+      // grayscale source — average RGB and normalize
+      const b = (data[idx] + data[idx + 1] + data[idx + 2]) / (3 * 255);
+      if (b > 0.08) {
+        const bucket = bucketFor(b);
         cells.push({
           x: targetRect.x + i * CELL_W,
           y: targetRect.y + j * CELL_H,
-          ch: randGlyph(GLYPHS),
           b,
+          bucket,
+          ch: pickFrom(RAMP[bucket]),
         });
       }
     }
@@ -97,8 +118,9 @@ export function AsciiHandsFooter() {
       const w = canvas.clientWidth;
       const h = canvas.clientHeight;
 
-      // Each hand takes ~48% of width; vertical band centered.
-      const handW = Math.min(w * 0.48, 900);
+      // Each hand ~50% of width, slight overlap toward center handled by
+      // fingertip anatomy in the source images.
+      const handW = Math.min(w * 0.5, 960);
       const handH = handW * (640 / 1024);
       const bandY = h * 0.5 - handH * 0.5;
 
@@ -167,7 +189,7 @@ export function AsciiHandsFooter() {
       const w = canvas.clientWidth;
       const h = canvas.clientHeight;
       ctx.clearRect(0, 0, w, h);
-      ctx.font = `${CELL_H - 1}px "JetBrains Mono", "Menlo", "Courier New", monospace`;
+      ctx.font = `${CELL_H}px "JetBrains Mono", "Menlo", "Courier New", monospace`;
       ctx.textBaseline = "top";
 
       const cells = cellsRef.current;
@@ -177,19 +199,22 @@ export function AsciiHandsFooter() {
       for (let k = 0; k < cells.length; k++) {
         const c = cells[k];
 
-        // ambient shimmer: ~1/220 chance to reroll glyph per frame
-        if (!prefersReduce && Math.random() < 0.0045) {
-          c.ch = randGlyph(GLYPHS);
+        // ambient shimmer: reroll glyph within its own bucket so shadows
+        // stay shadow-glyphs and highlights stay highlight-glyphs.
+        if (!prefersReduce && Math.random() < 0.006) {
+          c.ch = pickFrom(RAMP[c.bucket]);
         }
 
         let dx = 0;
         let dy = 0;
         let ch = c.ch;
-        // base color: warm coral, brightness tied to silhouette
-        let r = 255;
-        let g = 90;
-        let bl = 74;
-        let alpha = 0.35 + c.b * 0.55;
+        // Base color: coral, shadowed cells desaturate toward deep red-brown.
+        // b=0 -> ~#4a1410  ,  b=1 -> ~#ff8a70
+        const bb = c.b;
+        let r = Math.floor(70 + bb * 195); // 70..255
+        let g = Math.floor(20 + bb * 118); // 20..138
+        let bl = Math.floor(16 + bb * 96); // 16..112
+        let alpha = 0.25 + bb * 0.7; // 0.25..0.95
 
         if (m.active && !prefersReduce) {
           const ddx = c.x - m.x;
@@ -197,18 +222,22 @@ export function AsciiHandsFooter() {
           const dist2 = ddx * ddx + ddy * ddy;
           if (dist2 < r2) {
             const dist = Math.sqrt(dist2);
-            const t = 1 - dist / INFLUENCE_RADIUS; // 0..1, 1 near cursor
-            // radial push outward
-            const push = t * 14;
+            const t = 1 - dist / INFLUENCE_RADIUS; // 0..1
+            // subtle radial push — don't shred shading
+            const push = t * 7;
             dx = (ddx / (dist || 1)) * push;
             dy = (ddy / (dist || 1)) * push;
-            // brighten toward white
-            r = 255;
-            g = Math.floor(90 + (255 - 90) * t);
-            bl = Math.floor(74 + (255 - 74) * t);
-            alpha = Math.min(1, alpha + t * 0.6);
-            // densify near center
-            if (t > 0.55) ch = randGlyph(DENSE_GLYPHS);
+            // add cursor "light" on top of base luminance (clamped)
+            const lift = t * 0.85;
+            r = Math.min(255, r + Math.floor(lift * 200));
+            g = Math.min(255, g + Math.floor(lift * 170));
+            bl = Math.min(255, bl + Math.floor(lift * 150));
+            alpha = Math.min(1, alpha + t * 0.35);
+            // bump one ramp bucket up near the core of the cursor
+            if (t > 0.5) {
+              const upBucket = Math.min(RAMP.length - 1, c.bucket + 1);
+              ch = pickFrom(RAMP[upBucket]);
+            }
           }
         }
 

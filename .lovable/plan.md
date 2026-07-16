@@ -1,65 +1,40 @@
-# ASCII Hands Footer (Creation of Adam)
+# Fix: Real Chiaroscuro Shading on the ASCII Hands
 
-Rebuild the effect from good-fella.com's footer: two hands from Michelangelo's *Creation of Adam* rendered entirely out of ASCII glyphs, sitting on a near-black background with copyright text centered between the fingertips and a huge faded "Good/Fella" wordmark ghosted behind. Includes the live interaction.
+## What's wrong now
 
-## Visual anatomy
+The current implementation samples a **flat white silhouette** and renders every "on" cell as a uniform coral glyph. Result: two solid red blobs with no volume. The reference is doing the opposite — glyphs vary in brightness across the hand, so the eye reads muscle, tendon, and finger volume. It's classic ASCII-art chiaroscuro.
 
-```text
-┌──────────────────────────────────────────────────────────────┐
-│  ▓ascii hand▓                                 ▓ascii hand▓   │
-│   (God, left,          © 2026                 (Adam, right,  │
-│    reaching   Good Fella Studio GmbH.          reaching      │
-│    right)    Let the Fellas handle it.         left)         │
-│                                                              │
-│           G o o d / F e l l a  (huge, ~15% opacity)          │
-└──────────────────────────────────────────────────────────────┘
-```
+Two root causes:
 
-- Background: near-black (`#0a0a0a`).
-- Glyphs: warm red/coral (`#ff5a4a` range), mono font, small size (~10–12px), letter/line tight.
-- Character set: mix of `{}[]()/\|<>?+-~;:,._YZXCVUJKLMNOP0123456789` etc. (matches reference).
-- Text block in the exact copy from the reference, centered vertically & horizontally.
-- Wordmark "Good/Fella" as a bottom-anchored, oversized, low-opacity SVG/text; clipped so only the top ~40% peeks above the fold.
+1. The source silhouettes I generated are pure white on black — no grayscale, no shading information to sample.
+2. The renderer uses a hard threshold (`b > 0.35 → same alpha`) and picks glyphs randomly instead of by brightness.
 
-## Interaction (matches reference)
+## Fix
 
-- **Ambient**: each glyph very slowly re-randomizes (~1 in 200 per frame) so the hands "shimmer".
-- **Cursor field**: within a radius (~120px) of the mouse, glyphs
-  1. brighten toward white,
-  2. get replaced with denser glyphs (`#`, `@`, `%`, `▓`),
-  3. get a small radial push outward (parallax offset that eases back).
-- **Idle drift**: subtle 1–2px per-glyph offset driven by low-freq noise so the hands feel alive without the mouse.
-- **Touch**: same field, following `touchmove`.
-- Uses `requestAnimationFrame` on a `<canvas>` (not DOM nodes per glyph — too many).
+### 1. Regenerate the hand images with real chiaroscuro
+Replace `hand-god.png` and `hand-adam.png` with grayscale renderings styled after Michelangelo's *Creation of Adam* — bright highlights on knuckles/index-finger ridge/forearm top, deep shadows in the palm/underside, soft midtones on skin planes. Solid black background. No color, just a full 0–255 luminance range. This is the actual data source for the shading.
 
-## How the hands are formed
+### 2. Rewrite the sampler + renderer to be brightness-driven
+- **Sampling**: keep the grid, but store the raw luminance `b ∈ [0,1]` per cell. Lower inclusion threshold to ~0.08 so shadow areas still get glyphs (just dim ones).
+- **Glyph ramp**: pick the glyph by brightness from a density ramp — dim cells get sparse marks (`.`, `` ` ``, `,`, `:`, `;`, `'`), midtones get medium glyphs (`/`, `\`, `|`, `<`, `>`, `?`, `+`, `t`, `r`, `x`, `z`), bright cells get dense glyphs (`Y`, `X`, `Z`, `0`, `8`, `#`, `@`, `%`, `&`). Each cell keeps a *seed* and a *set index* driven by its brightness; the shimmer reroll stays within the same density bucket so it never brightens a shadow.
+- **Color/alpha per cell**: alpha ramps `0.15 → 1.0` with brightness; hue stays coral (`~#ff5a4a`) but shadow cells desaturate slightly toward `#7a1f1a`, highlights push toward warm off-white. This produces the visible volume in the reference.
 
-1. Generate two silhouette source images with `imagegen--generate_image`:
-   - `hand-god.png` — Michelangelo's God hand, right hand pointing right with index finger extended, pure white silhouette on solid black, no wrist details beyond forearm fade. 1024×640.
-   - `hand-adam.png` — Adam's left hand, limp index finger reaching left. 1024×640.
-   Save under `src/assets/` and import as pointer JSON.
-2. On mount, draw each image to an offscreen canvas, sample pixels on a grid matching the glyph cell size, and produce an array of `{ x, y, brightness }` cells where brightness > threshold.
-3. Each cell gets a random glyph from the character set; render all cells to the visible canvas each frame. Left image aligned to left edge, right image mirrored/aligned to right edge.
-4. Wordmark is a separate absolutely-positioned `<div>` with the display text at ~18rem, `color-mix` faded, non-interactive.
+### 3. Cursor interaction stays, tuned to shading
+- Same radial influence, but the brightening now *stacks on top of* the base luminance instead of overwriting it, so cursor light reads like a physical highlight moving across the hand — not a flat white patch.
+- Densification near the cursor jumps the cell one bucket up the ramp (not straight to `#`), preserving texture.
+- Push amplitude reduced from 14px to ~8px so the shading isn't shredded.
 
-## Files
+### 4. Minor cleanup
+- Reduce cell size to 7×10 for finer detail (the reference is dense).
+- Tighten the horizontal placement so both hands reach toward the center, leaving the copy block between the fingertips (currently the hands extend too far and overlap the text).
 
-- `src/components/AsciiHandsFooter.tsx` — canvas component, mouse/touch handlers, RAF loop, image sampling.
-- `src/components/AsciiHandsFooter.helpers.ts` — glyph set, sampling util, noise helper (small, dependency-free).
-- `src/assets/hand-god.png.asset.json`, `src/assets/hand-adam.png.asset.json` — generated silhouette pointers.
-- `src/routes/index.tsx` — replace placeholder with a full-viewport section that renders `<AsciiHandsFooter />` (the effect *is* the page for now, mirroring the reference's landing state). Update `head()` with real title/description.
-- `src/routes/__root.tsx` — swap default "Lovable App" title/description for project-specific metadata.
+## Files touched
 
-No new dependencies; pure canvas + React.
+- Regenerate `/tmp/hand-god.png`, `/tmp/hand-adam.png` with new prompt, re-upload via `lovable-assets` (delete old pointers via CLI, write new ones).
+- `src/components/AsciiHandsFooter.tsx` — new glyph ramp, brightness-indexed rendering, tuned cursor logic, smaller cells, tighter layout.
 
-## Technical notes
-
-- Canvas is `devicePixelRatio`-aware; resize observer re-samples on width change (debounced).
-- Sampling runs once per image load + on resize, not per frame — per frame only redraws glyphs.
-- Cell size ~9×12px → roughly 12–18k active glyphs across both hands on a 1920 viewport; well within canvas budget.
-- Respects `prefers-reduced-motion`: disables shimmer + cursor displacement, keeps static render.
-- SEO: single H1 is visually hidden ("Good Fella Studio"), decorative canvas has `aria-hidden`.
+No new dependencies. No changes to routing or metadata.
 
 ## Out of scope
 
-- The rest of the good-fella.com site (nav, projects, etc.). Only the footer hands effect + surrounding copy/wordmark, as requested.
+Adding page chrome, animations elsewhere on the site, or migrating the effect to WebGL. This is a targeted quality fix on the existing footer effect.
