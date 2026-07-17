@@ -1,29 +1,38 @@
-# Per-direction edge glyph subsets
+# Match source site font + character composition
 
-Right now every strong edge collapses to one of four glyphs (`-`, `|`, `/`, `\`), which reads mechanical. Replace each direction with a small subset of glyphs of matching visual orientation and slightly varying weight, picked deterministically per cell so the linework doesn't flicker.
+Findings from `good-fella.com`:
+- Root class `geistmono_..._variable` → the entire site (including the ASCII footer canvas) uses **Geist Mono**.
+- Theme is `data-theme="dark"`, brand color is a vivid brand orange (~`#F94B14`), applied at varying opacities (e.g. `bg-brand/10`).
+- The ASCII grid uses a monochrome brand-orange palette; brightness is encoded by glyph density alone (a classic ramp), not by hue shifts toward white. Glyphs are ASCII symbols/digits — no letters like `M/N/Q/W/B` — so the hand reads as an abstract stipple, not typography.
 
-## Steps (single file: `src/components/AsciiHandsFooter.tsx`)
+Changes (single file: `src/components/AsciiHandsFooter.tsx`, plus a Google Fonts link in `src/routes/__root.tsx`):
 
-1. **Define four direction subsets**
-   Replace `EDGE_GLYPHS: string[]` (length 4) with `EDGE_SETS: string[]` (length 4), each a short glyph string ordered dark→bright within that orientation:
+## 1. Add Geist Mono
+- In `src/routes/__root.tsx`, add a Google Fonts `<link>` for `Geist Mono` weights 400 and 500 (preconnect + stylesheet).
+- Update the canvas font stack to `'Geist Mono', ui-monospace, 'JetBrains Mono', 'Menlo', monospace`.
+- Also apply Geist Mono to the wordmark and to the © copy block so the whole footer matches the source's monospace treatment.
 
-   - **Horizontal** (dir 0): `"-_=~—"`  — flat strokes and dashes
-   - **Anti-diagonal** (dir 1, `\`): `"\\\\`", `,`, `%`, `¥`" → concretely `"\\`,%¥"` (keep monospace-friendly)
-   - **Vertical** (dir 2): `"|!|iI1"` — vertical stems of varying weight
-   - **Diagonal** (dir 3, `/`): `"/;/j7"`
+## 2. Rewrite the ramp to symbols/digits only
+- Replace current ramp
+  `"   ..,':;!li|/\\+=tcvnxzuoaswmkhbdpg#%8&@MWNQ$B"`
+  with a symbol-and-digit ramp ordered dark→bright:
+  `"   .·,':;-~+=<>()[]?*!/\\|1lI7itcv3zosx#%$&8@"`
+  (kept ASCII, no letter shapes that read as typography).
+- Bump `RAMP_LEN` accordingly.
 
-   Final glyph strings (kept ASCII-only for monospace-safe rendering):
-   - `["-_=~"`, `"\\`,%"`, `"|!Il1"`, `"/;j7"`]`
+## 3. Edge glyph subsets → symbol-only
+- Horizontal (dir 0): `"-_=~"` → keep
+- Anti-diag  (dir 1): `"\\`,%"` → `"\\`,%"` (unchanged, all symbols)
+- Vertical   (dir 2): `"|!Il1"` → `"|!1["` (drop letters `Il`)
+- Diagonal   (dir 3): `"/;j7"` → `"/;7)"` (drop letter `j`)
 
-2. **Deterministic pick per cell**
-   Add a stable `seed` to each `Cell` (e.g. `(i * 131 + j * 17) & 0xff`) during sampling. In the render loop, when a strong edge fires, pick `EDGE_SETS[dir].charAt(seed % set.length)` combined with the cell's brightness bucket — e.g. `set.charAt((seed + Math.floor(b * (set.length - 1))) % set.length)` so brighter edges lean toward the heavier glyph in the set. This keeps each cell's edge glyph identical across frames (no flicker) while giving the overall edge run a natural mix.
+## 4. Single-hue color model
+- Base brand: `#F94B14` (r=249, g=75, b=20). Drop the shadow→highlight RGB ramp; render every visible cell in brand orange and let alpha alone carry brightness.
+- Alpha: `alpha = 0.35 + b * 0.65` (was `0.45 + 0.55 * b`) — wider low end so shadows recede more.
+- Rim highlight for `edge > 0.5 && b > 0.55`: keep the warm-white mix at `t=0.35` toward `#ffe4d4`; the source has faint brighter accents on the very brightest edges, so keep this but slightly reduced.
+- Cursor light: additive lift stays but tuned to a pale brand tint — push toward `(255, 205, 170)` instead of pure white so the interaction color still reads brand-orange.
 
-3. **Medium-edge bump keeps ramp glyph**
-   Leave the `edge ∈ (0.35, 0.55)` branch alone — it should stay body-fill glyph bumped up the density ramp, not a line character, so mid-contrast areas don't turn into a hatched mesh.
+## 5. Cell metrics
+- Keep `CELL_W=7`, `CELL_H=9`. Font size stays at `CELL_H`px; Geist Mono at that size renders a hair narrower than JetBrains Mono so the grid packs a touch tighter — no metric change needed.
 
-4. **Ambient shimmer stays off for edges**
-   Already gated by `c.edge < 0.55`; no change needed.
-
-## Out of scope
-
-Sobel math, tonemap, color ramp, cursor interaction, layout. No new dependencies.
+No new dependencies. No API/animation logic changes beyond the swaps above.
