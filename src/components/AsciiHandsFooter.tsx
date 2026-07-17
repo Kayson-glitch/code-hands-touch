@@ -49,6 +49,9 @@ const PARALLAX_LERP = 0.08;
 // Intensity ease durations (ms) — cursor enter / leave.
 const INTENSITY_IN_MS = 200;
 const INTENSITY_OUT_MS = 250;
+// Slight pre-warm delay after cursor enters before the reveal disc starts
+// growing — mirrors good-fella.com's subtle hover-in latency.
+const INTENSITY_IN_DELAY_MS = 120;
 
 function glyphAt(idx: number) {
   const clamped = Math.min(RAMP_LEN - 1, Math.max(0, idx));
@@ -265,6 +268,7 @@ export function AsciiHandsFooter() {
     let intensity = 0;
     let scrambleSeed = 0;
     let scrambleTick = 0;
+    let hoverDwellMs = 0;
     let parallaxX = 0;
     let parallaxY = 0;
     const draw = () => {
@@ -290,11 +294,22 @@ export function AsciiHandsFooter() {
       // Ease intensity toward 1 when cursor is active, 0 otherwise. Mirrors
       // the source's animated uGooeyIntensity so the disc doesn't pop in/out.
       const target = m.active && !prefersReduce ? 1 : 0;
+      if (target > 0) {
+        hoverDwellMs += dt;
+      } else {
+        hoverDwellMs = 0;
+      }
       const easeMs = target > intensity ? INTENSITY_IN_MS : INTENSITY_OUT_MS;
       const step = dt / easeMs;
-      intensity = target > intensity
-        ? Math.min(1, intensity + step)
-        : Math.max(0, intensity - step);
+      if (target > intensity) {
+        // Gate ease-in behind a small dwell delay so the disc doesn't appear
+        // the instant the cursor crosses the footer.
+        if (hoverDwellMs >= INTENSITY_IN_DELAY_MS) {
+          intensity = Math.min(1, intensity + step);
+        }
+      } else {
+        intensity = Math.max(0, intensity - step);
+      }
 
       // Bump scramble seed a few times per second so glyphs inside the disc
       // visibly re-shuffle, matching the source's continuous scramble.
@@ -382,12 +397,15 @@ export function AsciiHandsFooter() {
               );
               // Lift ramp index toward the dense end of the ramp so dark cells
               // become legible cream glyphs on black inside the reveal disc.
-              const lifted = c.idx + sharp * (RAMP_LEN - 1 - c.idx) * 0.85;
+              // Preserve the cell's original brightness (c.idx). Only scramble
+              // the glyph within a small neighbourhood so dark areas stay dark
+              // and light areas stay light — the hover only re-shuffles and
+              // tints, it does not lift density.
               const scrambleOffset = Math.floor(
-                scramble * RAMP_LEN * (0.3 + 0.7 * sharp),
+                (scramble - 0.5) * RAMP_LEN * 0.25 * sharp,
               );
               const finalIdx =
-                (Math.floor(lifted) + scrambleOffset) % RAMP_LEN;
+                ((c.idx + scrambleOffset) % RAMP_LEN + RAMP_LEN) % RAMP_LEN;
               ch = glyphAt(finalIdx);
 
               // Blend base coral → warm highlight by sharp.
