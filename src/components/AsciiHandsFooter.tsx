@@ -39,9 +39,9 @@ const CELL_W = 10;
 const CELL_H = 10;
 // Source (good-fella.com ASCIIEffect) uniforms — expressed in UV space,
 // aspect-corrected. See docs/plan.md notes.
-const GOOEY_RADIUS_UV = 0.075;
-const GOOEY_SOFTNESS_UV = 0.04;
-const GOOEY_NOISE = 0.02;
+const GOOEY_RADIUS_UV = 0.035;
+const GOOEY_SOFTNESS_UV = 0.025;
+const GOOEY_NOISE = 0.012;
 // Max whole-scene parallax drift on hover, in CSS pixels. Small — mirrors the
 // source's "the picture leans toward the finger" feel.
 const PARALLAX_MAX = 8;
