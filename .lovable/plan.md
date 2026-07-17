@@ -1,13 +1,12 @@
-Plan: Remove the remaining center copy text and its now-empty wrapper from `src/components/AsciiHandsFooter.tsx`.
+Plan: Enhance the tonal contrast and sculptural depth of the `hands-pair.png` source image used by the ASCII footer, so the mechanical arms read as more three-dimensional when sampled into glyphs.
 
 What to change:
-- Delete the entire center copy block (lines 331–347), including the `{/* Center copy */}` comment, the outer `pointer-events-none` wrapper div, the inner styled `text-center` div, and the two remaining lines:
-  - `<p>Good Fella Studio GmbH.</p>`
-  - `<p>Let the Fellas handle it.</p>`
-- After removal, the ASCII canvas `<canvas />` element will remain directly inside the `<section>`.
+- Take the current `hands-pair.png` image asset referenced by `src/assets/hands-pair.png.asset.json`.
+- Apply a contrast/depth edit: deepen shadows, lift highlights, slightly exaggerate the light-to-dark gradient on the metal surfaces to increase perceived volume and form. Keep the transparent background and subject framing unchanged.
+- Replace the asset with the enhanced version (updating `src/assets/hands-pair.png.asset.json` to point to the new image), leaving all component code and ASCII parameters untouched.
 
 Verification:
-- Run the build/typecheck to ensure no syntax errors after removing the block.
-- Confirm the footer renders only the ASCII hands effect without any overlaid center text.
+- Run the build to ensure the asset reference remains valid.
+- Confirm in the preview that the ASCII footer now shows stronger light/dark separation and more dimensional arm forms.
 
-No other changes to the ASCII effect, image asset, colors, layout, or cursor interaction.
+No other changes to `AsciiHandsFooter.tsx`, the ramp, gamma, sampling, or layout.
