@@ -26,7 +26,7 @@ type Cell = {
 const FONT_PX = 8;
 const CELL_W = 10;
 const CELL_H = 10;
-const INFLUENCE_RADIUS = 70;
+const INFLUENCE_RADIUS = 110;
 
 function glyphAt(idx: number) {
   const clamped = Math.min(RAMP_LEN - 1, Math.max(0, idx));
@@ -57,7 +57,7 @@ function sampleImage(
   img: HTMLImageElement,
   targetRect: { x: number; y: number; w: number; h: number },
   mirror: boolean,
-): Cell[] {
+): { cells: Cell[]; grid: Grid } {
   const off = document.createElement("canvas");
   const cols = Math.floor(targetRect.w / CELL_W);
   const rows = Math.floor(targetRect.h / CELL_H);
@@ -93,7 +93,15 @@ function sampleImage(
       if (y > 0.04) raws.push({ i, j, y, a });
     }
   }
-  if (raws.length === 0) return [];
+  const emptyGrid: Grid = {
+    cols,
+    rows,
+    originX: targetRect.x,
+    originY: targetRect.y,
+    silIdx: new Int32Array(cols * rows).fill(-1),
+    seed: new Float32Array(cols * rows),
+  };
+  if (raws.length === 0) return { cells: [], grid: emptyGrid };
 
   // Percentile stretch: 2nd..98th → 0..1, then mild gamma to lift midtones.
   const sorted = raws.map((r) => r.y).sort((a, b) => a - b);
@@ -103,6 +111,10 @@ function sampleImage(
   // gamma < 1 lifts midtones toward highlight → brighter overall while keeping contrast.
   const gamma = 0.92;
 
+  const silIdx = new Int32Array(cols * rows).fill(-1);
+  const seed = new Float32Array(cols * rows);
+  for (let s = 0; s < seed.length; s++) seed[s] = Math.random();
+
   const cells: Cell[] = [];
   for (const r of raws) {
     const stretched = Math.min(1, Math.max(0, (r.y - lo) / span));
@@ -111,6 +123,7 @@ function sampleImage(
     const feather = Math.pow(r.a, 0.65);
     const b = Math.pow(stretched, gamma) * feather;
     const idx = indexFor(b);
+    silIdx[r.j * cols + r.i] = cells.length;
     cells.push({
       x: targetRect.x + r.i * CELL_W,
       y: targetRect.y + r.j * CELL_H,
@@ -119,7 +132,17 @@ function sampleImage(
       ch: glyphAt(idx),
     });
   }
-  return cells;
+  return {
+    cells,
+    grid: {
+      cols,
+      rows,
+      originX: targetRect.x,
+      originY: targetRect.y,
+      silIdx,
+      seed,
+    },
+  };
 }
 
 export function AsciiHandsFooter() {
