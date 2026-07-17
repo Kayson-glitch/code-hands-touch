@@ -24,19 +24,13 @@ export const Route = createFileRoute("/")({
 
 function Index() {
   return (
-    <div className="relative">
-      <div
-        aria-hidden
-        className="pointer-events-none fixed inset-0 z-10"
-      >
-        <PrismaticBurst
-          intensity={2}
-          speed={0.5}
-          distort={1}
-          mixBlendMode="lighten"
-        />
+    <div className="relative bg-[#0a0a0a]">
+      <div aria-hidden className="pointer-events-none fixed inset-0 z-0">
+        <PrismaticBurst intensity={2} speed={0.5} distort={1} />
       </div>
-      <AsciiHandsFooter />
+      <div className="relative z-10">
+        <AsciiHandsFooter />
+      </div>
     </div>
   );
 }
