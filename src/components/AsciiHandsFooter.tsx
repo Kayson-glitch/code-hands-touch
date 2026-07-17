@@ -371,10 +371,9 @@ export function AsciiHandsFooter() {
           const seed = grid.seed[idx] ?? 0.5;
           // Large, slow blob — pushes whole patches of the edge in/out.
           const lowFreq = (seed * 2 - 1) * GOOEY_NOISE * 1.5;
-          // Mid-frequency coordinate hash — creates the visible chipped/broken lobes.
+          // Mid-frequency smooth coordinate wave — creates the visible chipped/broken lobes.
           const midFreq =
-            (fract(Math.sin(i * 2.3 + j * 1.7 + seed * 5.9) * 47.1) - 0.5) *
-            GOOEY_NOISE * 4;
+            Math.sin(i * 0.7 + j * 0.5 + seed * 1.5) * GOOEY_NOISE * 4;
           // Slow time wobble so the edge "breathes" rather than flickers.
           const wobble = prefersReduce
             ? 0
