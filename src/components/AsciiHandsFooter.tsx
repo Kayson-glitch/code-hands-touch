@@ -26,7 +26,7 @@ type Cell = {
 const FONT_PX = 8;
 const CELL_W = 10;
 const CELL_H = 10;
-const INFLUENCE_RADIUS = 130;
+const INFLUENCE_RADIUS = 70;
 
 function glyphAt(idx: number) {
   const clamped = Math.min(RAMP_LEN - 1, Math.max(0, idx));
@@ -234,50 +234,38 @@ export function AsciiHandsFooter() {
           c.ch = glyphAt(c.idx + jitter);
         }
 
-        let dx = 0;
-        let dy = 0;
         let ch = c.ch;
-        // Glyph already encodes brightness — keep alpha high across the
-        // whole hand, and let color ramp coral shadow → warm highlight on
-        // a gamma-lifted curve so midtones read warm, not muddy.
         const bb = c.b;
-        // Coral palette sampled from good-fella.com's rendered ASCII footer:
-        //   shadow  rgb(30, 17, 22)   → deepest reddish-brown
-        //   highlight rgb(223, 93, 68) → salmon coral
-        // Alpha stays at 1 — source doesn't fade cells; density is entirely
-        // encoded in the glyph choice.
-        let r = Math.floor(30 + bb * 193); //  30 → 223
-        let g = Math.floor(17 + bb * 76); //  17 →  93
-        let bl = Math.floor(22 + bb * 46); //  22 →  68
-        let alpha = 1;
+        // Coral palette sampled from good-fella.com:
+        //   shadow  rgb(30, 17, 22) → highlight rgb(223, 93, 68)
+        let r = 30 + bb * 193;
+        let g = 17 + bb * 76;
+        let bl = 22 + bb * 46;
 
         if (m.active && !prefersReduce) {
           const ddx = c.x - m.x;
           const ddy = c.y - m.y;
           const dist2 = ddx * ddx + ddy * ddy;
           if (dist2 < r2) {
-            const dist = Math.sqrt(dist2);
-            const t = 1 - dist / INFLUENCE_RADIUS; // 0..1
-            // subtle radial push — don't shred shading
-            const push = t * 6;
-            dx = (ddx / (dist || 1)) * push;
-            dy = (ddy / (dist || 1)) * push;
-            // add cursor "light" on top of base luminance (clamped)
-            const lift = t;
-            r = Math.min(255, r + Math.floor(lift * 140));
-            g = Math.min(255, g + Math.floor(lift * 140));
-            bl = Math.min(255, bl + Math.floor(lift * 140));
-            alpha = Math.min(1, alpha + t * 0.35);
-            // step several rungs up the ramp near cursor core
-            const bump = Math.floor(t * 5); // 0..5
+            // smoothstep(0,1, 1 - dist/R) — soft edge, hot core.
+            const u = 1 - Math.sqrt(dist2) / INFLUENCE_RADIUS;
+            const t = u * u * (3 - 2 * u);
+            // Whiten toward warm near-white — source doesn't just add coral,
+            // cells shift toward white in the disc core.
+            const WR = 245, WG = 235, WB = 225;
+            r = r + (WR - r) * t;
+            g = g + (WG - g) * t;
+            bl = bl + (WB - bl) * t;
+            // Ramp bump 0..6 rungs, driven by smoothstep so the falloff matches.
+            const bump = Math.floor(t * 6);
             if (bump > 0) ch = glyphAt(c.idx + bump);
           }
         }
 
-        ctx.fillStyle = `rgba(${r},${g},${bl},${alpha})`;
+        ctx.fillStyle = `rgba(${r | 0},${g | 0},${bl | 0},1)`;
         // baseline offset — glyph ascent for Cascadia Mono ≈ FONT_PX,
         // so this seats the glyph inside the CELL_H box with 1-px top air.
-        ctx.fillText(ch, c.x + dx, c.y + dy + FONT_PX);
+        ctx.fillText(ch, c.x, c.y + FONT_PX);
       }
 
       raf = requestAnimationFrame(draw);
