@@ -1,11 +1,11 @@
-Plan: Adjust the ASCII rendering parameters in `src/components/AsciiHandsFooter.tsx` so the final footer reads brighter overall, while keeping the enhanced light-dark contrast and three-dimensional form.
+Plan: Reduce the ASCII footer glyph size from 9 px to 8 px to see if it improves the rendering.
 
 What to change:
-- Reduce the `gamma` value from `1.15` to around `0.92` in the `sampleImage` function. This lifts the midtones toward the brighter glyph end of the ramp without changing the image asset or the density ramp itself.
-- The result: darker cells stay sparse (shadows), midtones become brighter, and highlights remain bright — the overall composition becomes lighter while preserving the 3D volume.
+- Change the `FONT_PX` constant in `src/components/AsciiHandsFooter.tsx` from `9` to `8`.
+- The `CELL_W` and `CELL_H` remain at 10 CSS px, so the glyphs will sit in the same grid but render slightly smaller, giving each character a bit more breathing room.
 
 Verification:
-- Run the build to ensure no TypeScript errors after the change.
-- Confirm in the preview that the ASCII arms are visibly brighter overall and the human arm is no longer lost in the dark background.
+- Run the build to ensure no errors after the constant change.
+- Confirm in the preview that the ASCII arms still form a recognizable silhouette and the smaller glyph size looks acceptable.
 
-No other changes to the image asset, the glyph ramp, colors, layout, or cursor interaction.
+No other changes to the image asset, ramp, gamma, colors, layout, or cursor interaction.
