@@ -49,8 +49,8 @@ const PARALLAX_LERP = 0.08;
 // Reveal disc smoothly chases the cursor (source-site behaviour). Smaller =
 // stickier follow, which naturally reads as a gentle hover-in latency without
 // a hard delay gate.
-const DISC_LERP = 0.12;
-const INTENSITY_LERP = 0.08;
+const DISC_LERP = 0.08;
+const INTENSITY_LERP = 0.05;
 
 function glyphAt(idx: number) {
   const clamped = Math.min(RAMP_LEN - 1, Math.max(0, idx));
