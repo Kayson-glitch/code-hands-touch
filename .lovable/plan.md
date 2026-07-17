@@ -1,76 +1,58 @@
 ## 目标
-微调 hover 时的**深度视差**与**角度倾斜**，让整只手在光标经过时呈现源站那种"字符像被磁场牵引"的连续、有节奏的响应，而不是当前均匀的线性变化。
+根据参考图，源站每个字符都带有**独立的、静态的微小倾斜**（各不相同的角度，非鼠标驱动），叠加在整齐网格之上形成"手写/手抖"的质感。这是与 hover 视差**并存**的第二层旋转。
 
-## 现状问题
-1. `angle = (dxc / TILT_FALLOFF) * ...` — 只用了 x 分量，光标垂直上下时字符几乎不转；缺少"绕光标旋转"的切向感。
-2. 距离衰减是线性 `1 - dist/FALLOFF`，边缘生硬。
-3. 深度只取 `bb`（亮度），指尖并没有比手背更凸出，缺乏源站那种指尖领先的层次。
-4. tilt 直接跟随光标，光标快速移动时字符会瞬跳。
+## 观察
+参考图中：
+- 无鼠标交互时字符已经带旋转，各自角度不同（±10° 左右范围）
+- 每个字符的旋转是**稳定的**（不闪烁），像烘焙进网格的随机相位
+- hover 的切向摆动应叠加在这个基础倾斜之上
 
 ## 修改文件
 `src/components/AsciiHandsFooter.tsx`
 
 ## 实现步骤
 
-### 1. 切向 tilt（swirl 感）
-用 cell→光标向量的**法向量**驱动旋转，让字符像围绕光标切向摆动：
+### 1. 每 cell 烘焙一个稳态倾斜角
+`sampleImage` 中已经有 `grid.seed`（0..1 per-cell 随机数）。在 `Cell` 类型新增：
 ```
-const dxc = cx - discX, dyc = cy - discY;
-const dist = Math.hypot(dxc, dyc);
-// 归一化，取法向（垂直于半径）
-const nAngle = Math.atan2(dyc, dxc);
-// 用 sin(nAngle) 让"上下方向"也产生倾斜
-const tangential = Math.sin(nAngle - Math.PI / 2);  // = -dxc/dist
-// 但保留一点径向反馈让离得越近字符略被"推开"
-angle = (dxc / TILT_FALLOFF) * tiltScale * falloff;
+baseTilt: number;  // 弧度，稳定不变
 ```
-调整为使用 `dxc + 0.5*dyc*sign` 的组合，或者直接：
-- 主分量：`dxc / TILT_FALLOFF`（水平位移驱动旋转）
-- 次分量：`dyc / TILT_FALLOFF * 0.4`（垂直也贡献轻微倾斜，让正上/正下时不为 0）
+在 push cell 时用 `seed` 派生：
 ```
-angle = ((dxc + dyc * 0.35) / TILT_FALLOFF) * tiltScale * falloff;
+const rawTilt = (seed - 0.5) * 2;              // -1..1
+const shaped  = Math.sign(rawTilt) * Math.pow(Math.abs(rawTilt), 1.4); // 集中在小角，偶尔大角
+baseTilt = shaped * (BASE_TILT_MAX_DEG * Math.PI / 180);
 ```
 
-### 2. 平滑 falloff（smoothstep）
+### 2. 新增常量
 ```
-const t = Math.min(1, dist / TILT_FALLOFF);
-const falloff = 1 - t * t * (3 - 2 * t);   // smoothstep
+const BASE_TILT_MAX_DEG = 10;   // 单字符静态最大倾斜（度）
 ```
-让远端字符缓慢淡出，不再有明显的作用圈。
+（当前 `TILT_MAX_DEG = 8` 是 hover 追加的动态角，两者独立。）
 
-### 3. 深度视差引入 armT
-指尖 (`armT ≈ 1`) 应比手根 (`armT ≈ 0`) 位移更多，配合亮度：
+### 3. 渲染时合并两种角度
+在计算 `angle`（hover tilt）之后：
 ```
-const depth = hoverActive
-  ? 0.35 + bb * 0.45 + c.armT * 0.35   // 暗根 ~0.35x，亮指尖 ~1.15x
-  : 1;
+const finalAngle = c.baseTilt + angle;
 ```
-提高 `DEPTH_PARALLAX` 相关系数上限到 ~1.15，让层次更明显。
+把原来的 `if (angle !== 0)` 改为 `if (finalAngle !== 0)`，用 `finalAngle` 做 rotate。这样：
+- 无 hover：只有静态 baseTilt → 每字符已经天然倾斜
+- 有 hover：叠加动态切向摆动
 
-### 4. tilt 平滑收敛（可选轻量）
-不做逐 cell lerp（开销大），而是把 `intensity` lerp 已经承担的平滑作为整体 gate（现状已有），并对 `angle` 幅度乘 `intensity` 的**平方**：
-```
-const tiltScale = TILT_MAX_DEG * (Math.PI / 180) * intensity * intensity;
-```
-让 tilt 在 hover 初期更柔、稳定后达到峰值。
+### 4. 快速路径调整
+现在几乎所有 cell 都会进入 transform 分支（因为 baseTilt 极少为 0），需要确保性能可接受：
+- transform 分支已经存在 save/rotate/restore，是 O(N) 常数因子略增
+- 由于 cell 总数 ~1.2 万且大多数被 intro/剔除掉了实际绘制在几千级别，可接受
+- 若性能受影响，可以对 `|finalAngle| < 0.005` 走快速路径（几乎不转）
 
-### 5. 常量微调
-```
-const TILT_MAX_DEG = 8;      // 从 6 提到 8，峰值更可见
-const TILT_FALLOFF = 320;    // 从 260 加大，让影响半径覆盖整只手掌
-```
-
-### 6. 保持描边同步
-outline 描边已在 transform 分支内绘制，无需改动。
+### 5. intro 时序
+intro 期间字符渐入，baseTilt 应从生成就存在（不做过渡），符合源站直接"落"进倾斜状态的感觉。
 
 ## 验证
 1. `bun run build` 通过。
-2. Playwright 截图三处：光标位于左手指尖上方、右手掌心正下方、两手之间；观察：
-   - 附近字符呈明显切向旋转，正上/正下也有倾斜；
-   - 指尖字符位移大于手根；
-   - 光标进/出时无跳变。
+2. Playwright 截图：无鼠标状态下放大观察，字符应像参考图那样各自略微歪斜；hover 时切向摆动叠加，字符不"抖动式"跳变。
 
 ## 预期
-- Hover 时字符像围绕光标"扇形摆动"，指尖凸出、手根稳固；
-- 远端字符柔和淡出，无生硬圈边；
-- hover 初动作柔顺，峰值张力更强，接近源站细节手感。
+- 静态时字符已呈现参考图的手工质感（每个字符独立小角度倾斜）
+- Hover 时切向摆动仍然生效，两层旋转自然叠加
+- 更接近源站的细节层次

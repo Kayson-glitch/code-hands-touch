@@ -17,6 +17,7 @@ type Cell = {
   ch: string;
   armT: number; // 0..1 along-arm progress, 0 = edge/root, 1 = fingertip/center
   isEdge?: boolean; // true if cell touches a background cell (silhouette outline)
+  baseTilt: number; // stable per-cell rotation (radians), baked from seed
 };
 
 type Grid = {
@@ -53,6 +54,10 @@ const PARALLAX_LERP = 0.08;
 // translating as one block.
 const TILT_MAX_DEG = 8;
 const TILT_FALLOFF = 320;
+// Every glyph gets a stable, unique tilt baked from its cell seed so the
+// grid reads as hand-set type rather than a uniform matrix. Hover tilt
+// composes on top of this base angle.
+const BASE_TILT_MAX_DEG = 10;
 // Reveal disc smoothly chases the cursor (source-site behaviour). Smaller =
 // stickier follow, which naturally reads as a gentle hover-in latency without
 // a hard delay gate.
@@ -239,6 +244,10 @@ function sampleImage(
     const b = Math.pow(stretched, gamma) * feather;
     const idx = indexFor(b);
     silIdx[r.j * cols + r.i] = cells.length;
+    const s = seed[r.j * cols + r.i];
+    const raw = (s - 0.5) * 2;
+    const shaped = Math.sign(raw) * Math.pow(Math.abs(raw), 1.4);
+    const baseTilt = shaped * ((BASE_TILT_MAX_DEG * Math.PI) / 180);
     cells.push({
       x: targetRect.x + r.i * CELL_W,
       y: targetRect.y + r.j * CELL_H,
@@ -246,6 +255,7 @@ function sampleImage(
       idx,
       ch: glyphAt(idx),
       armT: 0,
+      baseTilt,
     });
   }
   // Compute per-cell armT by projecting onto the nearest arm-skeleton
