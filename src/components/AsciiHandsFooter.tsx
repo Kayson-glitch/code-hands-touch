@@ -8,9 +8,11 @@ const RAMP =
   "   ..,':;!li|/\\+=tcvnxzuoaswmkhbdpg#%8&@MWNQ$B";
 const RAMP_LEN = RAMP.length;
 
-// Directional glyphs indexed by quantized gradient angle bin.
-// 0: horizontal, 1: anti-diag, 2: vertical, 3: diag
-const EDGE_GLYPHS = ["-", "\\", "|", "/"];
+// Per-direction edge glyph subsets, each ordered dark→bright within its
+// orientation. Cells pick from the subset deterministically by seed+brightness,
+// so linework varies in weight across an edge run without flickering.
+// 0: horizontal, 1: anti-diagonal (\), 2: vertical, 3: diagonal (/)
+const EDGE_SETS = ["-_=~", "\\`,%", "|!Il1", "/;j7"];
 
 type Cell = {
   x: number;
@@ -20,6 +22,7 @@ type Cell = {
   ch: string;
   edge: number; // 0..1 gradient magnitude
   dir: 0 | 1 | 2 | 3; // quantized gradient direction
+  seed: number; // stable per-cell integer for deterministic glyph picks
 };
 
 const CELL_W = 7;
@@ -136,6 +139,7 @@ function sampleImage(
       ch: glyphAt(idx),
       edge,
       dir,
+      seed: (r.i * 131 + r.j * 17) & 0xff,
     });
   }
   return cells;
@@ -266,7 +270,9 @@ export function AsciiHandsFooter() {
         // edges bump a few rungs up the density ramp so contours read
         // brighter than surrounding shade.
         if (c.edge > 0.55) {
-          ch = EDGE_GLYPHS[c.dir];
+          const set = EDGE_SETS[c.dir];
+          const weight = Math.floor(c.b * (set.length - 1));
+          ch = set.charAt((c.seed + weight) % set.length);
         } else if (c.edge > 0.35) {
           ch = glyphAt(c.idx + 3);
         }
