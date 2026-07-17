@@ -1,0 +1,27 @@
+// Write this file to src/routes/index.tsx.
+// Replace {{TITLE}} and {{DESCRIPTION}} with copy that fits the project.
+// Fallbacks if the user gave none:
+//   TITLE:       "ASCII Study — Interactive Portrait"
+//   DESCRIPTION: "An interactive ASCII rendering that responds to your cursor."
+// Do NOT add og:image on this route unless a real, meaningful image URL exists
+// (the CDN hand image is decorative and should not be used as the social preview).
+import { createFileRoute } from "@tanstack/react-router";
+import { AsciiHandsFooter } from "@/components/AsciiHandsFooter";
+
+export const Route = createFileRoute("/")({
+  head: () => ({
+    meta: [
+      { title: "{{TITLE}}" },
+      { name: "description", content: "{{DESCRIPTION}}" },
+      { property: "og:title", content: "{{TITLE}}" },
+      { property: "og:description", content: "{{DESCRIPTION}}" },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
+    ],
+  }),
+  component: Index,
+});
+
+function Index() {
+  return <AsciiHandsFooter />;
+}
