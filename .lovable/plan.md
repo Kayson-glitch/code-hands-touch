@@ -4,11 +4,12 @@
 ## 改动内容
 1. **增大噪声幅度**
    - `GOOEY_NOISE` 从 `0.011` 提升到 `0.018`。
-   - 低频次低频偏移（`seed` 驱动的 blob）幅度从 `2×` 提高到 `3×`。
+   - 低频 blob（`seed` 驱动）幅值 `GOOEY_NOISE * 1.5`。
 
-2. **叠加高频空间噪声**
-   - 在 `distorted` 计算中加入一层高频 hash 噪声：使用 `fract(sin(seed * 45.7) * 123.45)`，幅值 `GOOEY_NOISE * 0.8`。
-   - 再加入一层更高频的微小抖动（`GOOEY_NOISE * 0.4`），让边缘在细胞级别出现细碎断裂。
+2. **叠加多层空间噪声**
+   - 中频坐标 hash：使用 `fract(sin(i * 2.3 + j * 1.7 + seed * 5.9) * 47.1)`，幅值 `GOOEY_NOISE * 4`，制造可见的破碎 lobes。
+   - 高频 hash：使用 `fract(sin(seed * 45.7) * 123.45)`，幅值 `GOOEY_NOISE * 1.0`。
+   - 更高频微小抖动：使用 `fract(sin(seed * 137.9) * 437.58)`，幅值 `GOOEY_NOISE * 0.5`。
 
 3. **保持时间节奏缓慢，避免闪烁**
    - 时变 wobble 仍然只使用 `timeSec * 0.5` 低频正弦，幅值控制在 `GOOEY_NOISE * 0.6` 左右。
