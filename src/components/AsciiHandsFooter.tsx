@@ -291,7 +291,7 @@ export function AsciiHandsFooter() {
             lineHeight: 1,
             color: "rgba(255,255,255,0.05)",
             transform: "translateY(30%)",
-            fontFamily: '"Inter", "Helvetica Neue", sans-serif',
+            fontFamily: '"Geist Mono", ui-monospace, monospace',
           }}
         >
           Good/Fella
@@ -310,10 +310,10 @@ export function AsciiHandsFooter() {
           className="text-center"
           style={{
             color: "rgba(230,230,230,0.85)",
-            fontFamily: '"Inter", "Helvetica Neue", sans-serif',
-            fontSize: "0.95rem",
-            lineHeight: 1.8,
-            letterSpacing: "0.01em",
+            fontFamily: '"Geist Mono", ui-monospace, monospace',
+            fontSize: "0.8rem",
+            lineHeight: 1.7,
+            letterSpacing: "0",
           }}
         >
           <p>© 2026</p>
