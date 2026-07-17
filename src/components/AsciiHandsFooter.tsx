@@ -15,9 +15,13 @@ type Cell = {
   ch: string;
 };
 
+// Geist Mono @ weight 500, 11px: DOM & canvas both measure advance = 7 CSS px,
+// natural line-height = 14 CSS px. These values are stable across DPR=1 and
+// DPR=2, and match good-fella.com's `next/font/local` build exactly, so the
+// ASCII grid stays pixel-aligned with the reference site.
 const FONT_PX = 11;
 const CELL_W = 7;
-const CELL_H = 12;
+const CELL_H = 14;
 const INFLUENCE_RADIUS = 130;
 
 function glyphAt(idx: number) {
