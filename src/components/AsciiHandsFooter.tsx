@@ -39,9 +39,13 @@ const CELL_W = 10;
 const CELL_H = 10;
 // Source (good-fella.com ASCIIEffect) uniforms — expressed in UV space,
 // aspect-corrected. See docs/plan.md notes.
-const GOOEY_RADIUS_UV = 0.32;
-const GOOEY_SOFTNESS_UV = 0.18;
-const GOOEY_NOISE = 0.06;
+const GOOEY_RADIUS_UV = 0.18;
+const GOOEY_SOFTNESS_UV = 0.09;
+const GOOEY_NOISE = 0.035;
+// Max whole-scene parallax drift on hover, in CSS pixels. Small — mirrors the
+// source's "the picture leans toward the finger" feel.
+const PARALLAX_MAX = 8;
+const PARALLAX_LERP = 0.08;
 // Intensity ease durations (ms) — cursor enter / leave.
 const INTENSITY_IN_MS = 200;
 const INTENSITY_OUT_MS = 250;
@@ -261,6 +265,8 @@ export function AsciiHandsFooter() {
     let intensity = 0;
     let scrambleSeed = 0;
     let scrambleTick = 0;
+    let parallaxX = 0;
+    let parallaxY = 0;
     const draw = () => {
       if (!running) return;
       frame++;
@@ -308,6 +314,20 @@ export function AsciiHandsFooter() {
       const S = GOOEY_SOFTNESS_UV * intensity * 0.5;
       const rLo = R - S;
       const rHi = R + S;
+
+      // Smooth-follow cursor for parallax. When inactive, ease back to canvas
+      // center so the scene returns to rest.
+      const targetPX = m.active ? m.x : w * 0.5;
+      const targetPY = m.active ? m.y : h * 0.5;
+      if (parallaxX === 0 && parallaxY === 0) {
+        parallaxX = w * 0.5;
+        parallaxY = h * 0.5;
+      }
+      parallaxX += (targetPX - parallaxX) * PARALLAX_LERP;
+      parallaxY += (targetPY - parallaxY) * PARALLAX_LERP;
+      const parallaxAmt = prefersReduce ? 0 : intensity;
+      const offX = -((parallaxX - w * 0.5) / w) * PARALLAX_MAX * parallaxAmt;
+      const offY = -((parallaxY - h * 0.5) / h) * PARALLAX_MAX * parallaxAmt;
 
       // Highlight tint the source's revealed cells migrate toward. Sampled
       // from good-fella.com's rendered hover — a warm near-white.
@@ -381,7 +401,8 @@ export function AsciiHandsFooter() {
         ctx.fillStyle = `rgba(${r | 0},${g | 0},${bl | 0},1)`;
         // baseline offset — glyph ascent for Cascadia Mono ≈ FONT_PX,
         // so this seats the glyph inside the CELL_H box with 1-px top air.
-        ctx.fillText(ch, c.x, c.y + FONT_PX);
+        // offX/offY is a subtle whole-scene parallax that eases in with hover.
+        ctx.fillText(ch, c.x + offX, c.y + FONT_PX + offY);
       }
 
       raf = requestAnimationFrame(draw);

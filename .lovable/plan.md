@@ -1,44 +1,33 @@
-# Fix hover reveal — match source density & brightness
+# Shrink reveal disc + add subtle parallax on hover
 
 ## Diagnosis
 
-Comparing the current hover screenshot with the reference images:
-- Reference: inside the disc, glyphs are **dense and bright cream** — even cells that are dark at rest surface as legible characters.
-- Current: cells barely change. Only cells with high base luminance shift slightly warmer; dark silhouette cells stay near-black.
-
-Two things are missing from the port:
-
-1. **No ramp-index lift inside the disc.** The source's `sharpBlend` doesn't just recolor — the scrambled index is added to `c.idx`, and combined with the color lift, dark cells surface as visible glyphs. Our scramble multiplies by `bb` (luminance), so dark cells barely scramble and stay dark-glyph → invisible on black.
-2. **Color mix is too weak.** Base coral (`30,17,22`) at low `bb` mixed 100% toward `240,200,175` should be bright cream, but visually reads as muddy because the underlying glyph is still `.` or `` ` `` (near-empty ramp). Need to also push the ramp index up so a denser glyph is drawn.
+1. **Reveal area is too large.** Current uniforms `GOOEY_RADIUS_UV=0.32`, `SOFTNESS=0.18` produce a disc ~500px across on a 1440-wide canvas. Source site's reveal is closer to a ~220–260px cluster.
+2. **Missing parallax.** On the source site, moving the cursor over the ASCII art causes the entire hands silhouette to drift slightly toward/away from the cursor (a soft 2D parallax offset, a few pixels). Ours is static.
 
 ## Changes (single file: `src/components/AsciiHandsFooter.tsx`)
 
-Inside the `if (sharp > 0.01)` block:
+### 1. Shrink the disc
+- `GOOEY_RADIUS_UV`: `0.32` → `0.18`
+- `GOOEY_SOFTNESS_UV`: `0.18` → `0.09`
+- `GOOEY_NOISE`: `0.06` → `0.035`
 
-1. **Lift the ramp index by `sharp`** so dark cells surface with denser glyphs:
-   ```
-   const lifted = c.idx + sharp * (RAMP_LEN - 1 - c.idx) * 0.85;
-   const scrambleOffset = Math.floor(scramble * RAMP_LEN * (0.3 + 0.7 * sharp));
-   const finalIdx = (Math.floor(lifted) + scrambleOffset) % RAMP_LEN;
-   ch = glyphAt(finalIdx);
-   ```
-   Remove the `* bb` luminance gate on scramble — the source scrambles all cells inside the disc.
+This yields a ~240px reveal core with a soft, wobble-edged halo — matches the reference crop scale.
 
-2. **Stronger color lift** — mix toward highlight with an eased factor so even dark base cells hit near-cream inside the core:
-   ```
-   const colorMix = sharp; // already smoothstep-eased
-   r = 30 + bb * 193 + (HR - (30 + bb * 193)) * colorMix;
-   // same for g, bl
-   ```
-   (Current already does this, but combined with the ramp lift the character will now be visible so the color will read.)
+### 2. Add subtle cursor-driven parallax
+- Track a smoothed cursor position `parallax = {x, y}` that eases toward the actual cursor each frame (lerp factor ~0.08 for a soft trail).
+- Compute offset relative to canvas center, scaled small:
+  ```
+  const px = (parallax.x - w/2) / w;   // -0.5..0.5
+  const py = (parallax.y - h/2) / h;
+  const PARALLAX_MAX = 8; // CSS px
+  const offX = -px * PARALLAX_MAX * intensity;
+  const offY = -py * PARALLAX_MAX * intensity;
+  ```
+- Apply as a whole-scene translation when drawing cells: `ctx.fillText(ch, c.x + offX, c.y + FONT_PX + offY)`.
+- Cursor-UV for the gooey disc uses the raw (un-offset) cursor position so the disc stays under the actual pointer, while the ASCII drifts. This matches the source's feel: the picture responds, the reveal stays anchored to the finger.
+- Scaled by `intensity` so it eases in/out with hover (no jump on enter/leave).
+- Disabled under `prefersReduce`.
 
-3. **Slightly tighter softness core** — `sharpBlend = smoothstep(0, 0.15, gooey)` is correct; keep as-is.
-
-4. Keep radius/softness/noise uniforms unchanged (they match the source).
-
-5. Verify with Playwright: hover at center of hands → capture crop → confirm dense bright cluster on black, with wobbly edge, matching image-3/image-4.
-
-## Out of scope
-
-- No changes to base silhouette sampling, layout, or wordmark.
-- No changes to background cells (they stay black — matches source).
+### 3. Verify
+- Playwright: move cursor to (720, 400), capture crop. Expect: tight bright cluster ~240px across; whole silhouette shifted a few px opposite the cursor direction; return to rest position ~250ms after leave.
