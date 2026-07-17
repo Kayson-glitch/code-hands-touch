@@ -1,16 +1,11 @@
 import { useEffect, useRef } from "react";
 import handsPairAsset from "@/assets/hands-pair.png.asset.json";
 
-// Ordered density ramp, dark → bright. Symbols/digits only — no letter
-// shapes, so the hand reads as an abstract stipple. Leading spaces give
-// real negative space in the deepest shadows.
+// Ordered density ramp, dark → bright. Every glyph is one visual weight step;
+// a cell's index into this string comes from its normalized luminance.
 const RAMP =
-  "   .,':;-~+=<>()[]?*!/\\|17i3#%$&8@";
+  " `.,'\":;!li|()/\\+=trcvnxzuoaeswmkhbdqpgy#%8&@MWNQ$B";
 const RAMP_LEN = RAMP.length;
-
-// Per-direction edge glyph subsets — symbols/digits only.
-// 0: horizontal, 1: anti-diagonal (\), 2: vertical, 3: diagonal (/)
-const EDGE_SETS = ["-_=~", "\\`,%", "|!1[", "/;7)"];
 
 type Cell = {
   x: number;
@@ -18,9 +13,6 @@ type Cell = {
   b: number; // 0..1 normalized luminance (post stretch + gamma)
   idx: number; // ramp index derived from b
   ch: string;
-  edge: number; // 0..1 gradient magnitude
-  dir: 0 | 1 | 2 | 3; // quantized gradient direction
-  seed: number; // stable per-cell integer for deterministic glyph picks
 };
 
 const CELL_W = 7;
@@ -71,73 +63,37 @@ function sampleImage(
   octx.drawImage(img, 0, 0, cols, rows);
   const data = octx.getImageData(0, 0, cols, rows).data;
 
-  // Pass 1: perceptual luma (Rec.709) for the entire grid — keep the full
-  // buffer so Sobel can sample neighbors, including cells below threshold.
-  const luma = new Float32Array(cols * rows);
-  for (let j = 0; j < rows; j++) {
-    for (let i = 0; i < cols; i++) {
-      const p = (j * cols + i) * 4;
-      luma[j * cols + i] =
-        (0.2126 * data[p] + 0.7152 * data[p + 1] + 0.0722 * data[p + 2]) / 255;
-    }
-  }
-
-  type Raw = { i: number; j: number; y: number; gx: number; gy: number; mag: number };
+  // Pass 1: perceptual luma (Rec.709) for every non-background cell.
+  type Raw = { i: number; j: number; y: number };
   const raws: Raw[] = [];
   for (let j = 0; j < rows; j++) {
     for (let i = 0; i < cols; i++) {
-      const y = luma[j * cols + i];
-      if (y <= 0.07) continue;
-      // 3×3 Sobel — clamp at borders.
-      const jm = j > 0 ? j - 1 : j;
-      const jp = j < rows - 1 ? j + 1 : j;
-      const im = i > 0 ? i - 1 : i;
-      const ip = i < cols - 1 ? i + 1 : i;
-      const tl = luma[jm * cols + im], tc = luma[jm * cols + i], tr = luma[jm * cols + ip];
-      const ml = luma[j * cols + im],                          mr = luma[j * cols + ip];
-      const bl = luma[jp * cols + im], bc = luma[jp * cols + i], br = luma[jp * cols + ip];
-      const gx = -tl - 2 * ml - bl + tr + 2 * mr + br;
-      const gy = -tl - 2 * tc - tr + bl + 2 * bc + br;
-      const mag = Math.hypot(gx, gy);
-      raws.push({ i, j, y, gx, gy, mag });
+      const p = (j * cols + i) * 4;
+      const y =
+        (0.2126 * data[p] + 0.7152 * data[p + 1] + 0.0722 * data[p + 2]) / 255;
+      if (y > 0.04) raws.push({ i, j, y });
     }
   }
   if (raws.length === 0) return [];
 
-  // Percentile stretch: 8th..92nd → 0..1 for dramatic dynamic range, then
-  // an S-curve (smoothstep) to crush shadows and punch highlights.
+  // Percentile stretch: 2nd..98th → 0..1, then mild gamma to lift midtones.
   const sorted = raws.map((r) => r.y).sort((a, b) => a - b);
-  const lo = sorted[Math.floor(sorted.length * 0.08)];
-  const hi = sorted[Math.floor(sorted.length * 0.92)];
+  const lo = sorted[Math.floor(sorted.length * 0.02)];
+  const hi = sorted[Math.floor(sorted.length * 0.98)];
   const span = Math.max(1e-4, hi - lo);
-
-  // Normalize gradient magnitude by the 95th percentile so edge intensity
-  // is stable across images and resolutions.
-  const mags = raws.map((r) => r.mag).sort((a, b) => a - b);
-  const magNorm = Math.max(1e-4, mags[Math.floor(mags.length * 0.95)]);
+  const gamma = 0.85;
 
   const cells: Cell[] = [];
   for (const r of raws) {
     const stretched = Math.min(1, Math.max(0, (r.y - lo) / span));
-    // smoothstep: 3x² − 2x³
-    const b = stretched * stretched * (3 - 2 * stretched);
+    const b = Math.pow(stretched, gamma);
     const idx = indexFor(b);
-    const edge = Math.min(1, r.mag / magNorm);
-    // Quantize angle into 4 bins matching EDGE_GLYPHS.
-    // atan2 domain (−π, π]; shift by π/8 so bin centers land on cardinals.
-    let a = Math.atan2(r.gy, r.gx);
-    if (a < 0) a += Math.PI; // gradient direction is orientation, not signed
-    // a ∈ [0, π); map to 4 bins.
-    const dir = (Math.floor(((a + Math.PI / 8) / Math.PI) * 4) % 4) as 0 | 1 | 2 | 3;
     cells.push({
       x: targetRect.x + r.i * CELL_W,
       y: targetRect.y + r.j * CELL_H,
       b,
       idx,
       ch: glyphAt(idx),
-      edge,
-      dir,
-      seed: (r.i * 131 + r.j * 17) & 0xff,
     });
   }
   return cells;
@@ -235,7 +191,7 @@ export function AsciiHandsFooter() {
       const w = canvas.clientWidth;
       const h = canvas.clientHeight;
       ctx.clearRect(0, 0, w, h);
-      ctx.font = `${CELL_H}px "Geist Mono", ui-monospace, "JetBrains Mono", "Menlo", "Courier New", monospace`;
+      ctx.font = `${CELL_H}px "JetBrains Mono", "Menlo", "Courier New", monospace`;
       ctx.textBaseline = "top";
 
       const cells = cellsRef.current;
@@ -247,7 +203,7 @@ export function AsciiHandsFooter() {
 
         // ambient shimmer: nudge one step along the ramp so shading stays
         // coherent — shadows stay shadows, highlights stay highlights.
-        if (!prefersReduce && c.edge < 0.55 && Math.random() < 0.006) {
+        if (!prefersReduce && Math.random() < 0.006) {
           const jitter = Math.random() < 0.5 ? -1 : 1;
           c.ch = glyphAt(c.idx + jitter);
         }
@@ -255,34 +211,15 @@ export function AsciiHandsFooter() {
         let dx = 0;
         let dy = 0;
         let ch = c.ch;
-        // Single brand-orange hue (matches source site's #F94B14). Glyph
-        // density encodes brightness; alpha carries luminance falloff.
+        // Glyph already encodes brightness — keep alpha high across the
+        // whole hand, and let color ramp coral shadow → warm highlight on
+        // a gamma-lifted curve so midtones read warm, not muddy.
         const bb = c.b;
-        let r = 249;
-        let g = 75;
-        let bl = 20;
-        let alpha = 0.35 + bb * 0.65; // 0.35 → 1.0
-
-        // Edge layer: strong edges become directional line glyphs; medium
-        // edges bump a few rungs up the density ramp so contours read
-        // brighter than surrounding shade.
-        if (c.edge > 0.55) {
-          const set = EDGE_SETS[c.dir];
-          const weight = Math.floor(c.b * (set.length - 1));
-          ch = set.charAt((c.seed + weight) % set.length);
-        } else if (c.edge > 0.35) {
-          ch = glyphAt(c.idx + 3);
-        }
-
-        // Specular rim: strong edge on the bright side of the tonemap →
-        // gentle mix toward warm cream and force full alpha.
-        if (c.edge > 0.5 && bb > 0.55) {
-          const t = 0.3;
-          r = Math.floor(r * (1 - t) + 255 * t);
-          g = Math.floor(g * (1 - t) + 228 * t);
-          bl = Math.floor(bl * (1 - t) + 212 * t);
-          alpha = 1;
-        }
+        const hue = Math.pow(bb, 0.9);
+        let r = Math.floor(90 + hue * 165); //  90 → 255
+        let g = Math.floor(26 + hue * 150); //  26 → 176
+        let bl = Math.floor(18 + hue * 142); //  18 → 160
+        let alpha = 0.75 + bb * 0.25; // 0.75 → 1.0
 
         if (m.active && !prefersReduce) {
           const ddx = c.x - m.x;
@@ -297,9 +234,8 @@ export function AsciiHandsFooter() {
             dy = (ddy / (dist || 1)) * push;
             // add cursor "light" on top of base luminance (clamped)
             const lift = t * 0.85;
-            // pale brand tint on cursor light — stays orange, doesn't go white.
-            r = Math.min(255, r + Math.floor(lift * 6));
-            g = Math.min(255, g + Math.floor(lift * 130));
+            r = Math.min(255, r + Math.floor(lift * 200));
+            g = Math.min(255, g + Math.floor(lift * 170));
             bl = Math.min(255, bl + Math.floor(lift * 150));
             alpha = Math.min(1, alpha + t * 0.1);
             // step several rungs up the ramp near cursor core
@@ -347,7 +283,7 @@ export function AsciiHandsFooter() {
             lineHeight: 1,
             color: "rgba(255,255,255,0.05)",
             transform: "translateY(30%)",
-            fontFamily: '"Geist Mono", ui-monospace, monospace',
+            fontFamily: '"Inter", "Helvetica Neue", sans-serif',
           }}
         >
           Good/Fella
@@ -366,7 +302,7 @@ export function AsciiHandsFooter() {
           className="text-center"
           style={{
             color: "rgba(230,230,230,0.85)",
-            fontFamily: '"Geist Mono", ui-monospace, monospace',
+            fontFamily: '"Inter", "Helvetica Neue", sans-serif',
             fontSize: "0.95rem",
             lineHeight: 1.8,
             letterSpacing: "0.01em",

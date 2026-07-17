@@ -1,38 +1,27 @@
-# Match source site font + character composition
+# Better luminance mapping + finer density ramp
 
-Findings from `good-fella.com`:
-- Root class `geistmono_..._variable` → the entire site (including the ASCII footer canvas) uses **Geist Mono**.
-- Theme is `data-theme="dark"`, brand color is a vivid brand orange (~`#F94B14`), applied at varying opacities (e.g. `bg-brand/10`).
-- The ASCII grid uses a monochrome brand-orange palette; brightness is encoded by glyph density alone (a classic ramp), not by hue shifts toward white. Glyphs are ASCII symbols/digits — no letters like `M/N/Q/W/B` — so the hand reads as an abstract stipple, not typography.
+The current renderer washes out midtones because (a) luminance is a raw RGB average, (b) the 8-bucket ramp jumps too coarsely, and (c) alpha and color both scale linearly with brightness so dark regions vanish while highlights bloom flat. Fix all three.
 
-Changes (single file: `src/components/AsciiHandsFooter.tsx`, plus a Google Fonts link in `src/routes/__root.tsx`):
+## Steps (single file: `src/components/AsciiHandsFooter.tsx`)
 
-## 1. Add Geist Mono
-- In `src/routes/__root.tsx`, add a Google Fonts `<link>` for `Geist Mono` weights 400 and 500 (preconnect + stylesheet).
-- Update the canvas font stack to `'Geist Mono', ui-monospace, 'JetBrains Mono', 'Menlo', monospace`.
-- Also apply Geist Mono to the wordmark and to the © copy block so the whole footer matches the source's monospace treatment.
+1. **Perceptual luminance + histogram stretch**
+   - Sample luma via Rec. 709: `Y = 0.2126R + 0.7152G + 0.0722B`.
+   - During `sampleImage`, first pass collects raw Y for every included cell; compute the 2nd and 98th percentiles and remap to `[0,1]` (contrast stretch) so the darkest hand shadow → 0 and the brightest knuckle highlight → 1, regardless of the source image's exposure.
+   - Apply a mild gamma (~0.85) after stretching to lift midtones — this is where the reference site gets its readable "shading" band.
+   - Lower the visibility threshold to ~0.04 so faint forearm shadows still emit glyphs.
 
-## 2. Rewrite the ramp to symbols/digits only
-- Replace current ramp
-  `"   ..,':;!li|/\\+=tcvnxzuoaswmkhbdpg#%8&@MWNQ$B"`
-  with a symbol-and-digit ramp ordered dark→bright:
-  `"   .·,':;-~+=<>()[]?*!/\\|1lI7itcv3zosx#%$&8@"`
-  (kept ASCII, no letter shapes that read as typography).
-- Bump `RAMP_LEN` accordingly.
+2. **Finer, ordered density ramp (12 buckets)**
+   - Replace the 8-bucket padded-space ramp with a single ordered string of ~70 glyphs, dark→bright, e.g. `` ` . , ' : ; ! i | ( ) / \ + = t r c v n x z u o a e s w m k h b d q p g y # % 8 & @ M W N Q $ B ``. Each cell's index into this string = `floor(Y * (N-1))`, giving 70 steps of visual weight instead of 8.
+   - Ambient shimmer picks a neighboring index (±1) instead of a random glyph from a bucket, so shading stays coherent frame-to-frame.
 
-## 3. Edge glyph subsets → symbol-only
-- Horizontal (dir 0): `"-_=~"` → keep
-- Anti-diag  (dir 1): `"\\`,%"` → `"\\`,%"` (unchanged, all symbols)
-- Vertical   (dir 2): `"|!Il1"` → `"|!1["` (drop letters `Il`)
-- Diagonal   (dir 3): `"/;j7"` → `"/;7)"` (drop letter `j`)
+3. **Decouple color, alpha, and glyph**
+   - Glyph choice already encodes brightness — stop double-encoding with alpha.
+   - Alpha stays high (0.75–1.0) across all visible cells; color still ramps coral (shadow `#5a1a12` → highlight `#ffb0a0`) but on a gamma-corrected curve so midtone hue reads warm, not muddy.
+   - Cursor light: additive lift on RGB (as today) plus a small index bump (+2..+4 steps up the ramp near cursor core) instead of the current +1 bucket. Push amplitude unchanged.
 
-## 4. Single-hue color model
-- Base brand: `#F94B14` (r=249, g=75, b=20). Drop the shadow→highlight RGB ramp; render every visible cell in brand orange and let alpha alone carry brightness.
-- Alpha: `alpha = 0.35 + b * 0.65` (was `0.45 + 0.55 * b`) — wider low end so shadows recede more.
-- Rim highlight for `edge > 0.5 && b > 0.55`: keep the warm-white mix at `t=0.35` toward `#ffe4d4`; the source has faint brighter accents on the very brightest edges, so keep this but slightly reduced.
-- Cursor light: additive lift stays but tuned to a pale brand tint — push toward `(255, 205, 170)` instead of pure white so the interaction color still reads brand-orange.
+4. **Cell density tuning**
+   - Keep `CELL_W=7`, drop `CELL_H` to `9` for slightly denser vertical sampling — makes the fingers read as solid volumes rather than stripes.
 
-## 5. Cell metrics
-- Keep `CELL_W=7`, `CELL_H=9`. Font size stays at `CELL_H`px; Geist Mono at that size renders a hair narrower than JetBrains Mono so the grid packs a touch tighter — no metric change needed.
+## Out of scope
 
-No new dependencies. No API/animation logic changes beyond the swaps above.
+Layout, copy, background, wordmark, and image asset stay as-is. No new dependencies.
