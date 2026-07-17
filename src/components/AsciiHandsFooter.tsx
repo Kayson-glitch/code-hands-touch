@@ -48,6 +48,12 @@ const GOOEY_NOISE = 0.018;
 // source's "the picture leans toward the finger" feel.
 const PARALLAX_MAX = 8;
 const PARALLAX_LERP = 0.08;
+// Per-character hover response — mimics the source site where each glyph
+// tilts slightly and shifts by its own depth instead of the whole scene
+// translating as one block.
+const TILT_MAX_DEG = 6;
+const TILT_FALLOFF = 260;
+const DEPTH_PARALLAX = 0.6;
 // Reveal disc smoothly chases the cursor (source-site behaviour). Smaller =
 // stickier follow, which naturally reads as a gentle hover-in latency without
 // a hard delay gate.

@@ -1,32 +1,69 @@
 ## 目标
-在不改变现有生长动效、骨架和配色的前提下，为手掌/手指边缘增加一层细微的深色轮廓层，提升其在黑色背景上的分离感与层次。
+在现有的整体 parallax 位移之上，为每个字符增加**细微角度倾斜**和**深度差异位移**，让手掌在悬浮时呈现出源站那种"每个字符都在轻微响应鼠标"的立体感，而不是整块图像平移。
+
+## 观察源站
+好几种细节叠加：
+1. 整体轻微朝鼠标方向漂移（已实现）。
+2. **每个字符围绕自身中心做小角度旋转**，旋转量随该字符到光标的相对位置和距离变化——像光标在"吹动"字符。
+3. **深度层次位移**：越亮（越靠近手掌高光/前景）的字符位移更大，暗部位移小，营造伪 3D 视差。
 
 ## 修改文件
 `src/components/AsciiHandsFooter.tsx`
 
 ## 实现步骤
-1. **边缘检测**  
-   在网格初始化阶段为每个 cell 增加 `isEdge` 标记：
-   - 当 cell 的亮度 `bb > 0.05` 且周围 4 或 8 邻域中至少有一个 cell 亮度 `<= 0.05`（或超出网格）时，标记为边缘。
-   - 这样手指、手掌的外轮廓以及内部镂空都会自然被识别。
 
-2. **轮廓绘制**  
-   在 `draw` 循环中，每个 cell 在画主体字符之前：
-   - 如果 `c.isEdge` 为真，先用深色以轻微偏移画一次字符（1px 投影）。
-   - 颜色使用极暗的紫黑，如 `rgba(15, 12, 25, 0.75)`，与页面背景融合但略深于背景，形成 subtle 的轮廓。
-   - 偏移量：`x + 1, y + 1`（或 ±1 四个方向），保持 1px，避免粗重。
+### 1. 新增常量
+```
+const TILT_MAX_DEG = 6;        // 单字符最大倾斜角
+const TILT_FALLOFF = 260;      // px，超过此距离倾斜衰减到接近 0
+const DEPTH_PARALLAX = 0.6;    // 亮部相对暗部的额外位移倍率
+```
 
-3. **主体字符绘制**  
-   保持原有逻辑不变，在轮廓之上绘制正常字符，确保轮廓不会压过主体颜色。
+### 2. 每 cell 深度位移
+在计算 `offX/offY`（当前的整体 parallax）后，每个 cell 额外乘一个深度因子：
+```
+const depth = 0.4 + bb * DEPTH_PARALLAX;   // 暗部 0.4x，亮部 ~1x
+const cellOffX = offX * depth;
+const cellOffY = offY * depth;
+```
+让亮部凸出、暗部后退。
 
-4. **性能控制**  
-   边缘检测只在初始化/resize 时计算一次，不进入动画循环；绘制开销与 cell 数量线性相关，可接受。
+### 3. 每 cell 倾斜角
+计算 cell 中心到平滑光标 `(discX, discY)` 的向量，用其角度和距离衰减出 tilt：
+```
+const dx = c.x + CELL_W/2 - discX;
+const dy = c.y + CELL_H/2 - discY;
+const dist = Math.hypot(dx, dy);
+const falloff = Math.max(0, 1 - dist / TILT_FALLOFF);
+// 用 dx 的符号 + dy 分量制造"绕光标切向旋转"的感觉
+const angle = (dx / TILT_FALLOFF) * TILT_MAX_DEG * (Math.PI/180)
+              * falloff * intensity;
+```
+仅当 `intensity > 0.01` 时才计算，避免无 hover 时开销。
+
+### 4. 绘制时用 transform
+把当前 `ctx.fillText(ch, x, y)` 包一层：
+```
+if (angle !== 0) {
+  ctx.save();
+  ctx.translate(cx, cy);        // cx/cy = cell 中心
+  ctx.rotate(angle);
+  ctx.fillText(ch, -CELL_W/2, FONT_PX/2 - 1);  // 相对偏移
+  ctx.restore();
+} else {
+  ctx.fillText(ch, x, y);       // 快速路径，无 hover 时不变
+}
+```
+outline 描边层同样走这个 transform 分支，保持字符与描边一起旋转。
+
+### 5. 性能
+- 只有 `intensity > 0.01` 时才进入 tilt/transform 路径；静止和无鼠标时走原快速路径，性能不变。
+- save/restore 只对可见 cell 触发（intro 阶段跳过 `armT > introProgress` 的 cell 已生效）。
 
 ## 验证
-- 运行 `bun run build` 通过。
-- 截图观察：手指和手掌边缘应有一圈极细的暗色轮廓，在黑色背景上更立体，同时不影响内部的 ASCII 亮部效果。
+1. `bun run build` 通过。
+2. Playwright 截图：鼠标停在左手食指、右手手掌不同位置，观察附近字符呈微小切向旋转，亮部字符位移比暗部略大；鼠标离开后 tilt 平滑归零。
 
-## 预期结果
-- 暗背景中手掌不再是“一坨暗色”，边缘有 subtle 的分离线。
-- 整体仍然保持极简、赛博 ASCII 风格，不喧宾夺主。
-- 如轮廓太明显或太弱，可微调 alpha 或偏移量。
+## 预期
+- Hover 时不再是"一整块图平移"，而是每个字符都轻微响应，越靠近光标越明显、越亮越靠前，符合源站细腻的手感。
+- 无 hover 时视觉与性能保持现状。
