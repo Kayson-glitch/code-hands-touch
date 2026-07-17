@@ -1,46 +1,46 @@
 ## 目标
-参考源站 good-fella.com，让悬停揭示效果：
-1. 鼠标移入时有轻微延时才开始出现（源站有一个 ~120ms 的"预热"延时）
-2. 揭示区域内不再拉高字符密度，保持原有的明暗关系（源站只 scramble 字符 + 上色，不会把暗部提亮成亮部）
+把移入延时加长，并把 intensity 上升过程改成更自然的缓动曲线（当前是线性递增，容易在开始/结束显得突兀）。
 
 ## 改动位置
-仅编辑 `src/components/AsciiHandsFooter.tsx`，参数与一小段绘制逻辑。
+仅 `src/components/AsciiHandsFooter.tsx` 顶部常量 + draw 循环里 intensity 的更新逻辑。
 
-### 1. 移入延时（ease-in delay）
-在文件顶部常量区新增：
+### 1. 延时加长
 ```ts
-const INTENSITY_IN_DELAY_MS = 120; // 移入后延迟才开始上升，移出立即回落
+const INTENSITY_IN_DELAY_MS = 120; // → 220
+const INTENSITY_IN_MS = 200;        // → 360
 ```
-在 draw 循环里，`target = m.active && !prefersReduce ? 1 : 0` 后面维护一个 `hoverDwellMs`：
-- 当 `m.active` 时 `hoverDwellMs += dt`；不活动时归零。
-- 只有 `hoverDwellMs >= INTENSITY_IN_DELAY_MS` 时，intensity 才向 1 缓动；否则保持当前值（≈0）。
-- 移出（target=0）路径不变，立刻淡出。
+`INTENSITY_OUT_MS = 250` 保持不变（移出仍然干脆）。
 
-效果：光标进入后约 0.12s 才开始出现揭示盘，符合源站的轻微延时手感。
+### 2. 缓动曲线（ease-out cubic）
+当前直接对 `intensity` 做线性 `+step`。改成维护一个线性进度 `intensityT ∈ [0,1]`，intensity 由 `easeOutCubic(intensityT)` 映射得到：
 
-### 2. 揭示不影响明暗关系
-当前逻辑：
 ```ts
-const lifted = c.idx + sharp * (RAMP_LEN - 1 - c.idx) * 0.85;
-```
-把暗部字符（低 ramp index）强行推向亮部，导致手掌暗面被"提亮"。
+let intensityT = 0; // 线性进度
 
-改为保留原始密度，仅做 scramble：
-```ts
-// 不再 lift 密度，保留原明暗；仅在同亮度附近做小幅 scramble
-const scrambleOffset = Math.floor(
-  (scramble - 0.5) * RAMP_LEN * 0.25 * sharp,
-);
-const finalIdx =
-  (c.idx + scrambleOffset + RAMP_LEN) % RAMP_LEN;
+// 每帧：
+if (target > 0) {
+  hoverDwellMs += dt;
+  if (hoverDwellMs >= INTENSITY_IN_DELAY_MS) {
+    intensityT = Math.min(1, intensityT + dt / INTENSITY_IN_MS);
+  }
+} else {
+  hoverDwellMs = 0;
+  intensityT = Math.max(0, intensityT - dt / INTENSITY_OUT_MS);
+}
+// easeOutCubic：起步略快、收尾平滑，避免线性带来的"到位一瞬间停住"的卡顿
+const t = intensityT;
+intensity = 1 - Math.pow(1 - t, 3);
 ```
-颜色 tint 逻辑（`r/g/bl` 向 `HR/HG/HB` 混合）保持不变——这样揭示盘内仍呈现暖白 ASCII 字符，但字符字形的疏密仍由原亮度决定，暗部仍是暗的字符（点、逗号等），亮部仍是密字符，明暗结构不被破坏。
+
+这样：
+- 移入光标 → 220ms 无变化
+- 之后 360ms 内以 ease-out cubic 平滑长到 1
+- 移出仍按 250ms 线性淡出（快速回落，符合手感）
 
 ## 不改动
-- `GOOEY_RADIUS_UV / SOFTNESS / NOISE`（68px 尺寸保留）
-- `INTENSITY_IN_MS / OUT_MS`（缓动时长不变）
-- 视差、颜色 ramp、字体、网格等其它逻辑
+- 揭示盘半径 / softness / noise（68px）
+- 明暗保留逻辑（上一轮改动）
+- 视差、颜色、字体
 
 ## 验证
-- `bun run build` 通过
-- Playwright 截图：光标刚进入的 100ms 内基本无变化；~150ms 后揭示盘开始出现；揭示盘内暗部手掌区域字符不再被提亮为密字符。
+`bun run build` 通过；Playwright 在光标进入后 100ms / 250ms / 500ms 三个时间点截图，确认 100ms 时基本无揭示，250ms 时开始出现（较弱），500ms 时几乎到位，曲线感自然。

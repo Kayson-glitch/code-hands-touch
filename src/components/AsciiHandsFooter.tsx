@@ -47,11 +47,11 @@ const GOOEY_NOISE = 0.011;
 const PARALLAX_MAX = 8;
 const PARALLAX_LERP = 0.08;
 // Intensity ease durations (ms) — cursor enter / leave.
-const INTENSITY_IN_MS = 200;
+const INTENSITY_IN_MS = 360;
 const INTENSITY_OUT_MS = 250;
 // Slight pre-warm delay after cursor enters before the reveal disc starts
 // growing — mirrors good-fella.com's subtle hover-in latency.
-const INTENSITY_IN_DELAY_MS = 120;
+const INTENSITY_IN_DELAY_MS = 220;
 
 function glyphAt(idx: number) {
   const clamped = Math.min(RAMP_LEN - 1, Math.max(0, idx));
@@ -266,6 +266,7 @@ export function AsciiHandsFooter() {
     let frame = 0;
     let lastT = performance.now();
     let intensity = 0;
+    let intensityT = 0;
     let scrambleSeed = 0;
     let scrambleTick = 0;
     let hoverDwellMs = 0;
@@ -296,20 +297,16 @@ export function AsciiHandsFooter() {
       const target = m.active && !prefersReduce ? 1 : 0;
       if (target > 0) {
         hoverDwellMs += dt;
-      } else {
-        hoverDwellMs = 0;
-      }
-      const easeMs = target > intensity ? INTENSITY_IN_MS : INTENSITY_OUT_MS;
-      const step = dt / easeMs;
-      if (target > intensity) {
-        // Gate ease-in behind a small dwell delay so the disc doesn't appear
-        // the instant the cursor crosses the footer.
         if (hoverDwellMs >= INTENSITY_IN_DELAY_MS) {
-          intensity = Math.min(1, intensity + step);
+          intensityT = Math.min(1, intensityT + dt / INTENSITY_IN_MS);
         }
       } else {
-        intensity = Math.max(0, intensity - step);
+        hoverDwellMs = 0;
+        intensityT = Math.max(0, intensityT - dt / INTENSITY_OUT_MS);
       }
+      // ease-out cubic — smooth arrival, avoids the linear "snap to full" feel.
+      const _t = intensityT;
+      intensity = 1 - Math.pow(1 - _t, 3);
 
       // Bump scramble seed a few times per second so glyphs inside the disc
       // visibly re-shuffle, matching the source's continuous scramble.
