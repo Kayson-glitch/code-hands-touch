@@ -1,6 +1,5 @@
 import { useEffect, useRef } from "react";
-import handGodAsset from "@/assets/hand-god.png.asset.json";
-import handAdamAsset from "@/assets/hand-adam.png.asset.json";
+import handsPairAsset from "@/assets/hands-pair.png.asset.json";
 
 // Density ramp — dark → bright. Each bucket is a set of glyphs of roughly
 // the same visual weight. Cells pick their bucket from silhouette luminance.
@@ -101,7 +100,7 @@ export function AsciiHandsFooter() {
     y: -9999,
     active: false,
   });
-  const imagesRef = useRef<{ god?: HTMLImageElement; adam?: HTMLImageElement }>({});
+  const imageRef = useRef<HTMLImageElement | null>(null);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -113,24 +112,22 @@ export function AsciiHandsFooter() {
     const prefersReduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
     const resample = () => {
-      const { god, adam } = imagesRef.current;
-      if (!god || !adam) return;
+      const img = imageRef.current;
+      if (!img) return;
       const w = canvas.clientWidth;
       const h = canvas.clientHeight;
 
-      // Each hand ~50% of width, slight overlap toward center handled by
-      // fingertip anatomy in the source images.
-      const handW = Math.min(w * 0.5, 960);
-      const handH = handW * (640 / 1024);
-      const bandY = h * 0.5 - handH * 0.5;
-
-      const godRect = { x: 0, y: bandY, w: handW, h: handH };
-      const adamRect = { x: w - handW, y: bandY, w: handW, h: handH };
-
-      cellsRef.current = [
-        ...sampleImage(god, godRect, false),
-        ...sampleImage(adam, adamRect, false),
-      ];
+      // Source image is 1920x1080 with both hands baked into the composition,
+      // meeting near the center. Fit it to the full canvas width, centered.
+      const imgAR = img.naturalWidth / img.naturalHeight;
+      const bandW = w;
+      const bandH = bandW / imgAR;
+      const bandY = h * 0.5 - bandH * 0.5;
+      cellsRef.current = sampleImage(
+        img,
+        { x: 0, y: bandY, w: bandW, h: bandH },
+        false,
+      );
     };
 
     const resize = () => {
@@ -143,12 +140,10 @@ export function AsciiHandsFooter() {
       resample();
     };
 
-    Promise.all([loadImage(handGodAsset.url), loadImage(handAdamAsset.url)]).then(
-      ([god, adam]) => {
-        imagesRef.current = { god, adam };
-        resize();
-      },
-    );
+    loadImage(handsPairAsset.url).then((img) => {
+      imageRef.current = img;
+      resize();
+    });
 
     const ro = new ResizeObserver(resize);
     ro.observe(canvas);
