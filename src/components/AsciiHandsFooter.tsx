@@ -1,10 +1,10 @@
 import { useEffect, useRef } from "react";
 import handsPairAsset from "@/assets/hands-pair.png.asset.json";
 
-// Ordered density ramp, dark → bright. Every glyph is one visual weight step;
-// a cell's index into this string comes from its normalized luminance.
-const RAMP =
-  " `.,'\":;!li|()/\\+=trcvnxzuoaeswmkhbdqpgy#%8&@MWNQ$B";
+// Ordered density ramp, dark → bright. Chosen so each glyph's inked area
+// increases monotonically when rendered in Geist Mono — no vertical bars or
+// slashes that would break the gradient at midtones.
+const RAMP = " .`':,-~=+*xoevmwqbdOZ0M8W#N@";
 const RAMP_LEN = RAMP.length;
 
 type Cell = {
@@ -15,8 +15,9 @@ type Cell = {
   ch: string;
 };
 
+const FONT_PX = 11;
 const CELL_W = 7;
-const CELL_H = 9;
+const CELL_H = 12;
 const INFLUENCE_RADIUS = 130;
 
 function glyphAt(idx: number) {
@@ -71,17 +72,18 @@ function sampleImage(
       const p = (j * cols + i) * 4;
       const y =
         (0.2126 * data[p] + 0.7152 * data[p + 1] + 0.0722 * data[p + 2]) / 255;
-      if (y > 0.04) raws.push({ i, j, y });
+      if (y > 0.06) raws.push({ i, j, y });
     }
   }
   if (raws.length === 0) return [];
 
   // Percentile stretch: 2nd..98th → 0..1, then mild gamma to lift midtones.
   const sorted = raws.map((r) => r.y).sort((a, b) => a - b);
-  const lo = sorted[Math.floor(sorted.length * 0.02)];
-  const hi = sorted[Math.floor(sorted.length * 0.98)];
+  const lo = sorted[Math.floor(sorted.length * 0.05)];
+  const hi = sorted[Math.floor(sorted.length * 0.99)];
   const span = Math.max(1e-4, hi - lo);
-  const gamma = 0.85;
+  // gamma > 1 crushes midtones toward shadow → higher contrast, more volume.
+  const gamma = 1.15;
 
   const cells: Cell[] = [];
   for (const r of raws) {
@@ -191,8 +193,11 @@ export function AsciiHandsFooter() {
       const w = canvas.clientWidth;
       const h = canvas.clientHeight;
       ctx.clearRect(0, 0, w, h);
-      ctx.font = `${CELL_H}px "JetBrains Mono", "Menlo", "Courier New", monospace`;
-      ctx.textBaseline = "top";
+      ctx.font = `500 ${FONT_PX}px "Geist Mono", ui-monospace, "JetBrains Mono", Menlo, monospace`;
+      ctx.textBaseline = "alphabetic";
+      ctx.textAlign = "left";
+      // Cast: letterSpacing is a modern Canvas 2D API not in all TS libs yet.
+      (ctx as unknown as { letterSpacing?: string }).letterSpacing = "0px";
 
       const cells = cellsRef.current;
       const m = mouseRef.current;
@@ -215,11 +220,13 @@ export function AsciiHandsFooter() {
         // whole hand, and let color ramp coral shadow → warm highlight on
         // a gamma-lifted curve so midtones read warm, not muddy.
         const bb = c.b;
-        const hue = Math.pow(bb, 0.9);
-        let r = Math.floor(90 + hue * 165); //  90 → 255
-        let g = Math.floor(26 + hue * 150); //  26 → 176
-        let bl = Math.floor(18 + hue * 142); //  18 → 160
-        let alpha = 0.75 + bb * 0.25; // 0.75 → 1.0
+        // Warm-white ivory ramp — shadow near-black, highlight ivory.
+        let r = Math.floor(40 + bb * 200); //  40 → 240
+        let g = Math.floor(32 + bb * 200); //  32 → 232
+        let bl = Math.floor(28 + bb * 192); //  28 → 220
+        // Alpha low in shadows lets black background eat the darkest cells,
+        // which reads as depth rather than a flat mask.
+        let alpha = 0.35 + bb * 0.65;
 
         if (m.active && !prefersReduce) {
           const ddx = c.x - m.x;
@@ -229,15 +236,15 @@ export function AsciiHandsFooter() {
             const dist = Math.sqrt(dist2);
             const t = 1 - dist / INFLUENCE_RADIUS; // 0..1
             // subtle radial push — don't shred shading
-            const push = t * 7;
+            const push = t * 6;
             dx = (ddx / (dist || 1)) * push;
             dy = (ddy / (dist || 1)) * push;
             // add cursor "light" on top of base luminance (clamped)
-            const lift = t * 0.85;
-            r = Math.min(255, r + Math.floor(lift * 200));
-            g = Math.min(255, g + Math.floor(lift * 170));
-            bl = Math.min(255, bl + Math.floor(lift * 150));
-            alpha = Math.min(1, alpha + t * 0.1);
+            const lift = t;
+            r = Math.min(255, r + Math.floor(lift * 140));
+            g = Math.min(255, g + Math.floor(lift * 140));
+            bl = Math.min(255, bl + Math.floor(lift * 140));
+            alpha = Math.min(1, alpha + t * 0.35);
             // step several rungs up the ramp near cursor core
             const bump = Math.floor(t * 5); // 0..5
             if (bump > 0) ch = glyphAt(c.idx + bump);
@@ -245,7 +252,8 @@ export function AsciiHandsFooter() {
         }
 
         ctx.fillStyle = `rgba(${r},${g},${bl},${alpha})`;
-        ctx.fillText(ch, c.x + dx, c.y + dy);
+        // baseline offset so glyph sits inside its CELL_H box
+        ctx.fillText(ch, c.x + dx, c.y + dy + FONT_PX - 1);
       }
 
       raf = requestAnimationFrame(draw);
@@ -283,7 +291,7 @@ export function AsciiHandsFooter() {
             lineHeight: 1,
             color: "rgba(255,255,255,0.05)",
             transform: "translateY(30%)",
-            fontFamily: '"Inter", "Helvetica Neue", sans-serif',
+            fontFamily: '"Geist Mono", ui-monospace, monospace',
           }}
         >
           Good/Fella
@@ -302,10 +310,10 @@ export function AsciiHandsFooter() {
           className="text-center"
           style={{
             color: "rgba(230,230,230,0.85)",
-            fontFamily: '"Inter", "Helvetica Neue", sans-serif',
-            fontSize: "0.95rem",
-            lineHeight: 1.8,
-            letterSpacing: "0.01em",
+            fontFamily: '"Geist Mono", ui-monospace, monospace',
+            fontSize: "0.8rem",
+            lineHeight: 1.7,
+            letterSpacing: "0",
           }}
         >
           <p>© 2026</p>
