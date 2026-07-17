@@ -1,46 +1,42 @@
-## 目标
-把移入延时加长，并把 intensity 上升过程改成更自然的缓动曲线（当前是线性递增，容易在开始/结束显得突兀）。
+## 问题
+当前用 `延时 + cubic ease` 来做移入过渡，感觉是"卡一下再突然出现"。源网站的做法不是延时，而是让**揭示盘的位置本身做 lerp 平滑跟随光标**——光标进入时盘从上一次位置（或屏幕外）平滑滑到光标处，同时 intensity 用短时线性 lerp 起来。视觉上的"延时"来自跟随本身，而不是硬性 gate。
 
-## 改动位置
-仅 `src/components/AsciiHandsFooter.tsx` 顶部常量 + draw 循环里 intensity 的更新逻辑。
+## 改动 `src/components/AsciiHandsFooter.tsx`
 
-### 1. 延时加长
-```ts
-const INTENSITY_IN_DELAY_MS = 120; // → 220
-const INTENSITY_IN_MS = 200;        // → 360
-```
-`INTENSITY_OUT_MS = 250` 保持不变（移出仍然干脆）。
+### 1. 移除硬延时 gate
+删除 `INTENSITY_IN_DELAY_MS` 和 `hoverDwellMs` 相关逻辑。
 
-### 2. 缓动曲线（ease-out cubic）
-当前直接对 `intensity` 做线性 `+step`。改成维护一个线性进度 `intensityT ∈ [0,1]`，intensity 由 `easeOutCubic(intensityT)` 映射得到：
+### 2. 用 lerp 跟随替代 cubic ease
+新增光标平滑跟随位置 `discX / discY`（和现有 `parallaxX/Y` 独立，因为盘需要更"粘"一点的跟随）：
 
 ```ts
-let intensityT = 0; // 线性进度
-
-// 每帧：
-if (target > 0) {
-  hoverDwellMs += dt;
-  if (hoverDwellMs >= INTENSITY_IN_DELAY_MS) {
-    intensityT = Math.min(1, intensityT + dt / INTENSITY_IN_MS);
-  }
-} else {
-  hoverDwellMs = 0;
-  intensityT = Math.max(0, intensityT - dt / INTENSITY_OUT_MS);
-}
-// easeOutCubic：起步略快、收尾平滑，避免线性带来的"到位一瞬间停住"的卡顿
-const t = intensityT;
-intensity = 1 - Math.pow(1 - t, 3);
+const DISC_LERP = 0.12;   // 盘中心跟随光标的插值速率（越小越粘）
+const INTENSITY_LERP = 0.08; // intensity 每帧向目标插值
 ```
 
-这样：
-- 移入光标 → 220ms 无变化
-- 之后 360ms 内以 ease-out cubic 平滑长到 1
-- 移出仍按 250ms 线性淡出（快速回落，符合手感）
+每帧：
+```ts
+const targetIntensity = m.active && !prefersReduce ? 1 : 0;
+intensity += (targetIntensity - intensity) * INTENSITY_LERP;
+
+if (discX === -9999) { discX = m.x; discY = m.y; }
+discX += (m.x - discX) * DISC_LERP;
+discY += (m.y - discY) * DISC_LERP;
+```
+
+然后计算 `mUvX / mUvY` 时用 `discX / discY` 而不是 `m.x / m.y`。
+
+`INTENSITY_IN_MS / INTENSITY_OUT_MS / INTENSITY_IN_DELAY_MS` 这三个常量可以移除（intensity 现在用 lerp 系数，不再基于毫秒）。
+
+### 3. 效果
+- 光标进入 → 盘从旧位置（默认屏幕外远处）以 lerp 滑向光标，同时 intensity 从 0 lerp 向 1
+- 视觉上一瞬间有"跟不上"的感觉（就是源站那种），但没有生硬 gate
+- 离开时盘停在原地淡出（intensity 向 0 lerp），不再需要单独 out 时长
 
 ## 不改动
-- 揭示盘半径 / softness / noise（68px）
-- 明暗保留逻辑（上一轮改动）
-- 视差、颜色、字体
+- 揭示盘半径/软度/噪声（68px 相关）
+- 明暗保留、视差、颜色、字体
+- Parallax 的独立 lerp（`PARALLAX_LERP`）保留
 
 ## 验证
-`bun run build` 通过；Playwright 在光标进入后 100ms / 250ms / 500ms 三个时间点截图，确认 100ms 时基本无揭示，250ms 时开始出现（较弱），500ms 时几乎到位，曲线感自然。
+`bun run build` 通过；Playwright 在光标从画布外移入后 50ms / 200ms / 500ms 截图，确认盘平滑地追到光标位置且没有"先等再突然出现"的卡顿感。
