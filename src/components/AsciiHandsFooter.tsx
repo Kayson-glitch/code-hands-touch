@@ -57,6 +57,12 @@ const INTENSITY_LERP_MIN = 0.05;
 const INTENSITY_LERP_MAX = 0.12;
 // Pointer speed (CSS px/ms) at which the lerp reaches its MAX value.
 const SPEED_REF = 2.0;
+// Arm line orientation (from horizontal). Left half of the canvas uses +angle
+// (arm rises toward upper-right), right half uses the mirror. Tunable 35–65°.
+const ARM_ANGLE_DEG = 60;
+// 0 = isotropic noise, 1 = fully directional. Controls how much the broken
+// edge splashes along the arm vs across it.
+const ARM_ALIGN_STRENGTH = 0.85;
 
 function glyphAt(idx: number) {
   const clamped = Math.min(RAMP_LEN - 1, Math.max(0, idx));
@@ -366,6 +372,14 @@ export function AsciiHandsFooter() {
       const rLo = R - S;
       const rHi = R + S;
 
+      // Arm-aligned direction vector. Left half of the canvas → arm rises
+      // toward upper-right; right half → mirrored. y is negated because
+      // canvas y grows downward but arms visually rise upward.
+      const sideSign = discX < w / 2 ? 1 : -1;
+      const armRad = (ARM_ANGLE_DEG * Math.PI) / 180;
+      const armDx = Math.cos(armRad) * sideSign;
+      const armDy = -Math.sin(armRad);
+
       // Smooth-follow cursor for parallax. When inactive, ease back to canvas
       // center so the scene returns to rest.
       const targetPX = m.active ? m.x : w * 0.5;
@@ -401,6 +415,11 @@ export function AsciiHandsFooter() {
           const ddx = cellUvX - mUvX;
           const ddy = cellUvY - mUvY;
           const d = Math.sqrt(ddx * ddx + ddy * ddy);
+          // Directional weight: 1+STR along the arm axis, 1-STR across it.
+          const nx = d > 1e-5 ? ddx / d : 0;
+          const ny = d > 1e-5 ? ddy / d : 0;
+          const along = nx * armDx + ny * armDy;
+          const dirW = 1 + ARM_ALIGN_STRENGTH * (along * along * 2 - 1);
 
           // Per-cell hash + slow time wobble → ragged, gooey edge.
           const i = Math.floor((c.x - grid.originX) / CELL_W);
@@ -409,9 +428,12 @@ export function AsciiHandsFooter() {
           const seed = grid.seed[idx] ?? 0.5;
           // Large, slow blob — pushes whole patches of the edge in/out.
           const lowFreq = (seed * 2 - 1) * GOOEY_NOISE * 1.5;
-          // Mid-frequency smooth coordinate wave — creates the visible chipped/broken lobes.
+          // Mid-frequency wave uses arm-rotated cell coords so the chipped
+          // lobes elongate along the arm axis (low freq along arm, high across).
+          const localI = i * armDx + j * armDy;
+          const localJ = -i * armDy + j * armDx;
           const midFreq =
-            Math.sin(i * 0.45 + j * 0.35 + seed * 1.5) * GOOEY_NOISE * 5;
+            Math.sin(localI * 0.3 + localJ * 0.9 + seed * 1.5) * GOOEY_NOISE * 5;
           // Slow time wobble so the edge "breathes" rather than flickers.
           const wobble = prefersReduce
             ? 0
@@ -422,7 +444,12 @@ export function AsciiHandsFooter() {
           const microFract =
             (fract(Math.sin(seed * 137.9) * 437.58) - 0.5) * GOOEY_NOISE * 0.5;
           const distorted =
-            d + lowFreq + midFreq + wobble + highFreq + microFract;
+            d +
+            lowFreq +
+            midFreq * dirW +
+            wobble +
+            highFreq * dirW +
+            microFract * dirW;
 
           if (distorted < rHi) {
             // gooeyBlend = 1 - smoothstep(rLo, rHi, distorted)
