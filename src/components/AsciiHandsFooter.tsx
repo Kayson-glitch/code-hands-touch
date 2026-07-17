@@ -17,13 +17,13 @@ type Cell = {
   ch: string;
 };
 
-// good-fella.com's ASCII footer draws Cascadia Mono / SF Mono glyphs (weight
-// 500) into a near-square ~10×10 CSS-px grid. Cascadia Mono at 11px has an
-// advance ≈ 6.6 CSS px, so a 10-px cell leaves ~3 px of horizontal air —
-// matches the airy source spacing exactly. Both raster passes at DPR=1 and
-// DPR=2 land on the same integer grid, so the layout is pixel-aligned across
-// devices.
-const FONT_PX = 11;
+// good-fella.com's ASCII footer renders Cascadia Mono glyphs (from a 54-px
+// offscreen atlas scaled down) into a 10×10 CSS-px cell. Pixel measurements
+// off their live canvas: cell pitch 10×10 CSS px, average glyph footprint
+// 3.5×5.5 CSS px — i.e. glyphs sit roughly at 8-9-px optical size with plenty
+// of horizontal & vertical air around them. FONT_PX 9 with weight 500 lands
+// on the same on-screen glyph size (~4×5.5 CSS px) inside the 10-px cell.
+const FONT_PX = 9;
 const CELL_W = 10;
 const CELL_H = 10;
 const INFLUENCE_RADIUS = 130;
@@ -262,8 +262,9 @@ export function AsciiHandsFooter() {
         }
 
         ctx.fillStyle = `rgba(${r},${g},${bl},${alpha})`;
-        // baseline offset so glyph sits inside its CELL_H box
-        ctx.fillText(ch, c.x + dx, c.y + dy + FONT_PX - 1);
+        // baseline offset — glyph ascent for Cascadia Mono ≈ FONT_PX,
+        // so this seats the glyph inside the CELL_H box with 1-px top air.
+        ctx.fillText(ch, c.x + dx, c.y + dy + FONT_PX);
       }
 
       raf = requestAnimationFrame(draw);
