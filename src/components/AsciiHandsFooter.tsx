@@ -46,12 +46,11 @@ const GOOEY_NOISE = 0.011;
 // source's "the picture leans toward the finger" feel.
 const PARALLAX_MAX = 8;
 const PARALLAX_LERP = 0.08;
-// Intensity ease durations (ms) — cursor enter / leave.
-const INTENSITY_IN_MS = 360;
-const INTENSITY_OUT_MS = 250;
-// Slight pre-warm delay after cursor enters before the reveal disc starts
-// growing — mirrors good-fella.com's subtle hover-in latency.
-const INTENSITY_IN_DELAY_MS = 220;
+// Reveal disc smoothly chases the cursor (source-site behaviour). Smaller =
+// stickier follow, which naturally reads as a gentle hover-in latency without
+// a hard delay gate.
+const DISC_LERP = 0.12;
+const INTENSITY_LERP = 0.08;
 
 function glyphAt(idx: number) {
   const clamped = Math.min(RAMP_LEN - 1, Math.max(0, idx));
@@ -266,12 +265,12 @@ export function AsciiHandsFooter() {
     let frame = 0;
     let lastT = performance.now();
     let intensity = 0;
-    let intensityT = 0;
     let scrambleSeed = 0;
     let scrambleTick = 0;
-    let hoverDwellMs = 0;
     let parallaxX = 0;
     let parallaxY = 0;
+    let discX = -9999;
+    let discY = -9999;
     const draw = () => {
       if (!running) return;
       frame++;
@@ -292,21 +291,23 @@ export function AsciiHandsFooter() {
       const grid = gridRef.current;
       const m = mouseRef.current;
 
-      // Ease intensity toward 1 when cursor is active, 0 otherwise. Mirrors
-      // the source's animated uGooeyIntensity so the disc doesn't pop in/out.
-      const target = m.active && !prefersReduce ? 1 : 0;
-      if (target > 0) {
-        hoverDwellMs += dt;
-        if (hoverDwellMs >= INTENSITY_IN_DELAY_MS) {
-          intensityT = Math.min(1, intensityT + dt / INTENSITY_IN_MS);
+      // Lerp intensity toward its target — no hard delay gate. The visual
+      // hover-in latency comes from the disc position also lerping toward
+      // the cursor (below), mirroring the source site's follow behaviour.
+      const targetIntensity = m.active && !prefersReduce ? 1 : 0;
+      intensity += (targetIntensity - intensity) * INTENSITY_LERP;
+
+      // Smooth-follow disc center. Initialise to the current cursor on the
+      // first active frame so it doesn't fly in from (-9999, -9999).
+      if (m.active) {
+        if (discX === -9999) {
+          discX = m.x;
+          discY = m.y;
+        } else {
+          discX += (m.x - discX) * DISC_LERP;
+          discY += (m.y - discY) * DISC_LERP;
         }
-      } else {
-        hoverDwellMs = 0;
-        intensityT = Math.max(0, intensityT - dt / INTENSITY_OUT_MS);
       }
-      // ease-out cubic — smooth arrival, avoids the linear "snap to full" feel.
-      const _t = intensityT;
-      intensity = 1 - Math.pow(1 - _t, 3);
 
       // Bump scramble seed a few times per second so glyphs inside the disc
       // visibly re-shuffle, matching the source's continuous scramble.
@@ -320,8 +321,8 @@ export function AsciiHandsFooter() {
       const showGooey = intensity > 0.001 && grid;
       const minWH = Math.min(w, h);
       const aspectX = w / h;
-      const mUvX = showGooey ? (m.x / minWH) * aspectX : 0;
-      const mUvY = showGooey ? m.y / minWH : 0;
+      const mUvX = showGooey ? (discX / minWH) * aspectX : 0;
+      const mUvY = showGooey ? discY / minWH : 0;
       const R = GOOEY_RADIUS_UV * intensity;
       const S = GOOEY_SOFTNESS_UV * intensity * 0.5;
       const rLo = R - S;
