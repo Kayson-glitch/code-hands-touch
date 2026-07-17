@@ -374,16 +374,16 @@ export function AsciiHandsFooter() {
           // Mid-frequency coordinate hash — creates the visible chipped/broken lobes.
           const midFreq =
             (fract(Math.sin(i * 2.3 + j * 1.7 + seed * 5.9) * 47.1) - 0.5) *
-            GOOEY_NOISE * 3;
+            GOOEY_NOISE * 4;
           // Slow time wobble so the edge "breathes" rather than flickers.
           const wobble = prefersReduce
             ? 0
             : Math.sin(timeSec * 0.5 + seed * 6.28318) * GOOEY_NOISE * 0.6;
           // High-frequency spatial hash — creates the fine chipped/broken texture.
           const highFreq =
-            (fract(Math.sin(seed * 45.7) * 123.45) - 0.5) * GOOEY_NOISE * 0.8;
+            (fract(Math.sin(seed * 45.7) * 123.45) - 0.5) * GOOEY_NOISE * 1.0;
           const microFract =
-            (fract(Math.sin(seed * 137.9) * 437.58) - 0.5) * GOOEY_NOISE * 0.4;
+            (fract(Math.sin(seed * 137.9) * 437.58) - 0.5) * GOOEY_NOISE * 0.5;
           const distorted =
             d + lowFreq + midFreq + wobble + highFreq + microFract;
 
