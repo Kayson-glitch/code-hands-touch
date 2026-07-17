@@ -248,11 +248,15 @@ export function AsciiHandsFooter() {
         let dx = 0;
         let dy = 0;
         let ch = c.ch;
-        // Base layer: flat site orange. Density is carried entirely by the
-        // glyph shape (sparse ` .` vs dense `@`), not by the fill color.
-        let r = ORANGE_R;
-        let g = ORANGE_G;
-        let bl = ORANGE_B;
+        // Base layer: shadow → highlight ramp inside the orange family so
+        // light/shadow modeling reads clearly. Glyph density is only half
+        // the story; color luminance carries the rest of the form.
+        //   shadow  rgb( 60, 18,  8) — deep burnt orange
+        //   highlight rgb(255,110, 40) — hot site orange
+        const bb = c.b;
+        let r = Math.floor(60 + bb * 195); //  60 → 255
+        let g = Math.floor(18 + bb * 92); //  18 → 110
+        let bl = Math.floor(8 + bb * 32); //   8 →  40
         const alpha = 1;
 
         if (m.active) {
