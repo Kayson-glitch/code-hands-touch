@@ -1,20 +1,12 @@
-## Problem
-PrismaticBurst is currently mounted as a fixed overlay on top of the hands with `mix-blend-mode: lighten`. The burst is bright enough that it washes out the ASCII hands. User wants the burst as a true background **behind** the hands.
+当前视差参数（上一轮）过强，需要回调到介于原始版本与当前版本之间的强度。
 
-## Fix
+改动：
+1. `PARALLAX_MAX`：`18` → `13`（比原始 `8` 强约 60%，比当前 `18` 弱约 30%）
+2. 每字符深度倍率：`0.25 + bb*0.65 + c.armT*0.55` → `0.30 + bb*0.55 + c.armT*0.45`
+   - 暗部根节点约 `0.30`（原始 `0.35`，当前 `0.25`）
+   - 亮部指尖约 `1.30`（原始 `1.15`，当前 `1.45`）
+3. `PARALLAX_LERP` 保持 `0.08` 不变，仅减弱位移幅度。
 
-1. **Move PrismaticBurst behind the hands**
-   - In `src/routes/index.tsx`, drop `z-10` and the `mix-blend-mode` on the burst layer.
-   - Render the burst as `fixed inset-0 -z-10 pointer-events-none` (or `z-0`), and give the `<AsciiHandsFooter />` wrapper `relative z-10` so hands sit above the burst.
-
-2. **Make the hands canvas background transparent**
-   - `AsciiHandsFooter.tsx` currently sets inline `style={{ backgroundColor: "#0a0a0a", ... }}` on its root, which hides anything behind it. Change that to `backgroundColor: "transparent"` (keep height/minHeight untouched). This is the minimal change needed so the burst is visible underneath.
-   - Also set the page/body backdrop to a dark fallback via a wrapper `bg-[#0a0a0a]` on the outer div in `index.tsx`, so when the burst is dim there's still a dark canvas (matches current look).
-
-3. **Verify**
-   - `bun run build` passes.
-   - Playwright screenshot: ASCII hands clearly visible, prismatic burst glowing behind them, hover parallax still works.
-
-## Files touched
-- `src/routes/index.tsx` — reorder z-index, remove blend mode, add dark bg wrapper.
-- `src/components/AsciiHandsFooter.tsx` — one-line change: `backgroundColor: "#0a0a0a"` → `"transparent"`.
+验证：
+- `bun run build` 通过
+- 预览截图对比：鼠标悬停时手掌仍有明显漂移，但不再过度偏移；指尖领先根节点，强度介于原始与上一轮之间。
