@@ -373,7 +373,7 @@ export function AsciiHandsFooter() {
           const lowFreq = (seed * 2 - 1) * GOOEY_NOISE * 1.5;
           // Mid-frequency smooth coordinate wave — creates the visible chipped/broken lobes.
           const midFreq =
-            Math.sin(i * 0.7 + j * 0.5 + seed * 1.5) * GOOEY_NOISE * 4;
+            Math.sin(i * 0.45 + j * 0.35 + seed * 1.5) * GOOEY_NOISE * 5;
           // Slow time wobble so the edge "breathes" rather than flickers.
           const wobble = prefersReduce
             ? 0
