@@ -1,71 +1,48 @@
 ## Goal
 
-不再靠肉眼推断——直接从 good-fella.com 的 canvas 拦截真值：字体串、字号、字符集、颜色梯度、明暗曲线。然后把这些参数原样搬到 `AsciiHandsFooter.tsx`。
+在源站 canvas 上直接测量字符栅格的**真实像素间距**，然后把本地 `AsciiHandsFooter.tsx` 的 `FONT_PX / CELL_W / CELL_H` 逐项对齐。上一轮只用一行数据估算，误差偏大——这一轮做多行多列采样并取模态值。
 
-## 1. 拦截源站 canvas 绘制真值
+## 1. 精确测量源站栅格
 
-用 Playwright 打开 `https://good-fella.com/`，在文档加载**之前**通过 `add_init_script` 钩住 `CanvasRenderingContext2D.prototype` 的 setters/methods：
+Playwright 打开 `https://good-fella.com/`，1280×800@2，滚到 ASCII 页脚，截取 canvas 元素本体（`await canvas.screenshot()`，非页面视口），得到 960×1050 device-px 的干净底图。
 
-```js
-const rec = (window.__gfsRec = { font: new Set(), fillStyle: new Set(), glyphs: {}, xs: new Set(), ys: new Set(), positions: [] });
-const proto = CanvasRenderingContext2D.prototype;
-const _font = Object.getOwnPropertyDescriptor(proto, 'font');
-Object.defineProperty(proto, 'font', {
-  set(v){ rec.font.add(v); _font.set.call(this, v); },
-  get(){ return _font.get.call(this); }
-});
-const _fs = Object.getOwnPropertyDescriptor(proto, 'fillStyle');
-Object.defineProperty(proto, 'fillStyle', {
-  set(v){ if (typeof v === 'string') rec.fillStyle.add(v); _fs.set.call(this, v); },
-  get(){ return _fs.get.call(this); }
-});
-const _ft = proto.fillText;
-proto.fillText = function(t, x, y){
-  rec.glyphs[t] = (rec.glyphs[t]||0)+1;
-  rec.xs.add(Math.round(x)); rec.ys.add(Math.round(y));
-  if (rec.positions.length < 400) rec.positions.push([t, x, y, this.fillStyle]);
-  return _ft.apply(this, arguments);
-};
-```
+在 Python 里对底图分析：
 
-滚到 ASCII 页脚并停留 3–5 秒采样，然后回传：
+1. 生成 coral 掩膜 `R > G+8 且 R > 40`。
+2. 找 top-20 行/列（coral 像素最多的），逐行连通域取字符中心 x，逐列连通域取字符中心 y。
+3. 对每一组中心序列求相邻差，跨所有行/列汇总模态值 → **真 CELL_W / CELL_H（device px）**，除以 DPR（960/640 = 1.5）→ CSS px。
+4. 同时对每个字符连通域测量宽高与像素密度，估算实际 **字号**：`glyph_height / cap-height ratio` 反推 font-px。
+5. 输出 JSON：`{cellW_css, cellH_css, fontPx, glyph_avg_w, glyph_avg_h}`。
 
-- `Array.from(rec.font)` → 完整字体串（含 weight、字号、family）
-- `Array.from(rec.fillStyle)` → 所有出现过的颜色（去重）
-- `rec.glyphs` → 字符 → 出现次数（即字符集与相对频率）
-- `sorted xs / ys` 求相邻差 → 单元格 `CELL_W / CELL_H`
-- `rec.positions` 前 400 条 → 字符 × 颜色的相关性（明→暗字符对应哪种颜色）
+## 2. 对本地做同样测量
 
-采样在 1280×800@2 视口即可（我们已确认 Geist Mono metrics 与 DPR 无关）。输出到 `/tmp/browser/gfs_probe.json`。
+`http://localhost:8080/`，1280×800@2，直接对 `AsciiHandsFooter` 的 canvas 元素 `.screenshot()`。同样的 coral 掩膜（本地 coral 色相略不同，但 `R>G+8` 依旧成立）+ 同样的连通域测法 → 输出同一份 JSON。
 
-## 2. 从颜色集反推明暗曲线
+## 3. 计算 diff 并调参
 
-`fillStyle` 集合会是几十到上百个 `rgba(...)`。用 Python 计算每个颜色的相对亮度 `Y = 0.2126R + 0.7152G + 0.0722B`，排序后画曲线：
+以源站为基准，如果任何一项差 ≥1 CSS px，就在 `AsciiHandsFooter.tsx` 里直接改常量：
 
-- **端点**：取最暗色 → 最亮色，作为我们代码里 shadow / highlight 的两端 RGB。
-- **中段形态**：如果颜色沿 Y 单调、饱和度接近 0，就是灰阶；如果有偏色，就沿 R/G/B 各自拟合。
-- **透明度**：若颜色都是 rgb 且没有 rgba(...,a<1)，说明源站 **alpha 恒为 1**——我们当前 `0.35 + bb*0.65` 是过度设计，应该改成常量。
+| 参数 | 位置 |
+|------|------|
+| `FONT_PX` | 顶部常量 |
+| `CELL_W` | 顶部常量 |
+| `CELL_H` | 顶部常量 |
+| baseline 偏移（`+FONT_PX - 1`） | draw 循环末尾 |
 
-## 3. 从 positions 求字符 ↔ 亮度映射
+如果字号需要动，同步更新 baseline 偏移让字符垂直居中于 cell。字距（`letterSpacing`）保持 0——源站没有自定义字距，字距完全靠 CELL_W 步进。
 
-按 fillStyle 亮度 Y 分桶（10 桶），统计每桶最常出现的 top-5 字符 → 得到有序 ramp。这一定就是源站真实使用的字符串，替换我们代码里的手写 ramp。
+## 4. 验证
 
-## 4. 应用到 `AsciiHandsFooter.tsx`
+- `bun run build` / `tsgo` 无错。
+- 再次跑第 1 步的测量脚本对比本地和源站，确认三个参数都在 ±1 CSS px 内。
+- 截一张 1280×800@2 的本地 canvas 图 `/tmp/browser/loc_after.png`，与 `/tmp/browser/source_footer.png` 目视对比：手部密度、字符气隙、行间空隙一致。
 
-- `FONT_PX`：从 `rec.font` 里解析（若源站用 12/13/14px，与我们的 11 不同则同步）。
-- `CELL_W / CELL_H`：从 xs/ys 相邻差直接读出。
-- `RAMP`：用第 3 步得到的实测字符串。
-- 颜色两端与 gamma：用第 2 步得到的 shadow/highlight RGB；把 alpha 改成 1.0；重新拟合 gamma（若源站中间调偏亮就用 <1，偏暗就 >1）。
-- 光标交互不动（源站无鼠标高亮，这是我们的增强）。
+## 出范围
 
-## 5. 验证
-
-- `bun run build` 通过。
-- Playwright 在 1280×800@2 分别截 source 与 local 页脚，输出 `/tmp/browser/side-by-side.png`（两图水平拼接）。人工比对：色相、密度、字符形状一致。
+不改颜色、字体族、字符 ramp、光标交互、布局。这些上一轮已验证与源站对齐；本轮只调像素栅格。
 
 ## 技术细节
 
 - 只改 `src/components/AsciiHandsFooter.tsx`。
-- 不改布局、图片、路由。
-- 探针脚本、原始 JSON、拼接图放 `/tmp/browser/`，不入库。
+- 脚本、JSON、截图放 `/tmp/browser/`。
 - 无新依赖。
