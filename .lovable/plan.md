@@ -7,7 +7,7 @@
    - 低频 blob（`seed` 驱动）幅值 `GOOEY_NOISE * 1.5`。
 
 2. **叠加多层空间噪声**
-   - 中频坐标 hash：使用 `fract(sin(i * 2.3 + j * 1.7 + seed * 5.9) * 47.1)`，幅值 `GOOEY_NOISE * 4`，制造可见的破碎 lobes。
+   - 中频平滑坐标波：使用 `Math.sin(i * 0.45 + j * 0.35 + seed * 1.5)`，幅值 `GOOEY_NOISE * 5`，制造可见的破碎 lobes。
    - 高频 hash：使用 `fract(sin(seed * 45.7) * 123.45)`，幅值 `GOOEY_NOISE * 1.0`。
    - 更高频微小抖动：使用 `fract(sin(seed * 137.9) * 437.58)`，幅值 `GOOEY_NOISE * 0.5`。
 
