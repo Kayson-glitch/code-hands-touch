@@ -56,6 +56,11 @@ function indexFor(b: number) {
   return Math.min(RAMP_LEN - 1, Math.max(0, idx));
 }
 
+// GLSL fract() — the fractional part of x. Used for hash-based scramble.
+function fract(x: number) {
+  return x - Math.floor(x);
+}
+
 async function loadImage(src: string): Promise<HTMLImageElement> {
   return new Promise((resolve, reject) => {
     const img = new Image();
