@@ -680,6 +680,19 @@ export function AsciiHandsFooter() {
           }
         }
 
+        // Subtle outline stroke for silhouette edges: a dark 1px halo behind
+        // the glyph lifts fingers and palms off the near-black background.
+        if (c.isEdge) {
+          const OR = 15, OG = 12, OB = 25;
+          ctx.fillStyle = `rgba(${OR},${OG},${OB},0.75)`;
+          const ox = c.x + offX + jitterX;
+          const oy = c.y + FONT_PX + offY + jitterY;
+          ctx.fillText(ch, ox - 1, oy - 1);
+          ctx.fillText(ch, ox + 1, oy - 1);
+          ctx.fillText(ch, ox - 1, oy + 1);
+          ctx.fillText(ch, ox + 1, oy + 1);
+        }
+
         ctx.fillStyle = `rgba(${r | 0},${g | 0},${bl | 0},1)`;
         // baseline offset — glyph ascent for Cascadia Mono ≈ FONT_PX,
         // so this seats the glyph inside the CELL_H box with 1-px top air.
