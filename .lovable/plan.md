@@ -1,24 +1,27 @@
-# Use uploaded hands image as ASCII source
+# Better luminance mapping + finer density ramp
 
-Replace the two generated hand silhouettes with the user's uploaded image (human hand on the left, robot hand on the right, reaching toward each other — a Creation of Adam homage).
+The current renderer washes out midtones because (a) luminance is a raw RGB average, (b) the 8-bucket ramp jumps too coarsely, and (c) alpha and color both scale linearly with brightness so dark regions vanish while highlights bloom flat. Fix all three.
 
-## Steps
+## Steps (single file: `src/components/AsciiHandsFooter.tsx`)
 
-1. **Prepare the source image**
-   - Take `user-uploads://kling_20260715_作品_将图片中的手腕和手指_3228_1.png` (white background, two hands).
-   - Use `imagegen--edit_image` to remove the white background and re-composite onto a solid pure-black background as a grayscale chiaroscuro image (same brightness data model the current sampler already expects). Save to `/tmp/hands-pair.png` at 1920×1080.
-   - Upload via `lovable-assets` → `src/assets/hands-pair.png.asset.json`.
+1. **Perceptual luminance + histogram stretch**
+   - Sample luma via Rec. 709: `Y = 0.2126R + 0.7152G + 0.0722B`.
+   - During `sampleImage`, first pass collects raw Y for every included cell; compute the 2nd and 98th percentiles and remap to `[0,1]` (contrast stretch) so the darkest hand shadow → 0 and the brightest knuckle highlight → 1, regardless of the source image's exposure.
+   - Apply a mild gamma (~0.85) after stretching to lift midtones — this is where the reference site gets its readable "shading" band.
+   - Lower the visibility threshold to ~0.04 so faint forearm shadows still emit glyphs.
 
-2. **Simplify the component to sample one image**
-   - `src/components/AsciiHandsFooter.tsx`: drop the two-image (god + adam) sampling; load the single pair image and sample it once across the full canvas width. The composition (left hand, gap, right hand) is baked into the image, so we no longer place two rects — one rect covering the whole hand band is enough.
-   - Delete `hand-god.png.asset.json` and `hand-adam.png.asset.json` from `src/assets/` after the swap (via `lovable-assets delete`).
-   - Keep everything else — brightness ramp, coral color mapping, cursor light + push, ambient shimmer, reduced-motion respect.
+2. **Finer, ordered density ramp (12 buckets)**
+   - Replace the 8-bucket padded-space ramp with a single ordered string of ~70 glyphs, dark→bright, e.g. `` ` . , ' : ; ! i | ( ) / \ + = t r c v n x z u o a e s w m k h b d q p g y # % 8 & @ M W N Q $ B ``. Each cell's index into this string = `floor(Y * (N-1))`, giving 70 steps of visual weight instead of 8.
+   - Ambient shimmer picks a neighboring index (±1) instead of a random glyph from a bucket, so shading stays coherent frame-to-frame.
 
-3. **Layout tweak**
-   - The reference has the hands nearly touching at center with the copy block sitting just below/behind the meeting point. Adjust the band height so the fingertips frame the © text without overlapping.
+3. **Decouple color, alpha, and glyph**
+   - Glyph choice already encodes brightness — stop double-encoding with alpha.
+   - Alpha stays high (0.75–1.0) across all visible cells; color still ramps coral (shadow `#5a1a12` → highlight `#ffb0a0`) but on a gamma-corrected curve so midtone hue reads warm, not muddy.
+   - Cursor light: additive lift on RGB (as today) plus a small index bump (+2..+4 steps up the ramp near cursor core) instead of the current +1 bucket. Push amplitude unchanged.
 
-No other files change. No new dependencies.
+4. **Cell density tuning**
+   - Keep `CELL_W=7`, drop `CELL_H` to `9` for slightly denser vertical sampling — makes the fingers read as solid volumes rather than stripes.
 
 ## Out of scope
 
-Redesigning the page, changing text, or adjusting cursor behavior beyond what the new composition needs.
+Layout, copy, background, wordmark, and image asset stay as-is. No new dependencies.

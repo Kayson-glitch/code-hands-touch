@@ -1,41 +1,32 @@
 import { useEffect, useRef } from "react";
 import handsPairAsset from "@/assets/hands-pair.png.asset.json";
 
-// Density ramp — dark → bright. Each bucket is a set of glyphs of roughly
-// the same visual weight. Cells pick their bucket from silhouette luminance.
-const RAMP: string[] = [
-  ".,'`\"    ", //  bucket 0 — deepest shadow
-  ":;-~_    ", //  1
-  "+=<>|/\\ ", //  2
-  "cvxzjrft ", //  3
-  "uonymPCV ", //  4  midtone
-  "YZXUJK0 ", //   5
-  "abdegh# ", //   6
-  "%$8&B@# ", //   7  highlight
-];
+// Ordered density ramp, dark → bright. Every glyph is one visual weight step;
+// a cell's index into this string comes from its normalized luminance.
+const RAMP =
+  " `.,'\":;!li|()/\\+=trcvnxzuoaeswmkhbdqpgy#%8&@MWNQ$B";
+const RAMP_LEN = RAMP.length;
 
 type Cell = {
   x: number;
   y: number;
-  b: number; // 0..1 luminance from source
-  bucket: number; // ramp index derived from b
+  b: number; // 0..1 normalized luminance (post stretch + gamma)
+  idx: number; // ramp index derived from b
   ch: string;
 };
 
 const CELL_W = 7;
-const CELL_H = 10;
+const CELL_H = 9;
 const INFLUENCE_RADIUS = 130;
 
-function pickFrom(set: string) {
-  // Ramp buckets are padded with spaces so brighter buckets pick fewer spaces
-  // by chance — gives a natural falloff without special-casing.
-  const trimmed = set.trimEnd() || " ";
-  return trimmed.charAt(Math.floor(Math.random() * trimmed.length));
+function glyphAt(idx: number) {
+  const clamped = Math.min(RAMP_LEN - 1, Math.max(0, idx));
+  return RAMP.charAt(clamped);
 }
 
-function bucketFor(b: number) {
-  const idx = Math.floor(b * RAMP.length);
-  return Math.min(RAMP.length - 1, Math.max(0, idx));
+function indexFor(b: number) {
+  const idx = Math.floor(b * (RAMP_LEN - 1));
+  return Math.min(RAMP_LEN - 1, Math.max(0, idx));
 }
 
 async function loadImage(src: string): Promise<HTMLImageElement> {
@@ -71,23 +62,39 @@ function sampleImage(
   }
   octx.drawImage(img, 0, 0, cols, rows);
   const data = octx.getImageData(0, 0, cols, rows).data;
-  const cells: Cell[] = [];
+
+  // Pass 1: perceptual luma (Rec.709) for every non-background cell.
+  type Raw = { i: number; j: number; y: number };
+  const raws: Raw[] = [];
   for (let j = 0; j < rows; j++) {
     for (let i = 0; i < cols; i++) {
-      const idx = (j * cols + i) * 4;
-      // grayscale source — average RGB and normalize
-      const b = (data[idx] + data[idx + 1] + data[idx + 2]) / (3 * 255);
-      if (b > 0.08) {
-        const bucket = bucketFor(b);
-        cells.push({
-          x: targetRect.x + i * CELL_W,
-          y: targetRect.y + j * CELL_H,
-          b,
-          bucket,
-          ch: pickFrom(RAMP[bucket]),
-        });
-      }
+      const p = (j * cols + i) * 4;
+      const y =
+        (0.2126 * data[p] + 0.7152 * data[p + 1] + 0.0722 * data[p + 2]) / 255;
+      if (y > 0.04) raws.push({ i, j, y });
     }
+  }
+  if (raws.length === 0) return [];
+
+  // Percentile stretch: 2nd..98th → 0..1, then mild gamma to lift midtones.
+  const sorted = raws.map((r) => r.y).sort((a, b) => a - b);
+  const lo = sorted[Math.floor(sorted.length * 0.02)];
+  const hi = sorted[Math.floor(sorted.length * 0.98)];
+  const span = Math.max(1e-4, hi - lo);
+  const gamma = 0.85;
+
+  const cells: Cell[] = [];
+  for (const r of raws) {
+    const stretched = Math.min(1, Math.max(0, (r.y - lo) / span));
+    const b = Math.pow(stretched, gamma);
+    const idx = indexFor(b);
+    cells.push({
+      x: targetRect.x + r.i * CELL_W,
+      y: targetRect.y + r.j * CELL_H,
+      b,
+      idx,
+      ch: glyphAt(idx),
+    });
   }
   return cells;
 }
@@ -194,22 +201,25 @@ export function AsciiHandsFooter() {
       for (let k = 0; k < cells.length; k++) {
         const c = cells[k];
 
-        // ambient shimmer: reroll glyph within its own bucket so shadows
-        // stay shadow-glyphs and highlights stay highlight-glyphs.
+        // ambient shimmer: nudge one step along the ramp so shading stays
+        // coherent — shadows stay shadows, highlights stay highlights.
         if (!prefersReduce && Math.random() < 0.006) {
-          c.ch = pickFrom(RAMP[c.bucket]);
+          const jitter = Math.random() < 0.5 ? -1 : 1;
+          c.ch = glyphAt(c.idx + jitter);
         }
 
         let dx = 0;
         let dy = 0;
         let ch = c.ch;
-        // Base color: coral, shadowed cells desaturate toward deep red-brown.
-        // b=0 -> ~#4a1410  ,  b=1 -> ~#ff8a70
+        // Glyph already encodes brightness — keep alpha high across the
+        // whole hand, and let color ramp coral shadow → warm highlight on
+        // a gamma-lifted curve so midtones read warm, not muddy.
         const bb = c.b;
-        let r = Math.floor(70 + bb * 195); // 70..255
-        let g = Math.floor(20 + bb * 118); // 20..138
-        let bl = Math.floor(16 + bb * 96); // 16..112
-        let alpha = 0.25 + bb * 0.7; // 0.25..0.95
+        const hue = Math.pow(bb, 0.9);
+        let r = Math.floor(90 + hue * 165); //  90 → 255
+        let g = Math.floor(26 + hue * 150); //  26 → 176
+        let bl = Math.floor(18 + hue * 142); //  18 → 160
+        let alpha = 0.75 + bb * 0.25; // 0.75 → 1.0
 
         if (m.active && !prefersReduce) {
           const ddx = c.x - m.x;
@@ -227,12 +237,10 @@ export function AsciiHandsFooter() {
             r = Math.min(255, r + Math.floor(lift * 200));
             g = Math.min(255, g + Math.floor(lift * 170));
             bl = Math.min(255, bl + Math.floor(lift * 150));
-            alpha = Math.min(1, alpha + t * 0.35);
-            // bump one ramp bucket up near the core of the cursor
-            if (t > 0.5) {
-              const upBucket = Math.min(RAMP.length - 1, c.bucket + 1);
-              ch = pickFrom(RAMP[upBucket]);
-            }
+            alpha = Math.min(1, alpha + t * 0.1);
+            // step several rungs up the ramp near cursor core
+            const bump = Math.floor(t * 5); // 0..5
+            if (bump > 0) ch = glyphAt(c.idx + bump);
           }
         }
 
