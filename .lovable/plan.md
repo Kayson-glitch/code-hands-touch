@@ -1,42 +1,53 @@
 ## Goal
-让 reveal disc 的拖尾感在快慢鼠标移动时手感一致：慢速移动时保留柔和的墨滴扩散拖尾，快速移动时自动加快跟随，避免拖尾拉得过长导致 disc 严重滞后。
+保持 reveal disc 为圆形，但把破碎/拖尾噪声"定向"到手臂线条方向，让 hover 时的边缘迸溅像墨迹沿手臂流动。
 
 ## 改动范围
-仅修改 `src/components/AsciiHandsFooter.tsx`，属于前端表现层。
+仅 `src/components/AsciiHandsFooter.tsx`。
+
+## 关键观察
+- 两只手臂大致从底部左右斜向汇聚到中上部；左臂走向约 +60°（右上），右臂 -60°（左上）。
+- 使用鼠标相对画布水平中心的位置决定使用左臂还是右臂角度：`sideSign = discX < w/2 ? +1 : -1`。
+- 定义 `ARM_ANGLE_RAD = (60 * Math.PI) / 180`；实际角度 = `sideSign * ARM_ANGLE_RAD`（注意 canvas y 向下，`sin` 取负号让方向朝画面上方）。
 
 ## 实现步骤
 
-1. **跟踪鼠标速度**
-   - 在 `mouseRef` 之外新增 `mouseSpeedRef`（number，px/ms 的平滑值，初始 0）。
-   - 在 `onMove` / `onTouch` 中，用上一次事件的 `x/y/time` 计算 `instSpeed = dist / max(1, dtEvent)`，然后 `mouseSpeedRef.current += (instSpeed - mouseSpeedRef.current) * 0.35` 做 EMA 平滑，防抖。
-   - `onLeave` 时把速度衰减目标设为 0（由下方帧循环里的衰减逻辑处理）。
+1. **新增常量**
+   - `ARM_ANGLE_DEG = 60`
+   - `ARM_ALIGN_STRENGTH = 0.85`（噪声在手臂方向 vs 垂直方向的比重差；0 = 各向同性，1 = 完全定向）
 
-2. **在渲染帧里把速度映射为动态 lerp 系数**
-   - 常量新增：
-     - `DISC_LERP_MIN = 0.08`（现值，慢速）
-     - `DISC_LERP_MAX = 0.22`（快速上限，仍保留细微惯性）
-     - `INTENSITY_LERP_MIN = 0.05`
-     - `INTENSITY_LERP_MAX = 0.12`
-     - `SPEED_REF = 2.0`（px/ms，约等于快速划过的手感阈值）
-   - 每帧：
-     - 让 `mouseSpeedRef.current *= Math.exp(-dt / 120)`，长时间不动时自然衰减到 0。
-     - `const k = Math.min(1, mouseSpeedRef.current / SPEED_REF);`
-     - `const discLerp = DISC_LERP_MIN + (DISC_LERP_MAX - DISC_LERP_MIN) * k;`
-     - `const intensityLerp = INTENSITY_LERP_MIN + (INTENSITY_LERP_MAX - INTENSITY_LERP_MIN) * k;`
-   - 用 `discLerp` / `intensityLerp` 替换原来的常量在 lerp 表达式里的使用点（第 298、307-308 行）。
-   - 保留原 `DISC_LERP` / `INTENSITY_LERP` 常量作为 MIN 值删除，改为上面新的 MIN/MAX 常量以避免命名混乱。
+2. **在渲染循环里预计算方向向量**（每帧一次，位于 `showGooey` 计算后）
+   - `const sideSign = discX < w / 2 ? 1 : -1;`
+   - `const armRad = (ARM_ANGLE_DEG * Math.PI) / 180;`
+   - `const armDx = Math.cos(armRad);`（沿画面 x）
+   - `const armDy = -Math.sin(armRad) * sideSign;`（y 轴向下需反号；左侧手臂朝右上，右侧朝左上）
 
-3. **保持不变**
-   - `GOOEY_*` 噪声参数、亮度权重、字体、采样、parallax、scramble 都不动。
-   - `prefersReducedMotion` 时依旧强制 target intensity=0，不受速度影响。
+3. **改造每个 cell 的噪声混合**（当前 `ddx / ddy / midFreq / highFreq / microFract` 段）
+   - 用 `d` 做半径判定不变。
+   - 计算方向系数：
+     - `const nx = d > 1e-5 ? ddx / d : 0;`
+     - `const ny = d > 1e-5 ? ddy / d : 0;`
+     - `const along = nx * armDx + ny * armDy;`   // -1..1，沿手臂
+     - 定向权重 `const dirW = 1 + ARM_ALIGN_STRENGTH * (along * along - 0.5) * 2;`
+       - along²=1（沿手臂）→ `1 + ARM_ALIGN_STRENGTH`
+       - along²=0（垂直手臂）→ `1 - ARM_ALIGN_STRENGTH`
+   - `midFreq` 使用旋转后的坐标让 lobes 沿手臂拉伸：
+     - `const localI = i * armDx + j * armDy;`
+     - `const localJ = -i * armDy + j * armDx;`
+     - `midFreq = Math.sin(localI * 0.30 + localJ * 0.90 + seed * 1.5) * GOOEY_NOISE * 5`
+       （沿手臂低频、垂直手臂高频 → 视觉上是延手臂方向的长条 chips）
+   - `highFreq` 和 `microFract` 保持公式，但乘以 `dirW`。
+   - `lowFreq` 保持不变（属于整体呼吸）。
+   - 最终 `distorted = d + lowFreq + midFreq * dirW + wobble + highFreq * dirW + microFract * dirW;`
+     - 效果：破碎边缘沿手臂方向被大幅推拉，垂直方向被压缩 → 迸溅方向对齐手臂。
 
-## 手感目标
-- 慢速悬停：拖尾仍是缓慢墨滴扩散（等同当前 0.08 / 0.05 表现）。
-- 快速甩过：disc 不会被落下一大截，跟随明显更紧，破碎边缘不会被拉成长条。
-- 停止后：速度 EMA 在 ~120ms 内衰减回 0，自动回到"慢速柔和"模式。
+4. **保持不变**
+   - `GOOEY_RADIUS_UV / SOFTNESS_UV / GOOEY_NOISE` 数值不变（形状主体仍是圆）。
+   - 颜色、字体、scramble、parallax、动态 easing 全不动。
+   - `prefersReducedMotion` 不受影响。
 
 ## 验证
 - `bun run build` 通过。
-- Playwright 脚本模拟两种移动：
-  1. 慢速沿水平轴平移（每帧 ~1px），截图确认拖尾柔和，与之前一致。
-  2. 快速甩动（一次 mousemove 跨越 400px），截图确认 disc 紧跟末端，不会出现长条拖影。
+- Playwright 截图两组：
+  - 鼠标放在画面左半侧，观察噪声 chips 是否沿右上方向延伸。
+  - 鼠标放在右半侧，chips 应镜像沿左上方向。
+- 若视觉方向与实际手臂不吻合，仅需微调 `ARM_ANGLE_DEG`（35–65 之间）而不改结构。

@@ -57,6 +57,12 @@ const INTENSITY_LERP_MIN = 0.05;
 const INTENSITY_LERP_MAX = 0.12;
 // Pointer speed (CSS px/ms) at which the lerp reaches its MAX value.
 const SPEED_REF = 2.0;
+// Arm line orientation (from horizontal). Left half of the canvas uses +angle
+// (arm rises toward upper-right), right half uses the mirror. Tunable 35–65°.
+const ARM_ANGLE_DEG = 60;
+// 0 = isotropic noise, 1 = fully directional. Controls how much the broken
+// edge splashes along the arm vs across it.
+const ARM_ALIGN_STRENGTH = 0.85;
 
 function glyphAt(idx: number) {
   const clamped = Math.min(RAMP_LEN - 1, Math.max(0, idx));
