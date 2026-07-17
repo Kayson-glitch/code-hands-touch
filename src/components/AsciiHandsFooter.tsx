@@ -41,7 +41,7 @@ const CELL_H = 10;
 // aspect-corrected. See docs/plan.md notes.
 const GOOEY_RADIUS_UV = 0.0376;
 const GOOEY_SOFTNESS_UV = 0.023;
-const GOOEY_NOISE = 0.011;
+const GOOEY_NOISE = 0.018;
 // Max whole-scene parallax drift on hover, in CSS pixels. Small — mirrors the
 // source's "the picture leans toward the finger" feel.
 const PARALLAX_MAX = 8;
@@ -369,10 +369,22 @@ export function AsciiHandsFooter() {
           const j = Math.floor((c.y - grid.originY) / CELL_H);
           const idx = j * grid.cols + i;
           const seed = grid.seed[idx] ?? 0.5;
+          // Large, slow blob — pushes whole patches of the edge in/out.
+          const lowFreq = (seed * 2 - 1) * GOOEY_NOISE * 1.5;
+          // Mid-frequency smooth coordinate wave — creates the visible chipped/broken lobes.
+          const midFreq =
+            Math.sin(i * 0.45 + j * 0.35 + seed * 1.5) * GOOEY_NOISE * 5;
+          // Slow time wobble so the edge "breathes" rather than flickers.
           const wobble = prefersReduce
             ? 0
-            : Math.sin(timeSec * 1.5 + seed * 6.28318) * GOOEY_NOISE * 0.3;
-          const distorted = d + seed * GOOEY_NOISE * 2 + wobble;
+            : Math.sin(timeSec * 0.5 + seed * 6.28318) * GOOEY_NOISE * 0.6;
+          // High-frequency spatial hash — creates the fine chipped/broken texture.
+          const highFreq =
+            (fract(Math.sin(seed * 45.7) * 123.45) - 0.5) * GOOEY_NOISE * 1.0;
+          const microFract =
+            (fract(Math.sin(seed * 137.9) * 437.58) - 0.5) * GOOEY_NOISE * 0.5;
+          const distorted =
+            d + lowFreq + midFreq + wobble + highFreq + microFract;
 
           if (distorted < rHi) {
             // gooeyBlend = 1 - smoothstep(rLo, rHi, distorted)
