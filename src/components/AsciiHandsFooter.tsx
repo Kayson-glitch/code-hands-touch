@@ -643,7 +643,7 @@ export function AsciiHandsFooter() {
                 ((c.idx + scrambleOffset) % RAMP_LEN + RAMP_LEN) % RAMP_LEN;
               ch = glyphAt(finalIdx);
 
-              // Blend base coral → warm highlight, weighted by luminance so
+              // Blend base purple → cool highlight, weighted by luminance so
               // dark regions barely brighten.
               r += (HR - r) * sharpL;
               g += (HG - g) * sharpL;
