@@ -1,42 +1,34 @@
-## 问题
-当前用 `延时 + cubic ease` 来做移入过渡，感觉是"卡一下再突然出现"。源网站的做法不是延时，而是让**揭示盘的位置本身做 lerp 平滑跟随光标**——光标进入时盘从上一次位置（或屏幕外）平滑滑到光标处，同时 intensity 用短时线性 lerp 起来。视觉上的"延时"来自跟随本身，而不是硬性 gate。
-
 ## 改动 `src/components/AsciiHandsFooter.tsx`
 
-### 1. 移除硬延时 gate
-删除 `INTENSITY_IN_DELAY_MS` 和 `hoverDwellMs` 相关逻辑。
+### 1. 揭示盘 68px → 80px
+`GOOEY_RADIUS_UV`: `0.032` → `0.0376`（按 80/68 比例缩放；softness/noise 保持不变）。
 
-### 2. 用 lerp 跟随替代 cubic ease
-新增光标平滑跟随位置 `discX / discY`（和现有 `parallaxX/Y` 独立，因为盘需要更"粘"一点的跟随）：
+### 2. 移入效果跟随明暗关系
+当前问题：盘内所有 cell 的 scramble + 高光 tint 都按同一个 `sharp` 应用，导致原本很暗的区域也被"点亮"，破坏了轮廓的明暗层次。
+
+改法：让 tint 与 scramble 的强度都乘上 cell 本身的亮度权重 `c.b`，暗的地方几乎不亮起、亮的地方充分反应。给一个下限保底避免全黑消失：
 
 ```ts
-const DISC_LERP = 0.12;   // 盘中心跟随光标的插值速率（越小越粘）
-const INTENSITY_LERP = 0.08; // intensity 每帧向目标插值
+// b^0.6 让中亮区仍有明显反应，深阴影几乎不变
+const lumaWeight = Math.pow(c.b, 0.6);
+const sharpL = sharp * lumaWeight;
+
+// scramble 幅度也按亮度权重缩放（暗处不抖）
+const scrambleOffset = Math.floor(
+  (scramble - 0.5) * RAMP_LEN * 0.25 * sharpL,
+);
+// ...
+r += (HR - r) * sharpL;
+g += (HG - g) * sharpL;
+bl += (HB - bl) * sharpL;
 ```
 
-每帧：
-```ts
-const targetIntensity = m.active && !prefersReduce ? 1 : 0;
-intensity += (targetIntensity - intensity) * INTENSITY_LERP;
-
-if (discX === -9999) { discX = m.x; discY = m.y; }
-discX += (m.x - discX) * DISC_LERP;
-discY += (m.y - discY) * DISC_LERP;
-```
-
-然后计算 `mUvX / mUvY` 时用 `discX / discY` 而不是 `m.x / m.y`。
-
-`INTENSITY_IN_MS / INTENSITY_OUT_MS / INTENSITY_IN_DELAY_MS` 这三个常量可以移除（intensity 现在用 lerp 系数，不再基于毫秒）。
-
-### 3. 效果
-- 光标进入 → 盘从旧位置（默认屏幕外远处）以 lerp 滑向光标，同时 intensity 从 0 lerp 向 1
-- 视觉上一瞬间有"跟不上"的感觉（就是源站那种），但没有生硬 gate
-- 离开时盘停在原地淡出（intensity 向 0 lerp），不再需要单独 out 时长
+即：盘的位置/大小/软度不变，只是盘内的"揭示强度"按底图明暗调制——暗处保持暗，亮处才被 tint 抬高。
 
 ## 不改动
-- 揭示盘半径/软度/噪声（68px 相关）
-- 明暗保留、视差、颜色、字体
-- Parallax 的独立 lerp（`PARALLAX_LERP`）保留
+- 盘位置的 lerp 跟随（上一轮）
+- 视差、字体、颜色基色
+- 轮廓采样、明暗结构本身
 
 ## 验证
-`bun run build` 通过；Playwright 在光标从画布外移入后 50ms / 200ms / 500ms 截图，确认盘平滑地追到光标位置且没有"先等再突然出现"的卡顿感。
+`bun run build` 通过；Playwright 把光标放到手部深阴影处 vs 高光处各截一图，确认深阴影几乎无变化，高光处清晰变亮，整体明暗层次保留。
