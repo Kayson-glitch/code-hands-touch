@@ -1,18 +1,16 @@
 import { useEffect, useRef } from "react";
 import handsPairAsset from "@/assets/hands-pair.png.asset.json";
 
-// Ordered density ramp, dark → bright. Leading spaces give real negative
-// space in the deepest shadows; each following glyph is one visual weight
-// step. Cell's index into this string comes from its normalized luminance.
+// Ordered density ramp, dark → bright. Symbols/digits only — no letter
+// shapes, so the hand reads as an abstract stipple. Leading spaces give
+// real negative space in the deepest shadows.
 const RAMP =
-  "   ..,':;!li|/\\+=tcvnxzuoaswmkhbdpg#%8&@MWNQ$B";
+  "   .,':;-~+=<>()[]?*!/\\|17i3#%$&8@";
 const RAMP_LEN = RAMP.length;
 
-// Per-direction edge glyph subsets, each ordered dark→bright within its
-// orientation. Cells pick from the subset deterministically by seed+brightness,
-// so linework varies in weight across an edge run without flickering.
+// Per-direction edge glyph subsets — symbols/digits only.
 // 0: horizontal, 1: anti-diagonal (\), 2: vertical, 3: diagonal (/)
-const EDGE_SETS = ["-_=~", "\\`,%", "|!Il1", "/;j7"];
+const EDGE_SETS = ["-_=~", "\\`,%", "|!1[", "/;7)"];
 
 type Cell = {
   x: number;
@@ -237,7 +235,7 @@ export function AsciiHandsFooter() {
       const w = canvas.clientWidth;
       const h = canvas.clientHeight;
       ctx.clearRect(0, 0, w, h);
-      ctx.font = `${CELL_H}px "JetBrains Mono", "Menlo", "Courier New", monospace`;
+      ctx.font = `${CELL_H}px "Geist Mono", ui-monospace, "JetBrains Mono", "Menlo", "Courier New", monospace`;
       ctx.textBaseline = "top";
 
       const cells = cellsRef.current;
@@ -257,14 +255,13 @@ export function AsciiHandsFooter() {
         let dx = 0;
         let dy = 0;
         let ch = c.ch;
-        // Glyph already encodes brightness. Color ramps from deep coral
-        // shadow to warm near-white highlight; alpha widens the range so
-        // shadow glyphs recede and highlights pop.
+        // Single brand-orange hue (matches source site's #F94B14). Glyph
+        // density encodes brightness; alpha carries luminance falloff.
         const bb = c.b;
-        let r = Math.floor(50 + bb * 205); //  50 → 255
-        let g = Math.floor(14 + bb * 196); //  14 → 210
-        let bl = Math.floor(10 + bb * 180); //  10 → 190
-        let alpha = 0.45 + bb * 0.55; // 0.45 → 1.0
+        let r = 249;
+        let g = 75;
+        let bl = 20;
+        let alpha = 0.35 + bb * 0.65; // 0.35 → 1.0
 
         // Edge layer: strong edges become directional line glyphs; medium
         // edges bump a few rungs up the density ramp so contours read
@@ -278,9 +275,9 @@ export function AsciiHandsFooter() {
         }
 
         // Specular rim: strong edge on the bright side of the tonemap →
-        // mix toward warm white and force full alpha.
+        // gentle mix toward warm cream and force full alpha.
         if (c.edge > 0.5 && bb > 0.55) {
-          const t = 0.4;
+          const t = 0.3;
           r = Math.floor(r * (1 - t) + 255 * t);
           g = Math.floor(g * (1 - t) + 228 * t);
           bl = Math.floor(bl * (1 - t) + 212 * t);
@@ -300,8 +297,9 @@ export function AsciiHandsFooter() {
             dy = (ddy / (dist || 1)) * push;
             // add cursor "light" on top of base luminance (clamped)
             const lift = t * 0.85;
-            r = Math.min(255, r + Math.floor(lift * 200));
-            g = Math.min(255, g + Math.floor(lift * 170));
+            // pale brand tint on cursor light — stays orange, doesn't go white.
+            r = Math.min(255, r + Math.floor(lift * 6));
+            g = Math.min(255, g + Math.floor(lift * 130));
             bl = Math.min(255, bl + Math.floor(lift * 150));
             alpha = Math.min(1, alpha + t * 0.1);
             // step several rungs up the ramp near cursor core
