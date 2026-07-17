@@ -1,57 +1,60 @@
 ## Goal
 
-对齐源站（goodfellastudio.com 页脚）的 ASCII 手部效果：字体切到 **Geist Mono**，字距/行高与源站逐项一致，并恢复源站那种高对比、有厚度的明暗过渡。
+在多分辨率 / DPR 下确认 `AsciiHandsFooter` 里 Geist Mono 的字号、字距、行高与源站 goodfellastudio.com 页脚逐像素对齐，找出偏差并修复。
 
-## 1. 引入 Geist Mono（与源站一致）
+## 1. 采集源站真值（多视口 + DPR）
 
-源站字体：`Geist Mono`（Vercel 出品，等宽），fallback 到 `ui-monospace, monospace`。
+用 Playwright（沙箱内已装）打开 `https://goodfellastudio.com/`，滚动到底部页脚 ASCII 区，在以下矩阵采样：
 
-- 在 `src/routes/__root.tsx` 的 `head().links` 中加入 Google Fonts 预连接 + Geist Mono 样式表（权重 400/500）。不要在 `styles.css` 里 `@import` URL（Lightning CSS 不支持）。
-  ```
-  https://fonts.googleapis.com/css2?family=Geist+Mono:wght@400;500&display=swap
-  ```
-- `AsciiHandsFooter.tsx` 中把 canvas 字体串改为
-  `'Geist Mono', ui-monospace, "JetBrains Mono", Menlo, monospace`。
-- 中央版权 copy 与底部 wordmark 一并统一到 Geist Mono（源站 wordmark 也是同一族的加粗变体），去掉现有的 Inter fallback。
+| 视口 CSS px | DPR |
+|-------------|-----|
+| 390 × 844   | 2   |
+| 768 × 1024  | 2   |
+| 1280 × 800  | 1   |
+| 1280 × 800  | 2   |
+| 1920 × 1080 | 1   |
 
-## 2. 字距 / 行高 / 单元格像素对齐
+在每个视口执行：
+1. `getComputedStyle` 页脚 ASCII 容器，读取 `font-family / font-size / line-height / letter-spacing / font-weight`。
+2. 通过在页面里插入一个 `<span>ABCDEFGHIJ</span>` 用同款字体测量 `getBoundingClientRect().width / 10` → 单字宽（advance width）。同一 span 的 height → 行高。
+3. 元素级截图（`page.locator(...).screenshot`）保存到 `/tmp/browser/gfs/<viewport>.png`，供人工对照。
+4. 记录字符栅格：找两行相邻 glyph，取其 y 差 = 行高像素；同一行相邻 glyph x 差 = 字宽像素。
 
-源站截图测量（等宽栅格）：字号 ≈ 11px，行高 ≈ 12px，字距紧凑无额外 tracking；每个字符盒近似 `6.6 × 12`（宽:高 ≈ 0.55）。
+把 5 组读数写入 `/tmp/browser/gfs/measurements.json`。
 
-我们的实现：改成
-- `CELL_W = 7`（保留）→ 精确为 `6.6`，用 `Math.round` 布局但绘制时按 `6.6` 步进；或者把 `CELL_W=7, CELL_H=12`，字号 `11px`，`ctx.textBaseline="alphabetic"`，Y 偏移 `+10`。选后者，简单且贴合。
-- 新增常量 `FONT_PX = 11`, `CELL_W = 7`, `CELL_H = 12`。
-- `ctx.font = '500 11px "Geist Mono", ui-monospace, monospace'`。
-- 关闭 canvas 的字距自适应：设置 `ctx.textAlign = "left"`，`ctx.letterSpacing = "0px"`（新 API，支持则用）。
-- 绘制坐标：`fillText(ch, x, y + 10)`（baseline 校正）。
+## 2. 采集本地真值
 
-对应地，`sampleImage` 里 cols/rows 用新的 CELL_W/CELL_H；`resample` 无需其它改动。
+对 `http://localhost:8080/` 同样五个视口重复步骤 1–4，输出 `/tmp/browser/local/measurements.json`。除 `getComputedStyle` 外，额外读 canvas 里的字号：从 `AsciiHandsFooter` 常量 `FONT_PX / CELL_W / CELL_H` 反推，并用 `ctx.measureText("M")` 的 `width` 实测 Geist Mono 在当前 DPR 下的 advance。
 
-## 3. 还原明暗对比（chiaroscuro）
+## 3. 比对与判定
 
-当前 gamma=0.85 把中间调抬得过亮，coral 全域偏红，导致「洗白」。源站呈现的是**接近纯黑 → 冷灰 → 象牙白**的高对比灰阶，肩部/指缝几乎全黑，指关节高光近白。
+生成 diff 表格，字段：source vs local 的 `font-size / line-height / advance / cell_w / cell_h`。判定容差 ≤ 1 CSS px 为合格。特别关注：
 
-改动（都在 `AsciiHandsFooter.tsx`）：
+- **DPR=2 高清屏**：canvas 的 `setTransform(dpr,...)` 已生效，但 `ctx.font` 是 CSS px；确认 `measureText` 结果与源站 span 宽度一致。
+- **Geist Mono 未加载时的 fallback**：源站与本地是否落到同一 fallback（`ui-monospace`）。用 `document.fonts.check('11px "Geist Mono"')` 断言。
+- **canvas letterSpacing**：Chromium 支持；Safari/Firefox 若返回 undefined 需要手动步进 x。
 
-1. **拉高对比**：百分位窗口收紧到 5%..99%；gamma 提高到 `1.15`（>1 压低中间调，加深阴影）。visibility 阈值恢复到 `0.06`，避免噪点边缘出现浮字。
-2. **颜色改回单色暖白**（源站不是 coral，是暖白/象牙）：
-   - shadow `rgb(40,32,28)` → highlight `rgb(240,232,220)`，按 `bb` 线性插值。
-   - alpha：`0.35 + bb*0.65`（暗处半透，让黑背景吃进去，形成体积感）。
-3. **Ramp 更贴 Geist Mono 的实际字面**：使用 11 步经典密度串
-   `" .\`':,-~=+*xoevmwqbdOZ0M8W#N@"`（每字符实测在 Geist Mono 下面积覆盖单调递增），代替当前 50 字符含 `|/\\` 等竖笔画的串（那些在等宽下面积不单调，破坏梯度）。
-4. **光标交互**：push 幅度回到 `t*6`；lift 只加白，不加饱和度（RGB 各 +`t*140`）；ramp bump 保持 `+floor(t*5)`。
+## 4. 修复策略（只在检测到偏差时执行）
 
-## 4. 验证
+只改 `src/components/AsciiHandsFooter.tsx`（无布局或后端改动）：
 
-- `bun run build` 通过。
-- Playwright 打开 `http://localhost:8080/`，viewport 1280×1800，截 2 张图：无光标、光标悬停在右下（Adam 手）。人工比对：
-  - 手掌深处应几乎无字（黑）；
-  - 指关节应密集亮字（`@#8`）；
-  - 中间调呈可见的 `xoev` 灰阶带；
-  - 字体明显是 Geist Mono（`0` 带斜杠、`@` 圆润）。
+1. **advance 不匹配** → 调整 `CELL_W`（整数 6/7/8）或改成浮点步进 `x = Math.round(i * advance)`，其中 `advance = ctx.measureText("M").width`。用实测代替硬编码 7。
+2. **行高不匹配** → 调整 `CELL_H`（10/11/12）或改用 `lineHeight = Math.round(FONT_PX * 1.1)`。
+3. **字号不匹配** → 若源站 DPR=1 下测得 12px，把 `FONT_PX` 调到 12，同步 `CELL_H`。
+4. **DPR 缩放偏差** → 若发现在 DPR=2 下 canvas 字符“肥”一像素，说明 `setTransform` 之后又乘了 dpr，一次；确认无重复缩放。
+5. **字体未加载导致 fallback 抖动** → 在 draw 循环之前 `await document.fonts.load('500 11px "Geist Mono"')`，加载完再 `resample + draw`。
+
+修复后重跑第 2 步验证，直到所有视口 diff ≤ 1 px。
+
+## 5. 交付物
+
+- 更新后的 `AsciiHandsFooter.tsx`；
+- 一次 `bun run build` 通过；
+- 简短汇报：五个视口下 source 与 local 的 measurements 表 + 结论。
 
 ## 技术细节
 
-- **只改文件**：`src/routes/__root.tsx`（加字体 link）、`src/components/AsciiHandsFooter.tsx`（字体、栅格、色彩、ramp、gamma）。
-- **不改**：图片资源、布局、wordmark 文本、路由、后端。
-- **无新依赖**（用 Google Fonts CDN，符合项目 tailwind4 远程字体规范）。
+- 用 `playwright.async_api` + `chromium.launch(headless=True)`；每个视口用 `context = browser.new_context(viewport=..., device_scale_factor=dpr)`。
+- 元素截图，不要 `full_page=True`。
+- 脚本、JSON、截图统一放 `/tmp/browser/`，不污染仓库。
+- 不引入新依赖；不动路由 / 图片 / 布局 / wordmark 文案。
