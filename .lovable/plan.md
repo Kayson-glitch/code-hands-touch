@@ -1,40 +1,43 @@
 ## Goal
-Replace the "circular whitening halo" with the source's real interaction: the cursor **spawns a cloud of glyphs into empty background cells** and lifts nearby silhouette cells at the same time. The visible shape is not a clean disc — it's a soft cluster of randomly-picked glyphs whose density falls off with distance from the cursor.
+Replace our current cursor implementation with a faithful port of good-fella.com's ASCIIEffect gooey reveal. The correct effect is **glyph scrambling + color lift, on silhouette cells only, inside a noise-distorted wobbling disc** — not a glyph cloud spawned into background cells. Confirmed by reading the unminified GLSL (`734d3e55f9f110c2.js` in the source bundle).
 
-## Observations from the source
-
-- Source captures in `/tmp/browser/gf/hero_hover.png` and `hero_sweep.png` show glyphs appearing in the black space near the cursor — cells that had no glyph before now render one. Our current implementation never draws into background cells.
-- Your reference (`user-uploads://image-2.png`) shows the same effect at higher intensity: a dense cluster of ~15×10 varied bright glyphs (`ftmpdOJU`, `k0LZm@`, `bLIk`, `#M:8`, …). The glyphs are randomly chosen from across the ramp — not a smooth density gradient.
-- The cluster is roughly circular but its edge is ragged because per-cell spawn is probabilistic — probability falls off with distance from cursor.
-- Existing silhouette cells inside the cluster shift toward near-white; background cells that were spawned render as coral-to-white glyphs depending on distance.
-- Spawn only lives while the cursor is inside a cell's neighborhood; leave and the spawned glyphs vanish (no trail).
+## Source shader — parameters to mirror
+- `radius = 0.15` in UV (fraction of the shorter screen dim, aspect-corrected)
+- `softness = 0.08` in UV
+- `noiseIntensity = 0.03`
+- `intensity` (animated ease 0→1) — fade in on cursor enter (~200 ms), fade out on leave (~250 ms)
+- Distorted distance per cell:
+  `d' = d + hash(cell) * noiseIntensity * 2 + sin(time*1.5 + hash(cell)*τ) * noiseIntensity * 0.3`
+- Gooey blend: `1 - smoothstep(R*I - S*I*0.5, R*I + S*I*0.5, d')`
+- Scramble: `idx' = (idx + hash(cell+scrambleSeed) * rampLen * luminance) mod rampLen`
+  - `luminance` here is our per-cell `b` (already 0..1)
+- Sharp blend gate: `sharpBlend = smoothstep(0, 0.15, gooeyBlend)` — used as color mix factor
+- Color inside disc: mix toward a "reveal target" color that matches what the source's underlying scene contributes. Since we don't have a separate underlying image texture, use a fixed warm highlight `rgb(240, 200, 175)` mixed with the base ramp color by `sharpBlend`.
 
 ## Changes in `src/components/AsciiHandsFooter.tsx`
 
-1. **Build a full grid of "candidate" cells** at resample time, not only silhouette cells:
-   - Keep the existing `Cell` list (silhouette cells with real `b`, `idx`, `ch`).
-   - Additionally store, for every grid position covered by the image band, an `isSilhouette: boolean` and a stable random seed so re-renders don't flicker glyph choice.
-2. **In the draw loop, iterate over the full grid** (cols × rows), not just populated cells.
-   - For silhouette cells: draw as today (with the cursor whitening lift from the previous step).
-   - For background cells: only draw when they fall inside a **spawn radius** around the cursor.
-3. **Spawn model** for a background cell at distance `d` from cursor:
-   - Compute `t = smoothstep(0, 1, 1 - d/SPAWN_RADIUS)` with `SPAWN_RADIUS = 110`.
-   - Skip the cell if `t < 0.05`.
-   - Use a probabilistic mask: skip when `hash(cellSeed) > t * 0.9` — this produces the ragged, cluster-like edge instead of a filled disc.
-   - Pick the glyph from the ramp using a per-cell stable hash so the same cell shows the same glyph while the cursor lingers on it (not flickering every frame). Bias glyph choice toward mid-to-high ramp indices weighted by `t`.
-   - Color: interpolate from coral `rgb(60, 30, 30)` (edge) → warm near-white `rgb(245, 235, 225)` (core) by `t`.
-4. **Keep the silhouette whitening** from the last patch, but drive it from the same shared `smoothstep(t)` and shrink `INFLUENCE_RADIUS` to match `SPAWN_RADIUS = 110`. Silhouette cells inside the cluster whiten; outside cells stay at the coral ramp color.
-5. **No positional displacement.** Already removed.
-6. **No trail.** The spawned cells are recomputed every frame from the current cursor position.
-7. **Reduced motion & no-cursor path.** When `prefersReducedMotion` is on or `mouseRef.active === false`, skip the spawn loop entirely — behavior identical to current no-cursor idle.
-8. **Perf.** Only iterate over grid cells inside the cursor's bounding box (`ceil(SPAWN_RADIUS / CELL_W)` cells around cursor), not the whole grid. Keep the existing silhouette loop as-is.
+1. **Remove the background-cell spawn code.** Drop the loop that draws into `sIdx === -1` cells. Background stays black at all times.
+2. **Keep the per-cell grid metadata** (`silIdx`, `seed`) — we still need per-cell hash and stable random for the scramble and edge noise. Rename `seed` semantics to `hash(cell)` values, still 0..1.
+3. **Merge the two draw passes back into one silhouette-only pass.** Iterate over `cells` (silhouette cells only). For each cell:
+   - Compute `d` = distance from cell to cursor **in UV units**: divide pixel distance by `min(canvasW, canvasH)` and aspect-correct x by `canvasW/canvasH` (mirror the shader).
+   - Compute `d' = d + h*NOISE*2 + sin(t*1.5 + h*τ)*NOISE*0.3` where `h = grid.seed[k]` and `t` is a rolling seconds clock.
+   - Compute `intensity` from a state that eases `0↔1` toward `mouseRef.active ? 1 : 0` with time-based tween (200/250 ms).
+   - `R = 0.15 * intensity`, `S = 0.08 * intensity * 0.5`; skip if `d' > R + S`.
+   - `gooey = 1 - smoothstep(R-S, R+S, d')`.
+   - `sharp = smoothstep(0, 0.15, gooey)`.
+   - Scrambled index: `idx' = floor((c.idx + hash(k+scrambleSeed) * RAMP_LEN * c.b) % RAMP_LEN)`. Only apply when `sharp > 0`.
+   - Color: base ramp color (coral) → mix toward `rgb(240, 200, 175)` (warm highlight, sampled from the source's revealed cells) by `sharp`.
+4. **Add a `uScrambleSeed`-equivalent.** Bump every ~2 frames or on cursor stop so scrambled cells re-shuffle glyphs continuously; source visibly re-shuffles inside the disc.
+5. **Animate `intensity`.** Store `intensityRef` as a number; every frame ease toward target by `dt / durationMs`. Keeps the disc from popping.
+6. **Adjust radius to CSS px.** UV `0.15` on a `min(w,h)` basis means pixel radius `0.15 * min(canvasW, canvasH)`; use that instead of the current `INFLUENCE_RADIUS = 110`.
+7. **Remove ambient shimmer's dependence on `c.ch`** so it doesn't fight the scramble; keep it minimal or drop it.
+8. **Reduced-motion path:** skip scramble and edge noise; still allow static gooey lift (no time term, no animated intensity).
+
+## Non-goals
+- Not replicating the reveal typewriter (`uProgress`), click ripples (`uClickPoint`, `uImpactProgress`), or depth parallax — those are separate site features unrelated to the hover.
 
 ## Verification
-
 - `bun run build` passes.
-- Playwright: hover a fixed point on our footer canvas; capture 240×240 crop around cursor. Expect a soft-edged, ragged cluster of varied glyphs — not a smooth disc. Compare visually against `/tmp/browser/gf/hero_hover.png` and the user's uploaded reference.
-- Move cursor off; the cluster disappears with no residue.
-- Sweep test: cluster follows cursor smoothly, no trail.
-
-## Open question, only if the plan looks off
-If after implementing this the density still doesn't match, the next dial is `SPAWN_RADIUS` (larger → bigger cloud) and the probability curve (`t * 0.9` → `t^0.7`) which fills the core more solidly.
+- Playwright: hover, capture 240 px crop; expect only silhouette cells to change (background remains black); glyphs inside the disc look randomized; disc edge is soft and slightly ragged / wobbling frame-to-frame.
+- Cursor leave: cells return to base coral within ~250 ms, no residue.
+- Compare against captures under `/tmp/browser/gf/` and the earlier user-uploaded reference.

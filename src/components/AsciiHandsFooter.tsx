@@ -37,7 +37,14 @@ type Grid = {
 const FONT_PX = 8;
 const CELL_W = 10;
 const CELL_H = 10;
-const INFLUENCE_RADIUS = 110;
+// Source (good-fella.com ASCIIEffect) uniforms — expressed in UV space,
+// aspect-corrected. See docs/plan.md notes.
+const GOOEY_RADIUS_UV = 0.15;
+const GOOEY_SOFTNESS_UV = 0.08;
+const GOOEY_NOISE = 0.03;
+// Intensity ease durations (ms) — cursor enter / leave.
+const INTENSITY_IN_MS = 200;
+const INTENSITY_OUT_MS = 250;
 
 function glyphAt(idx: number) {
   const clamped = Math.min(RAMP_LEN - 1, Math.max(0, idx));
@@ -47,6 +54,11 @@ function glyphAt(idx: number) {
 function indexFor(b: number) {
   const idx = Math.floor(b * (RAMP_LEN - 1));
   return Math.min(RAMP_LEN - 1, Math.max(0, idx));
+}
+
+// GLSL fract() — the fractional part of x. Used for hash-based scramble.
+function fract(x: number) {
+  return x - Math.floor(x);
 }
 
 async function loadImage(src: string): Promise<HTMLImageElement> {
@@ -245,9 +257,17 @@ export function AsciiHandsFooter() {
     window.addEventListener("touchend", onLeave);
 
     let frame = 0;
+    let lastT = performance.now();
+    let intensity = 0;
+    let scrambleSeed = 0;
+    let scrambleTick = 0;
     const draw = () => {
       if (!running) return;
       frame++;
+      const now = performance.now();
+      const dt = Math.min(64, now - lastT);
+      lastT = now;
+      const timeSec = now / 1000;
       const w = canvas.clientWidth;
       const h = canvas.clientHeight;
       ctx.clearRect(0, 0, w, h);
@@ -261,108 +281,99 @@ export function AsciiHandsFooter() {
       const grid = gridRef.current;
       const m = mouseRef.current;
 
-      // Pass 1 — base silhouette (coral ramp, no cursor effect).
+      // Ease intensity toward 1 when cursor is active, 0 otherwise. Mirrors
+      // the source's animated uGooeyIntensity so the disc doesn't pop in/out.
+      const target = m.active && !prefersReduce ? 1 : 0;
+      const easeMs = target > intensity ? INTENSITY_IN_MS : INTENSITY_OUT_MS;
+      const step = dt / easeMs;
+      intensity = target > intensity
+        ? Math.min(1, intensity + step)
+        : Math.max(0, intensity - step);
+
+      // Bump scramble seed a few times per second so glyphs inside the disc
+      // visibly re-shuffle, matching the source's continuous scramble.
+      scrambleTick += dt;
+      if (scrambleTick > 90) {
+        scrambleTick = 0;
+        scrambleSeed = (scrambleSeed + 0.6180339887) % 1;
+      }
+
+      // Precompute cursor UV + aspect terms (only when disc has any effect).
+      const showGooey = intensity > 0.001 && grid;
+      const minWH = Math.min(w, h);
+      const aspectX = w / h;
+      const mUvX = showGooey ? (m.x / minWH) * aspectX : 0;
+      const mUvY = showGooey ? m.y / minWH : 0;
+      const R = GOOEY_RADIUS_UV * intensity;
+      const S = GOOEY_SOFTNESS_UV * intensity * 0.5;
+      const rLo = R - S;
+      const rHi = R + S;
+
+      // Highlight tint the source's revealed cells migrate toward. Sampled
+      // from good-fella.com's rendered hover — a warm near-white.
+      const HR = 240, HG = 200, HB = 175;
+
       for (let k = 0; k < cells.length; k++) {
         const c = cells[k];
-
-        // ambient shimmer: nudge one step along the ramp so shading stays
-        // coherent — shadows stay shadows, highlights stay highlights.
-        if (!prefersReduce && Math.random() < 0.006) {
-          const jitter = Math.random() < 0.5 ? -1 : 1;
-          c.ch = glyphAt(c.idx + jitter);
-        }
-
         const bb = c.b;
-        // Coral palette sampled from good-fella.com:
-        //   shadow  rgb(30, 17, 22) → highlight rgb(223, 93, 68)
-        const r = 30 + bb * 193;
-        const g = 17 + bb * 76;
-        const bl = 22 + bb * 46;
+
+        // Base coral color from the ramp:
+        //   shadow rgb(30, 17, 22) → highlight rgb(223, 93, 68)
+        let r = 30 + bb * 193;
+        let g = 17 + bb * 76;
+        let bl = 22 + bb * 46;
+        let ch = c.ch;
+
+        if (showGooey && grid) {
+          const cellUvX = (c.x / minWH) * aspectX;
+          const cellUvY = c.y / minWH;
+          const ddx = cellUvX - mUvX;
+          const ddy = cellUvY - mUvY;
+          const d = Math.sqrt(ddx * ddx + ddy * ddy);
+
+          // Per-cell hash + slow time wobble → ragged, gooey edge.
+          const i = Math.floor((c.x - grid.originX) / CELL_W);
+          const j = Math.floor((c.y - grid.originY) / CELL_H);
+          const idx = j * grid.cols + i;
+          const seed = grid.seed[idx] ?? 0.5;
+          const wobble = prefersReduce
+            ? 0
+            : Math.sin(timeSec * 1.5 + seed * 6.28318) * GOOEY_NOISE * 0.3;
+          const distorted = d + seed * GOOEY_NOISE * 2 + wobble;
+
+          if (distorted < rHi) {
+            // gooeyBlend = 1 - smoothstep(rLo, rHi, distorted)
+            const tt = Math.min(
+              1,
+              Math.max(0, (distorted - rLo) / Math.max(1e-4, rHi - rLo)),
+            );
+            const gooey = 1 - tt * tt * (3 - 2 * tt);
+            // sharpBlend = smoothstep(0, 0.15, gooey) — drives color and glyph swap.
+            const sh = Math.min(1, Math.max(0, gooey / 0.15));
+            const sharp = sh * sh * (3 - 2 * sh);
+
+            if (sharp > 0.01) {
+              // Scramble character index by hash(cell + scrambleSeed), scaled by
+              // luminance so dark cells scramble less.
+              const scramble = fract(
+                Math.sin((seed + scrambleSeed) * 12.9898) * 43758.5453,
+              );
+              const scrambled =
+                (c.idx + Math.floor(scramble * RAMP_LEN * bb)) % RAMP_LEN;
+              ch = glyphAt(scrambled);
+
+              // Blend base coral → warm highlight by sharp.
+              r += (HR - r) * sharp;
+              g += (HG - g) * sharp;
+              bl += (HB - bl) * sharp;
+            }
+          }
+        }
 
         ctx.fillStyle = `rgba(${r | 0},${g | 0},${bl | 0},1)`;
         // baseline offset — glyph ascent for Cascadia Mono ≈ FONT_PX,
         // so this seats the glyph inside the CELL_H box with 1-px top air.
-        ctx.fillText(c.ch, c.x, c.y + FONT_PX);
-      }
-
-      // Pass 2 — cursor cloud: iterate the grid cells within the cursor's
-      // bounding box. Silhouette cells get whitened + ramp-bumped; background
-      // cells get a probabilistic glyph spawn. Distance-falloff is a shared
-      // smoothstep so both effects share one soft, ragged edge.
-      if (m.active && !prefersReduce && grid) {
-        const R = INFLUENCE_RADIUS;
-        const R2 = R * R;
-        const minCol = Math.max(
-          0,
-          Math.floor((m.x - R - grid.originX) / CELL_W),
-        );
-        const maxCol = Math.min(
-          grid.cols - 1,
-          Math.ceil((m.x + R - grid.originX) / CELL_W),
-        );
-        const minRow = Math.max(
-          0,
-          Math.floor((m.y - R - grid.originY) / CELL_H),
-        );
-        const maxRow = Math.min(
-          grid.rows - 1,
-          Math.ceil((m.y + R - grid.originY) / CELL_H),
-        );
-        const WR = 245,
-          WG = 235,
-          WB = 225;
-        const ER = 60,
-          EG = 30,
-          EB = 30;
-
-        for (let j = minRow; j <= maxRow; j++) {
-          for (let i = minCol; i <= maxCol; i++) {
-            const gx = grid.originX + i * CELL_W;
-            const gy = grid.originY + j * CELL_H;
-            const ddx = gx - m.x;
-            const ddy = gy - m.y;
-            const dist2 = ddx * ddx + ddy * ddy;
-            if (dist2 >= R2) continue;
-            const u = 1 - Math.sqrt(dist2) / R;
-            const t = u * u * (3 - 2 * u); // smoothstep falloff
-            if (t < 0.05) continue;
-
-            const k = j * grid.cols + i;
-            const sIdx = grid.silIdx[k];
-            const s = grid.seed[k];
-
-            if (sIdx >= 0) {
-              // Whiten & bump an existing silhouette cell.
-              const c = cells[sIdx];
-              const bb = c.b;
-              let rr = 30 + bb * 193;
-              let gg = 17 + bb * 76;
-              let bb2 = 22 + bb * 46;
-              rr += (WR - rr) * t;
-              gg += (WG - gg) * t;
-              bb2 += (WB - bb2) * t;
-              const bump = Math.floor(t * 6);
-              const ch = bump > 0 ? glyphAt(c.idx + bump) : c.ch;
-              ctx.fillStyle = `rgba(${rr | 0},${gg | 0},${bb2 | 0},1)`;
-              ctx.fillText(ch, c.x, c.y + FONT_PX);
-            } else {
-              // Background cell — probabilistic spawn with ragged edge.
-              if (s > t * 0.9) continue;
-              // Glyph biased toward mid/high ramp indices; per-cell stable
-              // via seed so the same cell shows the same glyph frame-to-frame.
-              const rampT = Math.min(1, t * 0.7 + s * 0.5);
-              const rampIdx = Math.floor(
-                RAMP_LEN * 0.25 + rampT * (RAMP_LEN * 0.72),
-              );
-              const ch = glyphAt(rampIdx);
-              const rr = ER + (WR - ER) * t;
-              const gg = EG + (WG - EG) * t;
-              const bb2 = EB + (WB - EB) * t;
-              ctx.fillStyle = `rgba(${rr | 0},${gg | 0},${bb2 | 0},1)`;
-              ctx.fillText(ch, gx, gy + FONT_PX);
-            }
-          }
-        }
+        ctx.fillText(ch, c.x, c.y + FONT_PX);
       }
 
       raf = requestAnimationFrame(draw);
