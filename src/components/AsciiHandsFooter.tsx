@@ -39,9 +39,9 @@ const CELL_W = 10;
 const CELL_H = 10;
 // Source (good-fella.com ASCIIEffect) uniforms — expressed in UV space,
 // aspect-corrected. See docs/plan.md notes.
-const GOOEY_RADIUS_UV = 0.15;
-const GOOEY_SOFTNESS_UV = 0.08;
-const GOOEY_NOISE = 0.03;
+const GOOEY_RADIUS_UV = 0.32;
+const GOOEY_SOFTNESS_UV = 0.18;
+const GOOEY_NOISE = 0.06;
 // Intensity ease durations (ms) — cursor enter / leave.
 const INTENSITY_IN_MS = 200;
 const INTENSITY_OUT_MS = 250;
