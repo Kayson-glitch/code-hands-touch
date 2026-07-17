@@ -248,13 +248,11 @@ export function AsciiHandsFooter() {
         let dx = 0;
         let dy = 0;
         let ch = c.ch;
-        // Base layer: site orange, lightly modulated by cell density so
-        // denser glyphs sit a touch brighter than the sparse edges.
-        const bb = c.b;
-        const shade = 0.72 + 0.28 * bb; // 0.72 → 1.00
-        let r = Math.floor(ORANGE_R * shade);
-        let g = Math.floor(ORANGE_G * shade);
-        let bl = Math.floor(ORANGE_B * shade);
+        // Base layer: flat site orange. Density is carried entirely by the
+        // glyph shape (sparse ` .` vs dense `@`), not by the fill color.
+        let r = ORANGE_R;
+        let g = ORANGE_G;
+        let bl = ORANGE_B;
         const alpha = 1;
 
         if (m.active) {
