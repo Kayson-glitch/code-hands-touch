@@ -340,7 +340,7 @@ export function AsciiHandsFooter() {
             letterSpacing: "0",
           }}
         >
-          <p>© 2026</p>
+          
           <p>Good Fella Studio GmbH.</p>
           <p>Let the Fellas handle it.</p>
         </div>
