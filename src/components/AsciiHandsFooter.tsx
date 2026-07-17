@@ -1,10 +1,11 @@
 import { useEffect, useRef } from "react";
 import handsPairAsset from "@/assets/hands-pair.png.asset.json";
 
-// Ordered density ramp, dark → bright. Every glyph is one visual weight step;
-// a cell's index into this string comes from its normalized luminance.
+// Ordered density ramp, dark → bright. Leading spaces give real negative
+// space in the deepest shadows; each following glyph is one visual weight
+// step. Cell's index into this string comes from its normalized luminance.
 const RAMP =
-  " `.,'\":;!li|()/\\+=trcvnxzuoaeswmkhbdqpgy#%8&@MWNQ$B";
+  "   ..,':;!li|/\\+=tcvnxzuoaswmkhbdpg#%8&@MWNQ$B";
 const RAMP_LEN = RAMP.length;
 
 type Cell = {
@@ -71,22 +72,23 @@ function sampleImage(
       const p = (j * cols + i) * 4;
       const y =
         (0.2126 * data[p] + 0.7152 * data[p + 1] + 0.0722 * data[p + 2]) / 255;
-      if (y > 0.04) raws.push({ i, j, y });
+      if (y > 0.07) raws.push({ i, j, y });
     }
   }
   if (raws.length === 0) return [];
 
-  // Percentile stretch: 2nd..98th → 0..1, then mild gamma to lift midtones.
+  // Percentile stretch: 8th..92nd → 0..1 for dramatic dynamic range, then
+  // an S-curve (smoothstep) to crush shadows and punch highlights.
   const sorted = raws.map((r) => r.y).sort((a, b) => a - b);
-  const lo = sorted[Math.floor(sorted.length * 0.02)];
-  const hi = sorted[Math.floor(sorted.length * 0.98)];
+  const lo = sorted[Math.floor(sorted.length * 0.08)];
+  const hi = sorted[Math.floor(sorted.length * 0.92)];
   const span = Math.max(1e-4, hi - lo);
-  const gamma = 0.85;
 
   const cells: Cell[] = [];
   for (const r of raws) {
     const stretched = Math.min(1, Math.max(0, (r.y - lo) / span));
-    const b = Math.pow(stretched, gamma);
+    // smoothstep: 3x² − 2x³
+    const b = stretched * stretched * (3 - 2 * stretched);
     const idx = indexFor(b);
     cells.push({
       x: targetRect.x + r.i * CELL_W,
@@ -211,15 +213,14 @@ export function AsciiHandsFooter() {
         let dx = 0;
         let dy = 0;
         let ch = c.ch;
-        // Glyph already encodes brightness — keep alpha high across the
-        // whole hand, and let color ramp coral shadow → warm highlight on
-        // a gamma-lifted curve so midtones read warm, not muddy.
+        // Glyph already encodes brightness. Color ramps from deep coral
+        // shadow to warm near-white highlight; alpha widens the range so
+        // shadow glyphs recede and highlights pop.
         const bb = c.b;
-        const hue = Math.pow(bb, 0.9);
-        let r = Math.floor(90 + hue * 165); //  90 → 255
-        let g = Math.floor(26 + hue * 150); //  26 → 176
-        let bl = Math.floor(18 + hue * 142); //  18 → 160
-        let alpha = 0.75 + bb * 0.25; // 0.75 → 1.0
+        let r = Math.floor(50 + bb * 205); //  50 → 255
+        let g = Math.floor(14 + bb * 196); //  14 → 210
+        let bl = Math.floor(10 + bb * 180); //  10 → 190
+        let alpha = 0.45 + bb * 0.55; // 0.45 → 1.0
 
         if (m.active && !prefersReduce) {
           const ddx = c.x - m.x;

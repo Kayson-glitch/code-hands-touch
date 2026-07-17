@@ -1,27 +1,28 @@
-# Better luminance mapping + finer density ramp
+# Push chiaroscuro contrast harder
 
-The current renderer washes out midtones because (a) luminance is a raw RGB average, (b) the 8-bucket ramp jumps too coarsely, and (c) alpha and color both scale linearly with brightness so dark regions vanish while highlights bloom flat. Fix all three.
+Boost the dark-to-bright separation so shadows read as deep negative space and highlights punch out — closer to the reference site's dramatic Michelangelo lighting.
 
 ## Steps (single file: `src/components/AsciiHandsFooter.tsx`)
 
-1. **Perceptual luminance + histogram stretch**
-   - Sample luma via Rec. 709: `Y = 0.2126R + 0.7152G + 0.0722B`.
-   - During `sampleImage`, first pass collects raw Y for every included cell; compute the 2nd and 98th percentiles and remap to `[0,1]` (contrast stretch) so the darkest hand shadow → 0 and the brightest knuckle highlight → 1, regardless of the source image's exposure.
-   - Apply a mild gamma (~0.85) after stretching to lift midtones — this is where the reference site gets its readable "shading" band.
-   - Lower the visibility threshold to ~0.04 so faint forearm shadows still emit glyphs.
+1. **Tighter percentile stretch**
+   - Change stretch window from 2nd/98th → **8th/92nd** percentiles. Anything darker than the 8th percentile clamps to pure shadow; anything brighter than the 92nd clamps to full highlight. Bigger dynamic range → stronger contrast.
 
-2. **Finer, ordered density ramp (12 buckets)**
-   - Replace the 8-bucket padded-space ramp with a single ordered string of ~70 glyphs, dark→bright, e.g. `` ` . , ' : ; ! i | ( ) / \ + = t r c v n x z u o a e s w m k h b d q p g y # % 8 & @ M W N Q $ B ``. Each cell's index into this string = `floor(Y * (N-1))`, giving 70 steps of visual weight instead of 8.
-   - Ambient shimmer picks a neighboring index (±1) instead of a random glyph from a bucket, so shading stays coherent frame-to-frame.
+2. **S-curve remap, not just gamma**
+   - Replace the `pow(x, 0.85)` gamma lift with an S-curve: `smoothstep`-style `3x² - 2x³` applied after the stretch. This crushes lower midtones toward black and pulls upper midtones toward highlight — the exact "contrasty" look the reference has.
 
-3. **Decouple color, alpha, and glyph**
-   - Glyph choice already encodes brightness — stop double-encoding with alpha.
-   - Alpha stays high (0.75–1.0) across all visible cells; color still ramps coral (shadow `#5a1a12` → highlight `#ffb0a0`) but on a gamma-corrected curve so midtone hue reads warm, not muddy.
-   - Cursor light: additive lift on RGB (as today) plus a small index bump (+2..+4 steps up the ramp near cursor core) instead of the current +1 bucket. Push amplitude unchanged.
+3. **Two-tier drop below threshold**
+   - Raise the visibility threshold from `0.04` → `0.07` on raw luma so faint gray background pixels stop rendering as sparse dots (they currently create a low-level noise haze around the hands that flattens contrast).
 
-4. **Cell density tuning**
-   - Keep `CELL_W=7`, drop `CELL_H` to `9` for slightly denser vertical sampling — makes the fingers read as solid volumes rather than stripes.
+4. **Widen color range**
+   - Shadow floor darker: `rgb(50,14,10)` (was 90,26,18).
+   - Highlight ceiling brighter and warmer-white: `rgb(255,210,190)` (was 255,176,160).
+   - Alpha range widens: `0.45 + bb * 0.55` (was 0.75 + 0.25) so shadow glyphs recede while highlight glyphs pop.
+
+5. **Ramp weight redistribution**
+   - Front-load the ramp with more light-weight glyphs (spaces, dots, backticks) so the shadow half naturally has more visual "emptiness." New ramp:
+     ` `  ` `  ` `  `.`  `.`  `,`  `'`  `:`  `;`  `!`  `i`  `|`  `/`  `\`  `+`  `=`  `t`  `c`  `v`  `n`  `x`  `z`  `u`  `o`  `a`  `s`  `w`  `m`  `k`  `h`  `b`  `d`  `p`  `g`  `#`  `%`  `8`  `&`  `@`  `M`  `W`  `N`  `Q`  `$`  `B`
+     Three leading spaces mean the darkest ~7% of visible cells render nothing at all — real negative space where the hand shadow deepens.
 
 ## Out of scope
 
-Layout, copy, background, wordmark, and image asset stay as-is. No new dependencies.
+Cursor interaction physics, layout, copy, background, and image asset stay as-is. No new dependencies.
