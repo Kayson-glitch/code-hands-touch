@@ -51,9 +51,8 @@ const PARALLAX_LERP = 0.08;
 // Per-character hover response — mimics the source site where each glyph
 // tilts slightly and shifts by its own depth instead of the whole scene
 // translating as one block.
-const TILT_MAX_DEG = 6;
-const TILT_FALLOFF = 260;
-const DEPTH_PARALLAX = 0.6;
+const TILT_MAX_DEG = 8;
+const TILT_FALLOFF = 320;
 // Reveal disc smoothly chases the cursor (source-site behaviour). Smaller =
 // stickier follow, which naturally reads as a gentle hover-in latency without
 // a hard delay gate.
@@ -555,7 +554,7 @@ export function AsciiHandsFooter() {
       const offX = -((parallaxX - w * 0.5) / w) * PARALLAX_MAX * parallaxAmt;
       const offY = -((parallaxY - h * 0.5) / h) * PARALLAX_MAX * parallaxAmt;
       const hoverActive = intensity > 0.01 && !prefersReduce;
-      const tiltScale = TILT_MAX_DEG * (Math.PI / 180) * intensity;
+      const tiltScale = TILT_MAX_DEG * (Math.PI / 180) * intensity * intensity;
 
       // Highlight tint the revealed cells migrate toward. A soft near-white
       // with a lavender purple bias to match the #C5A9FF base color scheme.
@@ -690,7 +689,7 @@ export function AsciiHandsFooter() {
 
         // Per-cell depth parallax: brighter (foreground) cells drift more,
         // dark cells hold back — reads as pseudo-3D layering.
-        const depth = hoverActive ? 0.4 + bb * DEPTH_PARALLAX : 1;
+        const depth = hoverActive ? 0.35 + bb * 0.45 + c.armT * 0.35 : 1;
         const cellOffX = offX * depth;
         const cellOffY = offY * depth;
 
@@ -700,9 +699,10 @@ export function AsciiHandsFooter() {
           const dxc = c.x + CELL_W / 2 - discX;
           const dyc = c.y + CELL_H / 2 - discY;
           const dist = Math.hypot(dxc, dyc);
-          const falloff = Math.max(0, 1 - dist / TILT_FALLOFF);
+          const tRaw = Math.min(1, dist / TILT_FALLOFF);
+          const falloff = 1 - tRaw * tRaw * (3 - 2 * tRaw);
           if (falloff > 0) {
-            angle = (dxc / TILT_FALLOFF) * tiltScale * falloff;
+            angle = ((dxc + dyc * 0.35) / TILT_FALLOFF) * tiltScale * falloff;
           }
         }
 
