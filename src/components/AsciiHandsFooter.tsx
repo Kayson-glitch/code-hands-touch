@@ -49,8 +49,14 @@ const PARALLAX_LERP = 0.08;
 // Reveal disc smoothly chases the cursor (source-site behaviour). Smaller =
 // stickier follow, which naturally reads as a gentle hover-in latency without
 // a hard delay gate.
-const DISC_LERP = 0.08;
-const INTENSITY_LERP = 0.05;
+// Reveal easing adapts to pointer speed: slow moves keep the soft ink-diffusion
+// trail (MIN values), fast flicks tighten follow so the disc doesn't lag behind.
+const DISC_LERP_MIN = 0.08;
+const DISC_LERP_MAX = 0.22;
+const INTENSITY_LERP_MIN = 0.05;
+const INTENSITY_LERP_MAX = 0.12;
+// Pointer speed (CSS px/ms) at which the lerp reaches its MAX value.
+const SPEED_REF = 2.0;
 
 function glyphAt(idx: number) {
   const clamped = Math.min(RAMP_LEN - 1, Math.max(0, idx));
@@ -184,6 +190,8 @@ export function AsciiHandsFooter() {
     active: false,
   });
   const imageRef = useRef<HTMLImageElement | null>(null);
+  const mouseSpeedRef = useRef(0);
+  const lastMoveRef = useRef<{ x: number; y: number; t: number } | null>(null);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -235,9 +243,20 @@ export function AsciiHandsFooter() {
 
     const onMove = (e: MouseEvent) => {
       const rect = canvas.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+      const now = performance.now();
+      const last = lastMoveRef.current;
+      if (last) {
+        const dtEv = Math.max(1, now - last.t);
+        const dist = Math.hypot(x - last.x, y - last.y);
+        const inst = dist / dtEv;
+        mouseSpeedRef.current += (inst - mouseSpeedRef.current) * 0.35;
+      }
+      lastMoveRef.current = { x, y, t: now };
       mouseRef.current = {
-        x: e.clientX - rect.left,
-        y: e.clientY - rect.top,
+        x,
+        y,
         active: true,
       };
     };
@@ -245,14 +264,26 @@ export function AsciiHandsFooter() {
       mouseRef.current.active = false;
       mouseRef.current.x = -9999;
       mouseRef.current.y = -9999;
+      lastMoveRef.current = null;
     };
     const onTouch = (e: TouchEvent) => {
       if (e.touches.length === 0) return;
       const t = e.touches[0];
       const rect = canvas.getBoundingClientRect();
+      const x = t.clientX - rect.left;
+      const y = t.clientY - rect.top;
+      const now = performance.now();
+      const last = lastMoveRef.current;
+      if (last) {
+        const dtEv = Math.max(1, now - last.t);
+        const dist = Math.hypot(x - last.x, y - last.y);
+        const inst = dist / dtEv;
+        mouseSpeedRef.current += (inst - mouseSpeedRef.current) * 0.35;
+      }
+      lastMoveRef.current = { x, y, t: now };
       mouseRef.current = {
-        x: t.clientX - rect.left,
-        y: t.clientY - rect.top,
+        x,
+        y,
         active: true,
       };
     };
@@ -294,8 +325,15 @@ export function AsciiHandsFooter() {
       // Lerp intensity toward its target — no hard delay gate. The visual
       // hover-in latency comes from the disc position also lerping toward
       // the cursor (below), mirroring the source site's follow behaviour.
+      // Decay pointer speed when no move events arrive (~120ms half-life-ish).
+      mouseSpeedRef.current *= Math.exp(-dt / 120);
+      const speedK = Math.min(1, mouseSpeedRef.current / SPEED_REF);
+      const discLerp = DISC_LERP_MIN + (DISC_LERP_MAX - DISC_LERP_MIN) * speedK;
+      const intensityLerp =
+        INTENSITY_LERP_MIN + (INTENSITY_LERP_MAX - INTENSITY_LERP_MIN) * speedK;
+
       const targetIntensity = m.active && !prefersReduce ? 1 : 0;
-      intensity += (targetIntensity - intensity) * INTENSITY_LERP;
+      intensity += (targetIntensity - intensity) * intensityLerp;
 
       // Smooth-follow disc center. Initialise to the current cursor on the
       // first active frame so it doesn't fly in from (-9999, -9999).
@@ -304,8 +342,8 @@ export function AsciiHandsFooter() {
           discX = m.x;
           discY = m.y;
         } else {
-          discX += (m.x - discX) * DISC_LERP;
-          discY += (m.y - discY) * DISC_LERP;
+          discX += (m.x - discX) * discLerp;
+          discY += (m.y - discY) * discLerp;
         }
       }
 
