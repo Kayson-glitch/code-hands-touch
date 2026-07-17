@@ -668,6 +668,15 @@ export function AsciiHandsFooter() {
               // scrambled — preserves the light/dark structure.
               const lumaWeight = Math.pow(bb, 0.6);
               const sharpL = sharp * lumaWeight;
+              // Per-cell random tilt "woken up" by the reveal disc: stable
+              // phase from the cell seed, gated by sharp so outside the disc
+              // the glyph stays perfectly upright.
+              const raw = (seed - 0.5) * 2;
+              const shapedPhase = Math.sign(raw) * Math.pow(Math.abs(raw), 1.4);
+              revealTilt =
+                shapedPhase *
+                ((REVEAL_TILT_MAX_DEG * Math.PI) / 180) *
+                sharp;
               // Scramble character index by hash(cell + scrambleSeed). Unlike
               // the base render, we do NOT gate by luminance — every cell
               // inside the disc participates so dark silhouette cells surface
@@ -699,6 +708,7 @@ export function AsciiHandsFooter() {
 
         // Per-cell tilt: nearby glyphs rotate slightly, tangential to cursor.
         let angle = 0;
+        let revealTilt = 0;
         if (hoverActive) {
           const dxc = c.x + CELL_W / 2 - discX;
           const dyc = c.y + CELL_H / 2 - discY;
