@@ -39,7 +39,7 @@ const CELL_W = 10;
 const CELL_H = 10;
 // Source (good-fella.com ASCIIEffect) uniforms — expressed in UV space,
 // aspect-corrected. See docs/plan.md notes.
-const GOOEY_RADIUS_UV = 0.032;
+const GOOEY_RADIUS_UV = 0.0376;
 const GOOEY_SOFTNESS_UV = 0.023;
 const GOOEY_NOISE = 0.011;
 // Max whole-scene parallax drift on hover, in CSS pixels. Small — mirrors the
@@ -386,6 +386,11 @@ export function AsciiHandsFooter() {
             const sharp = sh * sh * (3 - 2 * sh);
 
             if (sharp > 0.01) {
+              // Modulate reveal by underlying cell luminance so dark
+              // silhouette areas stay dark and only lit areas get tinted /
+              // scrambled — preserves the light/dark structure.
+              const lumaWeight = Math.pow(bb, 0.6);
+              const sharpL = sharp * lumaWeight;
               // Scramble character index by hash(cell + scrambleSeed). Unlike
               // the base render, we do NOT gate by luminance — every cell
               // inside the disc participates so dark silhouette cells surface
@@ -393,23 +398,18 @@ export function AsciiHandsFooter() {
               const scramble = fract(
                 Math.sin((seed + scrambleSeed) * 12.9898) * 43758.5453,
               );
-              // Lift ramp index toward the dense end of the ramp so dark cells
-              // become legible cream glyphs on black inside the reveal disc.
-              // Preserve the cell's original brightness (c.idx). Only scramble
-              // the glyph within a small neighbourhood so dark areas stay dark
-              // and light areas stay light — the hover only re-shuffles and
-              // tints, it does not lift density.
               const scrambleOffset = Math.floor(
-                (scramble - 0.5) * RAMP_LEN * 0.25 * sharp,
+                (scramble - 0.5) * RAMP_LEN * 0.25 * sharpL,
               );
               const finalIdx =
                 ((c.idx + scrambleOffset) % RAMP_LEN + RAMP_LEN) % RAMP_LEN;
               ch = glyphAt(finalIdx);
 
-              // Blend base coral → warm highlight by sharp.
-              r += (HR - r) * sharp;
-              g += (HG - g) * sharp;
-              bl += (HB - bl) * sharp;
+              // Blend base coral → warm highlight, weighted by luminance so
+              // dark regions barely brighten.
+              r += (HR - r) * sharpL;
+              g += (HG - g) * sharpL;
+              bl += (HB - bl) * sharpL;
             }
           }
         }
