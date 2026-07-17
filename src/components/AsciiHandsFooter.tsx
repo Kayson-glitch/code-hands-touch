@@ -577,6 +577,7 @@ export function AsciiHandsFooter() {
         let ch = c.ch;
         let jitterX = 0;
         let jitterY = 0;
+        let revealTilt = 0;
 
         if (intro) {
           const frontDist = introProgress - c.armT;
@@ -708,7 +709,6 @@ export function AsciiHandsFooter() {
 
         // Per-cell tilt: nearby glyphs rotate slightly, tangential to cursor.
         let angle = 0;
-        let revealTilt = 0;
         if (hoverActive) {
           const dxc = c.x + CELL_W / 2 - discX;
           const dyc = c.y + CELL_H / 2 - discY;
@@ -722,7 +722,7 @@ export function AsciiHandsFooter() {
 
         const drawX = c.x + cellOffX + jitterX;
         const drawY = c.y + FONT_PX + cellOffY + jitterY;
-        const finalAngle = c.baseTilt + angle;
+        const finalAngle = angle + revealTilt;
         const useTransform = Math.abs(finalAngle) > 0.003;
 
         if (useTransform) {
