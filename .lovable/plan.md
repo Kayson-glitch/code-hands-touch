@@ -1,28 +1,28 @@
-# Push chiaroscuro contrast harder
+# Add a gradient/edge layer for sharper contours and highlight detail
 
-Boost the dark-to-bright separation so shadows read as deep negative space and highlights punch out — closer to the reference site's dramatic Michelangelo lighting.
+Overlay a second pass on top of the existing luminance grid: a Sobel gradient computed from the same downsampled image, driving both glyph choice and color on cells that sit on strong edges (finger silhouettes, knuckle ridges, wrist bones). This preserves the shading pass and adds crisp linework — the "layered" feel of the reference.
 
 ## Steps (single file: `src/components/AsciiHandsFooter.tsx`)
 
-1. **Tighter percentile stretch**
-   - Change stretch window from 2nd/98th → **8th/92nd** percentiles. Anything darker than the 8th percentile clamps to pure shadow; anything brighter than the 92nd clamps to full highlight. Bigger dynamic range → stronger contrast.
+1. **Compute a Sobel gradient during sampling**
+   - Inside `sampleImage`, after building the downsampled luma grid, run a 3×3 Sobel over the `cols × rows` buffer:
+     - `gx = (−1 0 +1 / −2 0 +2 / −1 0 +1)`, `gy = (−1 −2 −1 / 0 0 0 / +1 +2 +1)`.
+     - Store per-cell `mag = min(1, hypot(gx, gy) / normalizer)` (normalize by the 95th percentile of magnitudes so the range is stable across images) and `angle = atan2(gy, gx)`.
+   - Attach `edge: number` (magnitude 0..1) and `dir: 0|1|2|3` (quantized angle bin: horizontal `─`, vertical `│`, diag `╱`, anti-diag `╲`) to each `Cell`.
 
-2. **S-curve remap, not just gamma**
-   - Replace the `pow(x, 0.85)` gamma lift with an S-curve: `smoothstep`-style `3x² - 2x³` applied after the stretch. This crushes lower midtones toward black and pulls upper midtones toward highlight — the exact "contrasty" look the reference has.
+2. **Edge glyph selection**
+   - Add a small directional set: `["─", "│", "╱", "╲"]` (or ASCII fallbacks `-`, `|`, `/`, `\`).
+   - In the render loop, when `edge > 0.55`, override the ramp glyph with the direction-matched line character. When `edge > 0.35` and `< 0.55`, keep the ramp glyph but bump its index a few rungs up (edges read a bit brighter than surrounding shade).
 
-3. **Two-tier drop below threshold**
-   - Raise the visibility threshold from `0.04` → `0.07` on raw luma so faint gray background pixels stop rendering as sparse dots (they currently create a low-level noise haze around the hands that flattens contrast).
+3. **Highlight rim boost**
+   - On strong edges that also sit in the upper half of luminance (`edge > 0.5 && b > 0.55`), lift color toward warm white: mix current rgb 60/40 toward `#ffe4d4`, and drive alpha to 1.0. This is the "specular rim" on knuckles and fingertip tops.
 
-4. **Widen color range**
-   - Shadow floor darker: `rgb(50,14,10)` (was 90,26,18).
-   - Highlight ceiling brighter and warmer-white: `rgb(255,210,190)` (was 255,176,160).
-   - Alpha range widens: `0.45 + bb * 0.55` (was 0.75 + 0.25) so shadow glyphs recede while highlight glyphs pop.
+4. **Keep the existing pass intact**
+   - Body-fill glyphs, S-curve tonemap, coral color ramp, cursor light/push all stay as-is. Edges are additive detail on top, not a replacement.
 
-5. **Ramp weight redistribution**
-   - Front-load the ramp with more light-weight glyphs (spaces, dots, backticks) so the shadow half naturally has more visual "emptiness." New ramp:
-     ` `  ` `  ` `  `.`  `.`  `,`  `'`  `:`  `;`  `!`  `i`  `|`  `/`  `\`  `+`  `=`  `t`  `c`  `v`  `n`  `x`  `z`  `u`  `o`  `a`  `s`  `w`  `m`  `k`  `h`  `b`  `d`  `p`  `g`  `#`  `%`  `8`  `&`  `@`  `M`  `W`  `N`  `Q`  `$`  `B`
-     Three leading spaces mean the darkest ~7% of visible cells render nothing at all — real negative space where the hand shadow deepens.
+5. **Perf**
+   - Sobel runs once per resample (already the resize path), not per frame. No per-frame cost change beyond a couple of `if` checks per cell.
 
 ## Out of scope
 
-Cursor interaction physics, layout, copy, background, and image asset stay as-is. No new dependencies.
+Layout, copy, image asset, background, cursor interaction physics. No new dependencies.
