@@ -101,7 +101,7 @@ function sampleImage(
   const hi = sorted[Math.floor(sorted.length * 0.99)];
   const span = Math.max(1e-4, hi - lo);
   // gamma > 1 crushes midtones toward shadow → higher contrast, more volume.
-  const gamma = 1.15;
+  const gamma = 0.92;
 
   const cells: Cell[] = [];
   for (const r of raws) {
