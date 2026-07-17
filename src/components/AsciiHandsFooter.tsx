@@ -521,20 +521,20 @@ export function AsciiHandsFooter() {
       const offX = -((parallaxX - w * 0.5) / w) * PARALLAX_MAX * parallaxAmt;
       const offY = -((parallaxY - h * 0.5) / h) * PARALLAX_MAX * parallaxAmt;
 
-      // Highlight tint the source's revealed cells migrate toward. Sampled
-      // from good-fella.com's rendered hover — a warm near-white.
-      const HR = 240, HG = 200, HB = 175;
+      // Highlight tint the revealed cells migrate toward. A cool near-white
+      // with a purple bias to match the #733BFF base color scheme.
+      const HR = 235, HG = 225, HB = 255;
 
       for (let k = 0; k < cells.length; k++) {
         const c = cells[k];
         if (intro && c.armT > introProgress) continue;
         const bb = c.b;
 
-        // Base coral color from the ramp:
-        //   shadow rgb(30, 17, 22) → highlight rgb(223, 93, 68)
-        let r = 30 + bb * 193;
-        let g = 17 + bb * 76;
-        let bl = 22 + bb * 46;
+        // Base purple color from the ramp:
+        //   shadow rgb(20, 12, 35) → highlight rgb(115, 59, 255)
+        let r = 20 + bb * 95;
+        let g = 12 + bb * 47;
+        let bl = 35 + bb * 220;
         let ch = c.ch;
         let jitterX = 0;
         let jitterY = 0;
