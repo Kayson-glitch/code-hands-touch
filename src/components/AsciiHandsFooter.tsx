@@ -39,9 +39,9 @@ const CELL_W = 10;
 const CELL_H = 10;
 // Source (good-fella.com ASCIIEffect) uniforms — expressed in UV space,
 // aspect-corrected. See docs/plan.md notes.
-const GOOEY_RADIUS_UV = 0.15;
-const GOOEY_SOFTNESS_UV = 0.08;
-const GOOEY_NOISE = 0.03;
+const GOOEY_RADIUS_UV = 0.32;
+const GOOEY_SOFTNESS_UV = 0.18;
+const GOOEY_NOISE = 0.06;
 // Intensity ease durations (ms) — cursor enter / leave.
 const INTENSITY_IN_MS = 200;
 const INTENSITY_OUT_MS = 250;
@@ -353,14 +353,22 @@ export function AsciiHandsFooter() {
             const sharp = sh * sh * (3 - 2 * sh);
 
             if (sharp > 0.01) {
-              // Scramble character index by hash(cell + scrambleSeed), scaled by
-              // luminance so dark cells scramble less.
+              // Scramble character index by hash(cell + scrambleSeed). Unlike
+              // the base render, we do NOT gate by luminance — every cell
+              // inside the disc participates so dark silhouette cells surface
+              // as visible glyphs (matches source's ASCIIEffect scramble).
               const scramble = fract(
                 Math.sin((seed + scrambleSeed) * 12.9898) * 43758.5453,
               );
-              const scrambled =
-                (c.idx + Math.floor(scramble * RAMP_LEN * bb)) % RAMP_LEN;
-              ch = glyphAt(scrambled);
+              // Lift ramp index toward the dense end of the ramp so dark cells
+              // become legible cream glyphs on black inside the reveal disc.
+              const lifted = c.idx + sharp * (RAMP_LEN - 1 - c.idx) * 0.85;
+              const scrambleOffset = Math.floor(
+                scramble * RAMP_LEN * (0.3 + 0.7 * sharp),
+              );
+              const finalIdx =
+                (Math.floor(lifted) + scrambleOffset) % RAMP_LEN;
+              ch = glyphAt(finalIdx);
 
               // Blend base coral → warm highlight by sharp.
               r += (HR - r) * sharp;
