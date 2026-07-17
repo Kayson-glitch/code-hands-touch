@@ -554,7 +554,7 @@ export function AsciiHandsFooter() {
       const offX = -((parallaxX - w * 0.5) / w) * PARALLAX_MAX * parallaxAmt;
       const offY = -((parallaxY - h * 0.5) / h) * PARALLAX_MAX * parallaxAmt;
       const hoverActive = intensity > 0.01 && !prefersReduce;
-      const tiltScale = TILT_MAX_DEG * (Math.PI / 180) * intensity;
+      const tiltScale = TILT_MAX_DEG * (Math.PI / 180) * intensity * intensity;
 
       // Highlight tint the revealed cells migrate toward. A soft near-white
       // with a lavender purple bias to match the #C5A9FF base color scheme.
