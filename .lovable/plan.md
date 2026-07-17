@@ -1,45 +1,75 @@
 ## 目标
-参考上传视频（两只手臂分别从画面左右两侧缓慢伸入、指尖在画面中部即将相触），为现有 ASCII 手臂场景添加一次**入场动效**：初始画面为空，随后左右两条手臂以 ASCII glyph 的形式沿手臂骨架方向从边缘"生长"到位；完成后回落到当前 hover 交互模式。
+把入场"生长前沿"从当前的**直线**（沿 60° 单一轴投影）升级为**沿手臂骨架的曲线**，让前沿在肘部自然弯折、指尖收拢，视觉上像视频里手臂真的从边缘伸出来。
 
-## 交互与时序
-- **触发时机**：组件挂载后（下次首次可见即可，避免滚动出视口重复播放）。使用 `IntersectionObserver` 只播一次。
-- **总时长**：约 1600 ms（`prefers-reduced-motion` 时降为 0，直接展示成品）。
-- **阶段**：
-  1. 0–1400 ms：`revealProgress` 从 0 线性/eased 增长到 1，左右手臂各自沿手臂主轴由外向内逐格显影。
-  2. 1400–1600 ms：短暂的"到位"抖动（幅度极小的 sinusoidal settle），随后停止。
-- 入场结束后，hover reveal disc / parallax / scramble 全部照常工作；入场期间禁用 hover disc 以避免视觉冲突。
+## 现状与不足
+- `armT` 通过 `cell · (cosθ, -sinθ)` 单一直线方向投影，等值线是斜 60° 的直线。
+- 结果：前沿是一条直斜线扫过手臂，肘部/前臂/手掌被同一斜面切开，肘弯与手指部分同时显影，不像"伸出"。
 
-## 视觉规则
-- 每个 cell 根据其"沿手臂轴"的投影位置获得一个 0..1 的 `cellT`（0 = 手臂根部/画面边缘，1 = 指尖/画面中部）。到达阈值前该 cell 不绘制。
-- 左半侧 cells 用 `+ARM_ANGLE_DEG` 轴投影，右半侧用 `-ARM_ANGLE_DEG` 轴投影（复用现有 `ARM_ANGLE_DEG = 60` 常量与旋转公式，保证入场方向和 hover 破碎方向一致）。
-- 前沿附近（`|cellT - progress| < 0.08`）叠加：
-  - 亮度提升（向 `HR/HG/HB` 高光色靠近，权重 ~0.6）
-  - 字符 scramble（复用现有 scramble hash，让前沿是"墨迹涌出"的乱码，而不是静止 glyph）
-  - 轻微 x/y 抖动（±1 px，随 seed 抖动），营造喷溅感
-- 已经"生长完毕"的 cell 恢复正常渲染，融入现有系统。
+## 方案：分段骨架路径 + 最近点参数化
+为左右手臂各定义一条 3 段折线（近似骨架：肩→肘→腕→指尖），单位为 `targetRect` 归一化坐标 `(u, v)`，`u=0` 左边缘/`u=1` 右边缘，`v=0` 顶/`v=1` 底：
 
-## 技术细节（`src/components/AsciiHandsFooter.tsx`）
-1. 新增常量：`INTRO_DURATION_MS = 1600`, `INTRO_FRONT_WIDTH = 0.08`, `INTRO_EASE`（`t => 1 - Math.pow(1 - t, 3)` cubic-out，与视频里"先快后缓"的伸出手感一致）。
-2. 新增 ref：`introStartRef`（number | null）、`introDoneRef`（boolean）、`introVisibleRef`（IntersectionObserver 触发后置 true）。
-3. `resample()` 结束后，为每个 cell 预计算 `armT`：
-   - `sideSign = c.x < w/2 ? 1 : -1`
-   - 投影 `along = (c.x - edgeX) * cos(armRad) * sideSign + (c.y - baseY) * (-sin(armRad))`
-   - 归一化到 0..1（用整张手臂投影 min/max）。将 `armT` 存到 cell 上（扩展 `Cell` 类型）。
-4. 渲染循环：
-   - 若 `!introDoneRef.current && introVisibleRef.current`：`progress = INTRO_EASE(clamp((now - introStart)/INTRO_DURATION_MS))`，到 1 时置 `introDoneRef = true`。
-   - 若 `progress < 1`：
-     - 强制 `showGooey = false`（临时关闭 hover disc）
-     - 每个 cell：若 `armT > progress` → `continue`；否则 `frontDist = progress - armT`；若 `frontDist < INTRO_FRONT_WIDTH` → 施加亮度/scramble/抖动叠加。
-5. IntersectionObserver 挂在 canvas 元素上，`threshold: 0.25`，进入视口设置 `introStartRef = performance.now()` 并解除观察。
-6. `prefersReduce` 时直接 `introDoneRef = true`、`progress = 1`，跳过入场。
+- **左臂**（4 个控制点，累计弧长 → armT）：
+  - `P0 = (0.00, 0.90)` 肩/根（画面左下）
+  - `P1 = (0.22, 0.62)` 肘
+  - `P2 = (0.40, 0.48)` 腕
+  - `P3 = (0.50, 0.50)` 指尖（接近画面中部）
+- **右臂**：水平镜像。
+
+对每个 cell：
+1. 将其像素坐标转换到归一化 `(u, v)`。
+2. 根据 `u < 0.5` 选左臂骨架，否则右臂。
+3. 用 `pointToPolyline` 求该 cell 到骨架折线的**最近点及其累计弧长比 `s ∈ [0, 1]`**；`armT = s`。
+4. **横向偏差惩罚**（可选）：`armT = s + k * perpDist / totalArc`（`k ≈ 0.15`）——离骨架越远的 cell 显影稍晚，让"墨迹"沿骨架先流出，肌肉/边缘略滞后，进一步强化"从骨架长出来"的观感。
+
+## 实现细节（仅改 `src/components/AsciiHandsFooter.tsx`）
+1. 新增常量：
+   ```ts
+   const ARM_SKELETON_L: [number, number][] = [
+     [0.00, 0.90], [0.22, 0.62], [0.40, 0.48], [0.50, 0.50],
+   ];
+   // 右臂 = 左臂横向镜像 (1 - u)
+   const SKELETON_PERP_WEIGHT = 0.15;
+   ```
+2. 在 `sampleImage` 计算 `armT` 的分支中，替换现有"单一轴投影 + min/max"逻辑为：
+   - 预计算骨架累计弧长 `segLen[]` / `totalLen`。
+   - 遍历 cell：`(u, v)` 归一化 → 选左/右骨架 → 遍历各段做点到线段最近点计算，记录最小 `perpDist`、对应弧长比 `s` → `armT = clamp01(s + SKELETON_PERP_WEIGHT * perpDist / 1.0)`。
+3. 其余入场逻辑（`INTRO_DURATION_MS`、front-width、scramble/亮度/抖动、hover 禁用）**保持不变**——这次只改 `armT` 的定义。
+4. `ARM_ANGLE_DEG` 依然用于 hover 的**破碎噪声方向**，只是不再决定入场路径。两者解耦。
 
 ## 不改动
-- 现有 hover reveal disc（radius/softness/noise）
-- 动态 easing / 手臂方向噪声 / parallax / scramble tick / 字体与颜色系统
-- 采样管线（`sampleImage`、grid 数据结构；仅扩展 Cell 属性一个 `armT` 字段）
+- 采样管线、`Cell` 结构（`armT` 字段已存在，只改赋值方式）。
+- Hover reveal disc、动态 easing、parallax、scramble tick、字体、颜色。
+- `prefers-reduced-motion` 分支。
 
 ## 验证
 - `bun run build` 通过。
-- Playwright：加载页面后立刻截图 3 帧（0.3s / 0.9s / 1.6s），确认手臂由外向内逐步显影，前沿有高光。
-- 入场结束后 hover 一次，确认破碎 disc 正常工作（未被入场逻辑意外禁用）。
-- 打开 `prefers-reduced-motion: reduce`，确认直接呈现完整画面无动画。
+- Playwright 截取 0.4s / 0.8s / 1.2s / 1.6s 四帧：
+  - 0.4s：只有肩/前臂根部显影，肘及以后仍隐藏。
+  - 0.8s：前沿位于肘部附近，前臂已完整。
+  - 1.2s：前沿到手腕，手掌开始出现。
+  - 1.6s：指尖完成，进入 hover 模式。
+- 拖动鼠标验证 hover 破碎方向仍正确（`ARM_ANGLE_DEG` 未失效）。
+- 若骨架控制点与实际图像稍有偏差，仅调 `ARM_SKELETON_L` 数值即可，无需改结构。
+
+## 技术备注（折线最近点简要伪代码）
+```ts
+function nearestOnPolyline(pu, pv, pts, segLen, totalLen) {
+  let best = { s: 0, perp: Infinity };
+  let acc = 0;
+  for (let i = 0; i < pts.length - 1; i++) {
+    const [ax, ay] = pts[i], [bx, by] = pts[i + 1];
+    const dx = bx - ax, dy = by - ay;
+    const L2 = dx * dx + dy * dy;
+    let t = ((pu - ax) * dx + (pv - ay) * dy) / Math.max(1e-6, L2);
+    t = Math.max(0, Math.min(1, t));
+    const cx = ax + t * dx, cy = ay + t * dy;
+    const perp = Math.hypot(pu - cx, pv - cy);
+    if (perp < best.perp) {
+      best.perp = perp;
+      best.s = (acc + t * segLen[i]) / totalLen;
+    }
+    acc += segLen[i];
+  }
+  return best;
+}
+```
