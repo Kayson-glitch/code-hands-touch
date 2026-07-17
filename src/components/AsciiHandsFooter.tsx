@@ -521,22 +521,20 @@ export function AsciiHandsFooter() {
       const offX = -((parallaxX - w * 0.5) / w) * PARALLAX_MAX * parallaxAmt;
       const offY = -((parallaxY - h * 0.5) / h) * PARALLAX_MAX * parallaxAmt;
 
-      // Highlight tint the revealed cells migrate toward. A cool near-white
-      // with a purple bias to match the #7643DE base color scheme.
-      const HR = 235, HG = 225, HB = 255;
+      // Highlight tint the revealed cells migrate toward. A soft near-white
+      // with a lavender purple bias to match the #C5A9FF base color scheme.
+      const HR = 250, HG = 245, HB = 255;
 
       for (let k = 0; k < cells.length; k++) {
         const c = cells[k];
         if (intro && c.armT > introProgress) continue;
         const bb = c.b;
 
-        // Base purple derived from the original orange (#DF5D44) by keeping
-        // similar HSV saturation and shifting hue to purple, with raised value
-        // for brightness:
-        //   shadow rgb(40, 28, 75) → highlight rgb(136, 77, 255)
-        let r = 40 + bb * 96;
-        let g = 28 + bb * 49;
-        let bl = 75 + bb * 180;
+        // Base lavender purple color from the ramp:
+        //   shadow rgb(45, 35, 70) → highlight rgb(197, 169, 255)
+        let r = 45 + bb * 152;
+        let g = 35 + bb * 134;
+        let bl = 70 + bb * 185;
         let ch = c.ch;
         let jitterX = 0;
         let jitterY = 0;
