@@ -41,7 +41,7 @@ const CELL_H = 10;
 // aspect-corrected. See docs/plan.md notes.
 const GOOEY_RADIUS_UV = 0.0376;
 const GOOEY_SOFTNESS_UV = 0.023;
-const GOOEY_NOISE = 0.016;
+const GOOEY_NOISE = 0.018;
 // Max whole-scene parallax drift on hover, in CSS pixels. Small — mirrors the
 // source's "the picture leans toward the finger" feel.
 const PARALLAX_MAX = 8;
