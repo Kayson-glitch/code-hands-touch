@@ -242,42 +242,22 @@ function sampleImage(
       armT: 0,
     });
   }
-  // Compute per-cell armT: project each cell onto its side's arm axis so that
-  // 0 = outer edge (arm root) and 1 = center (fingertip). Left-half cells use
-  // the +ARM angle, right-half cells use the mirrored angle.
+  // Compute per-cell armT by projecting onto the nearest arm-skeleton
+  // polyline. Left-half cells snap to the human arm skeleton, right-half to
+  // the robot arm skeleton. The along-curve arclength gives armT ∈ [0,1];
+  // perpendicular distance adds a small delay so ink flows along the bone
+  // before spreading to the silhouette edge.
   {
-    const armRad = (ARM_ANGLE_DEG * Math.PI) / 180;
     const cx = targetRect.x + targetRect.w * 0.5;
-    const cAng = Math.cos(armRad);
-    const sAng = Math.sin(armRad);
-    let lMin = Infinity, lMax = -Infinity, rMin = Infinity, rMax = -Infinity;
-    const projs = new Float32Array(cells.length);
+    const polyL = buildPolyline(ARM_SKELETON_L);
+    const polyR = buildPolyline(ARM_SKELETON_R);
     for (let k = 0; k < cells.length; k++) {
       const c = cells[k];
-      const isLeft = c.x < cx;
-      const sideSign = isLeft ? 1 : -1;
-      const dx = (c.x - (isLeft ? targetRect.x : targetRect.x + targetRect.w));
-      const dy = c.y - (targetRect.y + targetRect.h);
-      // along-arm axis: (cos*sideSign, -sin). Since roots are at outer edge
-      // and bottom, cells closer to root have smaller projection.
-      const p = dx * cAng * sideSign + dy * -sAng;
-      projs[k] = p;
-      if (isLeft) {
-        if (p < lMin) lMin = p;
-        if (p > lMax) lMax = p;
-      } else {
-        if (p < rMin) rMin = p;
-        if (p > rMax) rMax = p;
-      }
-    }
-    const lSpan = Math.max(1e-4, lMax - lMin);
-    const rSpan = Math.max(1e-4, rMax - rMin);
-    for (let k = 0; k < cells.length; k++) {
-      const c = cells[k];
-      const isLeft = c.x < cx;
-      const t = isLeft
-        ? (projs[k] - lMin) / lSpan
-        : (projs[k] - rMin) / rSpan;
+      const u = (c.x - targetRect.x) / Math.max(1, targetRect.w);
+      const v = (c.y - targetRect.y) / Math.max(1, targetRect.h);
+      const poly = c.x < cx ? polyL : polyR;
+      const { s, perp } = nearestOnPolyline(u, v, poly);
+      const t = s + SKELETON_PERP_WEIGHT * perp;
       c.armT = Math.min(1, Math.max(0, t));
     }
   }
