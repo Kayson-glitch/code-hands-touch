@@ -377,9 +377,9 @@ export function AsciiHandsFooter() {
             : Math.sin(timeSec * 0.5 + seed * 6.28318) * GOOEY_NOISE * 0.6;
           // High-frequency spatial hash — creates the fine chipped/broken texture.
           const highFreq =
-            (fract(Math.sin(seed * 45.7) * 123.45) - 0.5) * GOOEY_NOISE * 0.5;
+            (fract(Math.sin(seed * 45.7) * 123.45) - 0.5) * GOOEY_NOISE * 0.8;
           const microFract =
-            (fract(Math.sin(seed * 137.9) * 437.58) - 0.5) * GOOEY_NOISE * 0.25;
+            (fract(Math.sin(seed * 137.9) * 437.58) - 0.5) * GOOEY_NOISE * 0.4;
           const distorted = d + lowFreq + wobble + highFreq + microFract;
 
           if (distorted < rHi) {
