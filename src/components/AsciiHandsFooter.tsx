@@ -157,6 +157,17 @@ function fract(x: number) {
   return x - Math.floor(x);
 }
 
+// Piecewise S-curve remap: darken the deep shadows while lifting the
+// lighter half of the dark region, and brighten the bright highlights while
+// dropping the darker half of the light region. Keeps the mid-point fixed.
+function remapLuminance(b: number) {
+  const t = Math.min(1, Math.max(0, b));
+  if (t < 0.5) {
+    return 0.5 * Math.pow(t * 2, 0.7);
+  }
+  return 1 - 0.5 * Math.pow(2 * (1 - t), 0.7);
+}
+
 async function loadImage(src: string): Promise<HTMLImageElement> {
   return new Promise((resolve, reject) => {
     const img = new Image();
@@ -571,9 +582,13 @@ export function AsciiHandsFooter() {
 
         // Base lavender purple color from the ramp:
         //   shadow rgb(45, 35, 70) → highlight rgb(197, 169, 255)
-        let r = 45 + bb * 152;
-        let g = 35 + bb * 134;
-        let bl = 70 + bb * 185;
+        // Apply a piecewise S-curve to luminance so dark and light regions
+        // each get more internal contrast (deep shadows darker, bright
+        // highlights lighter) while the mid-point stays put.
+        const b2 = remapLuminance(bb);
+        let r = 45 + b2 * 152;
+        let g = 35 + b2 * 134;
+        let bl = 70 + b2 * 185;
         let ch = c.ch;
         let jitterX = 0;
         let jitterY = 0;
