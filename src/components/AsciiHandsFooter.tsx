@@ -46,7 +46,7 @@ const GOOEY_SOFTNESS_UV = 0.023;
 const GOOEY_NOISE = 0.018;
 // Max whole-scene parallax drift on hover, in CSS pixels. Small — mirrors the
 // source's "the picture leans toward the finger" feel.
-const PARALLAX_MAX = 8;
+const PARALLAX_MAX = 18;
 const PARALLAX_LERP = 0.08;
 // Per-character hover response — mimics the source site where each glyph
 // tilts slightly and shifts by its own depth instead of the whole scene
@@ -703,7 +703,7 @@ export function AsciiHandsFooter() {
 
         // Per-cell depth parallax: brighter (foreground) cells drift more,
         // dark cells hold back — reads as pseudo-3D layering.
-        const depth = hoverActive ? 0.35 + bb * 0.45 + c.armT * 0.35 : 1;
+        const depth = hoverActive ? 0.25 + bb * 0.65 + c.armT * 0.55 : 1;
         const cellOffX = offX * depth;
         const cellOffY = offY * depth;
 
