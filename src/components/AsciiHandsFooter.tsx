@@ -65,22 +65,32 @@ function sampleImage(
   off.height = rows;
   const octx = off.getContext("2d", { willReadFrequently: true })!;
   octx.imageSmoothingEnabled = true;
+  // Sub-pixel blur before downsample softens the alpha edge so it doesn't
+  // land on the coarse 10-px grid as a hard step.
+  (octx as unknown as { filter: string }).filter = "blur(0.6px)";
   if (mirror) {
     octx.translate(cols, 0);
     octx.scale(-1, 1);
   }
   octx.drawImage(img, 0, 0, cols, rows);
+  (octx as unknown as { filter: string }).filter = "none";
   const data = octx.getImageData(0, 0, cols, rows).data;
 
   // Pass 1: perceptual luma (Rec.709) for every non-background cell.
-  type Raw = { i: number; j: number; y: number };
+  type Raw = { i: number; j: number; y: number; a: number };
   const raws: Raw[] = [];
   for (let j = 0; j < rows; j++) {
     for (let i = 0; i < cols; i++) {
       const p = (j * cols + i) * 4;
+      const a = data[p + 3] / 255;
+      // Alpha gate — fully-transparent background never gets a glyph.
+      if (a < 0.18) continue;
+      // Premultiply luma by alpha so non-premultiplied PNG edges (where RGB
+      // is dark but alpha low) don't read as "deep shadow" jaggies.
       const y =
-        (0.2126 * data[p] + 0.7152 * data[p + 1] + 0.0722 * data[p + 2]) / 255;
-      if (y > 0.06) raws.push({ i, j, y });
+        (a * (0.2126 * data[p] + 0.7152 * data[p + 1] + 0.0722 * data[p + 2])) /
+        255;
+      if (y > 0.04) raws.push({ i, j, y, a });
     }
   }
   if (raws.length === 0) return [];
@@ -96,7 +106,10 @@ function sampleImage(
   const cells: Cell[] = [];
   for (const r of raws) {
     const stretched = Math.min(1, Math.max(0, (r.y - lo) / span));
-    const b = Math.pow(stretched, gamma);
+    // Feather partial-alpha cells toward the low end of the ramp so the
+    // silhouette edge dissolves into sparser glyphs instead of stepping.
+    const feather = Math.pow(r.a, 0.65);
+    const b = Math.pow(stretched, gamma) * feather;
     const idx = indexFor(b);
     cells.push({
       x: targetRect.x + r.i * CELL_W,
