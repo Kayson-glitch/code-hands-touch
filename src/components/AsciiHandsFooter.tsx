@@ -8,12 +8,18 @@ const RAMP =
   "   ..,':;!li|/\\+=tcvnxzuoaswmkhbdpg#%8&@MWNQ$B";
 const RAMP_LEN = RAMP.length;
 
+// Directional glyphs indexed by quantized gradient angle bin.
+// 0: horizontal, 1: anti-diag, 2: vertical, 3: diag
+const EDGE_GLYPHS = ["-", "\\", "|", "/"];
+
 type Cell = {
   x: number;
   y: number;
   b: number; // 0..1 normalized luminance (post stretch + gamma)
   idx: number; // ramp index derived from b
   ch: string;
+  edge: number; // 0..1 gradient magnitude
+  dir: 0 | 1 | 2 | 3; // quantized gradient direction
 };
 
 const CELL_W = 7;
@@ -64,15 +70,35 @@ function sampleImage(
   octx.drawImage(img, 0, 0, cols, rows);
   const data = octx.getImageData(0, 0, cols, rows).data;
 
-  // Pass 1: perceptual luma (Rec.709) for every non-background cell.
-  type Raw = { i: number; j: number; y: number };
-  const raws: Raw[] = [];
+  // Pass 1: perceptual luma (Rec.709) for the entire grid — keep the full
+  // buffer so Sobel can sample neighbors, including cells below threshold.
+  const luma = new Float32Array(cols * rows);
   for (let j = 0; j < rows; j++) {
     for (let i = 0; i < cols; i++) {
       const p = (j * cols + i) * 4;
-      const y =
+      luma[j * cols + i] =
         (0.2126 * data[p] + 0.7152 * data[p + 1] + 0.0722 * data[p + 2]) / 255;
-      if (y > 0.07) raws.push({ i, j, y });
+    }
+  }
+
+  type Raw = { i: number; j: number; y: number; gx: number; gy: number; mag: number };
+  const raws: Raw[] = [];
+  for (let j = 0; j < rows; j++) {
+    for (let i = 0; i < cols; i++) {
+      const y = luma[j * cols + i];
+      if (y <= 0.07) continue;
+      // 3×3 Sobel — clamp at borders.
+      const jm = j > 0 ? j - 1 : j;
+      const jp = j < rows - 1 ? j + 1 : j;
+      const im = i > 0 ? i - 1 : i;
+      const ip = i < cols - 1 ? i + 1 : i;
+      const tl = luma[jm * cols + im], tc = luma[jm * cols + i], tr = luma[jm * cols + ip];
+      const ml = luma[j * cols + im],                          mr = luma[j * cols + ip];
+      const bl = luma[jp * cols + im], bc = luma[jp * cols + i], br = luma[jp * cols + ip];
+      const gx = -tl - 2 * ml - bl + tr + 2 * mr + br;
+      const gy = -tl - 2 * tc - tr + bl + 2 * bc + br;
+      const mag = Math.hypot(gx, gy);
+      raws.push({ i, j, y, gx, gy, mag });
     }
   }
   if (raws.length === 0) return [];
@@ -84,18 +110,32 @@ function sampleImage(
   const hi = sorted[Math.floor(sorted.length * 0.92)];
   const span = Math.max(1e-4, hi - lo);
 
+  // Normalize gradient magnitude by the 95th percentile so edge intensity
+  // is stable across images and resolutions.
+  const mags = raws.map((r) => r.mag).sort((a, b) => a - b);
+  const magNorm = Math.max(1e-4, mags[Math.floor(mags.length * 0.95)]);
+
   const cells: Cell[] = [];
   for (const r of raws) {
     const stretched = Math.min(1, Math.max(0, (r.y - lo) / span));
     // smoothstep: 3x² − 2x³
     const b = stretched * stretched * (3 - 2 * stretched);
     const idx = indexFor(b);
+    const edge = Math.min(1, r.mag / magNorm);
+    // Quantize angle into 4 bins matching EDGE_GLYPHS.
+    // atan2 domain (−π, π]; shift by π/8 so bin centers land on cardinals.
+    let a = Math.atan2(r.gy, r.gx);
+    if (a < 0) a += Math.PI; // gradient direction is orientation, not signed
+    // a ∈ [0, π); map to 4 bins.
+    const dir = (Math.floor(((a + Math.PI / 8) / Math.PI) * 4) % 4) as 0 | 1 | 2 | 3;
     cells.push({
       x: targetRect.x + r.i * CELL_W,
       y: targetRect.y + r.j * CELL_H,
       b,
       idx,
       ch: glyphAt(idx),
+      edge,
+      dir,
     });
   }
   return cells;
@@ -205,7 +245,7 @@ export function AsciiHandsFooter() {
 
         // ambient shimmer: nudge one step along the ramp so shading stays
         // coherent — shadows stay shadows, highlights stay highlights.
-        if (!prefersReduce && Math.random() < 0.006) {
+        if (!prefersReduce && c.edge < 0.55 && Math.random() < 0.006) {
           const jitter = Math.random() < 0.5 ? -1 : 1;
           c.ch = glyphAt(c.idx + jitter);
         }
@@ -221,6 +261,25 @@ export function AsciiHandsFooter() {
         let g = Math.floor(14 + bb * 196); //  14 → 210
         let bl = Math.floor(10 + bb * 180); //  10 → 190
         let alpha = 0.45 + bb * 0.55; // 0.45 → 1.0
+
+        // Edge layer: strong edges become directional line glyphs; medium
+        // edges bump a few rungs up the density ramp so contours read
+        // brighter than surrounding shade.
+        if (c.edge > 0.55) {
+          ch = EDGE_GLYPHS[c.dir];
+        } else if (c.edge > 0.35) {
+          ch = glyphAt(c.idx + 3);
+        }
+
+        // Specular rim: strong edge on the bright side of the tonemap →
+        // mix toward warm white and force full alpha.
+        if (c.edge > 0.5 && bb > 0.55) {
+          const t = 0.4;
+          r = Math.floor(r * (1 - t) + 255 * t);
+          g = Math.floor(g * (1 - t) + 228 * t);
+          bl = Math.floor(bl * (1 - t) + 212 * t);
+          alpha = 1;
+        }
 
         if (m.active && !prefersReduce) {
           const ddx = c.x - m.x;
