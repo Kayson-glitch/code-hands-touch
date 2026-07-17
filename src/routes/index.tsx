@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { AsciiHandsFooter } from "@/components/AsciiHandsFooter";
+import PrismaticBurst from "@/components/PrismaticBurst";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -22,5 +23,20 @@ export const Route = createFileRoute("/")({
 });
 
 function Index() {
-  return <AsciiHandsFooter />;
+  return (
+    <div className="relative">
+      <div
+        aria-hidden
+        className="pointer-events-none fixed inset-0 z-10"
+      >
+        <PrismaticBurst
+          intensity={2}
+          speed={0.5}
+          distort={1}
+          mixBlendMode="lighten"
+        />
+      </div>
+      <AsciiHandsFooter />
+    </div>
+  );
 }
