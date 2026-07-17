@@ -69,6 +69,69 @@ const INTRO_DURATION_MS = 1600;
 const INTRO_FRONT_WIDTH = 0.08;
 const introEase = (t: number) => 1 - Math.pow(1 - t, 3);
 
+// Arm skeleton polylines in normalized targetRect coords (u=0 left..1 right,
+// v=0 top..1 bottom). Calibrated against hands-pair.png: human arm enters
+// bottom-left horizontally, robot arm enters top-right diagonally.
+const ARM_SKELETON_L: [number, number][] = [
+  [0.00, 0.66], // shoulder/root at left edge
+  [0.12, 0.62], // upper forearm
+  [0.28, 0.52], // elbow area
+  [0.40, 0.44], // wrist
+  [0.48, 0.48], // fingertip
+];
+const ARM_SKELETON_R: [number, number][] = [
+  [1.00, 0.15], // shoulder/root at top-right
+  [0.90, 0.28], // upper arm
+  [0.78, 0.38], // elbow
+  [0.62, 0.44], // wrist
+  [0.52, 0.48], // fingertip
+];
+// Cells further from the skeleton curve show up slightly later, so ink appears
+// to flow along the bone before spreading outward to the silhouette edge.
+const SKELETON_PERP_WEIGHT = 0.18;
+
+function buildPolyline(pts: [number, number][]) {
+  const segLen: number[] = [];
+  let total = 0;
+  for (let i = 0; i < pts.length - 1; i++) {
+    const dx = pts[i + 1][0] - pts[i][0];
+    const dy = pts[i + 1][1] - pts[i][1];
+    const L = Math.hypot(dx, dy);
+    segLen.push(L);
+    total += L;
+  }
+  return { pts, segLen, total };
+}
+
+function nearestOnPolyline(
+  pu: number,
+  pv: number,
+  poly: { pts: [number, number][]; segLen: number[]; total: number },
+) {
+  let bestPerp = Infinity;
+  let bestS = 0;
+  let acc = 0;
+  for (let i = 0; i < poly.pts.length - 1; i++) {
+    const [ax, ay] = poly.pts[i];
+    const [bx, by] = poly.pts[i + 1];
+    const dx = bx - ax;
+    const dy = by - ay;
+    const L2 = Math.max(1e-6, dx * dx + dy * dy);
+    let t = ((pu - ax) * dx + (pv - ay) * dy) / L2;
+    if (t < 0) t = 0;
+    else if (t > 1) t = 1;
+    const cx = ax + t * dx;
+    const cy = ay + t * dy;
+    const perp = Math.hypot(pu - cx, pv - cy);
+    if (perp < bestPerp) {
+      bestPerp = perp;
+      bestS = (acc + t * poly.segLen[i]) / Math.max(1e-6, poly.total);
+    }
+    acc += poly.segLen[i];
+  }
+  return { s: bestS, perp: bestPerp };
+}
+
 function glyphAt(idx: number) {
   const clamped = Math.min(RAMP_LEN - 1, Math.max(0, idx));
   return RAMP.charAt(clamped);
