@@ -243,6 +243,9 @@ export function AsciiHandsFooter() {
   const imageRef = useRef<HTMLImageElement | null>(null);
   const mouseSpeedRef = useRef(0);
   const lastMoveRef = useRef<{ x: number; y: number; t: number } | null>(null);
+  const introStartRef = useRef<number | null>(null);
+  const introDoneRef = useRef(false);
+  const introVisibleRef = useRef(false);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -252,6 +255,10 @@ export function AsciiHandsFooter() {
     let running = true;
 
     const prefersReduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (prefersReduce) {
+      introDoneRef.current = true;
+      introVisibleRef.current = true;
+    }
 
     const resample = () => {
       const img = imageRef.current;
@@ -291,6 +298,21 @@ export function AsciiHandsFooter() {
 
     const ro = new ResizeObserver(resize);
     ro.observe(canvas);
+
+    // Trigger intro on first visibility.
+    const io = new IntersectionObserver(
+      (entries) => {
+        for (const e of entries) {
+          if (e.isIntersecting && !introVisibleRef.current) {
+            introVisibleRef.current = true;
+            introStartRef.current = performance.now();
+            io.disconnect();
+          }
+        }
+      },
+      { threshold: 0.25 },
+    );
+    io.observe(canvas);
 
     const onMove = (e: MouseEvent) => {
       const rect = canvas.getBoundingClientRect();
@@ -373,6 +395,22 @@ export function AsciiHandsFooter() {
       const grid = gridRef.current;
       const m = mouseRef.current;
 
+      // Intro reveal progress (0..1). Cells with armT > progress are skipped.
+      let introProgress = 1;
+      if (!introDoneRef.current) {
+        if (introVisibleRef.current && introStartRef.current != null) {
+          const raw = Math.min(
+            1,
+            Math.max(0, (now - introStartRef.current) / INTRO_DURATION_MS),
+          );
+          introProgress = introEase(raw);
+          if (raw >= 1) introDoneRef.current = true;
+        } else {
+          introProgress = 0;
+        }
+      }
+      const intro = introProgress < 1;
+
       // Lerp intensity toward its target — no hard delay gate. The visual
       // hover-in latency comes from the disc position also lerping toward
       // the cursor (below), mirroring the source site's follow behaviour.
@@ -383,7 +421,8 @@ export function AsciiHandsFooter() {
       const intensityLerp =
         INTENSITY_LERP_MIN + (INTENSITY_LERP_MAX - INTENSITY_LERP_MIN) * speedK;
 
-      const targetIntensity = m.active && !prefersReduce ? 1 : 0;
+      // Disable hover reveal disc while the arms are still growing in.
+      const targetIntensity = m.active && !prefersReduce && !intro ? 1 : 0;
       intensity += (targetIntensity - intensity) * intensityLerp;
 
       // Smooth-follow disc center. Initialise to the current cursor on the
@@ -445,6 +484,7 @@ export function AsciiHandsFooter() {
 
       for (let k = 0; k < cells.length; k++) {
         const c = cells[k];
+        if (intro && c.armT > introProgress) continue;
         const bb = c.b;
 
         // Base coral color from the ramp:
@@ -453,6 +493,39 @@ export function AsciiHandsFooter() {
         let g = 17 + bb * 76;
         let bl = 22 + bb * 46;
         let ch = c.ch;
+        let jitterX = 0;
+        let jitterY = 0;
+
+        if (intro) {
+          const frontDist = introProgress - c.armT;
+          if (frontDist < INTRO_FRONT_WIDTH) {
+            // Front-edge accent: scramble glyph, brighten toward highlight,
+            // add small ±1px jitter for a spatter feel.
+            const frontK = 1 - frontDist / INTRO_FRONT_WIDTH; // 1 at front, 0 behind
+            const seed = grid
+              ? grid.seed[
+                  Math.floor((c.y - grid.originY) / CELL_H) * grid.cols +
+                    Math.floor((c.x - grid.originX) / CELL_W)
+                ] ?? 0.5
+              : 0.5;
+            const scramble = fract(
+              Math.sin((seed + introProgress * 3.7) * 12.9898) * 43758.5453,
+            );
+            const scrambleOffset = Math.floor(
+              (scramble - 0.5) * RAMP_LEN * 0.5 * frontK,
+            );
+            const finalIdx =
+              ((c.idx + scrambleOffset) % RAMP_LEN + RAMP_LEN) % RAMP_LEN;
+            ch = glyphAt(finalIdx);
+            const blend = frontK * 0.6;
+            r += (HR - r) * blend;
+            g += (HG - g) * blend;
+            bl += (HB - bl) * blend;
+            const jK = frontK * 1.0;
+            jitterX = (fract(Math.sin(seed * 91.3) * 217.7) - 0.5) * 2 * jK;
+            jitterY = (fract(Math.sin(seed * 53.1) * 411.3) - 0.5) * 2 * jK;
+          }
+        }
 
         if (showGooey && grid) {
           const cellUvX = (c.x / minWH) * aspectX;
@@ -540,7 +613,7 @@ export function AsciiHandsFooter() {
         // baseline offset — glyph ascent for Cascadia Mono ≈ FONT_PX,
         // so this seats the glyph inside the CELL_H box with 1-px top air.
         // offX/offY is a subtle whole-scene parallax that eases in with hover.
-        ctx.fillText(ch, c.x + offX, c.y + FONT_PX + offY);
+        ctx.fillText(ch, c.x + offX + jitterX, c.y + FONT_PX + offY + jitterY);
       }
 
       raf = requestAnimationFrame(draw);
@@ -551,6 +624,7 @@ export function AsciiHandsFooter() {
       running = false;
       cancelAnimationFrame(raf);
       ro.disconnect();
+      io.disconnect();
       window.removeEventListener("mousemove", onMove);
       window.removeEventListener("mouseleave", onLeave);
       window.removeEventListener("touchmove", onTouch);
