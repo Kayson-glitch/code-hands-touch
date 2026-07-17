@@ -689,7 +689,7 @@ export function AsciiHandsFooter() {
 
         // Per-cell depth parallax: brighter (foreground) cells drift more,
         // dark cells hold back — reads as pseudo-3D layering.
-        const depth = hoverActive ? 0.4 + bb * DEPTH_PARALLAX : 1;
+        const depth = hoverActive ? 0.35 + bb * 0.45 + c.armT * 0.35 : 1;
         const cellOffX = offX * depth;
         const cellOffY = offY * depth;
 
@@ -699,9 +699,10 @@ export function AsciiHandsFooter() {
           const dxc = c.x + CELL_W / 2 - discX;
           const dyc = c.y + CELL_H / 2 - discY;
           const dist = Math.hypot(dxc, dyc);
-          const falloff = Math.max(0, 1 - dist / TILT_FALLOFF);
+          const tRaw = Math.min(1, dist / TILT_FALLOFF);
+          const falloff = 1 - tRaw * tRaw * (3 - 2 * tRaw);
           if (falloff > 0) {
-            angle = (dxc / TILT_FALLOFF) * tiltScale * falloff;
+            angle = ((dxc + dyc * 0.35) / TILT_FALLOFF) * tiltScale * falloff;
           }
         }
 
