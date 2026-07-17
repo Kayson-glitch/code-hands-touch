@@ -554,6 +554,8 @@ export function AsciiHandsFooter() {
       const parallaxAmt = prefersReduce ? 0 : intensity;
       const offX = -((parallaxX - w * 0.5) / w) * PARALLAX_MAX * parallaxAmt;
       const offY = -((parallaxY - h * 0.5) / h) * PARALLAX_MAX * parallaxAmt;
+      const hoverActive = intensity > 0.01 && !prefersReduce;
+      const tiltScale = TILT_MAX_DEG * (Math.PI / 180) * intensity;
 
       // Highlight tint the revealed cells migrate toward. A soft near-white
       // with a lavender purple bias to match the #C5A9FF base color scheme.
@@ -686,24 +688,57 @@ export function AsciiHandsFooter() {
           }
         }
 
-        // Subtle outline stroke for silhouette edges: a dark 1px halo behind
-        // the glyph lifts fingers and palms off the near-black background.
-        if (c.isEdge) {
-          const OR = 15, OG = 12, OB = 25;
-          ctx.fillStyle = `rgba(${OR},${OG},${OB},0.75)`;
-          const ox = c.x + offX + jitterX;
-          const oy = c.y + FONT_PX + offY + jitterY;
-          ctx.fillText(ch, ox - 1, oy - 1);
-          ctx.fillText(ch, ox + 1, oy - 1);
-          ctx.fillText(ch, ox - 1, oy + 1);
-          ctx.fillText(ch, ox + 1, oy + 1);
+        // Per-cell depth parallax: brighter (foreground) cells drift more,
+        // dark cells hold back — reads as pseudo-3D layering.
+        const depth = hoverActive ? 0.4 + bb * DEPTH_PARALLAX : 1;
+        const cellOffX = offX * depth;
+        const cellOffY = offY * depth;
+
+        // Per-cell tilt: nearby glyphs rotate slightly, tangential to cursor.
+        let angle = 0;
+        if (hoverActive) {
+          const dxc = c.x + CELL_W / 2 - discX;
+          const dyc = c.y + CELL_H / 2 - discY;
+          const dist = Math.hypot(dxc, dyc);
+          const falloff = Math.max(0, 1 - dist / TILT_FALLOFF);
+          if (falloff > 0) {
+            angle = (dxc / TILT_FALLOFF) * tiltScale * falloff;
+          }
         }
 
-        ctx.fillStyle = `rgba(${r | 0},${g | 0},${bl | 0},1)`;
-        // baseline offset — glyph ascent for Cascadia Mono ≈ FONT_PX,
-        // so this seats the glyph inside the CELL_H box with 1-px top air.
-        // offX/offY is a subtle whole-scene parallax that eases in with hover.
-        ctx.fillText(ch, c.x + offX + jitterX, c.y + FONT_PX + offY + jitterY);
+        const drawX = c.x + cellOffX + jitterX;
+        const drawY = c.y + FONT_PX + cellOffY + jitterY;
+        const useTransform = angle !== 0;
+
+        if (useTransform) {
+          const cx = c.x + cellOffX + jitterX + CELL_W / 2;
+          const cy = c.y + cellOffY + jitterY + CELL_H / 2;
+          ctx.save();
+          ctx.translate(cx, cy);
+          ctx.rotate(angle);
+          if (c.isEdge) {
+            ctx.fillStyle = `rgba(15,12,25,0.75)`;
+            const lx = -CELL_W / 2;
+            const ly = FONT_PX - CELL_H / 2;
+            ctx.fillText(ch, lx - 1, ly - 1);
+            ctx.fillText(ch, lx + 1, ly - 1);
+            ctx.fillText(ch, lx - 1, ly + 1);
+            ctx.fillText(ch, lx + 1, ly + 1);
+          }
+          ctx.fillStyle = `rgba(${r | 0},${g | 0},${bl | 0},1)`;
+          ctx.fillText(ch, -CELL_W / 2, FONT_PX - CELL_H / 2);
+          ctx.restore();
+        } else {
+          if (c.isEdge) {
+            ctx.fillStyle = `rgba(15,12,25,0.75)`;
+            ctx.fillText(ch, drawX - 1, drawY - 1);
+            ctx.fillText(ch, drawX + 1, drawY - 1);
+            ctx.fillText(ch, drawX - 1, drawY + 1);
+            ctx.fillText(ch, drawX + 1, drawY + 1);
+          }
+          ctx.fillStyle = `rgba(${r | 0},${g | 0},${bl | 0},1)`;
+          ctx.fillText(ch, drawX, drawY);
+        }
       }
 
       raf = requestAnimationFrame(draw);
