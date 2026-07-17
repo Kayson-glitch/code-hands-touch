@@ -15,9 +15,6 @@ type Cell = {
   b: number; // 0..1 normalized luminance (post stretch + gamma)
   idx: number; // ramp index derived from b
   ch: string;
-  cr: number; // source-image red   (colorful "underneath" layer)
-  cg: number; // source-image green
-  cb: number; // source-image blue
 };
 
 // good-fella.com's ASCII footer renders Cascadia Mono glyphs (from a 54-px
@@ -29,12 +26,7 @@ type Cell = {
 const FONT_PX = 8;
 const CELL_W = 10;
 const CELL_H = 10;
-const INFLUENCE_RADIUS = 160;
-
-// Site signature orange — sampled from good-fella.com base fill.
-const ORANGE_R = 250;
-const ORANGE_G = 75;
-const ORANGE_B = 22;
+const INFLUENCE_RADIUS = 130;
 
 function glyphAt(idx: number) {
   const clamped = Math.min(RAMP_LEN - 1, Math.max(0, idx));
@@ -85,7 +77,7 @@ function sampleImage(
   const data = octx.getImageData(0, 0, cols, rows).data;
 
   // Pass 1: perceptual luma (Rec.709) for every non-background cell.
-  type Raw = { i: number; j: number; y: number; a: number; r: number; g: number; bl: number };
+  type Raw = { i: number; j: number; y: number; a: number };
   const raws: Raw[] = [];
   for (let j = 0; j < rows; j++) {
     for (let i = 0; i < cols; i++) {
@@ -98,7 +90,7 @@ function sampleImage(
       const y =
         (a * (0.2126 * data[p] + 0.7152 * data[p + 1] + 0.0722 * data[p + 2])) /
         255;
-      if (y > 0.04) raws.push({ i, j, y, a, r: data[p], g: data[p + 1], bl: data[p + 2] });
+      if (y > 0.04) raws.push({ i, j, y, a });
     }
   }
   if (raws.length === 0) return [];
@@ -125,9 +117,6 @@ function sampleImage(
       b,
       idx,
       ch: glyphAt(idx),
-      cr: r.r,
-      cg: r.g,
-      cb: r.bl,
     });
   }
   return cells;
@@ -248,36 +237,37 @@ export function AsciiHandsFooter() {
         let dx = 0;
         let dy = 0;
         let ch = c.ch;
-        // Base layer: shadow → highlight ramp inside the orange family so
-        // light/shadow modeling reads clearly. Glyph density is only half
-        // the story; color luminance carries the rest of the form.
-        //   shadow  rgb( 60, 18,  8) — deep burnt orange
-        //   highlight rgb(255,110, 40) — hot site orange
+        // Glyph already encodes brightness — keep alpha high across the
+        // whole hand, and let color ramp coral shadow → warm highlight on
+        // a gamma-lifted curve so midtones read warm, not muddy.
         const bb = c.b;
-        let r = Math.floor(60 + bb * 195); //  60 → 255
-        let g = Math.floor(18 + bb * 92); //  18 → 110
-        let bl = Math.floor(8 + bb * 32); //   8 →  40
-        const alpha = 1;
+        // Coral palette sampled from good-fella.com's rendered ASCII footer:
+        //   shadow  rgb(30, 17, 22)   → deepest reddish-brown
+        //   highlight rgb(223, 93, 68) → salmon coral
+        // Alpha stays at 1 — source doesn't fade cells; density is entirely
+        // encoded in the glyph choice.
+        let r = Math.floor(30 + bb * 193); //  30 → 223
+        let g = Math.floor(17 + bb * 76); //  17 →  93
+        let bl = Math.floor(22 + bb * 46); //  22 →  68
+        let alpha = 1;
 
-        if (m.active) {
+        if (m.active && !prefersReduce) {
           const ddx = c.x - m.x;
           const ddy = c.y - m.y;
           const dist2 = ddx * ddx + ddy * ddy;
           if (dist2 < r2) {
             const dist = Math.sqrt(dist2);
             const t = 1 - dist / INFLUENCE_RADIUS; // 0..1
-            if (!prefersReduce) {
-              // subtle radial push — don't shred shading
-              const push = t * 6;
-              dx = (ddx / (dist || 1)) * push;
-              dy = (ddy / (dist || 1)) * push;
-            }
-            // Reveal: blend base orange → the cell's true source-image RGB.
-            // Smoothstep so the reveal has a soft edge and a saturated core.
-            const k = t * t * (3 - 2 * t);
-            r = Math.floor(r + (c.cr - r) * k);
-            g = Math.floor(g + (c.cg - g) * k);
-            bl = Math.floor(bl + (c.cb - bl) * k);
+            // subtle radial push — don't shred shading
+            const push = t * 6;
+            dx = (ddx / (dist || 1)) * push;
+            dy = (ddy / (dist || 1)) * push;
+            // add cursor "light" on top of base luminance (clamped)
+            const lift = t;
+            r = Math.min(255, r + Math.floor(lift * 140));
+            g = Math.min(255, g + Math.floor(lift * 140));
+            bl = Math.min(255, bl + Math.floor(lift * 140));
+            alpha = Math.min(1, alpha + t * 0.35);
             // step several rungs up the ramp near cursor core
             const bump = Math.floor(t * 5); // 0..5
             if (bump > 0) ch = glyphAt(c.idx + bump);

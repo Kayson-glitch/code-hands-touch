@@ -1,25 +1,11 @@
+Plan: Reduce the ASCII footer glyph size from 9 px to 8 px to see if it improves the rendering.
 
-## Problem
+What to change:
+- Change the `FONT_PX` constant in `src/components/AsciiHandsFooter.tsx` from `9` to `8`.
+- The `CELL_W` and `CELL_H` remain at 10 CSS px, so the glyphs will sit in the same grid but render slightly smaller, giving each character a bit more breathing room.
 
-Making the base a flat `rgb(250,75,22)` killed the light/shadow gradient. The previous coral shadow→highlight ramp was doing the tonal work; glyph density alone isn't enough to read as 3D form.
+Verification:
+- Run the build to ensure no errors after the constant change.
+- Confirm in the preview that the ASCII arms still form a recognizable silhouette and the smaller glyph size looks acceptable.
 
-## Fix
-
-Keep the "site orange" identity, but bring back a proper shadow→highlight ramp in the orange hue, driven by `c.b` (the normalized luminance we already compute). Only the base color changes — hover reveal logic stays as-is.
-
-## Change (single file: `src/components/AsciiHandsFooter.tsx`)
-
-Replace the flat orange assignment in the draw loop with a two-stop orange gradient:
-
-- **Shadow** (`b=0`): `rgb(60, 18, 8)` — deep burnt orange, keeps warmth but reads as shadow.
-- **Highlight** (`b=1`): `rgb(255, 110, 40)` — bright site orange, slightly hotter than 250/75/22 so the peaks pop.
-- Linear interpolate per channel by `c.b`.
-
-That restores the depth we had with the coral palette while staying inside the orange family shown on good-fella.com. Hover still blends this base → the cell's true source-image RGB via smoothstep `k`.
-
-No other changes.
-
-## Verify
-
-- Screenshot with cursor off-canvas: arms show clear light/shadow modeling in orange (dark burnt-orange in shadow, bright orange on highlights).
-- Screenshot with cursor over the arm: soft colorful reveal circle, base tonality preserved outside it.
+No other changes to the image asset, ramp, gamma, colors, layout, or cursor interaction.
