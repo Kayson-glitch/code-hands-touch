@@ -16,6 +16,7 @@ type Cell = {
   idx: number; // ramp index derived from b
   ch: string;
   armT: number; // 0..1 along-arm progress, 0 = edge/root, 1 = fingertip/center
+  isEdge?: boolean; // true if cell touches a background cell (silhouette outline)
 };
 
 type Grid = {
