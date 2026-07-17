@@ -17,6 +17,17 @@ type Cell = {
   ch: string;
 };
 
+type Grid = {
+  cols: number;
+  rows: number;
+  originX: number;
+  originY: number;
+  // -1 for background cell, else index into cells[]
+  silIdx: Int32Array;
+  // per-cell stable random 0..1, used for probabilistic spawn & glyph pick
+  seed: Float32Array;
+};
+
 // good-fella.com's ASCII footer renders Cascadia Mono glyphs (from a 54-px
 // offscreen atlas scaled down) into a 10×10 CSS-px cell. Pixel measurements
 // off their live canvas: cell pitch 10×10 CSS px, average glyph footprint
