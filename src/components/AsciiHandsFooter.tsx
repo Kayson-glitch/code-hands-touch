@@ -23,7 +23,7 @@ type Cell = {
 // 3.5×5.5 CSS px — i.e. glyphs sit roughly at 8-9-px optical size with plenty
 // of horizontal & vertical air around them. FONT_PX 9 with weight 500 lands
 // on the same on-screen glyph size (~4×5.5 CSS px) inside the 10-px cell.
-const FONT_PX = 9;
+const FONT_PX = 8;
 const CELL_W = 10;
 const CELL_H = 10;
 const INFLUENCE_RADIUS = 130;
