@@ -718,14 +718,15 @@ export function AsciiHandsFooter() {
 
         const drawX = c.x + cellOffX + jitterX;
         const drawY = c.y + FONT_PX + cellOffY + jitterY;
-        const useTransform = angle !== 0;
+        const finalAngle = c.baseTilt + angle;
+        const useTransform = Math.abs(finalAngle) > 0.003;
 
         if (useTransform) {
           const cx = c.x + cellOffX + jitterX + CELL_W / 2;
           const cy = c.y + cellOffY + jitterY + CELL_H / 2;
           ctx.save();
           ctx.translate(cx, cy);
-          ctx.rotate(angle);
+          ctx.rotate(finalAngle);
           if (c.isEdge) {
             ctx.fillStyle = `rgba(15,12,25,0.75)`;
             const lx = -CELL_W / 2;
