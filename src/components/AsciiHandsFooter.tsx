@@ -262,6 +262,33 @@ function sampleImage(
       c.armT = Math.min(1, Math.max(0, t));
     }
   }
+
+  // Edge detection: a cell is an outline edge if any of its 8 neighbors is
+  // background (silIdx === -1). This marks the outer silhouette of fingers and
+  // palms so we can draw a subtle lift stroke behind the glyph.
+  for (let k = 0; k < cells.length; k++) {
+    const c = cells[k];
+    const ci = Math.round((c.x - targetRect.x) / CELL_W);
+    const cj = Math.round((c.y - targetRect.y) / CELL_H);
+    let isEdge = false;
+    for (let dj = -1; dj <= 1 && !isEdge; dj++) {
+      for (let di = -1; di <= 1; di++) {
+        if (di === 0 && dj === 0) continue;
+        const ni = ci + di;
+        const nj = cj + dj;
+        if (ni < 0 || ni >= cols || nj < 0 || nj >= rows) {
+          isEdge = true;
+          break;
+        }
+        if (silIdx[nj * cols + ni] === -1) {
+          isEdge = true;
+          break;
+        }
+      }
+    }
+    c.isEdge = isEdge;
+  }
+
   return {
     cells,
     grid: {
