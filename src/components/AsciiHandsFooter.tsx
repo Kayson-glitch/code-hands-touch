@@ -17,7 +17,6 @@ type Cell = {
   ch: string;
   armT: number; // 0..1 along-arm progress, 0 = edge/root, 1 = fingertip/center
   isEdge?: boolean; // true if cell touches a background cell (silhouette outline)
-  baseTilt: number; // stable per-cell rotation (radians), baked from seed
 };
 
 type Grid = {
@@ -54,10 +53,10 @@ const PARALLAX_LERP = 0.08;
 // translating as one block.
 const TILT_MAX_DEG = 8;
 const TILT_FALLOFF = 320;
-// Every glyph gets a stable, unique tilt baked from its cell seed so the
-// grid reads as hand-set type rather than a uniform matrix. Hover tilt
-// composes on top of this base angle.
-const BASE_TILT_MAX_DEG = 10;
+// Per-glyph random tilt that only activates inside the hover reveal disc —
+// characters are "woken up" into a hand-set angle where the cursor reveals
+// them, and stay upright everywhere else.
+const REVEAL_TILT_MAX_DEG = 12;
 // Reveal disc smoothly chases the cursor (source-site behaviour). Smaller =
 // stickier follow, which naturally reads as a gentle hover-in latency without
 // a hard delay gate.
@@ -244,10 +243,6 @@ function sampleImage(
     const b = Math.pow(stretched, gamma) * feather;
     const idx = indexFor(b);
     silIdx[r.j * cols + r.i] = cells.length;
-    const s = seed[r.j * cols + r.i];
-    const raw = (s - 0.5) * 2;
-    const shaped = Math.sign(raw) * Math.pow(Math.abs(raw), 1.4);
-    const baseTilt = shaped * ((BASE_TILT_MAX_DEG * Math.PI) / 180);
     cells.push({
       x: targetRect.x + r.i * CELL_W,
       y: targetRect.y + r.j * CELL_H,
@@ -255,7 +250,6 @@ function sampleImage(
       idx,
       ch: glyphAt(idx),
       armT: 0,
-      baseTilt,
     });
   }
   // Compute per-cell armT by projecting onto the nearest arm-skeleton
@@ -583,6 +577,7 @@ export function AsciiHandsFooter() {
         let ch = c.ch;
         let jitterX = 0;
         let jitterY = 0;
+        let revealTilt = 0;
 
         if (intro) {
           const frontDist = introProgress - c.armT;
@@ -674,6 +669,15 @@ export function AsciiHandsFooter() {
               // scrambled — preserves the light/dark structure.
               const lumaWeight = Math.pow(bb, 0.6);
               const sharpL = sharp * lumaWeight;
+              // Per-cell random tilt "woken up" by the reveal disc: stable
+              // phase from the cell seed, gated by sharp so outside the disc
+              // the glyph stays perfectly upright.
+              const raw = (seed - 0.5) * 2;
+              const shapedPhase = Math.sign(raw) * Math.pow(Math.abs(raw), 1.4);
+              revealTilt =
+                shapedPhase *
+                ((REVEAL_TILT_MAX_DEG * Math.PI) / 180) *
+                sharp;
               // Scramble character index by hash(cell + scrambleSeed). Unlike
               // the base render, we do NOT gate by luminance — every cell
               // inside the disc participates so dark silhouette cells surface
@@ -718,7 +722,7 @@ export function AsciiHandsFooter() {
 
         const drawX = c.x + cellOffX + jitterX;
         const drawY = c.y + FONT_PX + cellOffY + jitterY;
-        const finalAngle = c.baseTilt + angle;
+        const finalAngle = angle + revealTilt;
         const useTransform = Math.abs(finalAngle) > 0.003;
 
         if (useTransform) {

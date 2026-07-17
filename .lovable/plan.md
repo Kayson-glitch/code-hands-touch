@@ -1,58 +1,48 @@
 ## 目标
-根据参考图，源站每个字符都带有**独立的、静态的微小倾斜**（各不相同的角度，非鼠标驱动），叠加在整齐网格之上形成"手写/手抖"的质感。这是与 hover 视差**并存**的第二层旋转。
-
-## 观察
-参考图中：
-- 无鼠标交互时字符已经带旋转，各自角度不同（±10° 左右范围）
-- 每个字符的旋转是**稳定的**（不闪烁），像烘焙进网格的随机相位
-- hover 的切向摆动应叠加在这个基础倾斜之上
+源站细节：只有**鼠标 hover 的视差圈范围内**，字符才各自呈现独立的小角度倾斜；圈外字符保持整齐。当前的切向 tilt 是"距离光标越近越转"的连续场，但源站是**每字符独立随机相位**——像被光标"唤醒"进入手写状态。
 
 ## 修改文件
 `src/components/AsciiHandsFooter.tsx`
 
 ## 实现步骤
 
-### 1. 每 cell 烘焙一个稳态倾斜角
-`sampleImage` 中已经有 `grid.seed`（0..1 per-cell 随机数）。在 `Cell` 类型新增：
+### 1. 新增常量
 ```
-baseTilt: number;  // 弧度，稳定不变
+const REVEAL_TILT_MAX_DEG = 12;   // 每字符在视差圈内的最大随机倾斜
 ```
-在 push cell 时用 `seed` 派生：
+保留现有 `TILT_MAX_DEG`（切向摆动）与 `TILT_FALLOFF`。
+
+### 2. 每 cell 派生稳态随机相位（不新增字段）
+利用已有的 `grid.seed[idx]` 派生一个 `-1..1` 的 shaped 相位，无需修改 Cell 类型：
 ```
-const rawTilt = (seed - 0.5) * 2;              // -1..1
-const shaped  = Math.sign(rawTilt) * Math.pow(Math.abs(rawTilt), 1.4); // 集中在小角，偶尔大角
-baseTilt = shaped * (BASE_TILT_MAX_DEG * Math.PI / 180);
+const raw = (seed - 0.5) * 2;
+const revealPhase = Math.sign(raw) * Math.pow(Math.abs(raw), 1.4);
 ```
 
-### 2. 新增常量
+### 3. 在 gooey 分支内叠加 reveal tilt
+现有 `if (showGooey && grid) { ... if (sharp > 0.01) { ... } }` 已经计算了 `sharpL`（受亮度加权的圈内强度）。在该 `if` 分支内新增：
 ```
-const BASE_TILT_MAX_DEG = 10;   // 单字符静态最大倾斜（度）
+const revealTilt = revealPhase * REVEAL_TILT_MAX_DEG * (Math.PI/180) * sharpL;
 ```
-（当前 `TILT_MAX_DEG = 8` 是 hover 追加的动态角，两者独立。）
+把这个 `revealTilt` 加到已有的 hover 切向 `angle` 上（在 hover tilt 计算完成之后合并）。
 
-### 3. 渲染时合并两种角度
-在计算 `angle`（hover tilt）之后：
+### 4. 合成最终角度
 ```
-const finalAngle = c.baseTilt + angle;
+const finalAngle = angle + revealTilt;   // 圈外 revealTilt=0，圈内被唤醒
 ```
-把原来的 `if (angle !== 0)` 改为 `if (finalAngle !== 0)`，用 `finalAngle` 做 rotate。这样：
-- 无 hover：只有静态 baseTilt → 每字符已经天然倾斜
-- 有 hover：叠加动态切向摆动
+将 transform 分支的旋转改用 `finalAngle`。`sharpL` 已随着圈内衰减 → 0，因此**圈外字符仍然完全直立**，符合"只有视差里才倾斜"的要求。
 
-### 4. 快速路径调整
-现在几乎所有 cell 都会进入 transform 分支（因为 baseTilt 极少为 0），需要确保性能可接受：
-- transform 分支已经存在 save/rotate/restore，是 O(N) 常数因子略增
-- 由于 cell 总数 ~1.2 万且大多数被 intro/剔除掉了实际绘制在几千级别，可接受
-- 若性能受影响，可以对 `|finalAngle| < 0.005` 走快速路径（几乎不转）
-
-### 5. intro 时序
-intro 期间字符渐入，baseTilt 应从生成就存在（不做过渡），符合源站直接"落"进倾斜状态的感觉。
+### 5. 无 hover 时快速路径
+`hoverActive === false` 时 `showGooey === false`（intensity ≈ 0），gooey 分支不进入，`revealTilt` 保持 0，且 `angle` 也是 0 → 走直接 fillText 快速路径，性能不变。
 
 ## 验证
 1. `bun run build` 通过。
-2. Playwright 截图：无鼠标状态下放大观察，字符应像参考图那样各自略微歪斜；hover 时切向摆动叠加，字符不"抖动式"跳变。
+2. Playwright 截图两种状态：
+   - 无鼠标：所有字符整齐直立（对比参考图外部区域）
+   - 光标停在手掌上：光标附近字符各自有独立随机倾斜，圈外仍然直立
+3. 观察圈边缘：`sharpL` 平滑衰减，倾斜也随之淡出，无生硬圈边。
 
 ## 预期
-- 静态时字符已呈现参考图的手工质感（每个字符独立小角度倾斜）
-- Hover 时切向摆动仍然生效，两层旋转自然叠加
-- 更接近源站的细节层次
+- 视差圈内字符像被光标"唤醒"，各自呈参考图那样的独立小角度
+- 圈外保持整齐网格，符合源站细节手感
+- hover 切向摆动与每字符随机倾斜自然叠加
