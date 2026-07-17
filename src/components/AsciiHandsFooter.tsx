@@ -531,11 +531,12 @@ export function AsciiHandsFooter() {
         const bb = c.b;
 
         // Base purple derived from the original orange (#DF5D44) by keeping
-        // similar HSV saturation/value and shifting hue to purple:
-        //   shadow rgb(30, 20, 55) → highlight rgb(118, 67, 222)
-        let r = 30 + bb * 88;
-        let g = 20 + bb * 47;
-        let bl = 55 + bb * 167;
+        // similar HSV saturation and shifting hue to purple, with raised value
+        // for brightness:
+        //   shadow rgb(40, 28, 75) → highlight rgb(136, 77, 255)
+        let r = 40 + bb * 96;
+        let g = 28 + bb * 49;
+        let bl = 75 + bb * 180;
         let ch = c.ch;
         let jitterX = 0;
         let jitterY = 0;
