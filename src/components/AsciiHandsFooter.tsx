@@ -16,6 +16,7 @@ type Cell = {
   idx: number; // ramp index derived from b
   ch: string;
   armT: number; // 0..1 along-arm progress, 0 = edge/root, 1 = fingertip/center
+  isEdge?: boolean; // true if cell touches a background cell (silhouette outline)
 };
 
 type Grid = {
@@ -261,6 +262,33 @@ function sampleImage(
       c.armT = Math.min(1, Math.max(0, t));
     }
   }
+
+  // Edge detection: a cell is an outline edge if any of its 8 neighbors is
+  // background (silIdx === -1). This marks the outer silhouette of fingers and
+  // palms so we can draw a subtle lift stroke behind the glyph.
+  for (let k = 0; k < cells.length; k++) {
+    const c = cells[k];
+    const ci = Math.round((c.x - targetRect.x) / CELL_W);
+    const cj = Math.round((c.y - targetRect.y) / CELL_H);
+    let isEdge = false;
+    for (let dj = -1; dj <= 1 && !isEdge; dj++) {
+      for (let di = -1; di <= 1; di++) {
+        if (di === 0 && dj === 0) continue;
+        const ni = ci + di;
+        const nj = cj + dj;
+        if (ni < 0 || ni >= cols || nj < 0 || nj >= rows) {
+          isEdge = true;
+          break;
+        }
+        if (silIdx[nj * cols + ni] === -1) {
+          isEdge = true;
+          break;
+        }
+      }
+    }
+    c.isEdge = isEdge;
+  }
+
   return {
     cells,
     grid: {
@@ -650,6 +678,19 @@ export function AsciiHandsFooter() {
               bl += (HB - bl) * sharpL;
             }
           }
+        }
+
+        // Subtle outline stroke for silhouette edges: a dark 1px halo behind
+        // the glyph lifts fingers and palms off the near-black background.
+        if (c.isEdge) {
+          const OR = 15, OG = 12, OB = 25;
+          ctx.fillStyle = `rgba(${OR},${OG},${OB},0.75)`;
+          const ox = c.x + offX + jitterX;
+          const oy = c.y + FONT_PX + offY + jitterY;
+          ctx.fillText(ch, ox - 1, oy - 1);
+          ctx.fillText(ch, ox + 1, oy - 1);
+          ctx.fillText(ch, ox - 1, oy + 1);
+          ctx.fillText(ch, ox + 1, oy + 1);
         }
 
         ctx.fillStyle = `rgba(${r | 0},${g | 0},${bl | 0},1)`;
