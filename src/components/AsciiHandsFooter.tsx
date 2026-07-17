@@ -1,10 +1,12 @@
 import { useEffect, useRef } from "react";
 import handsPairAsset from "@/assets/hands-pair.png.asset.json";
 
-// Ordered density ramp, dark → bright. Chosen so each glyph's inked area
-// increases monotonically when rendered in Geist Mono — no vertical bars or
-// slashes that would break the gradient at midtones.
-const RAMP = " .`':,-~=+*xoevmwqbdOZ0M8W#N@";
+// Ordered density ramp, dark → bright. Mirrors the exact 70-glyph set used by
+// good-fella.com's ASCII footer (recovered by hooking their canvas atlas).
+// Ordering follows the Paul Bourke density ramp, with the digits 0/1/8 slotted
+// in at their approximate visual weight.
+const RAMP =
+  " .`'^\",:;Il!i1><~+_-?][}{)(|\\/tfjrxnuvczXYUJCLQOZ0mwqpdbkhao*#MW8&%B@$";
 const RAMP_LEN = RAMP.length;
 
 type Cell = {
@@ -15,13 +17,15 @@ type Cell = {
   ch: string;
 };
 
-// Geist Mono @ weight 500, 11px: DOM & canvas both measure advance = 7 CSS px,
-// natural line-height = 14 CSS px. These values are stable across DPR=1 and
-// DPR=2, and match good-fella.com's `next/font/local` build exactly, so the
-// ASCII grid stays pixel-aligned with the reference site.
+// good-fella.com's ASCII footer draws Cascadia Mono / SF Mono glyphs (weight
+// 500) into a near-square ~10×10 CSS-px grid. Cascadia Mono at 11px has an
+// advance ≈ 6.6 CSS px, so a 10-px cell leaves ~3 px of horizontal air —
+// matches the airy source spacing exactly. Both raster passes at DPR=1 and
+// DPR=2 land on the same integer grid, so the layout is pixel-aligned across
+// devices.
 const FONT_PX = 11;
-const CELL_W = 7;
-const CELL_H = 14;
+const CELL_W = 10;
+const CELL_H = 10;
 const INFLUENCE_RADIUS = 130;
 
 function glyphAt(idx: number) {
@@ -197,7 +201,7 @@ export function AsciiHandsFooter() {
       const w = canvas.clientWidth;
       const h = canvas.clientHeight;
       ctx.clearRect(0, 0, w, h);
-      ctx.font = `500 ${FONT_PX}px "Geist Mono", ui-monospace, "JetBrains Mono", Menlo, monospace`;
+      ctx.font = `500 ${FONT_PX}px "Cascadia Mono", "SF Mono", Menlo, Consolas, "Liberation Mono", monospace`;
       ctx.textBaseline = "alphabetic";
       ctx.textAlign = "left";
       // Cast: letterSpacing is a modern Canvas 2D API not in all TS libs yet.
@@ -224,13 +228,15 @@ export function AsciiHandsFooter() {
         // whole hand, and let color ramp coral shadow → warm highlight on
         // a gamma-lifted curve so midtones read warm, not muddy.
         const bb = c.b;
-        // Warm-white ivory ramp — shadow near-black, highlight ivory.
-        let r = Math.floor(40 + bb * 200); //  40 → 240
-        let g = Math.floor(32 + bb * 200); //  32 → 232
-        let bl = Math.floor(28 + bb * 192); //  28 → 220
-        // Alpha low in shadows lets black background eat the darkest cells,
-        // which reads as depth rather than a flat mask.
-        let alpha = 0.35 + bb * 0.65;
+        // Coral palette sampled from good-fella.com's rendered ASCII footer:
+        //   shadow  rgb(30, 17, 22)   → deepest reddish-brown
+        //   highlight rgb(223, 93, 68) → salmon coral
+        // Alpha stays at 1 — source doesn't fade cells; density is entirely
+        // encoded in the glyph choice.
+        let r = Math.floor(30 + bb * 193); //  30 → 223
+        let g = Math.floor(17 + bb * 76); //  17 →  93
+        let bl = Math.floor(22 + bb * 46); //  22 →  68
+        let alpha = 1;
 
         if (m.active && !prefersReduce) {
           const ddx = c.x - m.x;
