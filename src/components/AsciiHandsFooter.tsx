@@ -328,23 +328,6 @@ export function AsciiHandsFooter() {
         className="absolute inset-0 h-full w-full"
       />
 
-      {/* Center copy */}
-      <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-        <div
-          className="text-center"
-          style={{
-            color: "rgba(230,230,230,0.85)",
-            fontFamily: '"Geist Mono", ui-monospace, monospace',
-            fontSize: "0.8rem",
-            lineHeight: 1.7,
-            letterSpacing: "0",
-          }}
-        >
-          
-          <p>Good Fella Studio GmbH.</p>
-          <p>Let the Fellas handle it.</p>
-        </div>
-      </div>
     </section>
   );
 }
