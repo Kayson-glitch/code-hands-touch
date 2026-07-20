@@ -754,15 +754,22 @@ export function AsciiHandsFooter({
           const ddy = cellUvY - mUvY;
           const dEuclid = Math.sqrt(ddx * ddx + ddy * ddy);
           const shapeMode = shapeRef.current;
-          // Base radial distance per shape (before noise). Kept on the same
-          // scale as rHi so a single set of noise magnitudes reads correctly
-          // across all four shapes.
           let d = dEuclid;
-          // along / across arm-axis decomposition (used by B and C).
           const nnx = dEuclid > 1e-5 ? ddx / dEuclid : 0;
           const nny = dEuclid > 1e-5 ? ddy / dEuclid : 0;
           const alongAxis = nnx * armDx + nny * armDy;
-          if (shapeMode === "B") {
+          if (shapeMode === "A") {
+            // Irregular near-circle: radius warped by low-frequency angular
+            // blobs + mid hash chips, but footprint stays roughly circular.
+            const theta = Math.atan2(ddy, ddx);
+            const radiusBump =
+              (Math.sin(theta * 3 + cellSeed * 6.28318) * 0.18 +
+                Math.sin(theta * 5 - timeSec * 0.5) * 0.10 +
+                (fract(Math.sin(cellSeed * 31.7) * 91.3) - 0.5) * 0.08) *
+              GOOEY_RADIUS_UV *
+              intensity;
+            d = Math.max(0, dEuclid - radiusBump);
+          } else if (shapeMode === "B") {
             // Stretched ellipse along the arm axis.
             const along = ddx * armDx + ddy * armDy;
             const across = -ddx * armDy + ddy * armDx;
@@ -782,31 +789,37 @@ export function AsciiHandsFooter({
               intensity;
             d = Math.max(0, dEuclid - bulge);
           }
-          // Directional weight: 1+STR along the arm axis, 1-STR across it.
-          const dirW = 1 + ARM_ALIGN_STRENGTH * (alongAxis * alongAxis * 2 - 1);
+          // Shape A keeps an isotropic broken edge so the circle doesn't
+          // elongate along the arms; B/C/D keep the directional splash.
+          const dirW =
+            shapeMode === "A"
+              ? 1
+              : 1 + ARM_ALIGN_STRENGTH * (alongAxis * alongAxis * 2 - 1);
 
           // Per-cell hash + slow time wobble → ragged, gooey edge.
           const i = Math.floor((c.x - grid.originX) / CELL_W);
           const j = Math.floor((c.y - grid.originY) / CELL_H);
           const idx = j * grid.cols + i;
           const seed = grid.seed[idx] ?? 0.5;
+          // Shape A needs a slightly more chipped edge to read as irregular.
+          const noiseMul = shapeMode === "A" ? 1.3 : 1.0;
           // Large, slow blob — pushes whole patches of the edge in/out.
-          const lowFreq = (seed * 2 - 1) * GOOEY_NOISE * 1.5;
+          const lowFreq = (seed * 2 - 1) * GOOEY_NOISE * 1.5 * noiseMul;
           // Mid-frequency wave uses arm-rotated cell coords so the chipped
           // lobes elongate along the arm axis (low freq along arm, high across).
           const localI = i * armDx + j * armDy;
           const localJ = -i * armDy + j * armDx;
           const midFreq =
-            Math.sin(localI * 0.3 + localJ * 0.9 + seed * 1.5) * GOOEY_NOISE * 5;
+            Math.sin(localI * 0.3 + localJ * 0.9 + seed * 1.5) * GOOEY_NOISE * 5 * noiseMul;
           // Slow time wobble so the edge "breathes" rather than flickers.
           const wobble = prefersReduce
             ? 0
-            : Math.sin(timeSec * 0.5 + seed * 6.28318) * GOOEY_NOISE * 0.6;
+            : Math.sin(timeSec * 0.5 + seed * 6.28318) * GOOEY_NOISE * 0.6 * noiseMul;
           // High-frequency spatial hash — creates the fine chipped/broken texture.
           const highFreq =
-            (fract(Math.sin(seed * 45.7) * 123.45) - 0.5) * GOOEY_NOISE * 1.0;
+            (fract(Math.sin(seed * 45.7) * 123.45) - 0.5) * GOOEY_NOISE * 1.0 * noiseMul;
           const microFract =
-            (fract(Math.sin(seed * 137.9) * 437.58) - 0.5) * GOOEY_NOISE * 0.5;
+            (fract(Math.sin(seed * 137.9) * 437.58) - 0.5) * GOOEY_NOISE * 0.5 * noiseMul;
           const distorted =
             d +
             lowFreq +
