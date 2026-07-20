@@ -65,11 +65,11 @@ const REVEAL_TILT_MAX_DEG = 12;
 // broken tiles of the raw source image so the underlying photo peeks
 // through a shattered ASCII surface. Numbers below tuned against the
 // existing 10×10 cell pitch.
-const MOSAIC_MASK_THRESHOLD = 0.06;
-const MOSAIC_SHATTER_PX = 2.5; // max positional break at the disc edge
-const MOSAIC_SCALE_MIN = 0.78; // min tile occupancy at the disc edge
-const MOSAIC_SCALE_MAX = 1.05; // max tile occupancy (center)
-const MOSAIC_SPLATTER_PROB = 0.09; // % of tiles that fling further out
+const MOSAIC_MASK_THRESHOLD = 0.04;
+const MOSAIC_SHATTER_PX = 1.8; // max positional break at the disc edge
+const MOSAIC_SCALE_MIN = 0.88; // min tile occupancy at the disc edge
+const MOSAIC_SCALE_MAX = 1.12; // max tile occupancy (center)
+const MOSAIC_SPLATTER_PROB = 0.06; // % of tiles that fling further out
 const MOSAIC_SPLATTER_PX = 5;
 // Continuous character flow along arm skeleton — a low-frequency, time-driven
 // phase rides along `armT` so glyphs shimmer/drift between neighbouring ramp
