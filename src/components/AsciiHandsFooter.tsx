@@ -674,7 +674,6 @@ export function AsciiHandsFooter() {
         let revealTilt = 0;
         // Set true when this cell is covered by a mosaic-shatter tile — we
         // then skip the ASCII glyph pass so the raw image reads cleanly.
-        let mosaicCovered = false;
         let mosaicAlpha = 0;
         // Post-front settle alpha — cells that just crossed the front fade
         // the last bit of opacity in over INTRO_SETTLE_WIDTH of armT.
@@ -896,14 +895,16 @@ export function AsciiHandsFooter() {
           }
         }
 
-        // Mosaic-covered cells skip the ASCII glyph — the raw pixel tile
-        // stands on its own. Edge cells keep a faint glyph (via reduced
-        // alpha below) so the shatter blends into surrounding ASCII.
-        if (mosaicCovered) {
-          continue;
+        // Continuous mosaic→glyph fade: as the mosaic tile grows more
+        // opaque, the underlying ASCII glyph smoothly recedes. No hard
+        // switch, so edges dissolve rather than pop.
+        let residueAlpha = 1;
+        if (mosaicAlpha > 0) {
+          const t = Math.min(1, Math.max(0, (mosaicAlpha - 0.35) / 0.5));
+          const fade = t * t * (3 - 2 * t);
+          residueAlpha = 1 - fade;
+          if (residueAlpha < 0.02) continue;
         }
-        // Faint glyph residue in partially-mosaiced cells.
-        const residueAlpha = mosaicAlpha > 0 ? 1 - mosaicAlpha * 0.75 : 1;
         const drawX = c.x + cellOffX + jitterX;
         const drawY = c.y + FONT_PX + cellOffY + jitterY;
         const finalAngle = angle + revealTilt;
