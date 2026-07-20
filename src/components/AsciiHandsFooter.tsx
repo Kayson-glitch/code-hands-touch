@@ -802,7 +802,7 @@ export function AsciiHandsFooter() {
   return (
     <section
       className="relative w-full overflow-hidden"
-      style={{ backgroundColor: "#0a0a0a", height: "100vh", minHeight: 600 }}
+      style={{ backgroundColor: "transparent", height: "100vh", minHeight: 600 }}
     >
       <h1 className="sr-only">Good Fella Studio — ASCII Creation of Adam</h1>
 
