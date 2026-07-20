@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import handsPairAsset from "@/assets/hands-pair.png.asset.json";
 
 // Ordered density ramp, dark → bright. Mirrors the exact 70-glyph set used by
