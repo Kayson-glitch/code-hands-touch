@@ -577,7 +577,7 @@ export function AsciiHandsFooter() {
         INTENSITY_LERP_MIN + (INTENSITY_LERP_MAX - INTENSITY_LERP_MIN) * speedK;
       // Speed-adaptive mosaic diffusion / dissipation.
       const shatterK = 1 + smoothSpeedK * 0.9;
-      const scaleMinDyn = MOSAIC_SCALE_MIN + smoothSpeedK * 0.14;
+        const scaleMinDyn = MOSAIC_SCALE_MIN + smoothSpeedK * 0.10;
       const alphaGamma = 0.85 - smoothSpeedK * 0.25;
       const fadeLo = 0.35 - smoothSpeedK * 0.15;
       const fadeHi = 0.85 - smoothSpeedK * 0.20;
