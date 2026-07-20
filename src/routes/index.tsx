@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { AsciiHandsFooter } from "@/components/AsciiHandsFooter";
+import { MatrixCodeRain } from "@/components/ui/matrix-code-rain";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -22,5 +23,14 @@ export const Route = createFileRoute("/")({
 });
 
 function Index() {
-  return <AsciiHandsFooter />;
+  return (
+    <div className="relative min-h-screen w-full overflow-hidden bg-black">
+      <div className="pointer-events-none absolute inset-0 z-0">
+        <MatrixCodeRain />
+      </div>
+      <div className="relative z-10">
+        <AsciiHandsFooter />
+      </div>
+    </div>
+  );
 }
