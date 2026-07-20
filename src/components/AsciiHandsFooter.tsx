@@ -517,6 +517,7 @@ export function AsciiHandsFooter() {
     let parallaxY = 0;
     let discX = -9999;
     let discY = -9999;
+    let smoothSpeedK = 0;
     const draw = () => {
       if (!running) return;
       frame++;
@@ -570,9 +571,17 @@ export function AsciiHandsFooter() {
       // Decay pointer speed when no move events arrive (~120ms half-life-ish).
       mouseSpeedRef.current *= Math.exp(-dt / 120);
       const speedK = Math.min(1, mouseSpeedRef.current / SPEED_REF);
+      smoothSpeedK += (speedK - smoothSpeedK) * 0.15;
       const discLerp = DISC_LERP_MIN + (DISC_LERP_MAX - DISC_LERP_MIN) * speedK;
       const intensityLerp =
         INTENSITY_LERP_MIN + (INTENSITY_LERP_MAX - INTENSITY_LERP_MIN) * speedK;
+      // Speed-adaptive mosaic diffusion / dissipation.
+      const shatterK = 1 + smoothSpeedK * 0.9;
+      const scaleMinDyn = MOSAIC_SCALE_MIN + smoothSpeedK * 0.14;
+      const alphaGamma = 0.85 - smoothSpeedK * 0.25;
+      const fadeLo = 0.35 - smoothSpeedK * 0.15;
+      const fadeHi = 0.85 - smoothSpeedK * 0.20;
+      const fadeSpan = Math.max(0.05, fadeHi - fadeLo);
 
       // Disable hover reveal disc while the arms are still growing in.
       const targetIntensity = m.active && !prefersReduce && !intro ? 1 : 0;
@@ -825,18 +834,18 @@ export function AsciiHandsFooter() {
                 const jx =
                   (fract(Math.sin(seed * 12.7) * 91.3) - 0.5) *
                   2 *
-                  MOSAIC_SHATTER_PX *
+                  MOSAIC_SHATTER_PX * shatterK *
                   shatter;
                 const jy =
                   (fract(Math.sin(seed * 41.9) * 57.1) - 0.5) *
                   2 *
-                  MOSAIC_SHATTER_PX *
+                  MOSAIC_SHATTER_PX * shatterK *
                   shatter;
                 // Occasional splatter tiles fling further along arm normal
                 // — small clumps of image break loose from the crowd.
                 const splat = fract(Math.sin(seed * 73.1) * 811.7);
                 const splatterActive = splat < MOSAIC_SPLATTER_PROB ? 1 : 0;
-                const splatMag = splatterActive * MOSAIC_SPLATTER_PX * shatter;
+                const splatMag = splatterActive * MOSAIC_SPLATTER_PX * shatterK * shatter;
                 // Perpendicular to arm axis (rotate arm dir 90°).
                 const normX = -armDy;
                 const normY = armDx;
@@ -845,8 +854,8 @@ export function AsciiHandsFooter() {
                 const sx = jx + normX * splatMag * splatSign;
                 const sy = jy + normY * splatMag * splatSign;
                 const scale =
-                  MOSAIC_SCALE_MIN +
-                  (MOSAIC_SCALE_MAX - MOSAIC_SCALE_MIN) * (1 - shatter);
+                  scaleMinDyn +
+                  (MOSAIC_SCALE_MAX - scaleMinDyn) * (1 - shatter);
                 const tw = CELL_W * scale;
                 const th = CELL_H * scale;
                 const tx =
@@ -868,7 +877,7 @@ export function AsciiHandsFooter() {
                 // dissolve into the surrounding ASCII rather than snapping off.
                 const gg = Math.min(1, Math.max(0, gooey));
                 const ss = gg * gg * (3 - 2 * gg);
-                mosaicAlpha = Math.pow(ss, 0.85);
+                mosaicAlpha = Math.pow(ss, alphaGamma);
                 ctx.fillStyle = `rgba(${cr},${cg},${cb},${mosaicAlpha})`;
                 ctx.fillRect(tx, ty, tw, th);
               }
@@ -900,7 +909,7 @@ export function AsciiHandsFooter() {
         // switch, so edges dissolve rather than pop.
         let residueAlpha = 1;
         if (mosaicAlpha > 0) {
-          const t = Math.min(1, Math.max(0, (mosaicAlpha - 0.35) / 0.5));
+          const t = Math.min(1, Math.max(0, (mosaicAlpha - fadeLo) / fadeSpan));
           const fade = t * t * (3 - 2 * t);
           residueAlpha = 1 - fade;
           if (residueAlpha < 0.02) continue;
