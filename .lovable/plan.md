@@ -1,19 +1,40 @@
 ## 目标
-把当前 ASCII 手部效果使用的 `hands-pair.png` 资源替换为用户上传的新图 `Frame_1321320132-2.png`，保持所有代码、颜色、动效、交互参数不变。
+当前手部入场动画节奏偏快（1600ms），前沿宽度窄（0.08），并使用单一 `easeOutCubic`，导致「一闪就到」和末段收尾生硬。目标是让整段生长更慢、更连贯、有呼吸感，同时保持已有的骨架轨迹、描边、流动、揭示与视差效果不变。
 
-## 当前状态
-- 组件 `src/components/AsciiHandsFooter.tsx` 通过 `import handsPairAsset from "@/assets/hands-pair.png.asset.json"` 读取 CDN 资源。
-- 现有 asset 指向旧图（asset_id: aeabbf83-b4b7-4a8e-8ee0-42ca498cf9c2）。
-- 用户上传的新图为黑底、人类手与机械手相向伸出的高对比照片，适合现有 ASCII 采样逻辑。
+## 方案（只改 `src/components/AsciiHandsFooter.tsx` 顶部动画参数与入场渲染段）
 
-## 实施步骤
-1. 使用 `lovable-assets create` 将 `user-uploads://Frame_1321320132-2.png` 上传为 CDN asset，并输出到 `src/assets/hands-pair.png.asset.json`。
-2. 删除旧 asset 指针文件中原内容，写入新 CLI 生成的 JSON（保持文件名 `hands-pair.png.asset.json` 不变）。
-3. 不修改 `src/components/AsciiHandsFooter.tsx` 及其任何常量、动效、颜色或交互逻辑。
+1. **延长总时长**
+   - `INTRO_DURATION_MS`: `1600` → `2600`（约 +60%，主体生长更从容）。
+
+2. **更柔和的缓动**
+   - 用一段「先慢起、再匀速推进、末端缓收」的曲线替换 `easeOutCubic`：
+     - `introEase = t => t<0.5 ? 2*t*t : 1 - Math.pow(-2*t+2, 2)/2`（`easeInOutQuad`）
+   - 效果：起始不再突进，尾段不再急停，与后续持续流动过渡更自然。
+
+3. **加宽前沿过渡带**
+   - `INTRO_FRONT_WIDTH`: `0.08` → `0.18`
+   - 前沿的扰动/亮度增强跨度更长，视觉上从「一条硬边推进」变成「一段柔性生长带」。
+
+4. **前沿抖动降频、幅度略降**
+   - 将前沿 scramble 中的 `introProgress * 3.7` 系数降到 `1.6`，`frontK` 亮度增益从当前值降约 30%（避免慢速时闪烁感被放大）。
+
+5. **前沿之后的整体淡入**
+   - 当前 `armT ≤ introProgress` 的 cell 直接以最终亮度渲染；改为按「距离前沿的深度」再做一次 0.25s 短淡入（alpha 从 0.6→1），让新露出的字符不是「瞬间实心」，而是「浸润出来」。
+   - 实现：`const settleK = clamp((introProgress - c.armT) / 0.12, 0, 1); alpha *= 0.6 + 0.4*settleK;`
+
+6. **左右手轻微错峰（可选，默认开启）**
+   - 右臂（机械臂）起始延迟 `120ms`，让两只手不同步推进、更有叙事感。
+   - 实现：在计算 `introProgress` 时按 `c.side` 用不同 `start = introStartRef.current + (side==='R' ? 120 : 0)`。
+
+7. **`prefers-reduced-motion` 保持原行为**
+   - 该分支不改动，仍然一次性显示全部。
+
+## 交付
+- 仅编辑 `src/components/AsciiHandsFooter.tsx`：常量段 + `introProgress` 计算 + 前沿渲染分支。
+- 其它模块（hover 揭示、视差、字符倾斜、流动、描边、颜色）零改动。
 
 ## 验证
-- 运行 `bun run build` 确认构建通过。
-- 通过预览查看新的手部剪影是否被正确采样为 ASCII 字符，且原有揭示、视差、流动、描边等效果保持不变。
+- 本地预览刷新，观察：整段生长≈2.6s；前沿是一条柔性带而非硬边；左右手错峰；无明显阶跃/闪烁。
+- 用 Playwright 截 0ms / 800ms / 1600ms / 2400ms 四帧对比过渡是否平滑。
 
-## 不改动
-- 颜色、揭示盘半径/形状、视差强度、字符倾斜、入场生长、流动动效、描边层、代码结构。
+如果 2.6s 觉得偏慢或 0.18 前沿带偏宽，我可以再收一档（例如 2200ms / 0.14）。要不要我按这个方案实现？

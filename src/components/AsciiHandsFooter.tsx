@@ -83,9 +83,18 @@ const ARM_ANGLE_DEG = 60;
 // edge splashes along the arm vs across it.
 const ARM_ALIGN_STRENGTH = 0.85;
 // Intro reveal timing — arms grow from screen edge inward along the arm axis.
-const INTRO_DURATION_MS = 1600;
-const INTRO_FRONT_WIDTH = 0.08;
-const introEase = (t: number) => 1 - Math.pow(1 - t, 3);
+// Longer duration + easeInOutQuad + wider front band = a slower, more organic
+// "ink diffusion" growth that reads as breath rather than a hard sweep.
+const INTRO_DURATION_MS = 2600;
+const INTRO_FRONT_WIDTH = 0.18;
+// Right (robot) arm lags slightly behind the left so the two hands don't march
+// in lockstep — subtle narrative offset.
+const INTRO_SIDE_STAGGER_MS = 120;
+// Post-front "settle" band: cells behind the front fade the last stretch of
+// alpha from 0.6 → 1 across this fraction of armT.
+const INTRO_SETTLE_WIDTH = 0.12;
+const introEase = (t: number) =>
+  t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
 
 // Arm skeleton polylines in normalized targetRect coords (u=0 left..1 right,
 // v=0 top..1 bottom). Calibrated against hands-pair.png: human arm enters
@@ -483,20 +492,31 @@ export function AsciiHandsFooter() {
       const grid = gridRef.current;
       const m = mouseRef.current;
 
-      // Intro reveal progress (0..1). Cells with armT > progress are skipped.
-      let introProgress = 1;
+      // Intro reveal progress (0..1). Two-sided: left arm starts at t=0,
+      // right arm starts INTRO_SIDE_STAGGER_MS later. Per-cell selection
+      // happens in the render loop via `introProgressFor(side)`.
+      let introRawL = 1;
+      let introRawR = 1;
       if (!introDoneRef.current) {
         if (introVisibleRef.current && introStartRef.current != null) {
-          const raw = Math.min(
+          const elapsed = now - introStartRef.current;
+          introRawL = Math.min(1, Math.max(0, elapsed / INTRO_DURATION_MS));
+          introRawR = Math.min(
             1,
-            Math.max(0, (now - introStartRef.current) / INTRO_DURATION_MS),
+            Math.max(0, (elapsed - INTRO_SIDE_STAGGER_MS) / INTRO_DURATION_MS),
           );
-          introProgress = introEase(raw);
-          if (raw >= 1) introDoneRef.current = true;
+          if (introRawL >= 1 && introRawR >= 1) introDoneRef.current = true;
         } else {
-          introProgress = 0;
+          introRawL = 0;
+          introRawR = 0;
         }
       }
+      const introProgressL = introEase(introRawL);
+      const introProgressR = introEase(introRawR);
+      // A representative progress used only for gating global effects (flow
+      // amplitude, hover suppression). Use the slower of the two arms so
+      // hover doesn't re-enable while the robot arm is still growing.
+      const introProgress = Math.min(introProgressL, introProgressR);
       const intro = introProgress < 1;
 
       // Lerp intensity toward its target — no hard delay gate. The visual
@@ -574,7 +594,9 @@ export function AsciiHandsFooter() {
 
       for (let k = 0; k < cells.length; k++) {
         const c = cells[k];
-        if (intro && c.armT > introProgress) continue;
+        // Per-cell intro progress based on which arm the cell belongs to.
+        const cellProgress = c.x < w / 2 ? introProgressL : introProgressR;
+        if (intro && c.armT > cellProgress) continue;
         const bb = c.b;
 
         // Cell seed (used by flow, intro-front and gooey blocks).
@@ -605,9 +627,19 @@ export function AsciiHandsFooter() {
         let jitterX = 0;
         let jitterY = 0;
         let revealTilt = 0;
+        // Post-front settle alpha — cells that just crossed the front fade
+        // the last bit of opacity in over INTRO_SETTLE_WIDTH of armT.
+        let cellAlpha = 1;
+        if (intro) {
+          const settleK = Math.min(
+            1,
+            Math.max(0, (cellProgress - c.armT) / INTRO_SETTLE_WIDTH),
+          );
+          cellAlpha = 0.6 + 0.4 * settleK;
+        }
 
         if (intro) {
-          const frontDist = introProgress - c.armT;
+          const frontDist = cellProgress - c.armT;
           if (frontDist < INTRO_FRONT_WIDTH) {
             // Front-edge accent: scramble glyph, brighten toward highlight,
             // add small ±1px jitter for a spatter feel.
@@ -619,19 +651,19 @@ export function AsciiHandsFooter() {
                 ] ?? 0.5
               : 0.5;
             const scramble = fract(
-              Math.sin((seed + introProgress * 3.7) * 12.9898) * 43758.5453,
+              Math.sin((seed + cellProgress * 1.6) * 12.9898) * 43758.5453,
             );
             const scrambleOffset = Math.floor(
-              (scramble - 0.5) * RAMP_LEN * 0.5 * frontK,
+              (scramble - 0.5) * RAMP_LEN * 0.4 * frontK,
             );
             const finalIdx =
               ((c.idx + scrambleOffset) % RAMP_LEN + RAMP_LEN) % RAMP_LEN;
             ch = glyphAt(finalIdx);
-            const blend = frontK * 0.6;
+            const blend = frontK * 0.42;
             r += (HR - r) * blend;
             g += (HG - g) * blend;
             bl += (HB - bl) * blend;
-            const jK = frontK * 1.0;
+            const jK = frontK * 0.8;
             jitterX = (fract(Math.sin(seed * 91.3) * 217.7) - 0.5) * 2 * jK;
             jitterY = (fract(Math.sin(seed * 53.1) * 411.3) - 0.5) * 2 * jK;
           }
@@ -759,7 +791,7 @@ export function AsciiHandsFooter() {
           ctx.translate(cx, cy);
           ctx.rotate(finalAngle);
           if (c.isEdge) {
-            ctx.fillStyle = `rgba(15,12,25,0.75)`;
+            ctx.fillStyle = `rgba(15,12,25,${0.75 * cellAlpha})`;
             const lx = -CELL_W / 2;
             const ly = FONT_PX - CELL_H / 2;
             ctx.fillText(ch, lx - 1, ly - 1);
@@ -767,18 +799,18 @@ export function AsciiHandsFooter() {
             ctx.fillText(ch, lx - 1, ly + 1);
             ctx.fillText(ch, lx + 1, ly + 1);
           }
-          ctx.fillStyle = `rgba(${r | 0},${g | 0},${bl | 0},1)`;
+          ctx.fillStyle = `rgba(${r | 0},${g | 0},${bl | 0},${cellAlpha})`;
           ctx.fillText(ch, -CELL_W / 2, FONT_PX - CELL_H / 2);
           ctx.restore();
         } else {
           if (c.isEdge) {
-            ctx.fillStyle = `rgba(15,12,25,0.75)`;
+            ctx.fillStyle = `rgba(15,12,25,${0.75 * cellAlpha})`;
             ctx.fillText(ch, drawX - 1, drawY - 1);
             ctx.fillText(ch, drawX + 1, drawY - 1);
             ctx.fillText(ch, drawX - 1, drawY + 1);
             ctx.fillText(ch, drawX + 1, drawY + 1);
           }
-          ctx.fillStyle = `rgba(${r | 0},${g | 0},${bl | 0},1)`;
+          ctx.fillStyle = `rgba(${r | 0},${g | 0},${bl | 0},${cellAlpha})`;
           ctx.fillText(ch, drawX, drawY);
         }
       }
