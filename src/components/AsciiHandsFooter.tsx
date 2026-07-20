@@ -28,6 +28,10 @@ type Grid = {
   silIdx: Int32Array;
   // per-cell stable random 0..1, used for probabilistic spawn & glyph pick
   seed: Float32Array;
+  // per-cell RGB of the source image at grid resolution (cols*rows*3).
+  // Used by the hover mosaic-shatter reveal to paint the raw image pixels
+  // behind broken tile positions.
+  color: Uint8ClampedArray;
 };
 
 // good-fella.com's ASCII footer renders Cascadia Mono glyphs (from a 54-px
