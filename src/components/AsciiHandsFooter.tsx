@@ -1224,7 +1224,7 @@ export function AsciiHandsFooter() {
       <div
         aria-hidden
         className="pointer-events-none absolute inset-x-0 bottom-0 flex justify-center overflow-hidden"
-        style={{ height: "45%" }}
+        style={{ height: "45%", zIndex: 0 }}
       >
         <span
           className="select-none whitespace-nowrap font-bold tracking-tight"
@@ -1244,12 +1244,13 @@ export function AsciiHandsFooter() {
         ref={canvasRef}
         aria-hidden
         className="absolute inset-0 h-full w-full"
+        style={{ zIndex: 10 }}
       />
 
       <div
         aria-hidden
         className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2"
-        style={{ width: 200, height: 200, zIndex: 50 }}
+        style={{ width: 200, height: 200, zIndex: 60, isolation: "isolate" }}
       >
         {mounted && <LiquidMetalOrb />}
       </div>

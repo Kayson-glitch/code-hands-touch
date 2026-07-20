@@ -1,23 +1,25 @@
 ## 目标
-让紫色液态金属球（LiquidMetalOrb）在 footer 中稳定显示，并叠加在所有元素（背景大字、ASCII canvas）之上。
+在点击展开/收回马赛克动画期间，球体始终位于所有元素之上，且不拦截手部的 hover/click 交互。
 
-## 排查
-- Orb 容器已用 `absolute` 定位，但和 canvas 处于同一堆叠上下文、无显式 `z-index`；如果之后有任何元素或 canvas 覆盖，就看不到球体。
-- `LiquidMetalOrb` 里的 R3F `<Canvas>` 在 TanStack Start SSR 阶段可能报错或输出空节点，客户端 hydrate 后也可能没被正确挂载，导致预览为空。
-- WebGL 判定逻辑 (`!("WebGLRenderingContext" in window)`) 只在无 WebGL 时返回 null，本身没问题，但组件未做客户端保护。
+## 现状检查
+- `section` 是 `relative overflow-hidden`，形成堆叠上下文。
+- 背景 wordmark 容器：`absolute`，无 `z-index` → 默认 0。
+- ASCII `<canvas>`：`absolute inset-0`，无 `z-index` → 默认 0，但因 DOM 顺序在 wordmark 之后而覆盖它；点击/hover 事件由它接收。
+- 球体容器：`absolute` + `zIndex: 50` + `pointer-events-none`，DOM 顺序最后。
 
-## 修改方案（只动展示层，不改 hover/click/流动等既有效果）
+理论上球体已在最上层，但没有显式给 canvas 和 wordmark 分配 z-index，展开动画期间任何后续新增元素或第三方浮层都可能意外遮挡；同时应确保球体内部 R3F Canvas 也不吃事件。
 
-1. **`src/components/AsciiHandsFooter.tsx`**
-   - 给球体容器补一个最高层级：
-     - 追加 `z-50`（或 `style={{ zIndex: 50 }}`），保证盖过 wordmark 和 ASCII canvas。
-   - 用 `useHydrated()` 或本地 `mounted` state 包一层，只有客户端挂载后才渲染 `<LiquidMetalOrb />`，避免 SSR 空白。
+## 调整方案（仅调层级/事件，不动动画逻辑）
 
-2. **`src/components/LiquidMetalOrb.tsx`**
-   - 给 `<Canvas>` 加 `style={{ width: "100%", height: "100%", pointerEvents: "none" }}`，确保在 200×200 容器中撑满。
-   - 移除多余的 WebGL 探测（交给客户端渲染保护）；如需保留可只在 `useEffect` 内判定。
+**`src/components/AsciiHandsFooter.tsx`**
+- Wordmark 容器：追加 `style={{ zIndex: 0 }}`。
+- ASCII `<canvas>`：追加 `style={{ zIndex: 10 }}`（保持接收 hover/click）。
+- 球体容器：`zIndex` 由 50 提升为 `zIndex: 60`，并保留 `pointer-events-none`；再补一个 `style={{ isolation: "isolate" }}` 避免子级 Canvas 产生新的堆叠意外。
+
+**`src/components/LiquidMetalOrb.tsx`**
+- `<Canvas>` 的 `style` 已包含 `pointerEvents: "none"`，再补 `touchAction: "none"`，彻底避免移动端手势拦截。
 
 ## 验证
-- 保存后在预览中央应能看到 200px 的紫色金属球持续旋转/形变。
-- Hover 手部与点击锁定马赛克仍正常（容器 `pointer-events-none`，球体不拦截交互）。
-- Console 无 R3F/SSR 报错。
+- 展开/收回动画播放中，球体始终清晰可见、不被马赛克 tile 覆盖。
+- 手部 hover 破碎效果、单击锁定/再次单击收回均正常触发。
+- DevTools Elements 面板中球体容器 z-index = 60，canvas = 10，wordmark = 0。
