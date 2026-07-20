@@ -517,6 +517,7 @@ export function AsciiHandsFooter() {
     let parallaxY = 0;
     let discX = -9999;
     let discY = -9999;
+    let smoothSpeedK = 0;
     const draw = () => {
       if (!running) return;
       frame++;
