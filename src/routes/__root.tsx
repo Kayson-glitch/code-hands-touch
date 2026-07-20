@@ -77,14 +77,18 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Lovable App" },
-      { name: "description", content: "Lovable Generated Project" },
+      { title: "Good/Fella — ASCII Creation of Adam" },
+      { name: "description", content: "An interactive ASCII homage to Michelangelo's Creation of Adam — two hands sculpted from code, responding to your cursor." },
       { name: "author", content: "Lovable" },
-      { property: "og:title", content: "Lovable App" },
-      { property: "og:description", content: "Lovable Generated Project" },
+      { property: "og:title", content: "Good/Fella — ASCII Creation of Adam" },
+      { property: "og:description", content: "An interactive ASCII homage to Michelangelo's Creation of Adam — two hands sculpted from code, responding to your cursor." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
       { name: "twitter:site", content: "@Lovable" },
+      { name: "twitter:title", content: "Good/Fella — ASCII Creation of Adam" },
+      { name: "twitter:description", content: "An interactive ASCII homage to Michelangelo's Creation of Adam — two hands sculpted from code, responding to your cursor." },
+      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/29306ebd-bdea-4829-8e6d-9ff2f3f7f461/id-preview-4e39b9d3--5f189616-74af-43e1-9d81-6bf187196947.lovable.app-1784511719735.png" },
+      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/29306ebd-bdea-4829-8e6d-9ff2f3f7f461/id-preview-4e39b9d3--5f189616-74af-43e1-9d81-6bf187196947.lovable.app-1784511719735.png" },
     ],
     links: [
       {

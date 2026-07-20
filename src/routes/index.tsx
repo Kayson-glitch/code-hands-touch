@@ -14,7 +14,7 @@ export const Route = createFileRoute("/")({
       {
         property: "og:description",
         content:
-          "Two hands sculpted from code, responding to your cursor. A study inspired by Michelangelo's Creation of Adam.",
+          "An interactive ASCII homage to Michelangelo's Creation of Adam — two hands sculpted from code, responding to your cursor.",
       },
     ],
   }),
