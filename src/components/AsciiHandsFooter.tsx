@@ -384,6 +384,8 @@ function sampleImage(
 
 export function AsciiHandsFooter() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => { setMounted(true); }, []);
   const cellsRef = useRef<Cell[]>([]);
   const gridRef = useRef<Grid | null>(null);
   const mouseRef = useRef<{ x: number; y: number; active: boolean }>({
