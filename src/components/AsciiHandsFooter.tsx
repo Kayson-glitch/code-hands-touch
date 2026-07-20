@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import handsPairAsset from "@/assets/hands-pair.png.asset.json";
 import { LiquidMetalOrb } from "./LiquidMetalOrb";
 
@@ -384,6 +384,8 @@ function sampleImage(
 
 export function AsciiHandsFooter() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => { setMounted(true); }, []);
   const cellsRef = useRef<Cell[]>([]);
   const gridRef = useRef<Grid | null>(null);
   const mouseRef = useRef<{ x: number; y: number; active: boolean }>({
@@ -1247,9 +1249,9 @@ export function AsciiHandsFooter() {
       <div
         aria-hidden
         className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2"
-        style={{ width: 200, height: 200 }}
+        style={{ width: 200, height: 200, zIndex: 50 }}
       >
-        <LiquidMetalOrb />
+        {mounted && <LiquidMetalOrb />}
       </div>
 
     </section>

@@ -25,15 +25,12 @@ function Orb() {
 }
 
 export function LiquidMetalOrb() {
-  if (typeof window !== "undefined" && !("WebGLRenderingContext" in window)) {
-    return null;
-  }
   return (
     <Canvas
       dpr={[1, 2]}
       gl={{ alpha: true, antialias: true }}
       camera={{ position: [0, 0, 2.6], fov: 45 }}
-      style={{ background: "transparent" }}
+      style={{ background: "transparent", width: "100%", height: "100%", pointerEvents: "none" }}
     >
       <ambientLight intensity={0.4} />
       <directionalLight position={[3, 3, 3]} intensity={1.2} />
