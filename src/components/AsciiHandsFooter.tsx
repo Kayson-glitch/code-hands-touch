@@ -45,9 +45,9 @@ const CELL_W = 10;
 const CELL_H = 10;
 // Source (good-fella.com ASCIIEffect) uniforms — expressed in UV space,
 // aspect-corrected. See docs/plan.md notes.
-const GOOEY_RADIUS_UV = 0.0376;
-const GOOEY_SOFTNESS_UV = 0.020;
-const GOOEY_NOISE = 0.006;
+const GOOEY_RADIUS_UV = 0.048;
+const GOOEY_SOFTNESS_UV = 0.028;
+const GOOEY_NOISE = 0.011;
 // Max whole-scene parallax drift on hover, in CSS pixels. Small — mirrors the
 // source's "the picture leans toward the finger" feel.
 const PARALLAX_MAX = 13;
@@ -66,8 +66,8 @@ const REVEAL_TILT_MAX_DEG = 12;
 // through a shattered ASCII surface. Numbers below tuned against the
 // existing 10×10 cell pitch.
 const MOSAIC_MASK_THRESHOLD = 0.06;
-const MOSAIC_SHATTER_PX = 1.5; // max positional break at the disc edge
-const MOSAIC_SCALE_MIN = 0.88; // min tile occupancy at the disc edge
+const MOSAIC_SHATTER_PX = 2.5; // max positional break at the disc edge
+const MOSAIC_SCALE_MIN = 0.78; // min tile occupancy at the disc edge
 const MOSAIC_SCALE_MAX = 1.05; // max tile occupancy (center)
 const MOSAIC_SPLATTER_PROB = 0.09; // % of tiles that fling further out
 const MOSAIC_SPLATTER_PX = 5;
@@ -95,7 +95,7 @@ const SPEED_REF = 2.0;
 const ARM_ANGLE_DEG = 60;
 // 0 = isotropic noise, 1 = fully directional. Controls how much the broken
 // edge splashes along the arm vs across it.
-const ARM_ALIGN_STRENGTH = 0.25;
+const ARM_ALIGN_STRENGTH = 0.45;
 // Intro reveal timing — arms grow from screen edge inward along the arm axis.
 // A hermite curve gives fast forearm coverage, then a distinct deceleration as
 // the reveal reaches the wrist / palm / fingers.
@@ -674,7 +674,6 @@ export function AsciiHandsFooter() {
         let revealTilt = 0;
         // Set true when this cell is covered by a mosaic-shatter tile — we
         // then skip the ASCII glyph pass so the raw image reads cleanly.
-        let mosaicCovered = false;
         let mosaicAlpha = 0;
         // Post-front settle alpha — cells that just crossed the front fade
         // the last bit of opacity in over INTRO_SETTLE_WIDTH of armT.
@@ -751,20 +750,23 @@ export function AsciiHandsFooter() {
           const localI = i * armDx + j * armDy;
           const localJ = -i * armDy + j * armDx;
           const midFreq =
-            Math.sin(localI * 0.3 + localJ * 0.9 + seed * 1.5) * GOOEY_NOISE * 1.2;
+            Math.sin(localI * 0.3 + localJ * 0.9 + seed * 1.5) * GOOEY_NOISE * 2.6;
+          const lowFreq2 =
+            Math.sin(localI * 0.15 + localJ * 0.42 + seed * 3.1) * GOOEY_NOISE * 3.0;
           // Slow time wobble so the edge "breathes" rather than flickers.
           const wobble = prefersReduce
             ? 0
             : Math.sin(timeSec * 0.5 + seed * 6.28318) * GOOEY_NOISE * 0.6;
           // High-frequency spatial hash — creates the fine chipped/broken texture.
           const highFreq =
-            (fract(Math.sin(seed * 45.7) * 123.45) - 0.5) * GOOEY_NOISE * 0.15;
+            (fract(Math.sin(seed * 45.7) * 123.45) - 0.5) * GOOEY_NOISE * 0.35;
           const microFract =
-            (fract(Math.sin(seed * 137.9) * 437.58) - 0.5) * GOOEY_NOISE * 0.1;
+            (fract(Math.sin(seed * 137.9) * 437.58) - 0.5) * GOOEY_NOISE * 0.2;
           const distorted =
             d +
             lowFreq +
             midFreq * dirW +
+            lowFreq2 * dirW +
             wobble +
             highFreq * dirW +
             microFract * dirW;
@@ -861,13 +863,14 @@ export function AsciiHandsFooter() {
                 const cr = grid.color[colBase + 0] ?? 0;
                 const cg = grid.color[colBase + 1] ?? 0;
                 const cb = grid.color[colBase + 2] ?? 0;
-                mosaicAlpha = Math.min(1, gooey * 1.35);
+                // Smoothstep-shaped alpha: saturated at the disc core,
+                // gracefully fading through the shattered edge so tiles
+                // dissolve into the surrounding ASCII rather than snapping off.
+                const gg = Math.min(1, Math.max(0, gooey));
+                const ss = gg * gg * (3 - 2 * gg);
+                mosaicAlpha = Math.pow(ss, 0.85);
                 ctx.fillStyle = `rgba(${cr},${cg},${cb},${mosaicAlpha})`;
                 ctx.fillRect(tx, ty, tw, th);
-                // Strong-cover tiles suppress the glyph entirely; edge tiles
-                // let a faint glyph bleed through for continuity with the
-                // shattered ASCII surface.
-                mosaicCovered = mosaicAlpha > 0.55;
               }
             }
           }
@@ -892,14 +895,16 @@ export function AsciiHandsFooter() {
           }
         }
 
-        // Mosaic-covered cells skip the ASCII glyph — the raw pixel tile
-        // stands on its own. Edge cells keep a faint glyph (via reduced
-        // alpha below) so the shatter blends into surrounding ASCII.
-        if (mosaicCovered) {
-          continue;
+        // Continuous mosaic→glyph fade: as the mosaic tile grows more
+        // opaque, the underlying ASCII glyph smoothly recedes. No hard
+        // switch, so edges dissolve rather than pop.
+        let residueAlpha = 1;
+        if (mosaicAlpha > 0) {
+          const t = Math.min(1, Math.max(0, (mosaicAlpha - 0.35) / 0.5));
+          const fade = t * t * (3 - 2 * t);
+          residueAlpha = 1 - fade;
+          if (residueAlpha < 0.02) continue;
         }
-        // Faint glyph residue in partially-mosaiced cells.
-        const residueAlpha = mosaicAlpha > 0 ? 1 - mosaicAlpha * 0.75 : 1;
         const drawX = c.x + cellOffX + jitterX;
         const drawY = c.y + FONT_PX + cellOffY + jitterY;
         const finalAngle = angle + revealTilt;
