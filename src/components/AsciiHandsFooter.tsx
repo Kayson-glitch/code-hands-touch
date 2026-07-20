@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import handsPairAsset from "@/assets/hands-pair.png.asset.json";
 
 // Ordered density ramp, dark → bright. Mirrors the exact 70-glyph set used by
@@ -66,11 +66,14 @@ const REVEAL_TILT_MAX_DEG = 12;
 // through a shattered ASCII surface. Numbers below tuned against the
 // existing 10×10 cell pitch.
 const MOSAIC_MASK_THRESHOLD = 0.06;
-const MOSAIC_SHATTER_PX = 3;   // max positional break at the disc edge
-const MOSAIC_SCALE_MIN = 0.72; // min tile occupancy at the disc edge
-const MOSAIC_SCALE_MAX = 1.05; // max tile occupancy (center)
-const MOSAIC_SPLATTER_PROB = 0.09; // % of tiles that fling further out
-const MOSAIC_SPLATTER_PX = 5;
+const MOSAIC_SHATTER_PX = 2.2; // max positional break at the disc edge (per sub-tile)
+const MOSAIC_SCALE_MIN = 0.68; // min sub-tile occupancy at the disc edge
+const MOSAIC_SCALE_MAX = 1.02; // max sub-tile occupancy (center)
+const MOSAIC_SPLATTER_PROB = 0.09; // % of sub-tiles that fling further out
+const MOSAIC_SPLATTER_PX = 4;
+
+// Available reveal shapes for the debug panel.
+type RevealShape = "A" | "B" | "C" | "D";
 // Continuous character flow along arm skeleton — a low-frequency, time-driven
 // phase rides along `armT` so glyphs shimmer/drift between neighbouring ramp
 // densities. Independent of hover; gives the piece a subtle "always alive" feel.
@@ -373,7 +376,11 @@ function sampleImage(
   };
 }
 
-export function AsciiHandsFooter() {
+export function AsciiHandsFooter({
+  showControls = true,
+}: {
+  showControls?: boolean;
+} = {}) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const cellsRef = useRef<Cell[]>([]);
   const gridRef = useRef<Grid | null>(null);
@@ -388,6 +395,19 @@ export function AsciiHandsFooter() {
   const introStartRef = useRef<number | null>(null);
   const introDoneRef = useRef(false);
   const introVisibleRef = useRef(false);
+
+  // Debug-panel state → mirrored into refs so the rAF loop reads without
+  // re-subscribing to React state on every frame.
+  const [shape, setShape] = useState<RevealShape>("A");
+  const [subGrid, setSubGrid] = useState<number>(2);
+  const shapeRef = useRef<RevealShape>(shape);
+  const subGridRef = useRef<number>(subGrid);
+  useEffect(() => {
+    shapeRef.current = shape;
+  }, [shape]);
+  useEffect(() => {
+    subGridRef.current = subGrid;
+  }, [subGrid]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -732,12 +752,38 @@ export function AsciiHandsFooter() {
           const cellUvY = c.y / minWH;
           const ddx = cellUvX - mUvX;
           const ddy = cellUvY - mUvY;
-          const d = Math.sqrt(ddx * ddx + ddy * ddy);
+          const dEuclid = Math.sqrt(ddx * ddx + ddy * ddy);
+          const shapeMode = shapeRef.current;
+          // Base radial distance per shape (before noise). Kept on the same
+          // scale as rHi so a single set of noise magnitudes reads correctly
+          // across all four shapes.
+          let d = dEuclid;
+          // along / across arm-axis decomposition (used by B and C).
+          const nnx = dEuclid > 1e-5 ? ddx / dEuclid : 0;
+          const nny = dEuclid > 1e-5 ? ddy / dEuclid : 0;
+          const alongAxis = nnx * armDx + nny * armDy;
+          if (shapeMode === "B") {
+            // Stretched ellipse along the arm axis.
+            const along = ddx * armDx + ddy * armDy;
+            const across = -ddx * armDy + ddy * armDx;
+            d = Math.sqrt((along / 1.55) * (along / 1.55) + (across / 0.65) * (across / 0.65));
+          } else if (shapeMode === "C") {
+            // Axis-aligned diamond: L1 distance, scaled to keep footprint
+            // roughly comparable to the circle at rHi.
+            d = (Math.abs(ddx) + Math.abs(ddy)) * 0.82;
+          } else if (shapeMode === "D") {
+            // Organic blob: subtract a low-frequency angular bulge from
+            // the euclidean distance so the outline breathes.
+            const theta = Math.atan2(ddy, ddx);
+            const bulge =
+              (Math.sin(theta * 3 + timeSec * 0.7) * 0.28 +
+                Math.sin(theta * 5 - timeSec * 0.5) * 0.14) *
+              GOOEY_RADIUS_UV *
+              intensity;
+            d = Math.max(0, dEuclid - bulge);
+          }
           // Directional weight: 1+STR along the arm axis, 1-STR across it.
-          const nx = d > 1e-5 ? ddx / d : 0;
-          const ny = d > 1e-5 ? ddy / d : 0;
-          const along = nx * armDx + ny * armDy;
-          const dirW = 1 + ARM_ALIGN_STRENGTH * (along * along * 2 - 1);
+          const dirW = 1 + ARM_ALIGN_STRENGTH * (alongAxis * alongAxis * 2 - 1);
 
           // Per-cell hash + slow time wobble → ragged, gooey edge.
           const i = Math.floor((c.x - grid.originX) / CELL_W);
@@ -820,39 +866,6 @@ export function AsciiHandsFooter() {
               // mask so the shatter edge matches the ASCII reveal edge.
               if (gooey > MOSAIC_MASK_THRESHOLD) {
                 const shatter = 1 - gooey; // 0 at center, ~1 at disc edge
-                const jx =
-                  (fract(Math.sin(seed * 12.7) * 91.3) - 0.5) *
-                  2 *
-                  MOSAIC_SHATTER_PX *
-                  shatter;
-                const jy =
-                  (fract(Math.sin(seed * 41.9) * 57.1) - 0.5) *
-                  2 *
-                  MOSAIC_SHATTER_PX *
-                  shatter;
-                // Occasional splatter tiles fling further along arm normal
-                // — small clumps of image break loose from the crowd.
-                const splat = fract(Math.sin(seed * 73.1) * 811.7);
-                const splatterActive = splat < MOSAIC_SPLATTER_PROB ? 1 : 0;
-                const splatMag = splatterActive * MOSAIC_SPLATTER_PX * shatter;
-                // Perpendicular to arm axis (rotate arm dir 90°).
-                const normX = -armDy;
-                const normY = armDx;
-                const splatSign =
-                  fract(Math.sin(seed * 19.3) * 313.7) > 0.5 ? 1 : -1;
-                const sx = jx + normX * splatMag * splatSign;
-                const sy = jy + normY * splatMag * splatSign;
-                const scale =
-                  MOSAIC_SCALE_MIN +
-                  (MOSAIC_SCALE_MAX - MOSAIC_SCALE_MIN) * (1 - shatter);
-                const tw = CELL_W * scale;
-                const th = CELL_H * scale;
-                const tx =
-                  c.x + offX * (0.30 + bb * 0.55 + c.armT * 0.45) +
-                  sx + (CELL_W - tw) * 0.5;
-                const ty =
-                  c.y + offY * (0.30 + bb * 0.55 + c.armT * 0.45) +
-                  sy + (CELL_H - th) * 0.5;
                 // Lookup source color for this cell from grid.color.
                 const colBase =
                   (Math.floor((c.y - grid.originY) / CELL_H) * grid.cols +
@@ -862,8 +875,60 @@ export function AsciiHandsFooter() {
                 const cg = grid.color[colBase + 1] ?? 0;
                 const cb = grid.color[colBase + 2] ?? 0;
                 mosaicAlpha = Math.min(1, gooey * 1.35);
-                ctx.fillStyle = `rgba(${cr},${cg},${cb},${mosaicAlpha})`;
-                ctx.fillRect(tx, ty, tw, th);
+                // Sub-divide each cell into `sub × sub` mini-tiles so
+                // shatter reads as fine crumb rather than one 10-px block.
+                const sub = Math.max(1, Math.min(4, subGridRef.current | 0));
+                const subW = CELL_W / sub;
+                const subH = CELL_H / sub;
+                const parX = offX * (0.30 + bb * 0.55 + c.armT * 0.45);
+                const parY = offY * (0.30 + bb * 0.55 + c.armT * 0.45);
+                // Perpendicular to arm axis (rotate arm dir 90°) — used by
+                // occasional splatter sub-tiles.
+                const normX = -armDy;
+                const normY = armDx;
+                for (let ssy = 0; ssy < sub; ssy++) {
+                  for (let ssx = 0; ssx < sub; ssx++) {
+                    const subSeed = fract(
+                      Math.sin(seed * 91.7 + ssx * 12.3 + ssy * 27.1) * 511.3,
+                    );
+                    const jx =
+                      (fract(Math.sin(subSeed * 12.7) * 91.3) - 0.5) *
+                      2 *
+                      MOSAIC_SHATTER_PX *
+                      shatter;
+                    const jy =
+                      (fract(Math.sin(subSeed * 41.9) * 57.1) - 0.5) *
+                      2 *
+                      MOSAIC_SHATTER_PX *
+                      shatter;
+                    const splat = fract(Math.sin(subSeed * 73.1) * 811.7);
+                    const splatterActive =
+                      splat < MOSAIC_SPLATTER_PROB ? 1 : 0;
+                    const splatMag =
+                      splatterActive * MOSAIC_SPLATTER_PX * shatter;
+                    const splatSign =
+                      fract(Math.sin(subSeed * 19.3) * 313.7) > 0.5 ? 1 : -1;
+                    const sx = jx + normX * splatMag * splatSign;
+                    const sy = jy + normY * splatMag * splatSign;
+                    const scale =
+                      MOSAIC_SCALE_MIN +
+                      (MOSAIC_SCALE_MAX - MOSAIC_SCALE_MIN) * (1 - shatter);
+                    const tw = subW * scale;
+                    const th = subH * scale;
+                    const tx =
+                      c.x + ssx * subW + parX + sx + (subW - tw) * 0.5;
+                    const ty =
+                      c.y + ssy * subH + parY + sy + (subH - th) * 0.5;
+                    // Slight per-sub-tile brightness jitter breaks up the
+                    // flat repeat of the same cell color across sub-tiles.
+                    const lj = 0.85 + subSeed * 0.3;
+                    const rr = Math.min(255, cr * lj) | 0;
+                    const gg = Math.min(255, cg * lj) | 0;
+                    const bbCol = Math.min(255, cb * lj) | 0;
+                    ctx.fillStyle = `rgba(${rr},${gg},${bbCol},${mosaicAlpha})`;
+                    ctx.fillRect(tx, ty, tw, th);
+                  }
+                }
                 // Strong-cover tiles suppress the glyph entirely; edge tiles
                 // let a faint glyph bleed through for continuity with the
                 // shattered ASCII surface.
@@ -985,6 +1050,52 @@ export function AsciiHandsFooter() {
         className="absolute inset-0 h-full w-full"
       />
 
+      {showControls && (
+        <div
+          className="absolute right-3 top-3 z-10 select-none rounded-md border border-white/10 bg-black/60 px-3 py-2 text-[11px] leading-tight text-white/85 backdrop-blur"
+          style={{ fontFamily: '"Geist Mono", ui-monospace, monospace' }}
+        >
+          <div className="mb-1 text-white/60">Reveal Shape</div>
+          <div className="mb-2 flex gap-1">
+            {(["A", "B", "C", "D"] as const).map((s) => (
+              <button
+                key={s}
+                type="button"
+                onClick={() => setShape(s)}
+                className={`h-6 w-7 rounded border text-[11px] transition ${
+                  shape === s
+                    ? "border-white/70 bg-white/20 text-white"
+                    : "border-white/15 bg-white/5 text-white/70 hover:bg-white/10"
+                }`}
+                title={
+                  s === "A"
+                    ? "Irregular ink disc"
+                    : s === "B"
+                      ? "Arm-aligned ellipse"
+                      : s === "C"
+                        ? "Diamond shatter"
+                        : "Organic blob"
+                }
+              >
+                {s}
+              </button>
+            ))}
+          </div>
+          <div className="mb-1 flex items-center justify-between text-white/60">
+            <span>Mosaic sub-grid</span>
+            <span className="text-white/85">{subGrid}×{subGrid}</span>
+          </div>
+          <input
+            type="range"
+            min={1}
+            max={4}
+            step={1}
+            value={subGrid}
+            onChange={(e) => setSubGrid(parseInt(e.target.value, 10))}
+            className="w-40 accent-white/70"
+          />
+        </div>
+      )}
     </section>
   );
 }
