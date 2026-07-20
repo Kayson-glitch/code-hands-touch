@@ -28,6 +28,10 @@ type Grid = {
   silIdx: Int32Array;
   // per-cell stable random 0..1, used for probabilistic spawn & glyph pick
   seed: Float32Array;
+  // per-cell RGB of the source image at grid resolution (cols*rows*3).
+  // Used by the hover mosaic-shatter reveal to paint the raw image pixels
+  // behind broken tile positions.
+  color: Uint8ClampedArray;
 };
 
 // good-fella.com's ASCII footer renders Cascadia Mono glyphs (from a 54-px
@@ -57,6 +61,16 @@ const TILT_FALLOFF = 320;
 // characters are "woken up" into a hand-set angle where the cursor reveals
 // them, and stay upright everywhere else.
 const REVEAL_TILT_MAX_DEG = 12;
+// Hover mosaic-shatter reveal — inside the disc, cells are replaced by
+// broken tiles of the raw source image so the underlying photo peeks
+// through a shattered ASCII surface. Numbers below tuned against the
+// existing 10×10 cell pitch.
+const MOSAIC_MASK_THRESHOLD = 0.06;
+const MOSAIC_SHATTER_PX = 3;   // max positional break at the disc edge
+const MOSAIC_SCALE_MIN = 0.72; // min tile occupancy at the disc edge
+const MOSAIC_SCALE_MAX = 1.05; // max tile occupancy (center)
+const MOSAIC_SPLATTER_PROB = 0.09; // % of tiles that fling further out
+const MOSAIC_SPLATTER_PX = 5;
 // Continuous character flow along arm skeleton — a low-frequency, time-driven
 // phase rides along `armT` so glyphs shimmer/drift between neighbouring ramp
 // densities. Independent of hover; gives the piece a subtle "always alive" feel.
@@ -231,6 +245,16 @@ function sampleImage(
   (octx as unknown as { filter: string }).filter = "none";
   const data = octx.getImageData(0, 0, cols, rows).data;
 
+  // Grid-resolution color buffer (RGB, no alpha) — feeds the hover mosaic
+  // shatter reveal. Built once per resample from the same downsampled image
+  // so tiles land exactly on ASCII cell boundaries.
+  const color = new Uint8ClampedArray(cols * rows * 3);
+  for (let p = 0, q = 0; q < cols * rows; p += 4, q += 1) {
+    color[q * 3 + 0] = data[p + 0];
+    color[q * 3 + 1] = data[p + 1];
+    color[q * 3 + 2] = data[p + 2];
+  }
+
   // Pass 1: perceptual luma (Rec.709) for every non-background cell.
   type Raw = { i: number; j: number; y: number; a: number };
   const raws: Raw[] = [];
@@ -255,6 +279,7 @@ function sampleImage(
     originY: targetRect.y,
     silIdx: new Int32Array(cols * rows).fill(-1),
     seed: new Float32Array(cols * rows),
+    color,
   };
   if (raws.length === 0) return { cells: [], grid: emptyGrid };
 
@@ -343,6 +368,7 @@ function sampleImage(
       originY: targetRect.y,
       silIdx,
       seed,
+      color,
     },
   };
 }
@@ -646,6 +672,10 @@ export function AsciiHandsFooter() {
         let jitterX = 0;
         let jitterY = 0;
         let revealTilt = 0;
+        // Set true when this cell is covered by a mosaic-shatter tile — we
+        // then skip the ASCII glyph pass so the raw image reads cleanly.
+        let mosaicCovered = false;
+        let mosaicAlpha = 0;
         // Post-front settle alpha — cells that just crossed the front fade
         // the last bit of opacity in over INTRO_SETTLE_WIDTH of armT.
         let cellAlpha = 1;
@@ -784,6 +814,61 @@ export function AsciiHandsFooter() {
               r += (HR - r) * sharpL;
               g += (HG - g) * sharpL;
               bl += (HB - bl) * sharpL;
+
+              // Mosaic-shatter reveal: draw the raw source pixel as a broken
+              // tile behind (in place of) the glyph. Uses the same `gooey`
+              // mask so the shatter edge matches the ASCII reveal edge.
+              if (gooey > MOSAIC_MASK_THRESHOLD) {
+                const shatter = 1 - gooey; // 0 at center, ~1 at disc edge
+                const jx =
+                  (fract(Math.sin(seed * 12.7) * 91.3) - 0.5) *
+                  2 *
+                  MOSAIC_SHATTER_PX *
+                  shatter;
+                const jy =
+                  (fract(Math.sin(seed * 41.9) * 57.1) - 0.5) *
+                  2 *
+                  MOSAIC_SHATTER_PX *
+                  shatter;
+                // Occasional splatter tiles fling further along arm normal
+                // — small clumps of image break loose from the crowd.
+                const splat = fract(Math.sin(seed * 73.1) * 811.7);
+                const splatterActive = splat < MOSAIC_SPLATTER_PROB ? 1 : 0;
+                const splatMag = splatterActive * MOSAIC_SPLATTER_PX * shatter;
+                // Perpendicular to arm axis (rotate arm dir 90°).
+                const normX = -armDy;
+                const normY = armDx;
+                const splatSign =
+                  fract(Math.sin(seed * 19.3) * 313.7) > 0.5 ? 1 : -1;
+                const sx = jx + normX * splatMag * splatSign;
+                const sy = jy + normY * splatMag * splatSign;
+                const scale =
+                  MOSAIC_SCALE_MIN +
+                  (MOSAIC_SCALE_MAX - MOSAIC_SCALE_MIN) * (1 - shatter);
+                const tw = CELL_W * scale;
+                const th = CELL_H * scale;
+                const tx =
+                  c.x + offX * (0.30 + bb * 0.55 + c.armT * 0.45) +
+                  sx + (CELL_W - tw) * 0.5;
+                const ty =
+                  c.y + offY * (0.30 + bb * 0.55 + c.armT * 0.45) +
+                  sy + (CELL_H - th) * 0.5;
+                // Lookup source color for this cell from grid.color.
+                const colBase =
+                  (Math.floor((c.y - grid.originY) / CELL_H) * grid.cols +
+                    Math.floor((c.x - grid.originX) / CELL_W)) *
+                  3;
+                const cr = grid.color[colBase + 0] ?? 0;
+                const cg = grid.color[colBase + 1] ?? 0;
+                const cb = grid.color[colBase + 2] ?? 0;
+                mosaicAlpha = Math.min(1, gooey * 1.35);
+                ctx.fillStyle = `rgba(${cr},${cg},${cb},${mosaicAlpha})`;
+                ctx.fillRect(tx, ty, tw, th);
+                // Strong-cover tiles suppress the glyph entirely; edge tiles
+                // let a faint glyph bleed through for continuity with the
+                // shattered ASCII surface.
+                mosaicCovered = mosaicAlpha > 0.55;
+              }
             }
           }
         }
@@ -807,6 +892,14 @@ export function AsciiHandsFooter() {
           }
         }
 
+        // Mosaic-covered cells skip the ASCII glyph — the raw pixel tile
+        // stands on its own. Edge cells keep a faint glyph (via reduced
+        // alpha below) so the shatter blends into surrounding ASCII.
+        if (mosaicCovered) {
+          continue;
+        }
+        // Faint glyph residue in partially-mosaiced cells.
+        const residueAlpha = mosaicAlpha > 0 ? 1 - mosaicAlpha * 0.75 : 1;
         const drawX = c.x + cellOffX + jitterX;
         const drawY = c.y + FONT_PX + cellOffY + jitterY;
         const finalAngle = angle + revealTilt;
@@ -819,7 +912,7 @@ export function AsciiHandsFooter() {
           ctx.translate(cx, cy);
           ctx.rotate(finalAngle);
           if (c.isEdge) {
-            ctx.fillStyle = `rgba(15,12,25,${0.75 * cellAlpha})`;
+            ctx.fillStyle = `rgba(15,12,25,${0.75 * cellAlpha * residueAlpha})`;
             const lx = -CELL_W / 2;
             const ly = FONT_PX - CELL_H / 2;
             ctx.fillText(ch, lx - 1, ly - 1);
@@ -827,18 +920,18 @@ export function AsciiHandsFooter() {
             ctx.fillText(ch, lx - 1, ly + 1);
             ctx.fillText(ch, lx + 1, ly + 1);
           }
-          ctx.fillStyle = `rgba(${r | 0},${g | 0},${bl | 0},${cellAlpha})`;
+          ctx.fillStyle = `rgba(${r | 0},${g | 0},${bl | 0},${cellAlpha * residueAlpha})`;
           ctx.fillText(ch, -CELL_W / 2, FONT_PX - CELL_H / 2);
           ctx.restore();
         } else {
           if (c.isEdge) {
-            ctx.fillStyle = `rgba(15,12,25,${0.75 * cellAlpha})`;
+            ctx.fillStyle = `rgba(15,12,25,${0.75 * cellAlpha * residueAlpha})`;
             ctx.fillText(ch, drawX - 1, drawY - 1);
             ctx.fillText(ch, drawX + 1, drawY - 1);
             ctx.fillText(ch, drawX - 1, drawY + 1);
             ctx.fillText(ch, drawX + 1, drawY + 1);
           }
-          ctx.fillStyle = `rgba(${r | 0},${g | 0},${bl | 0},${cellAlpha})`;
+          ctx.fillStyle = `rgba(${r | 0},${g | 0},${bl | 0},${cellAlpha * residueAlpha})`;
           ctx.fillText(ch, drawX, drawY);
         }
       }
