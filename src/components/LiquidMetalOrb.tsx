@@ -13,7 +13,6 @@ function Orb() {
   return (
     <mesh ref={ref}>
       <icosahedronGeometry args={[1, 64]} />
-      {/* @ts-expect-error drei material props */}
       <MeshDistortMaterial
         color="#C5A9FF"
         metalness={0.9}
