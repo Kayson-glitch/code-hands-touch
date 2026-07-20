@@ -752,12 +752,38 @@ export function AsciiHandsFooter({
           const cellUvY = c.y / minWH;
           const ddx = cellUvX - mUvX;
           const ddy = cellUvY - mUvY;
-          const d = Math.sqrt(ddx * ddx + ddy * ddy);
+          const dEuclid = Math.sqrt(ddx * ddx + ddy * ddy);
+          const shapeMode = shapeRef.current;
+          // Base radial distance per shape (before noise). Kept on the same
+          // scale as rHi so a single set of noise magnitudes reads correctly
+          // across all four shapes.
+          let d = dEuclid;
+          // along / across arm-axis decomposition (used by B and C).
+          const nnx = dEuclid > 1e-5 ? ddx / dEuclid : 0;
+          const nny = dEuclid > 1e-5 ? ddy / dEuclid : 0;
+          const alongAxis = nnx * armDx + nny * armDy;
+          if (shapeMode === "B") {
+            // Stretched ellipse along the arm axis.
+            const along = ddx * armDx + ddy * armDy;
+            const across = -ddx * armDy + ddy * armDx;
+            d = Math.sqrt((along / 1.55) * (along / 1.55) + (across / 0.65) * (across / 0.65));
+          } else if (shapeMode === "C") {
+            // Axis-aligned diamond: L1 distance, scaled to keep footprint
+            // roughly comparable to the circle at rHi.
+            d = (Math.abs(ddx) + Math.abs(ddy)) * 0.82;
+          } else if (shapeMode === "D") {
+            // Organic blob: subtract a low-frequency angular bulge from
+            // the euclidean distance so the outline breathes.
+            const theta = Math.atan2(ddy, ddx);
+            const bulge =
+              (Math.sin(theta * 3 + timeSec * 0.7) * 0.28 +
+                Math.sin(theta * 5 - timeSec * 0.5) * 0.14) *
+              GOOEY_RADIUS_UV *
+              intensity;
+            d = Math.max(0, dEuclid - bulge);
+          }
           // Directional weight: 1+STR along the arm axis, 1-STR across it.
-          const nx = d > 1e-5 ? ddx / d : 0;
-          const ny = d > 1e-5 ? ddy / d : 0;
-          const along = nx * armDx + ny * armDy;
-          const dirW = 1 + ARM_ALIGN_STRENGTH * (along * along * 2 - 1);
+          const dirW = 1 + ARM_ALIGN_STRENGTH * (alongAxis * alongAxis * 2 - 1);
 
           // Per-cell hash + slow time wobble → ragged, gooey edge.
           const i = Math.floor((c.x - grid.originX) / CELL_W);
