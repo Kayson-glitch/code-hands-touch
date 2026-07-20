@@ -83,9 +83,18 @@ const ARM_ANGLE_DEG = 60;
 // edge splashes along the arm vs across it.
 const ARM_ALIGN_STRENGTH = 0.85;
 // Intro reveal timing — arms grow from screen edge inward along the arm axis.
-const INTRO_DURATION_MS = 1600;
-const INTRO_FRONT_WIDTH = 0.08;
-const introEase = (t: number) => 1 - Math.pow(1 - t, 3);
+// Longer duration + easeInOutQuad + wider front band = a slower, more organic
+// "ink diffusion" growth that reads as breath rather than a hard sweep.
+const INTRO_DURATION_MS = 2600;
+const INTRO_FRONT_WIDTH = 0.18;
+// Right (robot) arm lags slightly behind the left so the two hands don't march
+// in lockstep — subtle narrative offset.
+const INTRO_SIDE_STAGGER_MS = 120;
+// Post-front "settle" band: cells behind the front fade the last stretch of
+// alpha from 0.6 → 1 across this fraction of armT.
+const INTRO_SETTLE_WIDTH = 0.12;
+const introEase = (t: number) =>
+  t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
 
 // Arm skeleton polylines in normalized targetRect coords (u=0 left..1 right,
 // v=0 top..1 bottom). Calibrated against hands-pair.png: human arm enters
