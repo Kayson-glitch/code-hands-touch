@@ -659,10 +659,19 @@ export function AsciiHandsFooter() {
 
         if (intro) {
           const frontDist = cellProgress - c.armT;
-          if (frontDist < INTRO_FRONT_WIDTH) {
+          // Widen the front band once the reveal has crossed the wrist so the
+          // palm/fingers unfurl feels softer and reinforces the slowdown.
+          const wristBlend = Math.min(
+            1,
+            Math.max(0, (cellProgress - INTRO_WRIST_ANCHOR) / 0.12),
+          );
+          const frontWidth =
+            INTRO_FRONT_WIDTH_BASE +
+            (INTRO_FRONT_WIDTH_WRIST - INTRO_FRONT_WIDTH_BASE) * wristBlend;
+          if (frontDist < frontWidth) {
             // Front-edge accent: scramble glyph, brighten toward highlight,
             // add small ±1px jitter for a spatter feel.
-            const frontK = 1 - frontDist / INTRO_FRONT_WIDTH; // 1 at front, 0 behind
+            const frontK = 1 - frontDist / frontWidth; // 1 at front, 0 behind
             const seed = grid
               ? grid.seed[
                   Math.floor((c.y - grid.originY) / CELL_H) * grid.cols +
