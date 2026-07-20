@@ -235,6 +235,16 @@ function sampleImage(
   (octx as unknown as { filter: string }).filter = "none";
   const data = octx.getImageData(0, 0, cols, rows).data;
 
+  // Grid-resolution color buffer (RGB, no alpha) — feeds the hover mosaic
+  // shatter reveal. Built once per resample from the same downsampled image
+  // so tiles land exactly on ASCII cell boundaries.
+  const color = new Uint8ClampedArray(cols * rows * 3);
+  for (let p = 0, q = 0; q < cols * rows; p += 4, q += 1) {
+    color[q * 3 + 0] = data[p + 0];
+    color[q * 3 + 1] = data[p + 1];
+    color[q * 3 + 2] = data[p + 2];
+  }
+
   // Pass 1: perceptual luma (Rec.709) for every non-background cell.
   type Raw = { i: number; j: number; y: number; a: number };
   const raws: Raw[] = [];
@@ -259,6 +269,7 @@ function sampleImage(
     originY: targetRect.y,
     silIdx: new Int32Array(cols * rows).fill(-1),
     seed: new Float32Array(cols * rows),
+    color,
   };
   if (raws.length === 0) return { cells: [], grid: emptyGrid };
 
@@ -347,6 +358,7 @@ function sampleImage(
       originY: targetRect.y,
       silIdx,
       seed,
+      color,
     },
   };
 }
