@@ -866,39 +866,6 @@ export function AsciiHandsFooter({
               // mask so the shatter edge matches the ASCII reveal edge.
               if (gooey > MOSAIC_MASK_THRESHOLD) {
                 const shatter = 1 - gooey; // 0 at center, ~1 at disc edge
-                const jx =
-                  (fract(Math.sin(seed * 12.7) * 91.3) - 0.5) *
-                  2 *
-                  MOSAIC_SHATTER_PX *
-                  shatter;
-                const jy =
-                  (fract(Math.sin(seed * 41.9) * 57.1) - 0.5) *
-                  2 *
-                  MOSAIC_SHATTER_PX *
-                  shatter;
-                // Occasional splatter tiles fling further along arm normal
-                // — small clumps of image break loose from the crowd.
-                const splat = fract(Math.sin(seed * 73.1) * 811.7);
-                const splatterActive = splat < MOSAIC_SPLATTER_PROB ? 1 : 0;
-                const splatMag = splatterActive * MOSAIC_SPLATTER_PX * shatter;
-                // Perpendicular to arm axis (rotate arm dir 90°).
-                const normX = -armDy;
-                const normY = armDx;
-                const splatSign =
-                  fract(Math.sin(seed * 19.3) * 313.7) > 0.5 ? 1 : -1;
-                const sx = jx + normX * splatMag * splatSign;
-                const sy = jy + normY * splatMag * splatSign;
-                const scale =
-                  MOSAIC_SCALE_MIN +
-                  (MOSAIC_SCALE_MAX - MOSAIC_SCALE_MIN) * (1 - shatter);
-                const tw = CELL_W * scale;
-                const th = CELL_H * scale;
-                const tx =
-                  c.x + offX * (0.30 + bb * 0.55 + c.armT * 0.45) +
-                  sx + (CELL_W - tw) * 0.5;
-                const ty =
-                  c.y + offY * (0.30 + bb * 0.55 + c.armT * 0.45) +
-                  sy + (CELL_H - th) * 0.5;
                 // Lookup source color for this cell from grid.color.
                 const colBase =
                   (Math.floor((c.y - grid.originY) / CELL_H) * grid.cols +
@@ -908,8 +875,60 @@ export function AsciiHandsFooter({
                 const cg = grid.color[colBase + 1] ?? 0;
                 const cb = grid.color[colBase + 2] ?? 0;
                 mosaicAlpha = Math.min(1, gooey * 1.35);
-                ctx.fillStyle = `rgba(${cr},${cg},${cb},${mosaicAlpha})`;
-                ctx.fillRect(tx, ty, tw, th);
+                // Sub-divide each cell into `sub × sub` mini-tiles so
+                // shatter reads as fine crumb rather than one 10-px block.
+                const sub = Math.max(1, Math.min(4, subGridRef.current | 0));
+                const subW = CELL_W / sub;
+                const subH = CELL_H / sub;
+                const parX = offX * (0.30 + bb * 0.55 + c.armT * 0.45);
+                const parY = offY * (0.30 + bb * 0.55 + c.armT * 0.45);
+                // Perpendicular to arm axis (rotate arm dir 90°) — used by
+                // occasional splatter sub-tiles.
+                const normX = -armDy;
+                const normY = armDx;
+                for (let ssy = 0; ssy < sub; ssy++) {
+                  for (let ssx = 0; ssx < sub; ssx++) {
+                    const subSeed = fract(
+                      Math.sin(seed * 91.7 + ssx * 12.3 + ssy * 27.1) * 511.3,
+                    );
+                    const jx =
+                      (fract(Math.sin(subSeed * 12.7) * 91.3) - 0.5) *
+                      2 *
+                      MOSAIC_SHATTER_PX *
+                      shatter;
+                    const jy =
+                      (fract(Math.sin(subSeed * 41.9) * 57.1) - 0.5) *
+                      2 *
+                      MOSAIC_SHATTER_PX *
+                      shatter;
+                    const splat = fract(Math.sin(subSeed * 73.1) * 811.7);
+                    const splatterActive =
+                      splat < MOSAIC_SPLATTER_PROB ? 1 : 0;
+                    const splatMag =
+                      splatterActive * MOSAIC_SPLATTER_PX * shatter;
+                    const splatSign =
+                      fract(Math.sin(subSeed * 19.3) * 313.7) > 0.5 ? 1 : -1;
+                    const sx = jx + normX * splatMag * splatSign;
+                    const sy = jy + normY * splatMag * splatSign;
+                    const scale =
+                      MOSAIC_SCALE_MIN +
+                      (MOSAIC_SCALE_MAX - MOSAIC_SCALE_MIN) * (1 - shatter);
+                    const tw = subW * scale;
+                    const th = subH * scale;
+                    const tx =
+                      c.x + ssx * subW + parX + sx + (subW - tw) * 0.5;
+                    const ty =
+                      c.y + ssy * subH + parY + sy + (subH - th) * 0.5;
+                    // Slight per-sub-tile brightness jitter breaks up the
+                    // flat repeat of the same cell color across sub-tiles.
+                    const lj = 0.85 + subSeed * 0.3;
+                    const rr = Math.min(255, cr * lj) | 0;
+                    const gg = Math.min(255, cg * lj) | 0;
+                    const bbCol = Math.min(255, cb * lj) | 0;
+                    ctx.fillStyle = `rgba(${rr},${gg},${bbCol},${mosaicAlpha})`;
+                    ctx.fillRect(tx, ty, tw, th);
+                  }
+                }
                 // Strong-cover tiles suppress the glyph entirely; edge tiles
                 // let a faint glyph bleed through for continuity with the
                 // shattered ASCII surface.
