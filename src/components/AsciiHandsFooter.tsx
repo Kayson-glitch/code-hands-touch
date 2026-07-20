@@ -1251,7 +1251,7 @@ export function AsciiHandsFooter() {
         className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2"
         style={{ width: 200, height: 200, zIndex: 50 }}
       >
-        <LiquidMetalOrb />
+        {mounted && <LiquidMetalOrb />}
       </div>
 
     </section>
