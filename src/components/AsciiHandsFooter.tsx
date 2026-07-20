@@ -571,9 +571,17 @@ export function AsciiHandsFooter() {
       // Decay pointer speed when no move events arrive (~120ms half-life-ish).
       mouseSpeedRef.current *= Math.exp(-dt / 120);
       const speedK = Math.min(1, mouseSpeedRef.current / SPEED_REF);
+      smoothSpeedK += (speedK - smoothSpeedK) * 0.15;
       const discLerp = DISC_LERP_MIN + (DISC_LERP_MAX - DISC_LERP_MIN) * speedK;
       const intensityLerp =
         INTENSITY_LERP_MIN + (INTENSITY_LERP_MAX - INTENSITY_LERP_MIN) * speedK;
+      // Speed-adaptive mosaic diffusion / dissipation.
+      const shatterK = 1 + smoothSpeedK * 0.9;
+      const scaleMinDyn = MOSAIC_SCALE_MIN + smoothSpeedK * 0.14;
+      const alphaGamma = 0.85 - smoothSpeedK * 0.25;
+      const fadeLo = 0.35 - smoothSpeedK * 0.15;
+      const fadeHi = 0.85 - smoothSpeedK * 0.20;
+      const fadeSpan = Math.max(0.05, fadeHi - fadeLo);
 
       // Disable hover reveal disc while the arms are still growing in.
       const targetIntensity = m.active && !prefersReduce && !intro ? 1 : 0;
