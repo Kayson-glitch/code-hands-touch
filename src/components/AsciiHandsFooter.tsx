@@ -376,7 +376,11 @@ function sampleImage(
   };
 }
 
-export function AsciiHandsFooter() {
+export function AsciiHandsFooter({
+  showControls = true,
+}: {
+  showControls?: boolean;
+} = {}) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const cellsRef = useRef<Cell[]>([]);
   const gridRef = useRef<Grid | null>(null);
@@ -391,6 +395,19 @@ export function AsciiHandsFooter() {
   const introStartRef = useRef<number | null>(null);
   const introDoneRef = useRef(false);
   const introVisibleRef = useRef(false);
+
+  // Debug-panel state → mirrored into refs so the rAF loop reads without
+  // re-subscribing to React state on every frame.
+  const [shape, setShape] = useState<RevealShape>("A");
+  const [subGrid, setSubGrid] = useState<number>(2);
+  const shapeRef = useRef<RevealShape>(shape);
+  const subGridRef = useRef<number>(subGrid);
+  useEffect(() => {
+    shapeRef.current = shape;
+  }, [shape]);
+  useEffect(() => {
+    subGridRef.current = subGrid;
+  }, [subGrid]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
