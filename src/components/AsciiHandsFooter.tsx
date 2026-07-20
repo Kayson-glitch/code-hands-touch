@@ -577,12 +577,31 @@ export function AsciiHandsFooter() {
         if (intro && c.armT > introProgress) continue;
         const bb = c.b;
 
+        // Cell seed (used by flow, intro-front and gooey blocks).
+        const cellI = grid ? Math.floor((c.x - grid.originX) / CELL_W) : 0;
+        const cellJ = grid ? Math.floor((c.y - grid.originY) / CELL_H) : 0;
+        const cellSeed = grid ? grid.seed[cellJ * grid.cols + cellI] ?? 0.5 : 0.5;
+
+        // Continuous flow along the arm skeleton. Amplitude ramps up with the
+        // intro so it never fights the growth animation, and is unaffected by
+        // hover (gooey block below overrides ch anyway inside the reveal disc).
+        const flowAmp = prefersReduce ? 0 : introProgress;
+        const flowPhase =
+          c.armT * FLOW_DENSITY -
+          timeSec * FLOW_SPEED +
+          cellSeed * FLOW_JITTER;
+        const flowWave = Math.sin(flowPhase * Math.PI * 2);
+        const flowIdxOffset = Math.round(flowWave * FLOW_IDX_AMP * flowAmp);
+        const flowBrightness = 1 + flowWave * FLOW_BRIGHTNESS_AMP * flowAmp;
+
         // Base lavender purple color from the ramp:
         //   shadow rgb(45, 35, 70) → highlight rgb(197, 169, 255)
-        let r = 45 + bb * 152;
-        let g = 35 + bb * 134;
-        let bl = 70 + bb * 185;
-        let ch = c.ch;
+        let r = (45 + bb * 152) * flowBrightness;
+        let g = (35 + bb * 134) * flowBrightness;
+        let bl = (70 + bb * 185) * flowBrightness;
+        const baseIdx =
+          ((c.idx + flowIdxOffset) % RAMP_LEN + RAMP_LEN) % RAMP_LEN;
+        let ch = glyphAt(baseIdx);
         let jitterX = 0;
         let jitterY = 0;
         let revealTilt = 0;
