@@ -670,6 +670,38 @@ export function AsciiHandsFooter() {
       const showGooey = intensity > 0.001 && grid;
       const minWH = Math.min(w, h);
       const aspectX = w / h;
+
+      // ---- Click-lock: advance each side's progress toward its target ----
+      const lockL = lockRef.current.left;
+      const lockR = lockRef.current.right;
+      const stepLock = (st: { progress: number; target: number }) => {
+        if (st.progress === st.target) return;
+        const dir = st.target > st.progress ? 1 : -1;
+        const dur = dir > 0 ? LOCK_EXPAND_MS : LOCK_COLLAPSE_MS;
+        let p = st.progress + (dt / dur) * dir;
+        if (p > 1) p = 1;
+        if (p < 0) p = 0;
+        st.progress = p;
+      };
+      stepLock(lockL);
+      stepLock(lockR);
+      const easeInOutCubic = (t: number) =>
+        t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+      const lockLE = easeInOutCubic(lockL.progress);
+      const lockRE = easeInOutCubic(lockR.progress);
+      const lockLActive = lockLE > 0.001 && grid;
+      const lockRActive = lockRE > 0.001 && grid;
+      const lockLUvX = lockLActive ? (lockL.x / minWH) * aspectX : 0;
+      const lockLUvY = lockLActive ? lockL.y / minWH : 0;
+      const lockRUvX = lockRActive ? (lockR.x / minWH) * aspectX : 0;
+      const lockRUvY = lockRActive ? lockR.y / minWH : 0;
+      const lockLR = lockLActive ? lockL.radiusUv * lockLE : 0;
+      const lockRR = lockRActive ? lockR.radiusUv * lockRE : 0;
+      // Arm direction is mirrored per side (left = +, right = -).
+      const armDxL = Math.cos((ARM_ANGLE_DEG * Math.PI) / 180);
+      const armDxR = -armDxL;
+      const armDyLR = -Math.sin((ARM_ANGLE_DEG * Math.PI) / 180);
+
       const mUvX = showGooey ? (discX / minWH) * aspectX : 0;
       const mUvY = showGooey ? discY / minWH : 0;
       const R = GOOEY_RADIUS_UV * intensity;
