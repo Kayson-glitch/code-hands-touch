@@ -1050,6 +1050,52 @@ export function AsciiHandsFooter({
         className="absolute inset-0 h-full w-full"
       />
 
+      {showControls && (
+        <div
+          className="absolute right-3 top-3 z-10 select-none rounded-md border border-white/10 bg-black/60 px-3 py-2 text-[11px] leading-tight text-white/85 backdrop-blur"
+          style={{ fontFamily: '"Geist Mono", ui-monospace, monospace' }}
+        >
+          <div className="mb-1 text-white/60">Reveal Shape</div>
+          <div className="mb-2 flex gap-1">
+            {(["A", "B", "C", "D"] as const).map((s) => (
+              <button
+                key={s}
+                type="button"
+                onClick={() => setShape(s)}
+                className={`h-6 w-7 rounded border text-[11px] transition ${
+                  shape === s
+                    ? "border-white/70 bg-white/20 text-white"
+                    : "border-white/15 bg-white/5 text-white/70 hover:bg-white/10"
+                }`}
+                title={
+                  s === "A"
+                    ? "Irregular ink disc"
+                    : s === "B"
+                      ? "Arm-aligned ellipse"
+                      : s === "C"
+                        ? "Diamond shatter"
+                        : "Organic blob"
+                }
+              >
+                {s}
+              </button>
+            ))}
+          </div>
+          <div className="mb-1 flex items-center justify-between text-white/60">
+            <span>Mosaic sub-grid</span>
+            <span className="text-white/85">{subGrid}×{subGrid}</span>
+          </div>
+          <input
+            type="range"
+            min={1}
+            max={4}
+            step={1}
+            value={subGrid}
+            onChange={(e) => setSubGrid(parseInt(e.target.value, 10))}
+            className="w-40 accent-white/70"
+          />
+        </div>
+      )}
     </section>
   );
 }
