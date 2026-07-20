@@ -864,13 +864,14 @@ export function AsciiHandsFooter() {
                 const cr = grid.color[colBase + 0] ?? 0;
                 const cg = grid.color[colBase + 1] ?? 0;
                 const cb = grid.color[colBase + 2] ?? 0;
-                mosaicAlpha = Math.min(1, gooey * 1.35);
+                // Smoothstep-shaped alpha: saturated at the disc core,
+                // gracefully fading through the shattered edge so tiles
+                // dissolve into the surrounding ASCII rather than snapping off.
+                const gg = Math.min(1, Math.max(0, gooey));
+                const ss = gg * gg * (3 - 2 * gg);
+                mosaicAlpha = Math.pow(ss, 0.85);
                 ctx.fillStyle = `rgba(${cr},${cg},${cb},${mosaicAlpha})`;
                 ctx.fillRect(tx, ty, tw, th);
-                // Strong-cover tiles suppress the glyph entirely; edge tiles
-                // let a faint glyph bleed through for continuity with the
-                // shattered ASCII surface.
-                mosaicCovered = mosaicAlpha > 0.55;
               }
             }
           }
