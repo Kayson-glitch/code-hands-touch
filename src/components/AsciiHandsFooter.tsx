@@ -57,6 +57,14 @@ const TILT_FALLOFF = 320;
 // characters are "woken up" into a hand-set angle where the cursor reveals
 // them, and stay upright everywhere else.
 const REVEAL_TILT_MAX_DEG = 12;
+// Continuous character flow along arm skeleton — a low-frequency, time-driven
+// phase rides along `armT` so glyphs shimmer/drift between neighbouring ramp
+// densities. Independent of hover; gives the piece a subtle "always alive" feel.
+const FLOW_DENSITY = 14;          // phase cycles across arm length
+const FLOW_SPEED = 0.35;          // phase cycles per second
+const FLOW_JITTER = 0.6;          // per-cell phase offset (fraction of 2π)
+const FLOW_IDX_AMP = 2;           // ± ramp steps swapped by the wave
+const FLOW_BRIGHTNESS_AMP = 0.06; // ± tonal multiplier from the wave
 // Reveal disc smoothly chases the cursor (source-site behaviour). Smaller =
 // stickier follow, which naturally reads as a gentle hover-in latency without
 // a hard delay gate.
