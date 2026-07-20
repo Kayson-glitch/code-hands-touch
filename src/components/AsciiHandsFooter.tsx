@@ -46,8 +46,8 @@ const CELL_H = 10;
 // Source (good-fella.com ASCIIEffect) uniforms — expressed in UV space,
 // aspect-corrected. See docs/plan.md notes.
 const GOOEY_RADIUS_UV = 0.0376;
-const GOOEY_SOFTNESS_UV = 0.023;
-const GOOEY_NOISE = 0.018;
+const GOOEY_SOFTNESS_UV = 0.020;
+const GOOEY_NOISE = 0.006;
 // Max whole-scene parallax drift on hover, in CSS pixels. Small — mirrors the
 // source's "the picture leans toward the finger" feel.
 const PARALLAX_MAX = 13;
@@ -66,8 +66,8 @@ const REVEAL_TILT_MAX_DEG = 12;
 // through a shattered ASCII surface. Numbers below tuned against the
 // existing 10×10 cell pitch.
 const MOSAIC_MASK_THRESHOLD = 0.06;
-const MOSAIC_SHATTER_PX = 3;   // max positional break at the disc edge
-const MOSAIC_SCALE_MIN = 0.72; // min tile occupancy at the disc edge
+const MOSAIC_SHATTER_PX = 1.5; // max positional break at the disc edge
+const MOSAIC_SCALE_MIN = 0.88; // min tile occupancy at the disc edge
 const MOSAIC_SCALE_MAX = 1.05; // max tile occupancy (center)
 const MOSAIC_SPLATTER_PROB = 0.09; // % of tiles that fling further out
 const MOSAIC_SPLATTER_PX = 5;
@@ -95,7 +95,7 @@ const SPEED_REF = 2.0;
 const ARM_ANGLE_DEG = 60;
 // 0 = isotropic noise, 1 = fully directional. Controls how much the broken
 // edge splashes along the arm vs across it.
-const ARM_ALIGN_STRENGTH = 0.85;
+const ARM_ALIGN_STRENGTH = 0.25;
 // Intro reveal timing — arms grow from screen edge inward along the arm axis.
 // A hermite curve gives fast forearm coverage, then a distinct deceleration as
 // the reveal reaches the wrist / palm / fingers.
