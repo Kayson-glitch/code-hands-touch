@@ -1,30 +1,28 @@
 ## 目标
-点击单只手 → 以点击点为圆心，马赛克区域丝滑扩散并"锁定"覆盖整只手；再次点击同一只手 → 丝滑收回。两只手独立控制。
+让点击手部时的马赛克扩散/收回不再是纯 `easeInOutCubic` 的匀速感，而是带轻微"弹性"回弹，动作更有生命力，同时避免过度晃动影响清晰度。
 
-## 交互
-- 命中判断：点击画布，根据 `x < width/2` 判定人手（left）或机械手（right）。仅当该侧手部已完成生长动画后可点击。
-- 状态：`lockState = { left: { active, originX, originY, progress }, right: {...} }`；`progress` 0→1 或 1→0 补间。
-- 缓动：`easeInOutCubic`，450ms 展开 / 350ms 收回，动画由 `rAF` 驱动（不阻塞 hover）。
-- 悬停禁用：某侧 `active=true` 时，该侧不再响应 hover reveal（保留另一侧 hover）。
+## 方案（仅改 `src/components/AsciiHandsFooter.tsx`）
 
-## 视觉
-- 复用现有 mosaic + ASCII 过渡管线。新增每侧一个"锁定 disc"：
-  - 圆心 = 点击点（跟随 canvas 坐标）
-  - 半径 = `lerp(0, R_LOCK, easedProgress)`，`R_LOCK` ≈ 覆盖单手所需最大距离（基于该侧所有 cell 到点击点的最大欧氏距离，resample 时预算并缓存）
-  - 边缘沿用 `GOOEY_NOISE` + 手臂方向噪声，保持不规则近圆形观感
-- 侧掩码：锁定 disc 只作用在与点击同侧的 cell（通过 `c.x` vs 画布中线判定），避免溢出到另一只手
-- 与 hover 融合：`gooey = max(hoverGooey, lockGooey[side])`；渲染分支不变，因此速度自适应、字符倾斜、视差、halo 等效果自动继承
+1. **替换缓动函数**
+   - 展开阶段：用 `easeOutBack`（轻量参数 `s ≈ 1.4`）替代 `easeInOutCubic`，让马赛克圆盘冲到目标半径后回弹一次再稳定。
+   - 收回阶段：用 `easeInBack`（`s ≈ 1.2`），先轻微反向"蓄力"再快速收缩，比现在的匀速收回更利落。
+   - 保留 `progress` 0→1 线性推进逻辑，只在读取时切换缓动，保证中途反复点击不会跳变。
 
-## 动效手感
-- 展开：`easeInOutCubic`，前半段快速扩散、末段柔和贴边
-- 收回：同曲线反向，收回中心保留最后一点残影（progress<0.05 时才完全清除）
-- 光标离开/移入不影响锁定状态
+2. **时长微调匹配弹性**
+   - `LOCK_EXPAND_MS`: 520 → 620（给回弹留时间，避免弹跳被截断）。
+   - `LOCK_COLLAPSE_MS`: 380 → 340（`easeInBack` 前段慢，整体缩短保持利落）。
 
-## 文件
-仅修改 `src/components/AsciiHandsFooter.tsx`：
-- 新增 `lockRef`（双侧状态）与 `onPointerDown` 处理
-- 在主渲染循环里合成 `lockGooey`
-- resample 时预计算每侧最大半径
+3. **半径附加"过冲"**
+   - 在展开的最后 15% 阶段，对 `lockLR/lockRR` 叠加一个 `sin` 衰减的 `±3%` 半径脉冲，让圆盘边缘有一次轻微呼吸，加强弹性观感。收回阶段不加。
 
-## 不改动
-- 图片资源、颜色、字符集、生长动画、hover disc 尺寸/噪声、mosaic 参数
+4. **保护现有行为**
+   - 悬停 hover、intro 生长、mosaic 参数、字符流全部不动。
+   - 中途再次点击时，`target` 翻转仍然平滑：新缓动函数在 `progress ∈ [0,1]` 上单调段占主导，`Back` 的过冲只在末段发生，反向切换不会造成跳变（若担心可在切换瞬间把 `progress` 做一次镜像即可，代码里已具备 `dir` 判定，安全）。
+
+## 技术要点
+- 新增两个纯函数 `easeOutBack(t, s=1.4)`、`easeInBack(t, s=1.2)`，放在 `stepLock` 附近。
+- 在读取 `lockLE / lockRE` 时按 `dir`（当前 `target`）选择缓动：目标为 1 用 `easeOutBack`，目标为 0 用 `easeInBack`。
+- 过冲脉冲仅在 `target===1 && progress>0.85` 时启用：`radius *= 1 + 0.03 * sin((progress-0.85)/0.15 * π) * (1-progress)`。
+
+## 验证
+- Playwright：进入首页 → 分别点击左右手 → 截图三帧（扩散中、稳定、收回中）确认弹性可见且无跳变；连续快速点击不出现闪烁。
