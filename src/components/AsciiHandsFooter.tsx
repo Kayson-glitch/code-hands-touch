@@ -75,8 +75,8 @@ const MOSAIC_SPLATTER_PX = 5;
 // the click point until it fully covers that hand, then collapses on the
 // next click. Timings kept snappy but eased so the transition reads as
 // fluid rather than instant.
-const LOCK_EXPAND_MS = 520;
-const LOCK_COLLAPSE_MS = 380;
+const LOCK_EXPAND_MS = 620;
+const LOCK_COLLAPSE_MS = 340;
 const LOCK_SOFTNESS_UV = 0.045;
 const LOCK_RADIUS_MARGIN_UV = 0.025;
 // Continuous character flow along arm skeleton — a low-frequency, time-driven
