@@ -83,18 +83,37 @@ const ARM_ANGLE_DEG = 60;
 // edge splashes along the arm vs across it.
 const ARM_ALIGN_STRENGTH = 0.85;
 // Intro reveal timing — arms grow from screen edge inward along the arm axis.
-// Longer duration + easeInOutQuad + wider front band = a slower, more organic
-// "ink diffusion" growth that reads as breath rather than a hard sweep.
-const INTRO_DURATION_MS = 2600;
-const INTRO_FRONT_WIDTH = 0.18;
+// A hermite curve gives fast forearm coverage, then a distinct deceleration as
+// the reveal reaches the wrist / palm / fingers.
+const INTRO_DURATION_MS = 2400;
+const INTRO_FRONT_WIDTH_BASE = 0.18;
+// After the reveal passes the "wrist" anchor we widen the front band so the
+// palm + fingers unfurl feels softer / more diffused, reinforcing the slowdown.
+const INTRO_FRONT_WIDTH_WRIST = 0.22;
+const INTRO_WRIST_ANCHOR = 0.78; // eased-progress value at which we consider
+                                 // the reveal to have reached the wrist.
 // Right (robot) arm lags slightly behind the left so the two hands don't march
 // in lockstep — subtle narrative offset.
 const INTRO_SIDE_STAGGER_MS = 120;
 // Post-front "settle" band: cells behind the front fade the last stretch of
 // alpha from 0.6 → 1 across this fraction of armT.
 const INTRO_SETTLE_WIDTH = 0.12;
-const introEase = (t: number) =>
-  t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
+// Cubic hermite with tangents (fast in, slow out) chosen so that
+// introEase(0.62) ≈ 0.78 — i.e. ~78% of the arm is revealed by the time 62%
+// of the duration has elapsed, and the remaining 22% of distance takes 38% of
+// the time. Derivative is continuous and positive across the whole range, so
+// there is no perceptible pause at the wrist — just a smooth deceleration.
+const introEase = (t: number) => {
+  if (t <= 0) return 0;
+  if (t >= 1) return 1;
+  const s0 = 1.6; // starting slope — quick initial reveal
+  const s1 = 0.15; // ending slope — gentle arrival at fingertips
+  const h00 = 2 * t * t * t - 3 * t * t + 1;
+  const h10 = t * t * t - 2 * t * t + t;
+  const h01 = -2 * t * t * t + 3 * t * t;
+  const h11 = t * t * t - t * t;
+  return h00 * 0 + h10 * s0 + h01 * 1 + h11 * s1;
+};
 
 // Arm skeleton polylines in normalized targetRect coords (u=0 left..1 right,
 // v=0 top..1 bottom). Calibrated against hands-pair.png: human arm enters
