@@ -492,20 +492,31 @@ export function AsciiHandsFooter() {
       const grid = gridRef.current;
       const m = mouseRef.current;
 
-      // Intro reveal progress (0..1). Cells with armT > progress are skipped.
-      let introProgress = 1;
+      // Intro reveal progress (0..1). Two-sided: left arm starts at t=0,
+      // right arm starts INTRO_SIDE_STAGGER_MS later. Per-cell selection
+      // happens in the render loop via `introProgressFor(side)`.
+      let introRawL = 1;
+      let introRawR = 1;
       if (!introDoneRef.current) {
         if (introVisibleRef.current && introStartRef.current != null) {
-          const raw = Math.min(
+          const elapsed = now - introStartRef.current;
+          introRawL = Math.min(1, Math.max(0, elapsed / INTRO_DURATION_MS));
+          introRawR = Math.min(
             1,
-            Math.max(0, (now - introStartRef.current) / INTRO_DURATION_MS),
+            Math.max(0, (elapsed - INTRO_SIDE_STAGGER_MS) / INTRO_DURATION_MS),
           );
-          introProgress = introEase(raw);
-          if (raw >= 1) introDoneRef.current = true;
+          if (introRawL >= 1 && introRawR >= 1) introDoneRef.current = true;
         } else {
-          introProgress = 0;
+          introRawL = 0;
+          introRawR = 0;
         }
       }
+      const introProgressL = introEase(introRawL);
+      const introProgressR = introEase(introRawR);
+      // A representative progress used only for gating global effects (flow
+      // amplitude, hover suppression). Use the slower of the two arms so
+      // hover doesn't re-enable while the robot arm is still growing.
+      const introProgress = Math.min(introProgressL, introProgressR);
       const intro = introProgress < 1;
 
       // Lerp intensity toward its target — no hard delay gate. The visual
