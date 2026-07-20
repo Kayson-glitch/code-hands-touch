@@ -61,6 +61,16 @@ const TILT_FALLOFF = 320;
 // characters are "woken up" into a hand-set angle where the cursor reveals
 // them, and stay upright everywhere else.
 const REVEAL_TILT_MAX_DEG = 12;
+// Hover mosaic-shatter reveal — inside the disc, cells are replaced by
+// broken tiles of the raw source image so the underlying photo peeks
+// through a shattered ASCII surface. Numbers below tuned against the
+// existing 10×10 cell pitch.
+const MOSAIC_MASK_THRESHOLD = 0.06;
+const MOSAIC_SHATTER_PX = 3;   // max positional break at the disc edge
+const MOSAIC_SCALE_MIN = 0.72; // min tile occupancy at the disc edge
+const MOSAIC_SCALE_MAX = 1.05; // max tile occupancy (center)
+const MOSAIC_SPLATTER_PROB = 0.09; // % of tiles that fling further out
+const MOSAIC_SPLATTER_PX = 5;
 // Continuous character flow along arm skeleton — a low-frequency, time-driven
 // phase rides along `armT` so glyphs shimmer/drift between neighbouring ramp
 // densities. Independent of hover; gives the piece a subtle "always alive" feel.
