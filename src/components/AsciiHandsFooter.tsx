@@ -751,20 +751,23 @@ export function AsciiHandsFooter() {
           const localI = i * armDx + j * armDy;
           const localJ = -i * armDy + j * armDx;
           const midFreq =
-            Math.sin(localI * 0.3 + localJ * 0.9 + seed * 1.5) * GOOEY_NOISE * 1.2;
+            Math.sin(localI * 0.3 + localJ * 0.9 + seed * 1.5) * GOOEY_NOISE * 2.6;
+          const lowFreq2 =
+            Math.sin(localI * 0.15 + localJ * 0.42 + seed * 3.1) * GOOEY_NOISE * 3.0;
           // Slow time wobble so the edge "breathes" rather than flickers.
           const wobble = prefersReduce
             ? 0
             : Math.sin(timeSec * 0.5 + seed * 6.28318) * GOOEY_NOISE * 0.6;
           // High-frequency spatial hash — creates the fine chipped/broken texture.
           const highFreq =
-            (fract(Math.sin(seed * 45.7) * 123.45) - 0.5) * GOOEY_NOISE * 0.15;
+            (fract(Math.sin(seed * 45.7) * 123.45) - 0.5) * GOOEY_NOISE * 0.35;
           const microFract =
-            (fract(Math.sin(seed * 137.9) * 437.58) - 0.5) * GOOEY_NOISE * 0.1;
+            (fract(Math.sin(seed * 137.9) * 437.58) - 0.5) * GOOEY_NOISE * 0.2;
           const distorted =
             d +
             lowFreq +
             midFreq * dirW +
+            lowFreq2 * dirW +
             wobble +
             highFreq * dirW +
             microFract * dirW;
