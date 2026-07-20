@@ -1,19 +1,31 @@
 ## 目标
-把当前 ASCII 手部效果使用的 `hands-pair.png` 资源替换为用户上传的新图 `Frame_1321320132-2.png`，保持所有代码、颜色、动效、交互参数不变。
-
-## 当前状态
-- 组件 `src/components/AsciiHandsFooter.tsx` 通过 `import handsPairAsset from "@/assets/hands-pair.png.asset.json"` 读取 CDN 资源。
-- 现有 asset 指向旧图（asset_id: aeabbf83-b4b7-4a8e-8ee0-42ca498cf9c2）。
-- 用户上传的新图为黑底、人类手与机械手相向伸出的高对比照片，适合现有 ASCII 采样逻辑。
+把 Matrix 数字雨作为首页背景，ASCII 双手效果叠加在上层。
 
 ## 实施步骤
-1. 使用 `lovable-assets create` 将 `user-uploads://Frame_1321320132-2.png` 上传为 CDN asset，并输出到 `src/assets/hands-pair.png.asset.json`。
-2. 删除旧 asset 指针文件中原内容，写入新 CLI 生成的 JSON（保持文件名 `hands-pair.png.asset.json` 不变）。
-3. 不修改 `src/components/AsciiHandsFooter.tsx` 及其任何常量、动效、颜色或交互逻辑。
 
-## 验证
-- 运行 `bun run build` 确认构建通过。
-- 通过预览查看新的手部剪影是否被正确采样为 ASCII 字符，且原有揭示、视差、流动、描边等效果保持不变。
+1. **新建组件** `src/components/ui/matrix-code-rain.tsx`
+   - 采用提供的组件逻辑，但做以下调整以适配"背景"场景：
+     - 组件根元素改为 `absolute inset-0 w-full h-full`，canvas 占满父容器
+     - 移除右上角 Settings 齿轮按钮和设置面板（背景不需要 UI 控制）
+     - 保留可配置的 props：`fontSize`、`speed`、`density`、`textColor`，全部有默认值
+     - 默认颜色改为紫色系（`#C5A9FF`）以匹配当前 lavender 主题，而非原生绿色，保持视觉统一
+     - 背景填充由 `#000000` 改为半透明黑 `rgba(0,0,0,0.08)` 做拖尾淡出（不覆盖父层黑底）
+   - 修复原代码中 JSX 缺失的问题（原贴代码 return 部分是空的），按 shadcn/tsx 规范补齐
 
-## 不改动
-- 颜色、揭示盘半径/形状、视差强度、字符倾斜、入场生长、流动动效、描边层、代码结构。
+2. **修改首页** `src/routes/index.tsx`
+   - 用一个 `relative min-h-screen bg-black` 容器包裹
+   - 底层：`<MatrixCodeRain />`（`absolute inset-0 z-0`）
+   - 上层：`<AsciiHandsFooter />`（`relative z-10`）
+   - AsciiHandsFooter 内部 canvas 本身背景是黑色，需要确认它是否让 Matrix 透出——如果它自身填了不透明黑，需要把外层 wrapper 背景改为透明才能看到 Matrix
+
+3. **AsciiHandsFooter 透明化（如必要）**
+   - 检查 `AsciiHandsFooter.tsx` 的 canvas 每帧 `fillRect` 是否用不透明黑覆盖；若是，改为在渲染开始时用 `ctx.clearRect` 或者去掉背景填充，让下层 Matrix 透上来
+   - 这是让"作为背景"生效的关键点
+
+4. **依赖**：`lucide-react` 已在项目中（AsciiHandsFooter 未用，但 shadcn 项目已安装），无需新增
+
+## 需要你确认
+
+- **叠加方式**：Matrix 数字雨在**下层**做背景，ASCII 双手完全叠在上面（双手 canvas 透明化，能看到数字雨从双手后方穿过）？还是双手保持不透明黑底，Matrix 只在双手周围空白区可见？
+- **颜色**：Matrix 用当前主题紫 `#C5A9FF`，还是保留经典绿 `#00FF41`？
+- 若透明化双手 canvas 影响现有效果观感，是否接受？（现有的描边、视差、发光都是基于黑底调过的）
