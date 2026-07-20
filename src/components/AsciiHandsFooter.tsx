@@ -791,7 +791,7 @@ export function AsciiHandsFooter() {
           ctx.translate(cx, cy);
           ctx.rotate(finalAngle);
           if (c.isEdge) {
-            ctx.fillStyle = `rgba(15,12,25,0.75)`;
+            ctx.fillStyle = `rgba(15,12,25,${0.75 * cellAlpha})`;
             const lx = -CELL_W / 2;
             const ly = FONT_PX - CELL_H / 2;
             ctx.fillText(ch, lx - 1, ly - 1);
@@ -799,18 +799,18 @@ export function AsciiHandsFooter() {
             ctx.fillText(ch, lx - 1, ly + 1);
             ctx.fillText(ch, lx + 1, ly + 1);
           }
-          ctx.fillStyle = `rgba(${r | 0},${g | 0},${bl | 0},1)`;
+          ctx.fillStyle = `rgba(${r | 0},${g | 0},${bl | 0},${cellAlpha})`;
           ctx.fillText(ch, -CELL_W / 2, FONT_PX - CELL_H / 2);
           ctx.restore();
         } else {
           if (c.isEdge) {
-            ctx.fillStyle = `rgba(15,12,25,0.75)`;
+            ctx.fillStyle = `rgba(15,12,25,${0.75 * cellAlpha})`;
             ctx.fillText(ch, drawX - 1, drawY - 1);
             ctx.fillText(ch, drawX + 1, drawY - 1);
             ctx.fillText(ch, drawX - 1, drawY + 1);
             ctx.fillText(ch, drawX + 1, drawY + 1);
           }
-          ctx.fillStyle = `rgba(${r | 0},${g | 0},${bl | 0},1)`;
+          ctx.fillStyle = `rgba(${r | 0},${g | 0},${bl | 0},${cellAlpha})`;
           ctx.fillText(ch, drawX, drawY);
         }
       }
