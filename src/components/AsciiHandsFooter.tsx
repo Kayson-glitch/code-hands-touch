@@ -685,18 +685,40 @@ export function AsciiHandsFooter() {
       };
       stepLock(lockL);
       stepLock(lockR);
-      const easeInOutCubic = (t: number) =>
-        t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
-      const lockLE = easeInOutCubic(lockL.progress);
-      const lockRE = easeInOutCubic(lockR.progress);
+      // Elastic-ish easings: expand overshoots then settles, collapse loads
+      // slightly backward before snapping in.
+      const easeOutBack = (t: number, s = 1.4) => {
+        const c1 = s;
+        const c3 = c1 + 1;
+        const u = t - 1;
+        return 1 + c3 * u * u * u + c1 * u * u;
+      };
+      const easeInBack = (t: number, s = 1.2) => {
+        const c1 = s;
+        const c3 = c1 + 1;
+        return c3 * t * t * t - c1 * t * t;
+      };
+      const lockEase = (st: { progress: number; target: number }) =>
+        st.target >= 0.5 ? easeOutBack(st.progress) : 1 - easeInBack(1 - st.progress);
+      const lockLE = lockEase(lockL);
+      const lockRE = lockEase(lockR);
       const lockLActive = lockLE > 0.001 && grid;
       const lockRActive = lockRE > 0.001 && grid;
       const lockLUvX = lockLActive ? (lockL.x / minWH) * aspectX : 0;
       const lockLUvY = lockLActive ? lockL.y / minWH : 0;
       const lockRUvX = lockRActive ? (lockR.x / minWH) * aspectX : 0;
       const lockRUvY = lockRActive ? lockR.y / minWH : 0;
-      const lockLR = lockLActive ? lockL.radiusUv * lockLE : 0;
-      const lockRR = lockRActive ? lockR.radiusUv * lockRE : 0;
+      // Tiny sinusoidal overshoot in the last 15% of the expand phase to
+      // reinforce the elastic feel; disabled while collapsing.
+      const lockRadiusPulse = (st: { progress: number; target: number }) => {
+        if (st.target < 0.5) return 1;
+        const p = st.progress;
+        if (p <= 0.85) return 1;
+        const k = (p - 0.85) / 0.15;
+        return 1 + 0.03 * Math.sin(k * Math.PI) * (1 - p);
+      };
+      const lockLR = lockLActive ? lockL.radiusUv * lockLE * lockRadiusPulse(lockL) : 0;
+      const lockRR = lockRActive ? lockR.radiusUv * lockRE * lockRadiusPulse(lockR) : 0;
       // Arm direction is mirrored per side (left = +, right = -).
       const armDxL = Math.cos((ARM_ANGLE_DEG * Math.PI) / 180);
       const armDxR = -armDxL;
