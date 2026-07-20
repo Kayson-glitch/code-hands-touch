@@ -976,6 +976,136 @@ export function AsciiHandsFooter() {
           }
         }
 
+        // ---- Click-lock reveal (per hand) ----
+        // Runs independently of hover: if this cell belongs to a side whose
+        // lock disc is currently expanded, paint the mosaic tile + scrambled
+        // glyph the same way the hover disc does, but centered on the
+        // click origin and sized to cover the whole hand.
+        {
+          const cellIsLeft = c.x < w / 2;
+          const lockActive = cellIsLeft ? lockLActive : lockRActive;
+          if (lockActive && grid) {
+            const oxUv = cellIsLeft ? lockLUvX : lockRUvX;
+            const oyUv = cellIsLeft ? lockLUvY : lockRUvY;
+            const R2 = cellIsLeft ? lockLR : lockRR;
+            const S2 = LOCK_SOFTNESS_UV;
+            const cellUvX = (c.x / minWH) * aspectX;
+            const cellUvY = c.y / minWH;
+            const ddx = cellUvX - oxUv;
+            const ddy = cellUvY - oyUv;
+            const d2 = Math.sqrt(ddx * ddx + ddy * ddy);
+            const armDx = cellIsLeft ? armDxL : armDxR;
+            const armDy = armDyLR;
+            const nx = d2 > 1e-5 ? ddx / d2 : 0;
+            const ny = d2 > 1e-5 ? ddy / d2 : 0;
+            const along = nx * armDx + ny * armDy;
+            const dirW = 1 + ARM_ALIGN_STRENGTH * (along * along * 2 - 1);
+            // Larger disc → scale up noise magnitude so the broken edge
+            // reads at the same visual weight as the small hover disc.
+            const NS = 2.4;
+            const lowFreq = (cellSeed * 2 - 1) * GOOEY_NOISE * 1.5 * NS;
+            const localI = cellI * armDx + cellJ * armDy;
+            const localJ = -cellI * armDy + cellJ * armDx;
+            const midFreq =
+              Math.sin(localI * 0.3 + localJ * 0.9 + cellSeed * 1.5) *
+              GOOEY_NOISE * 2.6 * NS;
+            const lowFreq2 =
+              Math.sin(localI * 0.15 + localJ * 0.42 + cellSeed * 3.1) *
+              GOOEY_NOISE * 3.0 * NS;
+            const wobble = prefersReduce
+              ? 0
+              : Math.sin(timeSec * 0.5 + cellSeed * 6.28318) *
+                GOOEY_NOISE * 0.6 * NS;
+            const highFreq =
+              (fract(Math.sin(cellSeed * 45.7) * 123.45) - 0.5) *
+              GOOEY_NOISE * 0.35 * NS;
+            const microFract =
+              (fract(Math.sin(cellSeed * 137.9) * 437.58) - 0.5) *
+              GOOEY_NOISE * 0.2 * NS;
+            const distorted2 =
+              d2 + lowFreq + midFreq * dirW + lowFreq2 * dirW +
+              wobble + highFreq * dirW + microFract * dirW;
+            const rLo2 = R2 - S2;
+            const rHi2 = R2 + S2;
+            if (distorted2 < rHi2) {
+              const tt2 = Math.min(
+                1,
+                Math.max(0, (distorted2 - rLo2) / Math.max(1e-4, rHi2 - rLo2)),
+              );
+              const gooey2 = 1 - tt2 * tt2 * (3 - 2 * tt2);
+              const sh2 = Math.min(1, Math.max(0, gooey2 / 0.15));
+              const sharp2 = sh2 * sh2 * (3 - 2 * sh2);
+              if (sharp2 > 0.01) {
+                const lumaWeight = Math.pow(bb, 0.6);
+                const sharpL = sharp2 * lumaWeight;
+                const scramble = fract(
+                  Math.sin((cellSeed + scrambleSeed) * 12.9898) * 43758.5453,
+                );
+                const scrambleOffset = Math.floor(
+                  (scramble - 0.5) * RAMP_LEN * 0.25 * sharpL,
+                );
+                const finalIdx =
+                  ((c.idx + scrambleOffset) % RAMP_LEN + RAMP_LEN) % RAMP_LEN;
+                ch = glyphAt(finalIdx);
+                r += (HR - r) * sharpL;
+                g += (HG - g) * sharpL;
+                bl += (HB - bl) * sharpL;
+                const rawT = (cellSeed - 0.5) * 2;
+                const shapedPhase =
+                  Math.sign(rawT) * Math.pow(Math.abs(rawT), 1.4);
+                const lockTilt =
+                  shapedPhase *
+                  ((REVEAL_TILT_MAX_DEG * Math.PI) / 180) *
+                  sharp2;
+                if (Math.abs(lockTilt) > Math.abs(revealTilt)) {
+                  revealTilt = lockTilt;
+                }
+                if (gooey2 > MOSAIC_MASK_THRESHOLD) {
+                  const shatter = 1 - gooey2;
+                  const jx =
+                    (fract(Math.sin(cellSeed * 12.7) * 91.3) - 0.5) *
+                    2 * MOSAIC_SHATTER_PX * shatterK * shatter;
+                  const jy =
+                    (fract(Math.sin(cellSeed * 41.9) * 57.1) - 0.5) *
+                    2 * MOSAIC_SHATTER_PX * shatterK * shatter;
+                  const splat = fract(Math.sin(cellSeed * 73.1) * 811.7);
+                  const splatterActive =
+                    splat < MOSAIC_SPLATTER_PROB ? 1 : 0;
+                  const splatMag =
+                    splatterActive * MOSAIC_SPLATTER_PX * shatterK * shatter;
+                  const normX = -armDy;
+                  const normY = armDx;
+                  const splatSign =
+                    fract(Math.sin(cellSeed * 19.3) * 313.7) > 0.5 ? 1 : -1;
+                  const sx = jx + normX * splatMag * splatSign;
+                  const sy = jy + normY * splatMag * splatSign;
+                  const scale =
+                    scaleMinDyn +
+                    (MOSAIC_SCALE_MAX - scaleMinDyn) * (1 - shatter);
+                  const tw = CELL_W * scale;
+                  const th = CELL_H * scale;
+                  const tx =
+                    c.x + offX * (0.30 + bb * 0.55 + c.armT * 0.45) +
+                    sx + (CELL_W - tw) * 0.5;
+                  const ty =
+                    c.y + offY * (0.30 + bb * 0.55 + c.armT * 0.45) +
+                    sy + (CELL_H - th) * 0.5;
+                  const colBase = (cellJ * grid.cols + cellI) * 3;
+                  const cr = grid.color[colBase + 0] ?? 0;
+                  const cg = grid.color[colBase + 1] ?? 0;
+                  const cb = grid.color[colBase + 2] ?? 0;
+                  const gg = Math.min(1, Math.max(0, gooey2));
+                  const ss = gg * gg * (3 - 2 * gg);
+                  const lockAlpha = Math.pow(ss, alphaGamma);
+                  if (lockAlpha > mosaicAlpha) mosaicAlpha = lockAlpha;
+                  ctx.fillStyle = `rgba(${cr},${cg},${cb},${lockAlpha})`;
+                  ctx.fillRect(tx, ty, tw, th);
+                }
+              }
+            }
+          }
+        }
+
         // Per-cell depth parallax: brighter (foreground) cells drift more,
         // dark cells hold back — reads as pseudo-3D layering.
         const depth = hoverActive ? 0.30 + bb * 0.55 + c.armT * 0.45 : 1;
