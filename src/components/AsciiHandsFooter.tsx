@@ -57,6 +57,14 @@ const TILT_FALLOFF = 320;
 // characters are "woken up" into a hand-set angle where the cursor reveals
 // them, and stay upright everywhere else.
 const REVEAL_TILT_MAX_DEG = 12;
+// Continuous character flow along arm skeleton — a low-frequency, time-driven
+// phase rides along `armT` so glyphs shimmer/drift between neighbouring ramp
+// densities. Independent of hover; gives the piece a subtle "always alive" feel.
+const FLOW_DENSITY = 14;          // phase cycles across arm length
+const FLOW_SPEED = 0.35;          // phase cycles per second
+const FLOW_JITTER = 0.6;          // per-cell phase offset (fraction of 2π)
+const FLOW_IDX_AMP = 2;           // ± ramp steps swapped by the wave
+const FLOW_BRIGHTNESS_AMP = 0.06; // ± tonal multiplier from the wave
 // Reveal disc smoothly chases the cursor (source-site behaviour). Smaller =
 // stickier follow, which naturally reads as a gentle hover-in latency without
 // a hard delay gate.
@@ -569,12 +577,31 @@ export function AsciiHandsFooter() {
         if (intro && c.armT > introProgress) continue;
         const bb = c.b;
 
+        // Cell seed (used by flow, intro-front and gooey blocks).
+        const cellI = grid ? Math.floor((c.x - grid.originX) / CELL_W) : 0;
+        const cellJ = grid ? Math.floor((c.y - grid.originY) / CELL_H) : 0;
+        const cellSeed = grid ? grid.seed[cellJ * grid.cols + cellI] ?? 0.5 : 0.5;
+
+        // Continuous flow along the arm skeleton. Amplitude ramps up with the
+        // intro so it never fights the growth animation, and is unaffected by
+        // hover (gooey block below overrides ch anyway inside the reveal disc).
+        const flowAmp = prefersReduce ? 0 : introProgress;
+        const flowPhase =
+          c.armT * FLOW_DENSITY -
+          timeSec * FLOW_SPEED +
+          cellSeed * FLOW_JITTER;
+        const flowWave = Math.sin(flowPhase * Math.PI * 2);
+        const flowIdxOffset = Math.round(flowWave * FLOW_IDX_AMP * flowAmp);
+        const flowBrightness = 1 + flowWave * FLOW_BRIGHTNESS_AMP * flowAmp;
+
         // Base lavender purple color from the ramp:
         //   shadow rgb(45, 35, 70) → highlight rgb(197, 169, 255)
-        let r = 45 + bb * 152;
-        let g = 35 + bb * 134;
-        let bl = 70 + bb * 185;
-        let ch = c.ch;
+        let r = (45 + bb * 152) * flowBrightness;
+        let g = (35 + bb * 134) * flowBrightness;
+        let bl = (70 + bb * 185) * flowBrightness;
+        const baseIdx =
+          ((c.idx + flowIdxOffset) % RAMP_LEN + RAMP_LEN) % RAMP_LEN;
+        let ch = glyphAt(baseIdx);
         let jitterX = 0;
         let jitterY = 0;
         let revealTilt = 0;

@@ -1,45 +1,32 @@
-# 打包 ASCII Hands 交互效果为可移植代码包
-
 ## 目标
-把当前项目的核心交互效果（ASCII 手部动画 + 鼠标悬浮破碎揭示 + 视差 + 生长入场动画）打包成一份**独立的、可直接复制到其他工作区使用**的代码资产。
+让 ASCII 字符呈现持续流动的动效（不依赖鼠标交互也在动），保持高级感；其他视觉与交互（颜色、揭示盘、视差、倾斜、入场生长、描边等）完全不变。
 
-## 交付物
+## 方案：沿骨架方向的低频字符流动
+在现有每帧渲染循环里，为每个 cell 引入一个"时间驱动的字符相位"，让 glyph 在字符 ramp 上按骨架切向缓慢滚动，形成"沿手臂方向流淌"的视觉。
 
-在 `/mnt/documents/ascii-hands-package/` 下生成一个完整目录，包含：
+### 关键设计
+- **流动方向**：复用已有的 `armT`（沿骨架的 0..1 归一化位置）作为相位坐标 —— 天然贴合手臂走向，无需新增几何。
+- **相位公式**：`phase = armT * FLOW_DENSITY - t * FLOW_SPEED + cellNoise * FLOW_JITTER`
+  - `FLOW_DENSITY ≈ 14`：控制流动"条纹"密度
+  - `FLOW_SPEED ≈ 0.35`：每秒推进的相位周期数（慢 = 高级感）
+  - `FLOW_JITTER ≈ 0.6`：每 cell 稳定随机相位偏移，避免形成生硬横条
+- **字符选取**：在原本由亮度 `bb` 决定的 ramp index 上，叠加一个由 `sin(phase * 2π)` 调制的小幅偏移（±2 档），字符会周期性地在相邻密度间"呼吸/流淌"，不改变整体明暗结构。
+- **亮度微调**：同一 phase 波形以极小幅度（±6%）叠加到 cell 亮度上，形成沿臂"光泽扫过"的高级感，不破坏 tonal 层次。
+- **与现有效果的叠加顺序**：
+  1. 入场生长（intro）完成后才启用流动（intro 期间 amplitude 从 0 缓升到 1，避免打架）
+  2. 鼠标揭示盘内的 scramble 依然是最高优先级 —— 揭示区域的字符流动幅度自动衰减到 30%，避免与倾斜/scramble 视觉冲突
+- **性能**：无新循环、无新分配；每 cell 只增加 1 次 sin 调用，60fps 稳定。
 
-```
-ascii-hands-package/
-├── README.md                      # 使用说明（安装、集成、替换图片）
-├── AsciiHandsFooter.tsx           # 主组件（当前 src/components 版本）
-├── hands-pair.png                 # 当前使用的手部图片（从 CDN 下载内嵌）
-├── route-example.tsx              # TanStack Start 路由示例
-├── react-router-example.tsx       # 传统 React 项目示例
-└── tuning-notes.md                # 参数调校说明（半径、视差、倾斜等）
-```
+## 需改动
+仅 `src/components/AsciiHandsFooter.tsx`：
+- 顶部常量新增 `FLOW_DENSITY / FLOW_SPEED / FLOW_JITTER / FLOW_BRIGHTNESS_AMP`
+- 渲染循环内：读取 `armT` → 计算 `phase` → 调整 ramp index 与亮度乘子
+- intro 期间用现有 `introProgress` 作为流动幅度的 gate
 
-同时打包成 `ascii-hands-package.zip` 方便下载。
+## 不改动
+颜色、揭示盘半径/噪声/倾斜、视差、描边、入场轨迹、骨架路径、鼠标跟随缓动。
 
-## README.md 内容要点
-
-1. **环境要求**：React 18+、Tailwind（可选，仅用于容器样式）
-2. **快速集成（3 步）**：
-   - 复制 `AsciiHandsFooter.tsx` 到 `src/components/`
-   - 复制 `hands-pair.png` 到 `src/assets/` 并调整 import 路径
-   - 在页面中 `<AsciiHandsFooter />` 引用
-3. **替换图片**：说明图片要求（黑底、透明或纯色背景、双手对置构图效果最佳）以及只需替换 `hands-pair.png` 即可
-4. **可选自定义**：颜色（当前 `#C5A9FF` 淡紫）、鼠标揭示直径（80px）、视差强度（13px）在文件顶部常量区修改
-5. **依赖说明**：组件仅依赖 React，无需额外 npm 包
-
-## 技术说明
-
-- 组件已是自包含的：一个 `.tsx` 文件 + 一张图片资产
-- 从当前 `src/assets/hands-pair.png.asset.json` 的 CDN URL 下载图片实体文件内嵌到包中
-- 保留当前所有调好的参数（80px 揭示、13px 视差、220ms 延时、破碎噪声、arm-aligned 方向、生长入场动画、字符倾斜、边缘描边）
-- 提供两个集成示例：TanStack Start（当前项目） + 通用 React（Vite/CRA/Next 均适用）
-
-## 使用方式（用户视角）
-
-打包完成后我会告诉你：
-1. 下载 `ascii-hands-package.zip` 的路径
-2. 在新工作区如何 3 步集成
-3. 如何替换成你自己的图片
+## 验证
+Playwright 录制 3 秒静止画面 + 3 秒鼠标悬停画面各一张，确认：
+1. 无鼠标时字符沿手臂方向持续流动
+2. 悬停时揭示盘、倾斜、视差效果与之前一致
