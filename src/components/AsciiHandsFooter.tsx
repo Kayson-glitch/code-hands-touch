@@ -763,9 +763,9 @@ export function AsciiHandsFooter({
             // blobs + mid hash chips, but footprint stays roughly circular.
             const theta = Math.atan2(ddy, ddx);
             const radiusBump =
-              (Math.sin(theta * 3 + seed * 6.28318) * 0.18 +
+              (Math.sin(theta * 3 + cellSeed * 6.28318) * 0.18 +
                 Math.sin(theta * 5 - timeSec * 0.5) * 0.10 +
-                (fract(Math.sin(seed * 31.7) * 91.3) - 0.5) * 0.08) *
+                (fract(Math.sin(cellSeed * 31.7) * 91.3) - 0.5) * 0.08) *
               GOOEY_RADIUS_UV *
               intensity;
             d = Math.max(0, dEuclid - radiusBump);
