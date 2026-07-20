@@ -909,7 +909,7 @@ export function AsciiHandsFooter() {
         // switch, so edges dissolve rather than pop.
         let residueAlpha = 1;
         if (mosaicAlpha > 0) {
-          const t = Math.min(1, Math.max(0, (mosaicAlpha - 0.35) / 0.5));
+          const t = Math.min(1, Math.max(0, (mosaicAlpha - fadeLo) / fadeSpan));
           const fade = t * t * (3 - 2 * t);
           residueAlpha = 1 - fade;
           if (residueAlpha < 0.02) continue;
