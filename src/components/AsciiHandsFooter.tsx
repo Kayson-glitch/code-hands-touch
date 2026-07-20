@@ -594,7 +594,9 @@ export function AsciiHandsFooter() {
 
       for (let k = 0; k < cells.length; k++) {
         const c = cells[k];
-        if (intro && c.armT > introProgress) continue;
+        // Per-cell intro progress based on which arm the cell belongs to.
+        const cellProgress = c.x < w / 2 ? introProgressL : introProgressR;
+        if (intro && c.armT > cellProgress) continue;
         const bb = c.b;
 
         // Cell seed (used by flow, intro-front and gooey blocks).
@@ -625,9 +627,19 @@ export function AsciiHandsFooter() {
         let jitterX = 0;
         let jitterY = 0;
         let revealTilt = 0;
+        // Post-front settle alpha — cells that just crossed the front fade
+        // the last bit of opacity in over INTRO_SETTLE_WIDTH of armT.
+        let cellAlpha = 1;
+        if (intro) {
+          const settleK = Math.min(
+            1,
+            Math.max(0, (cellProgress - c.armT) / INTRO_SETTLE_WIDTH),
+          );
+          cellAlpha = 0.6 + 0.4 * settleK;
+        }
 
         if (intro) {
-          const frontDist = introProgress - c.armT;
+          const frontDist = cellProgress - c.armT;
           if (frontDist < INTRO_FRONT_WIDTH) {
             // Front-edge accent: scramble glyph, brighten toward highlight,
             // add small ±1px jitter for a spatter feel.
@@ -639,19 +651,19 @@ export function AsciiHandsFooter() {
                 ] ?? 0.5
               : 0.5;
             const scramble = fract(
-              Math.sin((seed + introProgress * 3.7) * 12.9898) * 43758.5453,
+              Math.sin((seed + cellProgress * 1.6) * 12.9898) * 43758.5453,
             );
             const scrambleOffset = Math.floor(
-              (scramble - 0.5) * RAMP_LEN * 0.5 * frontK,
+              (scramble - 0.5) * RAMP_LEN * 0.4 * frontK,
             );
             const finalIdx =
               ((c.idx + scrambleOffset) % RAMP_LEN + RAMP_LEN) % RAMP_LEN;
             ch = glyphAt(finalIdx);
-            const blend = frontK * 0.6;
+            const blend = frontK * 0.42;
             r += (HR - r) * blend;
             g += (HG - g) * blend;
             bl += (HB - bl) * blend;
-            const jK = frontK * 1.0;
+            const jK = frontK * 0.8;
             jitterX = (fract(Math.sin(seed * 91.3) * 217.7) - 0.5) * 2 * jK;
             jitterY = (fract(Math.sin(seed * 53.1) * 411.3) - 0.5) * 2 * jK;
           }
