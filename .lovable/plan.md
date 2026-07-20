@@ -1,32 +1,19 @@
 ## 目标
-让 ASCII 字符呈现持续流动的动效（不依赖鼠标交互也在动），保持高级感；其他视觉与交互（颜色、揭示盘、视差、倾斜、入场生长、描边等）完全不变。
+把当前 ASCII 手部效果使用的 `hands-pair.png` 资源替换为用户上传的新图 `Frame_1321320132-2.png`，保持所有代码、颜色、动效、交互参数不变。
 
-## 方案：沿骨架方向的低频字符流动
-在现有每帧渲染循环里，为每个 cell 引入一个"时间驱动的字符相位"，让 glyph 在字符 ramp 上按骨架切向缓慢滚动，形成"沿手臂方向流淌"的视觉。
+## 当前状态
+- 组件 `src/components/AsciiHandsFooter.tsx` 通过 `import handsPairAsset from "@/assets/hands-pair.png.asset.json"` 读取 CDN 资源。
+- 现有 asset 指向旧图（asset_id: aeabbf83-b4b7-4a8e-8ee0-42ca498cf9c2）。
+- 用户上传的新图为黑底、人类手与机械手相向伸出的高对比照片，适合现有 ASCII 采样逻辑。
 
-### 关键设计
-- **流动方向**：复用已有的 `armT`（沿骨架的 0..1 归一化位置）作为相位坐标 —— 天然贴合手臂走向，无需新增几何。
-- **相位公式**：`phase = armT * FLOW_DENSITY - t * FLOW_SPEED + cellNoise * FLOW_JITTER`
-  - `FLOW_DENSITY ≈ 14`：控制流动"条纹"密度
-  - `FLOW_SPEED ≈ 0.35`：每秒推进的相位周期数（慢 = 高级感）
-  - `FLOW_JITTER ≈ 0.6`：每 cell 稳定随机相位偏移，避免形成生硬横条
-- **字符选取**：在原本由亮度 `bb` 决定的 ramp index 上，叠加一个由 `sin(phase * 2π)` 调制的小幅偏移（±2 档），字符会周期性地在相邻密度间"呼吸/流淌"，不改变整体明暗结构。
-- **亮度微调**：同一 phase 波形以极小幅度（±6%）叠加到 cell 亮度上，形成沿臂"光泽扫过"的高级感，不破坏 tonal 层次。
-- **与现有效果的叠加顺序**：
-  1. 入场生长（intro）完成后才启用流动（intro 期间 amplitude 从 0 缓升到 1，避免打架）
-  2. 鼠标揭示盘内的 scramble 依然是最高优先级 —— 揭示区域的字符流动幅度自动衰减到 30%，避免与倾斜/scramble 视觉冲突
-- **性能**：无新循环、无新分配；每 cell 只增加 1 次 sin 调用，60fps 稳定。
-
-## 需改动
-仅 `src/components/AsciiHandsFooter.tsx`：
-- 顶部常量新增 `FLOW_DENSITY / FLOW_SPEED / FLOW_JITTER / FLOW_BRIGHTNESS_AMP`
-- 渲染循环内：读取 `armT` → 计算 `phase` → 调整 ramp index 与亮度乘子
-- intro 期间用现有 `introProgress` 作为流动幅度的 gate
-
-## 不改动
-颜色、揭示盘半径/噪声/倾斜、视差、描边、入场轨迹、骨架路径、鼠标跟随缓动。
+## 实施步骤
+1. 使用 `lovable-assets create` 将 `user-uploads://Frame_1321320132-2.png` 上传为 CDN asset，并输出到 `src/assets/hands-pair.png.asset.json`。
+2. 删除旧 asset 指针文件中原内容，写入新 CLI 生成的 JSON（保持文件名 `hands-pair.png.asset.json` 不变）。
+3. 不修改 `src/components/AsciiHandsFooter.tsx` 及其任何常量、动效、颜色或交互逻辑。
 
 ## 验证
-Playwright 录制 3 秒静止画面 + 3 秒鼠标悬停画面各一张，确认：
-1. 无鼠标时字符沿手臂方向持续流动
-2. 悬停时揭示盘、倾斜、视差效果与之前一致
+- 运行 `bun run build` 确认构建通过。
+- 通过预览查看新的手部剪影是否被正确采样为 ASCII 字符，且原有揭示、视差、流动、描边等效果保持不变。
+
+## 不改动
+- 颜色、揭示盘半径/形状、视差强度、字符倾斜、入场生长、流动动效、描边层、代码结构。
