@@ -1,31 +1,67 @@
-## 诊断
+## 问题定位
 
-hover 揭示盘的半径当前是 `GOOEY_RADIUS_UV(0.048) × min(canvasW, canvasH)`，也就是**跟随画布短边缩放**。上一次布局调整把 `handsHeight` 从 `45vh` 改成 `51vh`，并给画布加了 `min(100vw, 1440px)` 上限，导致 `minWH` 在不同视口下变化：
+历史版本（你给的 commit）里 canvas 是 `absolute inset-0 h-full w-full`，也就是**全屏画布**；hover 半径用 `GOOEY_RADIUS_UV = 0.048` 基于全屏坐标计算。
 
-- 之前 1440×900 场景：min(1440, 405) = 405 → 直径 ≈ 39px
-- 现在同视口：min(1440, 459) = 459 → 直径 ≈ 44px
-- 更宽屏幕上画布被限到 1440，短边可能更小 → 直径更小
+现在为了布局把 canvas 改成了手部区域：`width: min(100vw, 1440px)` + `height: 51vh`。但 hover 仍然用同一套 UV/距离计算：
 
-看起来"变小"其实是这种**跨视口飘忽**的观感（尤其在窗口尺寸变化后），本质原因是 hover 盘半径耦合了画布尺寸。
+```ts
+const minWH = Math.min(canvasW, canvasH)
+const aspectX = canvasW / canvasH
+const cellUvX = (x / minWH) * aspectX
+```
 
-## 方案
+当画布高度只有 51vh 时，`aspectX` 变大，横向距离被放大，hover 视觉区域会被压缩/变小，和历史 commit 不一致。
 
-把 hover 揭示盘的半径改为**固定像素**（80px 直径，即用户之前校准的值），不再依赖 `minWH`：
+## 修复方案
+
+保持现在的布局位置和 1440px 默认视觉宽度，但把 hover 计算恢复到历史的“全屏坐标基准”。
+
+### 1. canvas 恢复为全屏绘制层
 
 `src/components/AsciiHandsFooter.tsx`
 
-- 新增常量：`const GOOEY_RADIUS_PX = 40;`（半径，直径 80px），`const GOOEY_SOFTNESS_PX = 24;`
-- 在渲染循环内把 `R`/`S` 换成 UV 空间等价：
-  ```ts
-  const R = (GOOEY_RADIUS_PX / minWH) * intensity;
-  const S = ((GOOEY_SOFTNESS_PX * 0.5) / minWH) * intensity;
-  ```
-- 删除或保留 `GOOEY_RADIUS_UV` / `GOOEY_SOFTNESS_UV` 常量作为注释参考；不再在渲染中使用。
-- `GOOEY_NOISE`（0.011）保持 UV 空间不变，破碎边缘的相对幅度与盘尺寸解耦是可接受的。
+- canvas class/style 从局部画布改回全屏：`absolute inset-0 h-full w-full`。
+- 不再直接把 `top / height / width: min(100vw,1440px)` 写到 canvas 上。
 
-其余（点击锁定 mosaic、intro、视差、字符倾斜）都不受影响，因为它们本来就用像素或独立 UV。
+### 2. 新增手部绘制区域 rect
+
+在 render loop 中根据 `layout.handsTop / handsHeight` 计算一个绘制区域：
+
+```ts
+visualRect = {
+  x: (viewportW - Math.min(viewportW, 1440)) / 2,
+  y: resolvedHandsTopPx,
+  w: Math.min(viewportW, 1440),
+  h: resolvedHandsHeightPx,
+}
+```
+
+然后：
+
+- 图片采样 / ASCII 网格仍绘制在这个 rect 内。
+- 指针命中、点击锁定仍按这个 rect 内的手部位置判断。
+- hover disc 距离计算使用全屏 canvas 的 `minWH/aspectX`，恢复历史观感。
+
+### 3. hover 半径恢复历史 UV 公式
+
+- 删除/停用上次新增的 `GOOEY_RADIUS_PX` / `GOOEY_SOFTNESS_PX`。
+- 恢复：
+
+```ts
+const R = GOOEY_RADIUS_UV * intensity
+const S = GOOEY_SOFTNESS_UV * intensity * 0.5
+```
+
+这样大小和历史 commit 一致，同时不会因为手部视觉区域高度变化而变小。
+
+## 保持不变
+
+- 当前标题/手部布局比例不改。
+- 默认视觉宽度仍为 1440px 居中。
+- 悬停马赛克、字符倾斜、视差、点击锁定、intro 视频逻辑不改。
 
 ## 验证
 
-- 1327×922、1440×900、1920×1080、1280×720 分别 hover，直径应恒为 ~80px。
-- resize 窗口时盘尺寸不再跳动。
+- 在当前 1327×922 下 hover，视觉大小应接近你给的历史 preview。
+- 1440×900 下 hover 大小应保持一致。
+- 1920 宽屏下手部视觉宽度仍锁定 1440px 居中，但 hover 不再变小。
