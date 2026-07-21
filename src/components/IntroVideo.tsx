@@ -25,8 +25,6 @@ export function IntroVideo({
     firedRef.current = true;
     const v = videoRef.current;
     if (!v) return;
-    // Freeze on the last frame so it can act as the backdrop while the
-    // liquid burst spreads over it.
     try {
       if (v.duration && !Number.isNaN(v.duration)) {
         v.currentTime = Math.max(0, v.duration - 0.01);
@@ -49,38 +47,65 @@ export function IntroVideo({
 
   useEffect(() => {
     const v = videoRef.current;
+    const bg = bgRef.current;
     if (!v) return;
-    let fallbackTimer = 0;
-    const armFallback = () => {
-      window.clearTimeout(fallbackTimer);
-      // The video is ~4.04s. If the browser misses `ended`/`timeupdate`, or
-      // media metadata stalls in preview, still trigger the transition rather
-      // than leaving the intro on a blank frame forever.
-      fallbackTimer = window.setTimeout(() => fire(), 4300);
+
+    // Scroll-controlled scrubbing. Wheel deltaY accumulates into a pending
+    // time delta that we flush to the video's currentTime on rAF.
+    const SECONDS_PER_PIXEL = 0.004;
+    let pendingDelta = 0;
+    let rafId = 0;
+    let errorFallback = 0;
+
+    const ensurePaused = () => {
+      try { v.pause(); } catch { /* ignore */ }
+      try { bg?.pause(); } catch { /* ignore */ }
     };
-    const onTime = () => {
+
+    const flush = () => {
+      rafId = 0;
       if (!v.duration || Number.isNaN(v.duration)) return;
-      if (v.currentTime >= v.duration - 0.05) fire();
+      const next = Math.min(
+        v.duration,
+        Math.max(0, v.currentTime + pendingDelta),
+      );
+      pendingDelta = 0;
+      v.currentTime = next;
+      if (bg) bg.currentTime = next;
+      if (next >= v.duration - 0.05) fire();
     };
-    const onEnd = () => fire();
-    const onMeta = () => armFallback();
-    const onError = () => armFallback();
-    v.addEventListener("timeupdate", onTime);
-    v.addEventListener("ended", onEnd);
+
+    const onWheel = (e: WheelEvent) => {
+      if (firedRef.current) return;
+      e.preventDefault();
+      pendingDelta += e.deltaY * SECONDS_PER_PIXEL;
+      if (!rafId) rafId = requestAnimationFrame(flush);
+    };
+
+    const onMeta = () => {
+      ensurePaused();
+    };
+    const onError = () => {
+      // Preserve fallback ONLY when media fails to load at all.
+      window.clearTimeout(errorFallback);
+      errorFallback = window.setTimeout(() => fire(), 500);
+    };
+
     v.addEventListener("loadedmetadata", onMeta);
     v.addEventListener("error", onError);
-    // Kick off playback (some browsers need an explicit call after mount).
-    v.play().catch(() => {
-      armFallback();
-    });
-    bgRef.current?.play().catch(() => {});
-    armFallback();
+    window.addEventListener("wheel", onWheel, { passive: false });
+
+    // Start paused on frame 0. Some browsers won't render a frame until
+    // play() is called at least once; play then immediately pause.
+    v.play().then(() => ensurePaused()).catch(() => ensurePaused());
+    bg?.play().then(() => ensurePaused()).catch(() => ensurePaused());
+
     return () => {
-      window.clearTimeout(fallbackTimer);
-      v.removeEventListener("timeupdate", onTime);
-      v.removeEventListener("ended", onEnd);
+      window.clearTimeout(errorFallback);
+      if (rafId) cancelAnimationFrame(rafId);
       v.removeEventListener("loadedmetadata", onMeta);
       v.removeEventListener("error", onError);
+      window.removeEventListener("wheel", onWheel);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -97,7 +122,6 @@ export function IntroVideo({
       <video
         ref={bgRef}
         src={videoAsset.url}
-        autoPlay
         muted
         playsInline
         preload="auto"
@@ -117,14 +141,9 @@ export function IntroVideo({
       <video
         ref={videoRef}
         src={videoAsset.url}
-        autoPlay
         muted
         playsInline
         preload="auto"
-        onClick={() => {
-          videoRef.current?.play().catch(() => {});
-          bgRef.current?.play().catch(() => {});
-        }}
         style={{
           position: "absolute",
           inset: 0,
