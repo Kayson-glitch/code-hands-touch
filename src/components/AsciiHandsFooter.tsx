@@ -1267,25 +1267,26 @@ export function AsciiHandsFooter() {
         Good Fella Studio — ASCII Creation of Adam
       </h1>
 
-      {/* Giant faded wordmark behind everything */}
+      {/* Giant faded wordmark pinned to viewport bottom */}
       <div
         aria-hidden
-        className="pointer-events-none absolute inset-x-0 bottom-0 flex justify-center overflow-hidden"
+        className="pointer-events-none absolute inset-x-0 bottom-0 flex items-end justify-center overflow-hidden"
         style={{
-          height: "45%",
+          height: "28%",
           zIndex: 0,
           opacity: handsVisible ? 1 : 0,
           transition: "opacity 400ms ease-out",
         }}
       >
         <span
-          className="select-none whitespace-nowrap font-bold tracking-tight"
+          className="select-none whitespace-nowrap tracking-tight"
           style={{
             fontSize: "clamp(8rem, 22vw, 22rem)",
-            lineHeight: 1,
+            lineHeight: 0.9,
+            fontWeight: 700,
             color: "rgba(255,255,255,0.05)",
-            transform: "translateY(30%)",
-            fontFamily: '"Geist Mono", ui-monospace, monospace',
+            fontFamily:
+              'Montserrat, ui-sans-serif, system-ui, sans-serif',
           }}
         >
           Synergy.AI
@@ -1298,7 +1299,7 @@ export function AsciiHandsFooter() {
         className="absolute inset-x-0 bottom-0 w-full"
         style={{
           zIndex: 10,
-          height: "72vh",
+          height: "62vh",
           opacity: handsVisible ? 1 : 0,
           pointerEvents: handsVisible ? "auto" : "none",
           transition: "opacity 300ms ease-out",

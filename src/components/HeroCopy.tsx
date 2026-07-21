@@ -21,7 +21,7 @@ export function HeroCopy() {
     <div
       className="pointer-events-none absolute inset-x-0 top-0 z-30 flex flex-col items-center px-6 text-center"
       style={{
-        paddingTop: "14vh",
+        paddingTop: "22vh",
         opacity: visible ? 1 : 0,
         transform: visible ? "translateY(0)" : "translateY(12px)",
         transition: "opacity 700ms ease-out, transform 700ms ease-out",
