@@ -160,7 +160,7 @@ export function LiquidBurst({
   return (
     <div
       className="pointer-events-none fixed inset-0"
-      style={{ zIndex: 55 }}
+      style={{ zIndex: 70 }}
       aria-hidden
     >
       <div
