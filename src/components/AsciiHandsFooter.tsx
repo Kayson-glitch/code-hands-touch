@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from "react";
 import handsPairAsset from "@/assets/hands-pair.png.asset.json";
-import { LiquidBurst } from "./LiquidBurst";
 import { IntroVideo } from "./IntroVideo";
 
 // Ordered density ramp, dark → bright. Mirrors the exact 70-glyph set used by
@@ -387,11 +386,8 @@ export function AsciiHandsFooter() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [mounted, setMounted] = useState(false);
   useEffect(() => { setMounted(true); }, []);
-  // Interaction flow: orb → orb-exit → hands.
-  const [stage, setStage] = useState<
-    "orb" | "orb-burst" | "orb-fade" | "hands"
-  >("orb");
-  const [burstOrigin, setBurstOrigin] = useState<[number, number]>([0.5, 0.5]);
+  // Interaction flow: intro video → hands.
+  const [stage, setStage] = useState<"orb" | "hands">("orb");
   const stageRef = useRef(stage);
   useEffect(() => { stageRef.current = stage; }, [stage]);
   const startIntroRef = useRef<(() => void) | null>(null);
