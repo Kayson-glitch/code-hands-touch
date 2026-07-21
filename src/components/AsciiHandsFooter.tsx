@@ -110,7 +110,7 @@ const ARM_ALIGN_STRENGTH = 0.45;
 // A hermite curve gives fast forearm coverage, then a distinct deceleration as
 // the reveal reaches the wrist / palm / fingers.
 const INTRO_DURATION_MS = 2400;
-const INTRO_MASK_PREROLL_MS = 900;
+const INTRO_MASK_PREROLL_MS = 1600;
 const INTRO_FRONT_WIDTH_BASE = 0.18;
 // After the reveal passes the "wrist" anchor we widen the front band so the
 // palm + fingers unfurl feels softer / more diffused, reinforcing the slowdown.
@@ -1266,7 +1266,15 @@ export function AsciiHandsFooter() {
     setBgDark(true);
   };
   const handleBurstProgress = (p: number) => {
-    // Fallback for browsers that may skip the exact covered callback frame.
+    // Pre-roll the hand growth while the burst still fully dominates the frame,
+    // so the reveal does not fade into an empty black beat.
+    if (stage === "orb-burst" && p >= 0.72 && stageRef.current !== "hands") {
+      introPrerollRef.current = INTRO_MASK_PREROLL_MS;
+      setStage("hands");
+      return;
+    }
+
+    // Fallback for browsers that may skip the late pre-roll frame.
     if (stage === "orb-fade" && p >= 0.6 && stageRef.current !== "hands") {
       setStage("hands");
     }
