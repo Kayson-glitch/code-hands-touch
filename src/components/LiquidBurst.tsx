@@ -13,7 +13,7 @@ export function LiquidBurst({
   onCovered,
   onFaded,
   onProgress,
-  spreadMs = 1000,
+  spreadMs = 1600,
   fadeMs = 280,
 }: {
   /** Normalized viewport origin, x∈[0,1] left→right, y∈[0,1] bottom→top (WebGL-style). */
@@ -61,13 +61,16 @@ export function LiquidBurst({
       if (startRef.current == null) startRef.current = now;
       const t = now - startRef.current;
       const rawP = Math.min(1, t / spreadMs);
-      const p = 1 - Math.pow(1 - rawP, 3); // easeOutCubic
+      // easeOutBack — overshoots slightly for an elastic settle.
+      const c1 = 1.70158;
+      const p =
+        1 + (c1 + 1) * Math.pow(rawP - 1, 3) + c1 * Math.pow(rawP - 1, 2);
 
       // Radius as % of the viewport's diagonal, from origin. 0 → ~130%
       // ensures coverage regardless of click position.
       const fill = p * 130;
       // Feathered outer band size (chromatic edge width in %).
-      const feather = 6 + (1 - p) * 6;
+      const feather = 10 + (1 - Math.min(1, p)) * 14;
 
       const setGrad = (
         el: HTMLDivElement | null,
@@ -90,14 +93,14 @@ export function LiquidBurst({
 
       // Turbulence displacement ramps up so the front looks increasingly
       // torn as it spreads.
-      const displace = 10 + p * 60;
+      const displace = 20 + Math.min(1, p) * 100;
       dispRef.current?.setAttribute("scale", displace.toFixed(1));
 
-      // Advance seed every ~90ms so the wobble flows without flickering.
+      // Advance seed every ~60ms so the wobble flows without flickering.
       seedT += 16;
-      if (now - lastSeedTick > 90) {
+      if (now - lastSeedTick > 60) {
         lastSeedTick = now;
-        const seed = Math.floor(seedT / 90) % 128;
+        const seed = Math.floor(seedT / 60) % 128;
         turbRef.current?.setAttribute("seed", String(seed));
       }
 
@@ -155,8 +158,8 @@ export function LiquidBurst({
             <feTurbulence
               ref={turbRef}
               type="fractalNoise"
-              baseFrequency="0.012 0.018"
-              numOctaves={2}
+              baseFrequency="0.006 0.010"
+              numOctaves={3}
               seed={0}
               result="noise"
             />
@@ -164,7 +167,7 @@ export function LiquidBurst({
               ref={dispRef}
               in="SourceGraphic"
               in2="noise"
-              scale={10}
+              scale={20}
               xChannelSelector="R"
               yChannelSelector="G"
             />
