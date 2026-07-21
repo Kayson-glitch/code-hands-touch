@@ -18,14 +18,16 @@ function Orb({ exiting, onExited }: OrbProps) {
     m.rotation.y += dt * 0.3;
     m.rotation.x += dt * 0.1;
     if (exiting) {
-      exitT.current = Math.min(1, exitT.current + dt / 0.45);
+      // Short "charge" — orb tightens slightly and distort spikes as it
+      // hands off to the full-screen liquid burst layer.
+      exitT.current = Math.min(1, exitT.current + dt / 0.22);
       const t = exitT.current;
-      const e = 1 - Math.pow(1 - t, 3); // easeOutCubic
-      const scale = 1 + e * 1.4;
+      const e = 1 - Math.pow(1 - t, 3);
+      const scale = 1 - e * 0.18;
       m.scale.setScalar(scale);
       if (matRef.current) {
-        matRef.current.distort = 0.45 + e * 0.65;
-        matRef.current.opacity = 1 - e;
+        matRef.current.distort = 0.45 + e * 0.55;
+        matRef.current.opacity = 1 - e * 0.85;
       }
       if (t >= 1 && !doneRef.current) {
         doneRef.current = true;
