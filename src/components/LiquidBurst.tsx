@@ -95,7 +95,7 @@ export function LiquidBurst({
     const setClip = (el: HTMLDivElement | null, clipPath: string) => {
       if (!el) return;
       el.style.clipPath = clipPath;
-      el.style.webkitClipPath = clipPath;
+      el.style.setProperty("-webkit-clip-path", clipPath);
     };
 
     const tick = (now: number) => {
