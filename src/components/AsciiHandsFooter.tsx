@@ -1348,7 +1348,7 @@ export function AsciiHandsFooter() {
           onCovered={handleBurstCovered}
           onFaded={handleBurstFaded}
           onProgress={handleBurstProgress}
-          spreadMs={1000}
+          spreadMs={2600}
           fadeMs={280}
         />
       )}
