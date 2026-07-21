@@ -237,8 +237,8 @@ function sampleImage(
   mirror: boolean,
 ): { cells: Cell[]; grid: Grid } {
   const off = document.createElement("canvas");
-  const cols = Math.floor(targetRect.w / CELL_W);
-  const rows = Math.floor(targetRect.h / CELL_H);
+  const cols = Math.max(1, Math.floor(targetRect.w / CELL_W));
+  const rows = Math.max(1, Math.floor(targetRect.h / CELL_H));
   off.width = cols;
   off.height = rows;
   const octx = off.getContext("2d", { willReadFrequently: true })!;
@@ -433,6 +433,7 @@ export function AsciiHandsFooter() {
       if (!img) return;
       const w = canvas.clientWidth;
       const h = canvas.clientHeight;
+      if (w <= 0 || h <= 0) return;
 
       // Source image is 1920x1080 with both hands baked into the composition,
       // meeting near the center. Fit it to the full canvas width, centered.
@@ -1234,11 +1235,18 @@ export function AsciiHandsFooter() {
   }, []);
 
   const handsVisible = stage === "hands";
+  const [orbMounted, setOrbMounted] = useState(true);
   const handleOrbClick = () => {
     if (stage !== "orb") return;
     setStage("orb-exit");
-    // Overlap the last ~150ms of the orb exit with the arm growth intro.
+    // Overlap the last ~150ms of the orb exit with the arm growth intro:
+    // flip stage to "hands" partway through so the canvas fades in while
+    // the orb finishes its exit animation. Keep the orb mounted until its
+    // own onExited callback fires — otherwise it visibly pops mid-anim.
     window.setTimeout(() => setStage("hands"), 300);
+  };
+  const handleOrbExited = () => {
+    setOrbMounted(false);
   };
   return (
     <section
@@ -1284,7 +1292,7 @@ export function AsciiHandsFooter() {
         }}
       />
 
-      {stage !== "hands" && (
+      {orbMounted && (
         <div
           className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2"
           style={{
@@ -1299,6 +1307,7 @@ export function AsciiHandsFooter() {
             <LiquidMetalOrb
               onClick={handleOrbClick}
               exiting={stage === "orb-exit"}
+              onExited={handleOrbExited}
             />
           )}
         </div>
