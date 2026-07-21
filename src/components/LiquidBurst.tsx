@@ -175,8 +175,8 @@ function BurstMesh({
     uniforms.uOrigin.value.set(origin[0] * aspect, origin[1]);
   }, [size.width, size.height, origin, uniforms]);
 
-  useFrame(({ clock }) => {
-    const nowMs = clock.getElapsedTime() * 1000;
+  useFrame(() => {
+    const nowMs = performance.now();
     if (startRef.current == null) startRef.current = nowMs;
     const t = nowMs - startRef.current;
     const rawP = Math.min(1, t / spreadMs);
@@ -194,7 +194,7 @@ function BurstMesh({
     const endElastic = rawP > 0.85 ? Math.sin(((rawP - 0.85) / 0.15) * Math.PI) * 0.02 : 0;
     const p = Math.max(0, Math.min(1.02, curved + endElastic));
     uniforms.uProgress.value = p;
-    uniforms.uTime.value = clock.getElapsedTime();
+    uniforms.uTime.value = t / 1000;
     onProgress?.(p);
     if (rawP >= 1 && !coveredRef.current) {
       coveredRef.current = true;

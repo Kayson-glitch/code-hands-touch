@@ -1260,7 +1260,7 @@ export function AsciiHandsFooter() {
     videoW: number;
     videoH: number;
   }) => {
-    if (stage !== "orb") return;
+    if (stageRef.current !== "orb") return;
     const vw = window.innerWidth;
     const vh = window.innerHeight;
     const { videoRect, videoW, videoH } = info;
@@ -1278,8 +1278,8 @@ export function AsciiHandsFooter() {
       cy = drawnY + drawnH * FINGER_UV.y;
     }
     setBurstOrigin([cx / vw, 1 - cy / vh]);
-    setStage("orb-burst");
     setBurstMounted(true);
+    setStage("orb-burst");
   };
   const handleOrbExited = () => {
     setOrbMounted(false);
@@ -1294,7 +1294,7 @@ export function AsciiHandsFooter() {
   const handleBurstProgress = () => {};
   const handleBurstFaded = () => {
     setBurstMounted(false);
-    if (stageRef.current !== "hands") setStage("hands");
+    if (stageRef.current === "orb-fade") setStage("hands");
   };
   const [bgDark, setBgDark] = useState(false);
   return (
@@ -1356,11 +1356,11 @@ export function AsciiHandsFooter() {
             pointerEvents: stage === "orb" ? "auto" : "none",
           }}
         >
-          {mounted && <IntroVideo onEnded={handleIntroEnded} />}
+          <IntroVideo onEnded={handleIntroEnded} />
         </div>
       )}
 
-      {burstMounted && mounted && (
+      {burstMounted && (
         <LiquidBurst
           origin={burstOrigin}
           onCovered={handleBurstCovered}
