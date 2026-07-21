@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import handsPairAsset from "@/assets/hands-pair.png.asset.json";
 import { IntroVideo, type IntroProgressInfo } from "./IntroVideo";
-import { StardustBurst } from "./StardustBurst";
 
 // Ordered density ramp, dark → bright. Mirrors the exact 70-glyph set used by
 // good-fella.com's ASCII footer (recovered by hooking their canvas atlas).
@@ -1237,9 +1236,8 @@ export function AsciiHandsFooter() {
 
   const handsVisible = stage === "hands";
   const [orbMounted, setOrbMounted] = useState(true);
-  const [burst, setBurst] = useState({ progress: 0, cx: 0, cy: 0 });
-  const handleIntroProgress = (info: IntroProgressInfo) => {
-    setBurst({ progress: info.burstProgress, cx: info.centerX, cy: info.centerY });
+  const handleIntroProgress = (_info: IntroProgressInfo) => {
+    /* shader draws burst internally; no external state needed */
   };
   const handleIntroEnded = () => {
     if (stageRef.current !== "orb") return;
@@ -1310,12 +1308,6 @@ export function AsciiHandsFooter() {
           }}
         >
           <IntroVideo onEnded={handleIntroEnded} onProgress={handleIntroProgress} />
-          <StardustBurst
-            progress={burst.progress}
-            centerX={burst.cx}
-            centerY={burst.cy}
-            visible={stage === "orb"}
-          />
         </div>
       )}
 

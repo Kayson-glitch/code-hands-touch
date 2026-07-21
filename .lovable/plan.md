@@ -1,55 +1,78 @@
-# 视频视差 + 星尘扩散方案
+# 方案 B：1:1 复刻 Shopify Winter 2026 的 shader 扩散
 
-## 交互流程
+放弃当前的 Canvas 2D 粒子系统 — 它做不出参考视频里那种"从指尖爆开的液态光晕 + 边缘距离场发光 + 视频扭曲"的质感。改用 Shopify 同款技术栈：**Three.js 全屏后期 shader + VideoTexture**，把视频本身当作纹理送进 GLSL，用一个 `uProgress` 驱动全过程。
 
-滚轮总行程分成两段：
-- **0% → 60%**：视频进度（`currentTime` 跟随滚轮，已有）+ 新增缩放视差
-- **60% → 100%**：视频停在最后一帧，星尘粒子从两指相接点扩散
-- **100% 到达时**：整层淡出到黑，触发进入手部阶段
+## 效果对齐参考视频
 
-反向滚动完全可逆（星尘回缩、视频倒放），保证操作手感一致。
+1. **视频视差**：不是 CSS scale，而是在 shader 里做 `uv = (uv - center) * (1 - progress*0.12) + center`，围绕指尖中心轻微缩放/挤压
+2. **指尖爆点**：滚到 60% 后，从指尖 UV 生成一个圆形距离场 `d = length(uv - center) - radius(progress)`
+3. **液态边缘**：`edge = smoothstep(0.0, 0.08, d) - smoothstep(-0.04, 0.0, d)`，形成一圈亮环
+4. **有机扰动**：`d += fbm(uv*4.0 + uTime*0.3) * 0.06`，边缘变成不规则墨滴形
+5. **色散**：R/G/B 三通道分别用不同 offset 采样视频纹理，边缘处偏移量随 `edge` 放大 → 参考视频里那种彩色边
+6. **中心镂空 → 白光爆开**：`radius` 越过 1.0 后，圆盘内部由"透视频"渐变为"纯白 + 星尘噪点"，最终 `progress → 1.5` 时全屏白/黑，触发手部阶段
 
-## 具体实现
+## 交互流程（不变）
 
-### 1. 视频视差（`IntroVideo.tsx`）
-在现有 wheel 累加逻辑上派生 `scrollProgress`（0–1）：
-- 视频阶段进度 `videoP = clamp(scrollProgress / 0.6, 0, 1)`，仍驱动 `currentTime`
-- 前景 `<video>` 应用 `transform: scale(1 + videoP * 0.05)`（围绕两指中心，`transform-origin` 设为 50% 50% 对应容器内 UV）
-- 模糊背景保持 cover 不动，避免视觉抖动
-- 用 `requestAnimationFrame` 直接写 `style.transform`，不走 React state
+- 滚轮 0–60%：驱动 `video.currentTime` + shader `uProgress` 做视差
+- 滚轮 60–100%：视频停在末帧，`uProgress` 从 0.6 推到 1.5，扩散铺满
+- 反向滚动完全可逆
+- `progress >= 1.5` 持续 ~200ms → 切 `stage: 'hands'`
 
-### 2. 星尘扩散层（新增 `StardustBurst.tsx`）
-一个覆盖全屏的 `<canvas>`，`z-index: 65`（视频之上，手部/wordmark 之下）：
+## 技术实现
 
-- **粒子系统**：Canvas 2D，200–400 个粒子；每颗记录 `{angle, radius, speed, size, twinkle}`
-- **驱动**：外部传入 `burstProgress`（0–1，来自 `(scrollProgress - 0.6) / 0.4`）
-- **半径映射**：`r = easeOutCubic(burstProgress) * maxR`，`maxR = viewport 对角线`
-- **中心点**：两指相接点，由父组件按 contain 视频尺寸算出 `{cx, cy}` 传入
-- **视觉**：白色 sprite（预渲染带柔光的圆点 + 十字光芒），`globalCompositeOperation = 'lighter'` 叠加
-- **闪烁**：每颗按 `sin(time * freq + phase)` 调 alpha，重现 Shopify shader 中 `sin(uTime + uv.x*10)` 的活体感
-- **暗部**：在粒子层下叠一层由中心向外扩张的黑色径向蒙版（`radial-gradient` DOM 层），提供 Shopify 参考中"有机黑洞"的底色
-- **可逆**：`burstProgress` 减小时半径回缩、粒子透明度下降，无硬切
+### 新文件 `src/components/VideoBurstShader.tsx`
+- `<canvas>` + 原生 Three.js（不用 R3F，避免上下文冲突）
+- 一个正交相机 + 全屏 plane
+- `THREE.VideoTexture(videoElement)` 作为 `uVideoTex`
+- Uniforms: `uProgress`, `uCenter (vec2)`, `uTime`, `uResolution`, `uVideoTex`
+- Fragment shader（约 80 行 GLSL）：
+  ```glsl
+  // 视差
+  vec2 uv = (vUv - uCenter) * (1.0 - uProgress * 0.12) + uCenter;
+  // fbm 扰动
+  float n = fbm(uv * 4.0 + uTime * 0.3);
+  // 距离场
+  float r = smoothstep(0.6, 1.4, uProgress) * 1.2;
+  float d = length(uv - uCenter) - r + n * 0.08;
+  // 色散采样视频
+  float chroma = smoothstep(0.0, 0.15, abs(d)) * 0.02;
+  vec3 col;
+  col.r = texture2D(uVideoTex, uv + vec2(chroma, 0.0)).r;
+  col.g = texture2D(uVideoTex, uv).g;
+  col.b = texture2D(uVideoTex, uv - vec2(chroma, 0.0)).b;
+  // 边缘光
+  float edge = exp(-abs(d) * 40.0);
+  col += vec3(1.0, 0.95, 1.05) * edge * smoothstep(0.6, 1.0, uProgress);
+  // 内部褪白
+  float inside = smoothstep(0.0, -0.2, d);
+  col = mix(col, vec3(1.0), inside * smoothstep(1.0, 1.5, uProgress));
+  gl_FragColor = vec4(col, 1.0);
+  ```
 
-### 3. 终态淡出（`AsciiHandsFooter.tsx`）
-- `scrollProgress >= 1` 持续 ~200ms → `setStage('hands')`
-- 星尘层在切换瞬间 opacity 过渡到 0（400ms），同时背景已切黑
-- 手部生长动画照常触发
+### 改造 `IntroVideo.tsx`
+- 视频保留但设 `visibility: hidden` — 只作为纹理源，画面由 shader 输出
+- 滚轮累加器直出 `progress ∈ [0, 1.5]`；`videoProgress = min(1, progress/0.6)` 驱动 `currentTime`
+- 通过 `onProgress` 把 `progress` + 指尖 UV (0.5, 0.5) 传给 `VideoBurstShader`
+- 滚到 1.5 触发 `onEnded`
 
-### 4. 状态机改动
-`AsciiHandsFooter.tsx`：
-- 保留现有 `stage: 'video' | 'hands'`
-- 从 `IntroVideo` 提升 `scrollProgress` 到 footer，透传给 `StardustBurst`
-- 视频完成条件从"currentTime 到末尾"改为"scrollProgress >= 1"
+### 删除
+- `src/components/StardustBurst.tsx` — 完全废弃
 
-## 技术细节
+### `AsciiHandsFooter.tsx`
+- 移除 `<StardustBurst>` 引用
+- `<IntroVideo>` 内部自带 `<VideoBurstShader>`，footer 不感知
 
-- 粒子 sprite 通过 `OffscreenCanvas` 预烘焙，运行时 `drawImage` 无逐帧渲染成本
-- `prefers-reduced-motion` → 跳过粒子，直接淡黑过渡
-- 粒子数按 `devicePixelRatio` 与视口面积自适应（低端设备减半）
-- 复用现有 wheel 累加器，不新增滚动库
+## 风险与回退
 
-## 不改动的部分
+- **WebGL 上下文丢失**：之前 orb+burst 双 Canvas 出过。这版只有一块 WebGL Canvas（视频当纹理），安全。
+- **视频跨域**：`videoAsset.url` 是同域 CDN，无 CORS 问题；如遇到就加 `crossOrigin="anonymous"`。
+- **prefers-reduced-motion**：shader 里 `uProgress` 直接跳到 1.5，跳过扰动动画。
+- 若最终 shader 效果仍不满意，回退到"视频 + CSS 径向遮罩 + backdrop-filter blur"简化版。
 
-- 手部 ASCII、hover 破碎、点击马赛克、球体（已移除）逻辑不动
-- 视频源与模糊背景 contain 布局不动
-- 颜色体系（#C5A9FF 紫）不动
+## 验收标准
+
+滚轮到 60% 后：
+1. 视频画面本身出现色散彩边（红蓝分离）
+2. 指尖处爆出一圈不规则液态白光，向外扩散
+3. 光环边缘有 fbm 扰动，不是完美圆
+4. 铺满后视频被白光吞没，切手部阶段
