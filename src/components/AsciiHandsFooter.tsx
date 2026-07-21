@@ -384,8 +384,33 @@ function sampleImage(
   };
 }
 
+function resolveViewportLength(value: string, viewportW: number, viewportH: number) {
+  const raw = value.trim();
+  const calc = raw.match(/^calc\(([-\d.]+)vh\s*([+-])\s*([-\d.]+)px\)$/);
+  if (calc) {
+    const vh = (Number(calc[1]) / 100) * viewportH;
+    const px = Number(calc[3]);
+    return calc[2] === "-" ? vh - px : vh + px;
+  }
+  if (raw.endsWith("vh")) return (Number.parseFloat(raw) / 100) * viewportH;
+  if (raw.endsWith("vw")) return (Number.parseFloat(raw) / 100) * viewportW;
+  if (raw.endsWith("px")) return Number.parseFloat(raw);
+  return Number.parseFloat(raw) || 0;
+}
+
+function getHandsVisualRect(layout: HeroLayout, viewportW: number, viewportH: number) {
+  const visualW = Math.min(viewportW, HANDS_VISUAL_MAX_W);
+  return {
+    x: (viewportW - visualW) * 0.5,
+    y: resolveViewportLength(layout.handsTop, viewportW, viewportH),
+    w: visualW,
+    h: resolveViewportLength(layout.handsHeight, viewportW, viewportH),
+  };
+}
+
 export function AsciiHandsFooter() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const layout = useHeroLayout();
   const [mounted, setMounted] = useState(false);
   useEffect(() => { setMounted(true); }, []);
   // Interaction flow: intro video → hands.
