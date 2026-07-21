@@ -1,29 +1,43 @@
-## 目标
-让开屏视频的滚轮控制更丝滑：消除高频滚轮事件导致的抖动/跳帧，让进度在停止滚动后仍以自然的缓动继续，同时把视频 currentTime 的更新变得平滑。
+## 问题诊断
 
-## 现状问题（`src/components/IntroVideo.tsx`）
-1. `onWheel` 直接把 `deltaY` 累加到 `progress`，滚轮的原始 delta 本身就是离散、跳变的（尤其鼠标滚轮 vs 触控板差异极大），画面会一顿一顿。
-2. `video.currentTime` 每帧硬设，浏览器 seek 有开销，容易卡帧。
-3. 没有惯性/回弹，停止滚动瞬间进度也瞬间停止，缺乏丝滑感。
-4. 触控板和鼠标滚轮 delta 数量级不同，未做归一化。
+当前 `src/components/IntroVideo.tsx` 里滚动"卡"的主因不是平滑算法，而是**每帧都在 `video.currentTime = target` 上做 seek**：
 
-## 方案
-仅修改 `src/components/IntroVideo.tsx`，不动其他文件。
+- `SEEK_EPSILON = 0.04` 秒（≈1 帧）→ 只要平滑值持续追赶目标，几乎每个 rAF 都会触发一次 seek。
+- 浏览器解码非关键帧的 seek 成本很高，MP4 的 GOP 大时会出现明显掉帧/闪烁，表现就是"卡顿"。
+- 同时 `onProgress` 回调每帧都触发一次 React 状态更新（父组件 `AsciiHandsFooter` 里），也会叠加主线程压力。
 
-1. 引入 `targetProgress` 与 `progress` 双值：
-   - `onWheel` 只累加到 `targetProgress`（带 clamp）。
-   - 每帧用指数平滑 `progress += (target - progress) * k`，`k` 按帧时长归一（约 12–15/秒），得到丝滑跟随 + 停止后的短暂惯性延续。
-2. 滚轮 delta 归一化：
-   - 依据 `e.deltaMode`（PIXEL/LINE/PAGE）换算成像素。
-   - 对单次极大 delta 做上限裁剪（避免鼠标滚轮巨跳）。
-   - 略微提高 `PIXELS_FOR_FULL_PROGRESS`（如 2600 → 3200）以配合平滑后手感。
-3. 视频 seek 平滑：
-   - 只在 `videoProgress` 变化超过阈值（如 > 1 帧 ≈ 0.033s）时才写 `currentTime`。
-   - 用 `requestVideoFrameCallback`（可用时）或保持当前 RAF，但把阈值放宽，避免频繁 seek 抖动。
-4. 保留现有 burst/进度回调行为不变，`onProgress` 依旧输出平滑后的 `progress`。
+## 优化方案
 
-## 验收
-- 快速/慢速滚动、触控板双指滑动均无明显卡顿。
-- 停止滚动后进度会顺滑收敛到目标值，不会硬停。
-- 到达 1 时依旧正确 `fire()` 触发下一阶段。
-- 不影响手部动画、hover、点击等其他效果。
+改动只限于 `src/components/IntroVideo.tsx`，视觉/交互不变，只让手感更顺：
+
+1. **Seek 节流** — 把视频 seek 从"每帧 diff > 1 帧就 seek"改成：
+   - 时间节流：最多每 ~66ms（≈15fps）seek 一次；
+   - 距离阈值放宽到 ~0.08s；
+   - 优先使用 `video.fastSeek?.(target)`，失败回退 `currentTime`。
+   这样解码压力大幅下降，画面追赶滚轮的视觉流畅度反而提升。
+
+2. **平滑参数微调** — `SMOOTH_RATE` 从 12 提到 ~16，让指针跟随更贴合滚轮；单 tick 上限 `MAX_PIXELS_PER_TICK` 从 180 降到 140，避免鼠标滚轮一格造成"跳跃 + 长追赶"的拖影感。
+
+3. **`onProgress` 节流** — 仅当 `progress` 相对上次通知变化 > 0.003 时才调用，减少父组件重渲染频次；关键状态（fire / burst 起止）仍即时触发。
+
+4. **wheel 监听优化** — 保持 `passive: false`（需要 `preventDefault`），但把累加逻辑改成只写 `targetProgress`（当前已经是这样），确认没有在 wheel 回调里做 DOM 读写。
+
+5. **可选**：滚动时若目标 > 当前较多（快速滚动），临时提高 `alpha` 上限，让快速滚动时视频跟得更紧、慢速滚动时保持柔和。
+
+## 不改的内容
+
+- 布局、UI、shader、burst 效果、`VIDEO_FRACTION`、总滚动像素 `PIXELS_FOR_FULL_PROGRESS` 全部保持不变。
+- 手部/标题/导航等其他组件不动。
+
+## 技术备注
+
+Seek 节流的核心代码大致如下（示意）：
+
+```text
+if (now - lastSeekAt > 66 && |target - lastSeekTime| > 0.08) {
+  (video.fastSeek ?? assignCurrentTime)(target);
+  lastSeekAt = now; lastSeekTime = target;
+}
+```
+
+完成后我会在预览里滚一次，确认无掉帧再交付。
