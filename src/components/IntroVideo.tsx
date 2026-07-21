@@ -1,18 +1,6 @@
 import { useEffect, useRef } from "react";
 import * as THREE from "three";
-
-const frameModules = import.meta.glob("../assets/intro-frames/frame-*.jpg", {
-  eager: true,
-  query: "?url",
-  import: "default",
-}) as Record<string, string>;
-
-const FRAME_URLS = Object.entries(frameModules)
-  .sort(([a], [b]) => a.localeCompare(b))
-  .map(([, url]) => url);
-
-const FALLBACK_VIDEO_W = 1280;
-const FALLBACK_VIDEO_H = 722;
+import videoAsset from "@/assets/intro-hands.mp4.asset.json";
 
 export type IntroVideoEndInfo = {
   videoW: number;
@@ -32,14 +20,14 @@ const PIXELS_FOR_FULL_PROGRESS = 3200;
 // Cap a single wheel tick so a hard mouse-wheel notch doesn't jump the progress.
 const MAX_PIXELS_PER_TICK = 140;
 // Exponential smoothing rate (higher = snappier follow, lower = more inertia).
-const SMOOTH_RATE = 20;
+const SMOOTH_RATE = 16;
 // Extra snappiness when the user scrolls fast (large gap between target and current).
-const SMOOTH_RATE_FAST = 38;
-// Keep the full-screen shader modest on high-DPR screens; 2x at 1550×950 costs
-// almost 6M shaded pixels per frame and makes scroll scrubbing feel sticky.
-const RENDER_PIXEL_RATIO_MAX = 1.35;
+const SMOOTH_RATE_FAST = 26;
+// Throttle video seeks — decoding non-keyframes on every rAF is what makes scroll feel janky.
+const SEEK_MIN_INTERVAL_MS = 66; // ~15fps
+const SEEK_EPSILON = 0.08;       // ~2 frames @24fps
 // Only notify parent when progress moved meaningfully.
-const PROGRESS_NOTIFY_EPSILON = 0.012;
+const PROGRESS_NOTIFY_EPSILON = 0.003;
 
 const VERT = /* glsl */ `
   varying vec2 vUv;
@@ -116,14 +104,6 @@ const FRAG = /* glsl */ `
     // Cover-fit to preserve aspect (no stretch)
     vec2 sampleUv = coverUV(videoUv, uResolution, uVideoRes);
 
-    // Fast path for ordinary video scrubbing. The liquid/light pass is only
-    // needed after the video reaches its end; skipping fbm + extra samples here
-    // keeps wheel feedback smooth on high-DPI displays.
-    if (uBurst < 0.001) {
-      gl_FragColor = vec4(texture2D(uVideoTex, sampleUv).rgb, 1.0);
-      return;
-    }
-
     // ---- Burst distance field with organic fbm distortion ----
     float t = uTime;
     // Radius grows past 1 to fill screen. easeOutCubic feel.
@@ -183,39 +163,41 @@ export function IntroVideo({
   onProgress?: (info: IntroProgressInfo) => void;
 }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const imageRef = useRef<HTMLImageElement>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
   const firedRef = useRef(false);
   const onProgressRef = useRef(onProgress);
   useEffect(() => { onProgressRef.current = onProgress; }, [onProgress]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
-    const imageEl = imageRef.current;
-    if (!canvas || !imageEl || FRAME_URLS.length === 0) return;
+    const video = videoRef.current;
+    if (!canvas || !video) return;
 
-    imageEl.src = FRAME_URLS[0];
+    video.muted = true;
+    video.playsInline = true;
+    (video as any).crossOrigin = "anonymous";
 
     const renderer = new THREE.WebGLRenderer({ canvas, antialias: false, alpha: false });
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, RENDER_PIXEL_RATIO_MAX));
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
     renderer.setClearColor(0x000000, 1);
 
     const scene = new THREE.Scene();
     const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
 
-    const frameTex = new THREE.Texture();
-    frameTex.minFilter = THREE.LinearFilter;
-    frameTex.magFilter = THREE.LinearFilter;
-    frameTex.format = THREE.RGBAFormat;
-    (frameTex as any).colorSpace = THREE.SRGBColorSpace;
+    const videoTex = new THREE.VideoTexture(video);
+    videoTex.minFilter = THREE.LinearFilter;
+    videoTex.magFilter = THREE.LinearFilter;
+    videoTex.format = THREE.RGBAFormat;
+    (videoTex as any).colorSpace = THREE.SRGBColorSpace;
 
     const uniforms = {
-      uVideoTex: { value: frameTex },
+      uVideoTex: { value: videoTex },
       uProgress: { value: 0 },
       uBurst: { value: 0 },
       uTime: { value: 0 },
       uCenter: { value: new THREE.Vector2(0.5, 0.5) },
       uResolution: { value: new THREE.Vector2(1, 1) },
-      uVideoRes: { value: new THREE.Vector2(FALLBACK_VIDEO_W, FALLBACK_VIDEO_H) },
+      uVideoRes: { value: new THREE.Vector2(16, 9) },
       uVideoFraction: { value: VIDEO_FRACTION },
     };
 
@@ -241,52 +223,41 @@ export function IntroVideo({
     let progress = 0;
     let targetProgress = 0;
     let lastFrameTs = performance.now();
+    let lastSeekTime = -1;
+    let lastSeekAt = 0;
     let lastNotifiedProgress = -1;
     let lastNotifiedBurst = -1;
-    let frameIndex = -1;
     let rafId = 0;
     let running = true;
     const t0 = performance.now();
-
-    const frames = FRAME_URLS.map((url) => {
-      const img = new Image();
-      img.decoding = "async";
-      img.src = url;
-      return img;
-    });
-
-    const setFrame = (videoProgress: number) => {
-      const nextIndex = Math.min(
-        frames.length - 1,
-        Math.max(0, Math.round(videoProgress * (frames.length - 1))),
-      );
-      if (nextIndex === frameIndex) return;
-      frameIndex = nextIndex;
-      const frame = frames[nextIndex];
-      imageEl.src = frame.src;
-      if (frame.complete && frame.naturalWidth > 0) {
-        uniforms.uVideoRes.value.set(frame.naturalWidth, frame.naturalHeight);
-        frameTex.image = frame;
-        frameTex.needsUpdate = true;
-      } else {
-        frame.onload = () => {
-          uniforms.uVideoRes.value.set(frame.naturalWidth || FALLBACK_VIDEO_W, frame.naturalHeight || FALLBACK_VIDEO_H);
-          frameTex.image = frame;
-          frameTex.needsUpdate = true;
-        };
-      }
-    };
-
-    setFrame(0);
 
     const fire = () => {
       if (firedRef.current) return;
       firedRef.current = true;
       onEnded({
-        videoW: uniforms.uVideoRes.value.x || FALLBACK_VIDEO_W,
-        videoH: uniforms.uVideoRes.value.y || FALLBACK_VIDEO_H,
+        videoW: video.videoWidth || 0,
+        videoH: video.videoHeight || 0,
       });
     };
+
+    const onMeta = () => {
+      if (video.videoWidth && video.videoHeight) {
+        uniforms.uVideoRes.value.set(video.videoWidth, video.videoHeight);
+      }
+      try { video.pause(); } catch { /* ignore */ }
+    };
+    video.addEventListener("loadedmetadata", onMeta);
+
+    // Start paused; play once to force first frame decode on some browsers.
+    video.play().then(() => { try { video.pause(); } catch { /* ignore */ } })
+      .catch(() => { /* ignore */ });
+
+    let errorTimer = 0;
+    const onError = () => {
+      window.clearTimeout(errorTimer);
+      errorTimer = window.setTimeout(() => fire(), 500);
+    };
+    video.addEventListener("error", onError);
 
     const onWheel = (e: WheelEvent) => {
       if (firedRef.current) return;
@@ -325,16 +296,28 @@ export function IntroVideo({
 
       const videoProgress = Math.min(1, progress / VIDEO_FRACTION);
       const burstProgress = Math.min(1, Math.max(0, (progress - VIDEO_FRACTION) / (1 - VIDEO_FRACTION)));
-      setFrame(videoProgress);
-      const videoZoom = 1 / Math.max(0.001, 1 - videoProgress * 0.10);
-      imageEl.style.transform = `scale(${videoZoom.toFixed(4)})`;
-      canvas.style.opacity = burstProgress > 0.001 ? "1" : "0";
+      // Scrub video — throttled in both time and distance to keep the decoder happy.
+      if (video.duration && !Number.isNaN(video.duration)) {
+        const target = videoProgress * video.duration;
+        const drift = Math.abs(target - lastSeekTime);
+        const settled = progress === targetProgress && drift > 0.001;
+        if (
+          (now - lastSeekAt > SEEK_MIN_INTERVAL_MS && drift > SEEK_EPSILON) ||
+          settled
+        ) {
+          try {
+            const fs = (video as unknown as { fastSeek?: (t: number) => void }).fastSeek;
+            if (typeof fs === "function") fs.call(video, target);
+            else video.currentTime = target;
+            lastSeekTime = target;
+            lastSeekAt = now;
+          } catch { /* ignore */ }
+        }
+      }
       uniforms.uProgress.value = progress;
       uniforms.uBurst.value = burstProgress;
       uniforms.uTime.value = time;
-      if (burstProgress > 0.001) {
-        renderer.render(scene, camera);
-      }
+      renderer.render(scene, camera);
 
       // Throttle parent notifications to avoid per-frame React re-renders.
       const burstBoundaryCrossed =
@@ -367,7 +350,10 @@ export function IntroVideo({
       cancelAnimationFrame(rafId);
       window.removeEventListener("resize", resize);
       window.removeEventListener("wheel", onWheel);
-      frameTex.dispose();
+      video.removeEventListener("loadedmetadata", onMeta);
+      video.removeEventListener("error", onError);
+      window.clearTimeout(errorTimer);
+      videoTex.dispose();
       material.dispose();
       mesh.geometry.dispose();
       renderer.dispose();
@@ -376,36 +362,19 @@ export function IntroVideo({
 
   return (
     <div style={{ position: "absolute", inset: 0, background: "#000", overflow: "hidden" }}>
-      <img
-        ref={imageRef}
-        src={FRAME_URLS[0]}
-        alt=""
+      <video
+        ref={videoRef}
+        src={videoAsset.url}
+        muted
+        playsInline
+        preload="auto"
         aria-hidden
         tabIndex={-1}
-        style={{
-          position: "absolute",
-          inset: 0,
-          zIndex: 0,
-          width: "100%",
-          height: "100%",
-          objectFit: "cover",
-          transformOrigin: "50% 50%",
-          willChange: "transform",
-          pointerEvents: "none",
-        }}
+        style={{ position: "absolute", width: 1, height: 1, opacity: 0, pointerEvents: "none" }}
       />
       <canvas
         ref={canvasRef}
-        style={{
-          position: "absolute",
-          inset: 0,
-          zIndex: 1,
-          width: "100%",
-          height: "100%",
-          display: "block",
-          opacity: 0,
-          pointerEvents: "none",
-        }}
+        style={{ position: "absolute", inset: 0, width: "100%", height: "100%", display: "block" }}
       />
     </div>
   );

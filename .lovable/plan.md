@@ -1,22 +1,43 @@
-目标：只优化开屏视频的滚轮反馈流畅度，不改变后续手部动画、首屏 UI、布局和交互逻辑。
+## 问题诊断
 
-计划：
-1. 降低滚动卡顿来源
-   - 当前实现每隔约 66ms 修改一次 `video.currentTime/fastSeek`，视频解码会阻塞主线程，容易出现顿挫。
-   - 改为更轻量的 scrub 策略：滚轮时优先让 WebGL 画面按平滑进度运行，视频 seek 以更低频率、更稳定阈值更新，避免密集 seek 抖动。
+当前 `src/components/IntroVideo.tsx` 里滚动"卡"的主因不是平滑算法，而是**每帧都在 `video.currentTime = target` 上做 seek**：
 
-2. 优化滚轮输入手感
-   - 重新调整滚轮 delta 归一化和单次增量上限，让触控板与鼠标滚轮都不会忽快忽慢。
-   - 使用速度/距离自适应插值：慢滚时细腻，快滚时跟手，但不出现跳帧感。
+- `SEEK_EPSILON = 0.04` 秒（≈1 帧）→ 只要平滑值持续追赶目标，几乎每个 rAF 都会触发一次 seek。
+- 浏览器解码非关键帧的 seek 成本很高，MP4 的 GOP 大时会出现明显掉帧/闪烁，表现就是"卡顿"。
+- 同时 `onProgress` 回调每帧都触发一次 React 状态更新（父组件 `AsciiHandsFooter` 里），也会叠加主线程压力。
 
-3. 减少 React/父组件刷新干扰
-   - 进一步收紧 `onProgress` 通知频率，只在关键进度变化时通知父组件。
-   - 避免滚动过程中因为父组件状态更新影响视频渲染帧率。
+## 优化方案
 
-4. 保持现有效果不变
-   - 保留视频首屏、轻微视差、最后一帧停留、继续滚轮进入后续手部动画的流程。
-   - 不改标题、导航、对话框、手部 ASCII hover/click 等任何其他内容。
+改动只限于 `src/components/IntroVideo.tsx`，视觉/交互不变，只让手感更顺：
 
-验证：
-- 在本地预览中实际滚动首屏，检查视频进度是否连续、无明显卡顿。
-- 确认滚到末尾后仍自动进入手部动画，且页面其他层级和布局不变。
+1. **Seek 节流** — 把视频 seek 从"每帧 diff > 1 帧就 seek"改成：
+   - 时间节流：最多每 ~66ms（≈15fps）seek 一次；
+   - 距离阈值放宽到 ~0.08s；
+   - 优先使用 `video.fastSeek?.(target)`，失败回退 `currentTime`。
+   这样解码压力大幅下降，画面追赶滚轮的视觉流畅度反而提升。
+
+2. **平滑参数微调** — `SMOOTH_RATE` 从 12 提到 ~16，让指针跟随更贴合滚轮；单 tick 上限 `MAX_PIXELS_PER_TICK` 从 180 降到 140，避免鼠标滚轮一格造成"跳跃 + 长追赶"的拖影感。
+
+3. **`onProgress` 节流** — 仅当 `progress` 相对上次通知变化 > 0.003 时才调用，减少父组件重渲染频次；关键状态（fire / burst 起止）仍即时触发。
+
+4. **wheel 监听优化** — 保持 `passive: false`（需要 `preventDefault`），但把累加逻辑改成只写 `targetProgress`（当前已经是这样），确认没有在 wheel 回调里做 DOM 读写。
+
+5. **可选**：滚动时若目标 > 当前较多（快速滚动），临时提高 `alpha` 上限，让快速滚动时视频跟得更紧、慢速滚动时保持柔和。
+
+## 不改的内容
+
+- 布局、UI、shader、burst 效果、`VIDEO_FRACTION`、总滚动像素 `PIXELS_FOR_FULL_PROGRESS` 全部保持不变。
+- 手部/标题/导航等其他组件不动。
+
+## 技术备注
+
+Seek 节流的核心代码大致如下（示意）：
+
+```text
+if (now - lastSeekAt > 66 && |target - lastSeekTime| > 0.08) {
+  (video.fastSeek ?? assignCurrentTime)(target);
+  lastSeekAt = now; lastSeekTime = target;
+}
+```
+
+完成后我会在预览里滚一次，确认无掉帧再交付。
