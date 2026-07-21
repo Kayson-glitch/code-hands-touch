@@ -1,31 +1,22 @@
 ## 目标
+把墨迹扩散时长增加到 2.6s；消除切换阶段的"闪屏"。
 
-优化 `LiquidBurst` 的墨迹扩散动效：更慢、更有弹性、边缘更破碎。
+## 根因（已核对代码）
+`AsciiHandsFooter.tsx` 里调用 `LiquidBurst` 时硬编码 `spreadMs={1000}`，之前改到 1600 的默认值被 props 覆盖 —— 所以用户看到的一直是 1s。
 
-## 修改点（仅 `src/components/LiquidBurst.tsx`）
+"闪屏"来源：`section` 背景在 `orb-fade` 阶段用 `transition: background-color 280ms ease-out` 从 `#EFE7DA` 渐变到 `#0a0a0a`。由于 `easeOutBack` 让墨迹半径先冲过 100% 再回弹，加上羽化带 `transparent` 部分，覆盖并不是 100% 不透光；背景色在这一瞬间正好在跨渐变，透过羽化带就看到底色从米色跳到黑色 —— 就是那道"闪"。
 
-### 1. 放慢 + 弹性缓动
-- `spreadMs` 默认 1000 → **1600ms**。
-- 缓动从 `easeOutCubic` 换成**弹性 easeOutBack**：
-  ```
-  const c1 = 1.70158;
-  const p = 1 + (c1 + 1) * Math.pow(rawP - 1, 3) + c1 * Math.pow(rawP - 1, 2);
-  ```
-  半径会略微"越过"再回弹，产生弹性感。
-- 覆盖判定用 `rawP >= 1`（保持不变），但由于 easeOutBack 会先冲过 100% 再回来，观感是"啪"地扩到位后微微一顿。
+## 修改（仅前端表现层，只改 `src/components/AsciiHandsFooter.tsx`）
 
-### 2. 边缘更不规则
-- **turbulence 频率降低 + octave 增加**：`baseFrequency="0.006 0.010"`、`numOctaves={3}`（更大颗粒的破碎，替代当前偏细腻的 `0.012 0.018` / 2 octaves）。
-- **displacement scale 大幅上调**：从 `10 → 60` 改为 `20 → 120`，扩散过程中前沿撕裂更强。
-- **feather（羽化带）加宽**：从 `6 + (1-p)*6` 改为 `10 + (1-p)*14`，让边缘的过渡更"脏"、更墨渍。
-- **seed 更新更快**：从每 90ms 改为每 60ms，湍流流动更活跃，边缘持续变形不呆板。
-
-### 3. `AsciiHandsFooter.tsx` 不改
-- `handleBurstProgress` 里 `p >= 0.6` 触发 hands 的阈值保持不变；因为扩散更慢，hands 生长的启动点自然也延后（0.6 * 1600ms ≈ 960ms），整体节奏更从容。若感觉太慢再单独下调阈值。
+1. **加时长**：把 `<LiquidBurst spreadMs={1000} … />` 改成 `spreadMs={2600}`，`fadeMs` 保持 280。
+2. **消除闪屏**：
+   - `section` 的 `transition: background-color …` 去掉，改为在 `handleBurstCovered` 触发后立刻把背景设为 `#0a0a0a`（用一个 `bgDark` state；不再依赖 `lightBg` 派生 + CSS 过渡）。
+   - 切换时机就在墨迹 `rawP >= 1`（完全覆盖）的一帧，此时整屏被黑墨盖住，切换背景色不可见。
+   - 保留 `handsVisible` 触发的 canvas/wordmark 淡入（300–400ms），它们在黑底下淡入，不会再叠加背景变色。
+3. `LiquidBurst.tsx` 不动 —— 弹性 / 湍流 / 位移 / 羽化保持不变。
 
 ## 验证
-Playwright 打开首页 → 点击球体 → 每 120ms 截图连续 2.0s，确认：
-1. 扩散明显变慢（~1.6s 覆盖全屏）
-2. 到达边界时有轻微"越界回弹"的弹性感
-3. 墨迹边缘更破碎、更不规则，色散边更明显
-4. 无 `Context Lost`，hands 阶段正常衔接
+Playwright 打开首页 → 点击球体 → 每 200ms 截图共 3.4s：
+1. 扩散约 2.6s 完成，弹性收束仍在；
+2. 墨迹达到全屏那一刻背景已经是黑色，之后墨迹淡出直接露出黑底 + 手部，无任何米色到黑色的中间过渡帧；
+3. 无 WebGL Context Lost。
