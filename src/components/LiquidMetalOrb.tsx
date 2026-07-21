@@ -1,4 +1,5 @@
 import { useRef } from "react";
+import type React from "react";
 import { Canvas, useFrame } from "@react-three/fiber";
 import { MeshDistortMaterial } from "@react-three/drei";
 import type { Mesh } from "three";
