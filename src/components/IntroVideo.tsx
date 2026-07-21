@@ -20,14 +20,23 @@ const PIXELS_FOR_FULL_PROGRESS = 3200;
 // Cap a single wheel tick so a hard mouse-wheel notch doesn't jump the progress.
 const MAX_PIXELS_PER_TICK = 140;
 // Exponential smoothing rate (higher = snappier follow, lower = more inertia).
-const SMOOTH_RATE = 16;
+const SMOOTH_RATE = 20;
 // Extra snappiness when the user scrolls fast (large gap between target and current).
-const SMOOTH_RATE_FAST = 26;
-// Throttle video seeks — decoding non-keyframes on every rAF is what makes scroll feel janky.
-const SEEK_MIN_INTERVAL_MS = 66; // ~15fps
-const SEEK_EPSILON = 0.08;       // ~2 frames @24fps
+const SMOOTH_RATE_FAST = 38;
+// Keep the full-screen shader modest on high-DPR screens; 2x at 1550×950 costs
+// almost 6M shaded pixels per frame and makes scroll scrubbing feel sticky.
+const RENDER_PIXEL_RATIO_MAX = 1.35;
+// Let the video decoder run forward naturally instead of random-seeking every
+// frame. Seeking is reserved for reverse scrolls or large corrections.
+const VIDEO_PAUSE_EPSILON = 0.035;
+const VIDEO_REVERSE_SEEK_EPSILON = 0.045;
+const VIDEO_HARD_SEEK_EPSILON = 0.65;
+const VIDEO_SEEK_MIN_INTERVAL_MS = 90;
+const VIDEO_CORRECTION_INTERVAL_MS = 220;
+const VIDEO_PLAYBACK_RATE_MIN = 0.45;
+const VIDEO_PLAYBACK_RATE_MAX = 5.5;
 // Only notify parent when progress moved meaningfully.
-const PROGRESS_NOTIFY_EPSILON = 0.003;
+const PROGRESS_NOTIFY_EPSILON = 0.012;
 
 const VERT = /* glsl */ `
   varying vec2 vUv;
@@ -104,6 +113,14 @@ const FRAG = /* glsl */ `
     // Cover-fit to preserve aspect (no stretch)
     vec2 sampleUv = coverUV(videoUv, uResolution, uVideoRes);
 
+    // Fast path for ordinary video scrubbing. The liquid/light pass is only
+    // needed after the video reaches its end; skipping fbm + extra samples here
+    // keeps wheel feedback smooth on high-DPI displays.
+    if (uBurst < 0.001) {
+      gl_FragColor = vec4(texture2D(uVideoTex, sampleUv).rgb, 1.0);
+      return;
+    }
+
     // ---- Burst distance field with organic fbm distortion ----
     float t = uTime;
     // Radius grows past 1 to fill screen. easeOutCubic feel.
@@ -178,7 +195,7 @@ export function IntroVideo({
     (video as any).crossOrigin = "anonymous";
 
     const renderer = new THREE.WebGLRenderer({ canvas, antialias: false, alpha: false });
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, RENDER_PIXEL_RATIO_MAX));
     renderer.setClearColor(0x000000, 1);
 
     const scene = new THREE.Scene();
@@ -225,11 +242,90 @@ export function IntroVideo({
     let lastFrameTs = performance.now();
     let lastSeekTime = -1;
     let lastSeekAt = 0;
+    let lastCorrectionAt = 0;
     let lastNotifiedProgress = -1;
     let lastNotifiedBurst = -1;
+    let videoPlaying = false;
     let rafId = 0;
     let running = true;
     const t0 = performance.now();
+
+    const clamp = (value: number, min: number, max: number) => Math.min(max, Math.max(min, value));
+
+    const pauseVideo = () => {
+      if (!videoPlaying) return;
+      try { video.pause(); } catch { /* ignore */ }
+      videoPlaying = false;
+    };
+
+    const playVideo = () => {
+      if (videoPlaying) return;
+      videoPlaying = true;
+      video.play().catch(() => {
+        videoPlaying = false;
+      });
+    };
+
+    const seekVideo = (target: number, now: number) => {
+      try {
+        const fs = (video as unknown as { fastSeek?: (t: number) => void }).fastSeek;
+        if (typeof fs === "function") fs.call(video, target);
+        else video.currentTime = target;
+        lastSeekTime = target;
+        lastSeekAt = now;
+      } catch { /* ignore */ }
+    };
+
+    const syncVideo = (videoProgress: number, now: number) => {
+      if (!video.duration || Number.isNaN(video.duration)) return;
+
+      const duration = video.duration;
+      const target = clamp(videoProgress * duration, 0, Math.max(0, duration - 0.001));
+      const current = video.currentTime || 0;
+      const drift = target - current;
+      const absDrift = Math.abs(drift);
+
+      if (videoProgress >= 0.999) {
+        pauseVideo();
+        if (absDrift > VIDEO_REVERSE_SEEK_EPSILON && now - lastSeekAt > VIDEO_SEEK_MIN_INTERVAL_MS) {
+          seekVideo(target, now);
+        }
+        return;
+      }
+
+      if (absDrift < VIDEO_PAUSE_EPSILON) {
+        pauseVideo();
+        return;
+      }
+
+      if (drift > 0) {
+        // For normal forward scrolling, continuous playback is much smoother
+        // than repeatedly assigning currentTime. Correct only when the decoder
+        // falls far behind the scroll target.
+        if (
+          drift > VIDEO_HARD_SEEK_EPSILON &&
+          now - lastCorrectionAt > VIDEO_CORRECTION_INTERVAL_MS &&
+          now - lastSeekAt > VIDEO_SEEK_MIN_INTERVAL_MS
+        ) {
+          seekVideo(Math.max(0, target - 0.12), now);
+          lastCorrectionAt = now;
+        }
+        video.playbackRate = clamp(
+          0.35 + drift * 3.6,
+          VIDEO_PLAYBACK_RATE_MIN,
+          VIDEO_PLAYBACK_RATE_MAX,
+        );
+        playVideo();
+        return;
+      }
+
+      // Browsers cannot play video backward, so reverse scroll remains a
+      // throttled seek path. Keeping it separate prevents forward-scroll jank.
+      pauseVideo();
+      if (absDrift > VIDEO_REVERSE_SEEK_EPSILON && now - lastSeekAt > VIDEO_SEEK_MIN_INTERVAL_MS) {
+        seekVideo(target, now);
+      }
+    };
 
     const fire = () => {
       if (firedRef.current) return;
@@ -296,24 +392,7 @@ export function IntroVideo({
 
       const videoProgress = Math.min(1, progress / VIDEO_FRACTION);
       const burstProgress = Math.min(1, Math.max(0, (progress - VIDEO_FRACTION) / (1 - VIDEO_FRACTION)));
-      // Scrub video — throttled in both time and distance to keep the decoder happy.
-      if (video.duration && !Number.isNaN(video.duration)) {
-        const target = videoProgress * video.duration;
-        const drift = Math.abs(target - lastSeekTime);
-        const settled = progress === targetProgress && drift > 0.001;
-        if (
-          (now - lastSeekAt > SEEK_MIN_INTERVAL_MS && drift > SEEK_EPSILON) ||
-          settled
-        ) {
-          try {
-            const fs = (video as unknown as { fastSeek?: (t: number) => void }).fastSeek;
-            if (typeof fs === "function") fs.call(video, target);
-            else video.currentTime = target;
-            lastSeekTime = target;
-            lastSeekAt = now;
-          } catch { /* ignore */ }
-        }
-      }
+      syncVideo(videoProgress, now);
       uniforms.uProgress.value = progress;
       uniforms.uBurst.value = burstProgress;
       uniforms.uTime.value = time;
