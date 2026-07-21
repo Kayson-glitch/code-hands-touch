@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { AsciiHandsFooter } from "@/components/AsciiHandsFooter";
 import { SiteNav } from "@/components/SiteNav";
 import { HeroCopy } from "@/components/HeroCopy";
+import { FinChatDock } from "@/components/FinChatDock";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -29,6 +30,7 @@ function Index() {
       <AsciiHandsFooter />
       <SiteNav />
       <HeroCopy />
+      <FinChatDock />
     </div>
   );
 }
