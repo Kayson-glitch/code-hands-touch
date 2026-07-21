@@ -1,11 +1,21 @@
 import { useEffect, useRef } from "react";
 import videoAsset from "@/assets/intro-hands.mp4.asset.json";
 
+export type IntroVideoEndInfo = {
+  videoRect: DOMRect;
+  videoW: number;
+  videoH: number;
+};
+
 /**
  * Full-screen intro video. Calls `onEnded` exactly once when playback
  * reaches the last frame, so the caller can trigger the burst transition.
  */
-export function IntroVideo({ onEnded }: { onEnded: () => void }) {
+export function IntroVideo({
+  onEnded,
+}: {
+  onEnded: (info: IntroVideoEndInfo) => void;
+}) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const bgRef = useRef<HTMLVideoElement>(null);
   const firedRef = useRef(false);
@@ -13,7 +23,28 @@ export function IntroVideo({ onEnded }: { onEnded: () => void }) {
   const fire = () => {
     if (firedRef.current) return;
     firedRef.current = true;
-    onEnded();
+    const v = videoRef.current;
+    if (!v) return;
+    // Freeze on the last frame so it can act as the backdrop while the
+    // liquid burst spreads over it.
+    try {
+      if (v.duration && !Number.isNaN(v.duration)) {
+        v.currentTime = Math.max(0, v.duration - 0.01);
+      }
+      v.pause();
+    } catch {
+      /* ignore */
+    }
+    try {
+      bgRef.current?.pause();
+    } catch {
+      /* ignore */
+    }
+    onEnded({
+      videoRect: v.getBoundingClientRect(),
+      videoW: v.videoWidth || 0,
+      videoH: v.videoHeight || 0,
+    });
   };
 
   useEffect(() => {
