@@ -390,6 +390,10 @@ export function AsciiHandsFooter() {
   const [stage, setStage] = useState<"orb" | "orb-exit" | "hands">("orb");
   const stageRef = useRef(stage);
   useEffect(() => { stageRef.current = stage; }, [stage]);
+  const startIntroRef = useRef<(() => void) | null>(null);
+  useEffect(() => {
+    if (stage === "hands") startIntroRef.current?.();
+  }, [stage]);
   const cellsRef = useRef<Cell[]>([]);
   const gridRef = useRef<Grid | null>(null);
   const mouseRef = useRef<{ x: number; y: number; active: boolean }>({
@@ -482,14 +486,13 @@ export function AsciiHandsFooter() {
     );
     io.observe(canvas);
 
-    // When the orb finishes exiting we flip stage to "hands"; kick off the
-    // intro immediately regardless of the IO firing again.
-    const startIntro = () => {
+    // When the orb finishes exiting we flip stage to "hands"; the outer
+    // effect calls startIntro via this ref to kick off arm growth.
+    startIntroRef.current = () => {
       if (introVisibleRef.current) return;
       introVisibleRef.current = true;
       introStartRef.current = performance.now();
     };
-    (canvas as any).__startIntro = startIntro;
 
     const onMove = (e: MouseEvent) => {
       const rect = canvas.getBoundingClientRect();
