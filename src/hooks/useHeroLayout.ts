@@ -11,41 +11,41 @@ export type HeroLayout = {
 };
 
 const DESKTOP: HeroLayout = {
-  titlePaddingTop: "20vh",
+  titlePaddingTop: "18vh",
   titleFontSize: 48,
   titleLineHeight: "56px",
   subtitleFontSize: 16,
   subtitleLineHeight: "24px",
-  handsTop: "calc(48vh - 8px)",
+  handsTop: "calc(46vh - 8px)",
   handsHeight: "51vh",
 };
 
 const SHORT: HeroLayout = {
   ...DESKTOP,
-  titlePaddingTop: "16vh",
+  titlePaddingTop: "14vh",
   titleFontSize: 44,
   titleLineHeight: "52px",
-  handsTop: "44vh",
+  handsTop: "42vh",
   handsHeight: "54vh",
 };
 
 const TABLET: HeroLayout = {
   ...DESKTOP,
-  titlePaddingTop: "18vh",
+  titlePaddingTop: "16vh",
   titleFontSize: 40,
   titleLineHeight: "48px",
-  handsTop: "46vh",
+  handsTop: "44vh",
   handsHeight: "52vh",
 };
 
 const MOBILE: HeroLayout = {
   ...DESKTOP,
-  titlePaddingTop: "12vh",
+  titlePaddingTop: "10vh",
   titleFontSize: 32,
   titleLineHeight: "40px",
   subtitleFontSize: 14,
   subtitleLineHeight: "22px",
-  handsTop: "42vh",
+  handsTop: "40vh",
   handsHeight: "56vh",
 };
 

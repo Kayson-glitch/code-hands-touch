@@ -1,67 +1,34 @@
-## 问题定位
+## 目标
 
-历史版本（你给的 commit）里 canvas 是 `absolute inset-0 h-full w-full`，也就是**全屏画布**；hover 半径用 `GOOEY_RADIUS_UV = 0.048` 基于全屏坐标计算。
+将截图红圈处（"Book a Demo" 按钮底部到 ASCII 手部区域顶部）的垂直间距略微缩小，使首屏整体更紧凑。
 
-现在为了布局把 canvas 改成了手部区域：`width: min(100vw, 1440px)` + `height: 51vh`。但 hover 仍然用同一套 UV/距离计算：
+## 当前布局
 
-```ts
-const minWH = Math.min(canvasW, canvasH)
-const aspectX = canvasW / canvasH
-const cellUvX = (x / minWH) * aspectX
-```
+- `HeroCopy` 标题区通过 `paddingTop` 下推，按钮再带 `mt-8`（32px）额外间距。
+- 手部画布通过 `useHeroLayout.handsTop` 定位，桌面端为 `calc(48vh - 8px)`。
+- 间距 = `handsTop` 起始位置 - 按钮底部位置，主要由 `titlePaddingTop` 和 `handsTop` 共同决定。
 
-当画布高度只有 51vh 时，`aspectX` 变大，横向距离被放大，hover 视觉区域会被压缩/变小，和历史 commit 不一致。
+## 修改方案
 
-## 修复方案
+1. 统一小幅降低 `titlePaddingTop`，让标题/按钮整体下移约 2vh：
+   - Desktop: `20vh` → `18vh`
+   - Short: `16vh` → `14vh`
+   - Tablet: `18vh` → `16vh`
+   - Mobile: `12vh` → `10vh`
 
-保持现在的布局位置和 1440px 默认视觉宽度，但把 hover 计算恢复到历史的“全屏坐标基准”。
+2. 同步小幅上提手部画布起始位置，进一步收紧按钮与手之间的空隙：
+   - Desktop: `calc(48vh - 8px)` → `calc(46vh - 8px)`
+   - Short: `44vh` → `42vh`
+   - Tablet: `46vh` → `44vh`
+   - Mobile: `42vh` → `40vh`
 
-### 1. canvas 恢复为全屏绘制层
+3. 保持 `handsHeight` 不变，手部区域大小和内部 hover/ASCII 效果不受影响。
 
-`src/components/AsciiHandsFooter.tsx`
+## 涉及文件
 
-- canvas class/style 从局部画布改回全屏：`absolute inset-0 h-full w-full`。
-- 不再直接把 `top / height / width: min(100vw,1440px)` 写到 canvas 上。
+- `src/hooks/useHeroLayout.ts`：调整 `titlePaddingTop` 与 `handsTop` 的四个断点值。
 
-### 2. 新增手部绘制区域 rect
+## 验证方式
 
-在 render loop 中根据 `layout.handsTop / handsHeight` 计算一个绘制区域：
-
-```ts
-visualRect = {
-  x: (viewportW - Math.min(viewportW, 1440)) / 2,
-  y: resolvedHandsTopPx,
-  w: Math.min(viewportW, 1440),
-  h: resolvedHandsHeightPx,
-}
-```
-
-然后：
-
-- 图片采样 / ASCII 网格仍绘制在这个 rect 内。
-- 指针命中、点击锁定仍按这个 rect 内的手部位置判断。
-- hover disc 距离计算使用全屏 canvas 的 `minWH/aspectX`，恢复历史观感。
-
-### 3. hover 半径恢复历史 UV 公式
-
-- 删除/停用上次新增的 `GOOEY_RADIUS_PX` / `GOOEY_SOFTNESS_PX`。
-- 恢复：
-
-```ts
-const R = GOOEY_RADIUS_UV * intensity
-const S = GOOEY_SOFTNESS_UV * intensity * 0.5
-```
-
-这样大小和历史 commit 一致，同时不会因为手部视觉区域高度变化而变小。
-
-## 保持不变
-
-- 当前标题/手部布局比例不改。
-- 默认视觉宽度仍为 1440px 居中。
-- 悬停马赛克、字符倾斜、视差、点击锁定、intro 视频逻辑不改。
-
-## 验证
-
-- 在当前 1327×922 下 hover，视觉大小应接近你给的历史 preview。
-- 1440×900 下 hover 大小应保持一致。
-- 1920 宽屏下手部视觉宽度仍锁定 1440px 居中，但 hover 不再变小。
+- 保存后在当前预览视口（1327×924）查看按钮与手部的间距是否明显收紧但仍保持呼吸感。
+- 快速切换桌面/平板/移动视图确认各断点未出现重叠或过度拥挤。
