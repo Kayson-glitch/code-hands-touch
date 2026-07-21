@@ -18,11 +18,16 @@ export type IntroProgressInfo = {
 const VIDEO_FRACTION = 0.6;
 const PIXELS_FOR_FULL_PROGRESS = 3200;
 // Cap a single wheel tick so a hard mouse-wheel notch doesn't jump the progress.
-const MAX_PIXELS_PER_TICK = 180;
+const MAX_PIXELS_PER_TICK = 140;
 // Exponential smoothing rate (higher = snappier follow, lower = more inertia).
-const SMOOTH_RATE = 12;
-// Only re-seek the video when the target frame drifts by more than ~1 frame.
-const SEEK_EPSILON = 0.04;
+const SMOOTH_RATE = 16;
+// Extra snappiness when the user scrolls fast (large gap between target and current).
+const SMOOTH_RATE_FAST = 26;
+// Throttle video seeks — decoding non-keyframes on every rAF is what makes scroll feel janky.
+const SEEK_MIN_INTERVAL_MS = 66; // ~15fps
+const SEEK_EPSILON = 0.08;       // ~2 frames @24fps
+// Only notify parent when progress moved meaningfully.
+const PROGRESS_NOTIFY_EPSILON = 0.003;
 
 const VERT = /* glsl */ `
   varying vec2 vUv;
@@ -219,6 +224,9 @@ export function IntroVideo({
     let targetProgress = 0;
     let lastFrameTs = performance.now();
     let lastSeekTime = -1;
+    let lastSeekAt = 0;
+    let lastNotifiedProgress = -1;
+    let lastNotifiedBurst = -1;
     let rafId = 0;
     let running = true;
     const t0 = performance.now();
@@ -277,18 +285,33 @@ export function IntroVideo({
       lastFrameTs = now;
 
       // Frame-rate-independent exponential smoothing toward the target.
-      const alpha = 1 - Math.exp(-SMOOTH_RATE * dt);
+      // Scale rate up when the gap is large so fast scroll feels responsive,
+      // while slow scroll retains a softer, inertial follow.
+      const gap = Math.abs(targetProgress - progress);
+      const rate = SMOOTH_RATE + (SMOOTH_RATE_FAST - SMOOTH_RATE) * Math.min(1, gap * 8);
+      const alpha = 1 - Math.exp(-rate * dt);
       progress += (targetProgress - progress) * alpha;
       // Snap when essentially there so `fire()` still triggers cleanly.
       if (Math.abs(targetProgress - progress) < 0.0005) progress = targetProgress;
 
       const videoProgress = Math.min(1, progress / VIDEO_FRACTION);
       const burstProgress = Math.min(1, Math.max(0, (progress - VIDEO_FRACTION) / (1 - VIDEO_FRACTION)));
-      // Scrub video — only when drift exceeds ~1 frame to avoid seek thrash.
+      // Scrub video — throttled in both time and distance to keep the decoder happy.
       if (video.duration && !Number.isNaN(video.duration)) {
         const target = videoProgress * video.duration;
-        if (Math.abs(target - lastSeekTime) > SEEK_EPSILON) {
-          try { video.currentTime = target; lastSeekTime = target; } catch { /* ignore */ }
+        const drift = Math.abs(target - lastSeekTime);
+        const settled = progress === targetProgress && drift > 0.001;
+        if (
+          (now - lastSeekAt > SEEK_MIN_INTERVAL_MS && drift > SEEK_EPSILON) ||
+          settled
+        ) {
+          try {
+            const fs = (video as unknown as { fastSeek?: (t: number) => void }).fastSeek;
+            if (typeof fs === "function") fs.call(video, target);
+            else video.currentTime = target;
+            lastSeekTime = target;
+            lastSeekAt = now;
+          } catch { /* ignore */ }
         }
       }
       uniforms.uProgress.value = progress;
@@ -296,15 +319,27 @@ export function IntroVideo({
       uniforms.uTime.value = time;
       renderer.render(scene, camera);
 
-      const w = window.innerWidth;
-      const h = window.innerHeight;
-      onProgressRef.current?.({
-        progress,
-        videoProgress,
-        burstProgress,
-        centerX: uniforms.uCenter.value.x * w,
-        centerY: uniforms.uCenter.value.y * h,
-      });
+      // Throttle parent notifications to avoid per-frame React re-renders.
+      const burstBoundaryCrossed =
+        (lastNotifiedBurst <= 0 && burstProgress > 0) ||
+        (lastNotifiedBurst < 1 && burstProgress >= 1);
+      if (
+        Math.abs(progress - lastNotifiedProgress) > PROGRESS_NOTIFY_EPSILON ||
+        burstBoundaryCrossed ||
+        progress >= 1
+      ) {
+        const w = window.innerWidth;
+        const h = window.innerHeight;
+        onProgressRef.current?.({
+          progress,
+          videoProgress,
+          burstProgress,
+          centerX: uniforms.uCenter.value.x * w,
+          centerY: uniforms.uCenter.value.y * h,
+        });
+        lastNotifiedProgress = progress;
+        lastNotifiedBurst = burstProgress;
+      }
 
       if (progress >= 1) fire();
     };
