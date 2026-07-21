@@ -1236,9 +1236,8 @@ export function AsciiHandsFooter() {
 
   const handsVisible = stage === "hands";
   const [orbMounted, setOrbMounted] = useState(true);
-  const [burst, setBurst] = useState({ progress: 0, cx: 0, cy: 0 });
-  const handleIntroProgress = (info: IntroProgressInfo) => {
-    setBurst({ progress: info.burstProgress, cx: info.centerX, cy: info.centerY });
+  const handleIntroProgress = (_info: IntroProgressInfo) => {
+    /* shader draws burst internally; no external state needed */
   };
   const handleIntroEnded = () => {
     if (stageRef.current !== "orb") return;
@@ -1309,12 +1308,6 @@ export function AsciiHandsFooter() {
           }}
         >
           <IntroVideo onEnded={handleIntroEnded} onProgress={handleIntroProgress} />
-          <StardustBurst
-            progress={burst.progress}
-            centerX={burst.cx}
-            centerY={burst.cy}
-            visible={stage === "orb"}
-          />
         </div>
       )}
 
