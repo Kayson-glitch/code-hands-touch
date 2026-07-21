@@ -1,12 +1,12 @@
-import { useEffect, useId, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 /**
  * Full-screen ink burst.
  *
- * Pure CSS + SVG — no WebGL — so it never fights the orb Canvas for a GPU
- * context. Three overlapping radial gradients (red / black / cyan) form a
- * chromatic-aberration edge, and an `feTurbulence` + `feDisplacementMap`
- * filter wobbles the whole thing into an irregular ink shape.
+ * Pure SVG — no WebGL — so it never fights the orb Canvas for a GPU context.
+ * Three overlapping, fully opaque polygons (red / black / cyan) form a
+ * chromatic-aberration edge. The irregular outline is generated directly as
+ * a continuous polygon, avoiding displacement/clip-path transparency leaks.
  */
 export function LiquidBurst({
   origin,
@@ -24,26 +24,19 @@ export function LiquidBurst({
   spreadMs?: number;
   fadeMs?: number;
 }) {
-  const filterId = useId().replace(/:/g, "");
-  const filterUrl = `url(#ink-${filterId})`;
-
   const rafRef = useRef<number | null>(null);
   const startRef = useRef<number | null>(null);
   const coveredAtRef = useRef<number | null>(null);
   const coveredRef = useRef(false);
   const fadedRef = useRef(false);
 
-  const rRef = useRef<HTMLDivElement>(null);
-  const kRef = useRef<HTMLDivElement>(null);
-  const cRef = useRef<HTMLDivElement>(null);
   const wrapRef = useRef<HTMLDivElement>(null);
-  const turbRef = useRef<SVGFETurbulenceElement>(null);
-  const dispRef = useRef<SVGFEDisplacementMapElement>(null);
+  const rPolyRef = useRef<SVGPolygonElement>(null);
+  const kPolyRef = useRef<SVGPolygonElement>(null);
+  const cPolyRef = useRef<SVGPolygonElement>(null);
 
   const [ox, oy] = origin;
-  // Convert WebGL-style y (bottom-origin) to CSS % (top-origin).
-  const cssX = ox * 100;
-  const cssY = (1 - oy) * 100;
+  // Convert WebGL-style y (bottom-origin) to SVG px (top-origin) in the rAF loop.
 
   // Callbacks in refs so the rAF loop always sees the latest.
   const cbRef = useRef({ onCovered, onFaded, onProgress });
@@ -55,55 +48,85 @@ export function LiquidBurst({
   useEffect(() => {
     if (!ready) return;
     let seedT = 0;
-    let lastSeedTick = 0;
+
+    const POINTS = 96;
+
+    const hashNoise = (index: number, seed: number) => {
+      const s = Math.sin(index * 127.1 + seed * 311.7) * 43758.5453123;
+      return s - Math.floor(s);
+    };
+
+    const smoothNoise = (index: number, seed: number) => {
+      const whole = Math.floor(index);
+      const frac = index - whole;
+      const eased = frac * frac * (3 - 2 * frac);
+      const a = hashNoise(whole, seed);
+      const b = hashNoise(whole + 1, seed);
+      return a + (b - a) * eased;
+    };
+
+    const makePoints = (
+      centerX: number,
+      centerY: number,
+      radius: number,
+      roughness: number,
+      drift: number,
+      phase: number,
+    ) => {
+      const points: string[] = [];
+
+      for (let i = 0; i < POINTS; i += 1) {
+        const angle = (i / POINTS) * Math.PI * 2;
+        const longWave = smoothNoise(i * 0.1 + phase * 0.35, 4.7) - 0.5;
+        const midWave = smoothNoise(i * 0.36 - phase * 0.7, 12.3) - 0.5;
+        const tooth = smoothNoise(i * 1.18 + phase * 1.2, 29.1) - 0.5;
+        const wobble = longWave * 0.44 + midWave * 0.36 + tooth * 0.2;
+        const r = Math.max(0, radius * (1 + wobble * roughness));
+        const tangent = Math.sin(angle * 3 + phase) * drift;
+        const x = centerX + Math.cos(angle) * r + Math.cos(angle + Math.PI / 2) * tangent;
+        const y = centerY + Math.sin(angle) * r + Math.sin(angle + Math.PI / 2) * tangent;
+        points.push(`${x.toFixed(1)},${y.toFixed(1)}`);
+      }
+
+      return points.join(" ");
+    };
+
+    const setPoints = (el: SVGPolygonElement | null, points: string) => {
+      if (!el) return;
+      el.setAttribute("points", points);
+    };
 
     const tick = (now: number) => {
       if (startRef.current == null) startRef.current = now;
       const t = now - startRef.current;
       const rawP = Math.min(1, t / spreadMs);
-      // easeOutBack — overshoots slightly for an elastic settle.
-      const c1 = 1.70158;
-      const p =
-        1 + (c1 + 1) * Math.pow(rawP - 1, 3) + c1 * Math.pow(rawP - 1, 2);
+      // Keep the 2.6s as the actual spread duration: a smooth radial grow with
+      // only a subtle elastic settle near the end, instead of an early overshoot.
+      const smoothP = rawP * rawP * (3 - 2 * rawP);
+      const endElastic = rawP > 0.82 ? Math.sin((rawP - 0.82) / 0.18 * Math.PI) * 0.035 : 0;
+      const p = smoothP + endElastic;
 
-      // Radius as % of the viewport's diagonal, from origin. 0 → ~130%
-      // ensures coverage regardless of click position.
-      const fill = p * 130;
-      // Feathered outer band size (chromatic edge width in %). Kept narrow
-      // so the displacement can't tear visible see-through gaps.
-      const feather = 4 + (1 - Math.min(1, p)) * 6;
+      const width = window.innerWidth;
+      const height = window.innerHeight;
+      const centerX = ox * width;
+      const centerY = (1 - oy) * height;
+      const maxRadius = Math.hypot(
+        Math.max(centerX, width - centerX),
+        Math.max(centerY, height - centerY),
+      );
+      const settledP = Math.min(1.035, Math.max(0, p));
+      const radius = settledP * (maxRadius + 120);
+      const roughness = 0.09 + (1 - Math.min(1, rawP)) * 0.13;
+      const drift = 5 + Math.min(1, rawP) * 10;
+      seedT += 0.018;
 
-      const setGrad = (
-        el: HTMLDivElement | null,
-        color: string,
-        dx: number,
-        dy: number,
-      ) => {
-        if (!el) return;
-        const cx = cssX + dx;
-        const cy = cssY + dy;
-        el.style.background = `radial-gradient(circle at ${cx}% ${cy}%, ${color} 0%, ${color} ${fill}%, transparent ${fill + feather}%)`;
-      };
+      const redPoints = makePoints(centerX - 7, centerY - 3, radius + 18, roughness * 1.08, drift, seedT + 0.5);
+      const cyanPoints = makePoints(centerX + 7, centerY + 3, radius + 16, roughness, drift, seedT + 1.8);
+      const blackPoints = makePoints(centerX, centerY, radius, roughness * 0.92, drift * 0.72, seedT);
 
-      // Chromatic aberration: red pushed one way, cyan the other, black core
-      // centered. Blend-mode multiply so all three darken toward black in the
-      // overlap but leave color fringes on the leading edge.
-      setGrad(rRef.current, "#ff2244", -0.9, -0.3);
-      setGrad(kRef.current, "#000000", 0, 0);
-      setGrad(cRef.current, "#00e5ff", 0.9, 0.3);
-
-      // Turbulence displacement — capped small so edges get fine burrs
-      // rather than large waves that expose the section background.
-      const displace = 12 + Math.min(1, p) * 22;
-      dispRef.current?.setAttribute("scale", displace.toFixed(1));
-
-      // Advance seed every ~60ms so the wobble flows without flickering.
-      seedT += 16;
-      if (now - lastSeedTick > 60) {
-        lastSeedTick = now;
-        const seed = Math.floor(seedT / 60) % 128;
-        turbRef.current?.setAttribute("seed", String(seed));
-      }
+      setPoints(rPolyRef.current, redPoints);
+      setPoints(cPolyRef.current, cyanPoints);
+      setPoints(kPolyRef.current, blackPoints);
 
       cbRef.current.onProgress?.(p);
 
@@ -132,7 +155,7 @@ export function LiquidBurst({
     return () => {
       if (rafRef.current != null) cancelAnimationFrame(rafRef.current);
     };
-  }, [ready, spreadMs, fadeMs, cssX, cssY]);
+  }, [ready, spreadMs, fadeMs, ox, oy]);
 
   return (
     <div
@@ -140,76 +163,39 @@ export function LiquidBurst({
       style={{ zIndex: 55 }}
       aria-hidden
     >
-      {/* Hidden SVG hosting the displacement filter. */}
-      <svg
-        width="0"
-        height="0"
-        style={{ position: "absolute", pointerEvents: "none" }}
-        aria-hidden
-      >
-        <defs>
-          <filter
-            id={`ink-${filterId}`}
-            x="-20%"
-            y="-20%"
-            width="140%"
-            height="140%"
-            colorInterpolationFilters="sRGB"
-          >
-            <feTurbulence
-              ref={turbRef}
-              type="fractalNoise"
-              baseFrequency="0.012 0.018"
-              numOctaves={3}
-              seed={0}
-              result="noise"
-            />
-            <feDisplacementMap
-              ref={dispRef}
-              in="SourceGraphic"
-              in2="noise"
-              scale={20}
-              xChannelSelector="R"
-              yChannelSelector="G"
-            />
-          </filter>
-        </defs>
-      </svg>
-
       <div
         ref={wrapRef}
         style={{
           position: "absolute",
           inset: 0,
           opacity: 1,
-          filter: filterUrl,
-          WebkitFilter: filterUrl,
           willChange: "opacity",
         }}
       >
-        <div
-          ref={rRef}
-          style={{
-            position: "absolute",
-            inset: 0,
-            mixBlendMode: "multiply",
-          }}
-        />
-        <div
-          ref={cRef}
-          style={{
-            position: "absolute",
-            inset: 0,
-            mixBlendMode: "multiply",
-          }}
-        />
-        <div
-          ref={kRef}
+        <svg
+          width="100%"
+          height="100%"
+          viewBox={`0 0 ${typeof window === "undefined" ? 1 : window.innerWidth} ${typeof window === "undefined" ? 1 : window.innerHeight}`}
+          preserveAspectRatio="none"
           style={{
             position: "absolute",
             inset: 0,
           }}
-        />
+        >
+          <polygon
+            ref={rPolyRef}
+            points="0,0 0,0 0,0"
+            fill="#ff2244"
+            style={{ mixBlendMode: "multiply" }}
+          />
+          <polygon
+            ref={cPolyRef}
+            points="0,0 0,0 0,0"
+            fill="#00e5ff"
+            style={{ mixBlendMode: "multiply" }}
+          />
+          <polygon ref={kPolyRef} points="0,0 0,0 0,0" fill="#000000" />
+        </svg>
       </div>
     </div>
   );
