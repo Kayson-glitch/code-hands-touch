@@ -1,46 +1,47 @@
-## 目标
-把 `LiquidBurst` 的扩散效果按参考视频 1:1 复刻。当前实现（红/青/黑三层 multiply 多边形）与参考差距明显。
+## 现状问题
+`LiquidBurst.tsx` 目前用 SVG 多边形 + 手写噪声近似墨滴，无论怎么调参都是「多层几何图形叠加」的观感：边缘锯齿、色散生硬、无真实流体感、glitch 条突兀。参考站（unseen.co）的效果是像素级的流体位移 + chromatic aberration + noise mask，SVG 天花板已经到顶，必须换到 WebGL/shader。
 
-## 参考视频拆解（逐帧观察）
-1. **形状**：不是"带毛刺的圆"，而是真正有机的墨滴 —— 几处大型伪足向外突出，边缘缓慢起伏，整体轮廓在扩散中不断变形而非均匀外扩。
-2. **RGB 色散**：只出现在墨迹边缘外侧（红在一侧、青在另一侧），是分离的色边而不是内部叠色；扩散越快，色散越宽。
-3. **白色光晕**：墨迹外围有一圈明亮的乳白/浅色柔边（宽 8–20px），是墨迹排开背景像素时的"发光边"。
-4. **横向 glitch 条**：扩散过程中背景 letterbox 区间歇出现水平错位/条纹（青、紫、洋红短条），与色散一起营造数字撕裂感。
-5. **节奏**：慢启动，中段快速吞噬，末段轻微弹性回稳；总时长仍然 ~2.6s。
+## 方案：Three.js 全屏 shader pass
 
-## 改动（只改 `src/components/LiquidBurst.tsx`）
+新建 `src/components/LiquidBurst.tsx`（替换现有实现），用 `@react-three/fiber` 挂一个全屏 `<Canvas>`，内部只渲染一个覆盖整屏的正交 quad，所有视觉效果由 fragment shader 完成：
 
-### A. 轮廓生成：从"96 点带噪圆"改为"少量伪足有机墨滴"
-- 顶点数降到 ~48，噪声分层：`低频波(2–3 lobe) × 大幅度 + 中频 × 中幅度 + 细齿 × 小幅度`。
-- 低频 lobe 数量随 `rawP` 从 2 缓慢增到 4，模拟墨滴生长中长出的伪足。
-- `roughness` 起始更大（~0.28），随扩散略降到 0.12，让早期形状更狂放。
+### Shader 结构
+Uniforms:
+- `uTime` — 秒
+- `uProgress` — 0→1 扩散进度（JS 侧用曲线映射，保持 2.6s 总时长）
+- `uOrigin` — vec2，指尖 UV 坐标（复用现有 `origin` 传参换算）
+- `uResolution` — vec2
+- `uAspect` — float
 
-### B. 三层结构改为「白晕 + 色散边 + 黑心」
-渲染顺序（下→上）：
-1. **白色光晕层**：一个比黑心大 12–20px 的白色多边形（`fill:#f4ecdd` 或纯白），无混合模式；只在边缘可见（被黑心盖住内部）。半径 = `radius + 14 + drift*0.6`。
-2. **红通道边**：红色多边形，向指尖法线方向偏移 `+dx,+dy`（8→14px 随扩散加大），半径 = `radius + 8`。
-3. **青通道边**：青色多边形，反向偏移 `-dx,-dy`，半径 = `radius + 8`。
-4. **黑心**：纯黑多边形（当前形状），最上层。
+Fragment 主流程：
+1. **距离场**：`d = distance(uv*aspect, origin*aspect)`。
+2. **有机边界**：叠加 3 层 simplex/valueNoise（低/中/高频，频率随 progress 变化），生成 `mask = smoothstep(edge+feather, edge-feather, d + noise*amp)`。伪足由低频 noise 的高振幅提供，天生连续没有多边形拼接感。
+3. **白色发光边**：在 `mask` 边缘 ±feather 范围内加一层稍亮的乳白 rim（`smoothstep` 差值），随扩散半径同步移动，避免现在 SVG 版的"halo 层跟不上"。
+4. **RGB 色散**：分别用 `mask(uv + offset)` / `mask(uv - offset)` 采样 R 和 B 通道，offset 方向由 `uv - origin` 法线 + 时间旋转决定，宽度随 progress 线性增加（参考效果里越扩散越宽）。这是真·色散，不是叠色。
+5. **中段 glitch**：在 `progress ∈ [0.15, 0.85]` 时，按 `floor(uv.y * N)` 分行，用 hash(row, floor(time*8)) 做水平 UV 偏移，仅作用于 mask 外部的 rim/背景区，产生扫描线错位，节奏由 shader 内部决定而非 JS 定时器，抖动更自然。
+6. **输出**：alpha = mask，rgb = 黑心 or rim 白 or 色散边混合。
 
-不再用 `mixBlendMode: multiply`（当前叠色导致内部发暗、外部无色散）。红/青多边形被黑心覆盖内部，只在偏移方向露出一条彩色边，这正是参考里的效果。
-`dx,dy` 方向由扩散偏移向量决定（`Math.cos/sin(seedT*0.4)` 慢速旋转），使色散边随时间在墨滴四周游动。
+### JS 侧
+- 保持现有 props 接口（`origin`、`onCovered`、`onFaded`、`onProgress`、`spreadMs`、`fadeMs`）不变，`AsciiHandsFooter.tsx` 不动。
+- `useFrame` 里推进 `uProgress`（曲线：0–0.25 easeOutQuad → 0.25–0.85 线性 → 0.85–1 轻弹性），达到 1 时触发 `onCovered`，然后 CSS opacity 淡出 → `onFaded`。
+- Canvas 设置 `gl={{ alpha: true, premultipliedAlpha: false }}`，`dpr=[1, 2]`，`frameloop="always"`，`zIndex: 70` 覆盖视频。
+- 用独立 Canvas 而不是复用 orb 的，避免 WebGL context 冲突（历史上出过 context loss）。
 
-### C. 横向 glitch 条（可选轻量）
-在墨迹外侧添加 2–3 条随机水平细条（`<rect>`，青/洋红，宽度全屏，高度 2–6px，透明度 0.4），Y 位置每 120–200ms 重新随机、`mix-blend-mode: screen`。仅在 `rawP∈[0.15,0.85]` 期间出现，避免影响开场/结尾干净度。
-
-### D. 扩散曲线微调
-保持 2600ms 总时长，改为：
-- `0–0.25`：`easeOutQuad`，快速离开指尖
-- `0.25–0.85`：近线性稳定扩张
-- `0.85–1.0`：轻微 `easeOutBack` 弹性回稳（当前已有的 `endElastic`，幅度降到 0.02）
-
-### E. 保持不变
-- `zIndex: 70`、fixed 全屏容器、fade-out 淡出与 `onCovered/onFaded` 回调时序、`origin` 的 WebGL→SVG 坐标换算。
-- 不改 `IntroVideo`、`AsciiHandsFooter`、状态机、时长参数默认值。
+### 删除
+- 现在的所有 SVG polygon / rect / ref、`makePoints`、`smoothNoise`、glitch bar 定时器 —— 整个 `LiquidBurst.tsx` 重写。
 
 ## 验证
-Playwright 跳过视频（直接触发 `onEnded`），在扩散过程 0.4s / 1.0s / 1.6s / 2.2s / 2.6s 截图，肉眼比对参考视频对应帧：
-- 边缘可见白晕
-- 红/青色散分离（不是内部叠色）
-- 轮廓有明显伪足而非圆
-- 无背景漏光/闪屏
+Playwright 触发 `IntroVideo` 的 `onEnded` 跳过播放，在 `t = 0.4/1.0/1.6/2.2/2.6s` 截图，对照参考视频关键帧：
+- 边缘是像素级流体位移，无多边形折线
+- R/C 色散只出现在墨滴外侧偏移方向的一条窄带
+- 白色 rim 平滑跟随
+- 无背景漏光、无 SVG 描边闪烁
+
+## 技术细节
+
+- 依赖：项目已装 `three` / `@react-three/fiber` / `@react-three/drei`（`LiquidMetalOrb` 在用），无需新增。
+- Shader 用 `ShaderMaterial`，inline GLSL 字符串，避免额外 loader。
+- Noise 用便宜的 hash-based value noise（GPU 上跑得起 3 层），不引入 `glsl-noise` 依赖。
+- 全屏 quad：`<mesh><planeGeometry args={[2,2]}/></mesh>` + `OrthographicCamera` 或直接用 clip-space vertex shader。
+- Resize 监听 window，更新 `uResolution` / `uAspect`。
+- SSR 安全：组件顶部 `useState(false) + useEffect(()=>setReady(true))` 门控挂载（沿用现在写法）。
