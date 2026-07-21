@@ -387,7 +387,7 @@ export function AsciiHandsFooter() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [mounted, setMounted] = useState(false);
   useEffect(() => { setMounted(true); }, []);
-  // Interaction flow: orb → orb-exit → hands.
+  // Interaction flow: orb → liquid burst cover → hands under the fading mask.
   const [stage, setStage] = useState<
     "orb" | "orb-burst" | "orb-fade" | "hands"
   >("orb");
@@ -1256,12 +1256,13 @@ export function AsciiHandsFooter() {
     setOrbMounted(false);
   };
   const handleBurstCovered = () => {
-    setStage("orb-fade");
+    // Start the hands immediately once the liquid mask fully covers the screen.
+    // This avoids a visible black/empty beat between the burst and arm intro.
+    setStage("hands");
     setBgDark(true);
   };
   const handleBurstProgress = (p: number) => {
-    // Once the burst is nearly done fading, prep the hands so the arm
-    // growth animation starts as the purple veil finishes clearing.
+    // Fallback for browsers that may skip the exact covered callback frame.
     if (stage === "orb-fade" && p >= 0.6 && stageRef.current !== "hands") {
       setStage("hands");
     }
