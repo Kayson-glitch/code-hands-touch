@@ -233,6 +233,7 @@ export function IntroVideo({
     let lastNotifiedProgress = -1;
     let lastNotifiedBurst = -1;
     let playPending = false;
+    let firstFrameReady = false;
     let rafId = 0;
     let running = true;
     const t0 = performance.now();
@@ -284,8 +285,17 @@ export function IntroVideo({
         uniforms.uVideoRes.value.set(video.videoWidth, video.videoHeight);
       }
       try { video.pause(); } catch { /* ignore */ }
+      // Force decoding of the first frame so the shader doesn't sample black.
+      try { video.currentTime = 0; } catch { /* ignore */ }
     };
     video.addEventListener("loadedmetadata", onMeta);
+
+    const markFirstFrame = () => {
+      videoTex.needsUpdate = true;
+      firstFrameReady = true;
+    };
+    video.addEventListener("loadeddata", markFirstFrame);
+    video.addEventListener("seeked", markFirstFrame);
 
     // Start paused; play once to force first frame decode on some browsers.
     video.play().then(() => { try { video.pause(); } catch { /* ignore */ } })
@@ -361,7 +371,9 @@ export function IntroVideo({
       uniforms.uProgress.value = progress;
       uniforms.uBurst.value = burstProgress;
       uniforms.uTime.value = time;
-      renderer.render(scene, camera);
+      if (firstFrameReady) {
+        renderer.render(scene, camera);
+      }
 
       // Throttle parent notifications to avoid per-frame React re-renders.
       const burstBoundaryCrossed =
@@ -395,6 +407,8 @@ export function IntroVideo({
       window.removeEventListener("resize", resize);
       window.removeEventListener("wheel", onWheel);
       video.removeEventListener("loadedmetadata", onMeta);
+      video.removeEventListener("loadeddata", markFirstFrame);
+      video.removeEventListener("seeked", markFirstFrame);
       video.removeEventListener("error", onError);
       window.clearTimeout(errorTimer);
       pauseVideo();
