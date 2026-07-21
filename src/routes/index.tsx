@@ -1,8 +1,11 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { useCallback, useEffect, useState } from "react";
 import { AsciiHandsFooter } from "@/components/AsciiHandsFooter";
 import { SiteNav } from "@/components/SiteNav";
 import { HeroCopy } from "@/components/HeroCopy";
 import { FinChatDock } from "@/components/FinChatDock";
+import { IntroPreloader } from "@/components/IntroPreloader";
+import videoAsset from "@/assets/intro-hands.mp4.asset.json";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -25,12 +28,45 @@ export const Route = createFileRoute("/")({
 });
 
 function Index() {
+  const [videoSrc, setVideoSrc] = useState<string | null>(null);
+  const [shown, setShown] = useState(false);
+
+  const handleReady = useCallback((url: string) => {
+    setVideoSrc(url);
+    // next frame → fade in
+    requestAnimationFrame(() => requestAnimationFrame(() => setShown(true)));
+  }, []);
+  const handleFail = useCallback(() => {
+    setVideoSrc(videoAsset.url);
+    requestAnimationFrame(() => requestAnimationFrame(() => setShown(true)));
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      if (videoSrc && videoSrc.startsWith("blob:")) {
+        URL.revokeObjectURL(videoSrc);
+      }
+    };
+  }, [videoSrc]);
+
   return (
     <div className="relative min-h-screen">
-      <AsciiHandsFooter />
-      <SiteNav />
-      <HeroCopy />
-      <FinChatDock />
+      {videoSrc === null && (
+        <IntroPreloader src={videoAsset.url} onReady={handleReady} onFail={handleFail} />
+      )}
+      {videoSrc !== null && (
+        <div
+          style={{
+            opacity: shown ? 1 : 0,
+            transition: "opacity 350ms ease-out",
+          }}
+        >
+          <AsciiHandsFooter videoSrc={videoSrc} />
+          <SiteNav />
+          <HeroCopy />
+          <FinChatDock />
+        </div>
+      )}
     </div>
   );
 }
