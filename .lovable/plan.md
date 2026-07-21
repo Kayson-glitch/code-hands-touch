@@ -1,43 +1,31 @@
-## Goal
+## 诊断
 
-以 1440×900 为基准视口重新协调「标题组 + 手部」的上下关系，并把手部画布的默认渲染宽度限制为 1440px（居中）而非始终撑满视口。其他断点按同一比例等比推导。
+hover 揭示盘的半径当前是 `GOOEY_RADIUS_UV(0.048) × min(canvasW, canvasH)`，也就是**跟随画布短边缩放**。上一次布局调整把 `handsHeight` 从 `45vh` 改成 `51vh`，并给画布加了 `min(100vw, 1440px)` 上限，导致 `minWH` 在不同视口下变化：
 
-## 1. 手部画布宽度：默认 1440px 上限
+- 之前 1440×900 场景：min(1440, 405) = 405 → 直径 ≈ 39px
+- 现在同视口：min(1440, 459) = 459 → 直径 ≈ 44px
+- 更宽屏幕上画布被限到 1440，短边可能更小 → 直径更小
 
-`src/components/AsciiHandsFooter.tsx`（画布 `<canvas>` 容器）
+看起来"变小"其实是这种**跨视口飘忽**的观感（尤其在窗口尺寸变化后），本质原因是 hover 盘半径耦合了画布尺寸。
 
-- 外层容器改为 `left: 50%; transform: translateX(-50%); width: min(100vw, 1440px);`，去掉 `inset-x-0 w-full`。
-- 保持 `top` / `height` 由 `useHeroLayout` 提供，绝对定位不变。
-- 效果：≥1440px 屏幕上手部固定 1440px 宽居中，&lt;1440px 时仍按 100vw 自适应，不裁剪。
+## 方案
 
-## 2. 1440×900 基准下的标题 / 手部位置
+把 hover 揭示盘的半径改为**固定像素**（80px 直径，即用户之前校准的值），不再依赖 `minWH`：
 
-以 900px 视口高度为基线（导航 68px 已扣除感知），把 vh 换算成 px 便于校核：
+`src/components/AsciiHandsFooter.tsx`
 
-```text
-Nav                 0   – 68
-Title block start   180 (padding-top 20vh)
-  H1 (48/56 ×2 行)  180 – 292
-  Subtitle (16/24)  312 – 336
-  CTA (h40, mt-32)  368 – 408
-Hands canvas        top 430  height 460  → bottom 890
-```
+- 新增常量：`const GOOEY_RADIUS_PX = 40;`（半径，直径 80px），`const GOOEY_SOFTNESS_PX = 24;`
+- 在渲染循环内把 `R`/`S` 换成 UV 空间等价：
+  ```ts
+  const R = (GOOEY_RADIUS_PX / minWH) * intensity;
+  const S = ((GOOEY_SOFTNESS_PX * 0.5) / minWH) * intensity;
+  ```
+- 删除或保留 `GOOEY_RADIUS_UV` / `GOOEY_SOFTNESS_UV` 常量作为注释参考；不再在渲染中使用。
+- `GOOEY_NOISE`（0.011）保持 UV 空间不变，破碎边缘的相对幅度与盘尺寸解耦是可接受的。
 
-- Title 组底端 (408) 与手部顶端 (430) 之间留 ~22px 呼吸，整体重心居中，底部贴近首屏底。
-- 桌面 `DESKTOP`：
-  - `titlePaddingTop: "20vh"`
-  - `handsTop: "calc(48vh - 8px)"`
-  - `handsHeight: "51vh"`
-- `SHORT`（h ≤ 819）：`titlePaddingTop: "16vh"`, `handsTop: "44vh"`, `handsHeight: "54vh"`。
-- `TABLET`：`titlePaddingTop: "18vh"`, `handsTop: "46vh"`, `handsHeight: "52vh"`。
-- `MOBILE`：`titlePaddingTop: "12vh"`, `handsTop: "42vh"`, `handsHeight: "56vh"`（保持字号 32/40）。
-
-## 3. 其它不变
-
-- 字号 / 字重 / 渐变文字 / 副标题 / CTA 尺寸均保持当前值。
-- 手部内部渲染逻辑、悬停、马赛克、点击锁定、intro 视频层全部不动。
-- 导航栏、聊天 dock 不动。
+其余（点击锁定 mosaic、intro、视差、字符倾斜）都不受影响，因为它们本来就用像素或独立 UV。
 
 ## 验证
 
-- 1440×900、1280×800、1920×1080、iPad、iPhone 各截一张，确认标题-手部间距一致居中，且 ≥1440px 时手部宽度锁定 1440。
+- 1327×922、1440×900、1920×1080、1280×720 分别 hover，直径应恒为 ~80px。
+- resize 窗口时盘尺寸不再跳动。
