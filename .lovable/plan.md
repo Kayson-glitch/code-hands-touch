@@ -1,19 +1,17 @@
-目标：让视频最后一帧上的扩散动画稳定可见，并从两手指尖中心扩散，保持现有流程和 2.6s 扩散时长不变。
+## 目标
+删除所有扩散（LiquidBurst）相关代码，视频播放完直接进入手部动画阶段，其他不变。
 
-计划：
-1. 修复阶段切换时机
-   - 当前扩散层已挂载在视频上方，但视频结束后马上进入并很快完成/卸载，预览里只剩隐藏的手部 canvas，说明扩散阶段没有稳定留在屏幕上。
-   - 调整 `orb-burst → orb-fade → hands` 的触发条件，确保扩散完整跑完 2.6s 后才进入下一阶段。
+## 改动
 
-2. 修复 WebGL 扩散层可见性
-   - 保留 `LiquidBurst` 在最上层。
-   - 调整 shader 输出：扩散初期也必须有可见的黑色核心、白色边缘和色散边，而不是透明或接近不可见。
-   - 确保全屏 quad、透明混合和 alpha 组合不会把扩散结果完全混掉。
+1. **删除文件**
+   - `src/components/LiquidBurst.tsx`
 
-3. 保留视频作为扩散背景
-   - 视频结束后冻结最后一帧，不立即卸载。
-   - 只有当扩散已经覆盖全屏后，再移除视频并切到黑底，避免纯色背景提前盖住视频。
+2. **修改 `src/components/AsciiHandsFooter.tsx`**
+   - 移除 `LiquidBurst` 的 import 与渲染
+   - 移除 stage 中的 `"spread"` 状态（及 `spreadMs`、burst 起点坐标计算、相关 timer/ref）
+   - 视频 `onEnded`（含 fallback timer）后直接从 `"intro"` 切到 `"hands"` 阶段
+   - 保留背景色切换逻辑（视频结束时切到黑底），保留手部动画与其他所有效果不变
 
-4. 验证
-   - 在预览里检查视频层、扩散 WebGL canvas、手部 canvas 的挂载和层级。
-   - 触发一次完整流程，确认能看到从指尖中心向全屏扩散的动画。
+3. **保留不变**
+   - `src/components/IntroVideo.tsx`（模糊背景 + contain 布局、最后一帧冻结、fallback 时长）
+   - 手部 ASCII 动画、hover、点击马赛克、字符流动等全部原有效果
