@@ -7,18 +7,40 @@ export type IntroVideoEndInfo = {
   videoH: number;
 };
 
+export type IntroProgressInfo = {
+  /** Total scroll progress across intro (video + burst), 0..1. */
+  progress: number;
+  /** Video-only sub-progress, 0..1 (clamped to progress / VIDEO_FRACTION). */
+  videoProgress: number;
+  /** Burst sub-progress, 0..1 (kicks in after VIDEO_FRACTION). */
+  burstProgress: number;
+  /** Screen-space center of the two fingertips (px). */
+  centerX: number;
+  centerY: number;
+};
+
+/** How much of the total scroll journey is the video vs. the burst. */
+const VIDEO_FRACTION = 0.6;
+/** Pixels of wheel travel to cover 0→1 of total progress. */
+const PIXELS_FOR_FULL_PROGRESS = 2600;
+
 /**
- * Full-screen intro video. Calls `onEnded` exactly once when playback
- * reaches the last frame, so the caller can trigger the burst transition.
+ * Full-screen intro video. Scroll-scrubbed. Emits `onProgress` every frame
+ * (video scrub + parallax + burst origin), and `onEnded` exactly once when
+ * total scroll progress reaches 1.
  */
 export function IntroVideo({
   onEnded,
+  onProgress,
 }: {
   onEnded: (info: IntroVideoEndInfo) => void;
+  onProgress?: (info: IntroProgressInfo) => void;
 }) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const bgRef = useRef<HTMLVideoElement>(null);
   const firedRef = useRef(false);
+  const onProgressRef = useRef(onProgress);
+  useEffect(() => { onProgressRef.current = onProgress; }, [onProgress]);
 
   const fire = () => {
     if (firedRef.current) return;
@@ -50,10 +72,9 @@ export function IntroVideo({
     const bg = bgRef.current;
     if (!v) return;
 
-    // Scroll-controlled scrubbing. Wheel deltaY accumulates into a pending
-    // time delta that we flush to the video's currentTime on rAF.
-    const SECONDS_PER_PIXEL = 0.004;
-    let pendingDelta = 0;
+    // Scroll drives a single `progress` scalar in [0, 1] covering both
+    // video scrub and the post-video burst. Wheel deltaY accumulates.
+    let progress = 0;
     let rafId = 0;
     let errorFallback = 0;
 
@@ -62,28 +83,56 @@ export function IntroVideo({
       try { bg?.pause(); } catch { /* ignore */ }
     };
 
+    const emit = () => {
+      const videoProgress = Math.min(1, progress / VIDEO_FRACTION);
+      const burstProgress = Math.min(
+        1,
+        Math.max(0, (progress - VIDEO_FRACTION) / (1 - VIDEO_FRACTION)),
+      );
+      // Parallax: subtle zoom around the finger center, scaling with videoProgress.
+      const scale = 1 + videoProgress * 0.05;
+      v.style.transformOrigin = "50% 50%";
+      v.style.transform = `scale(${scale.toFixed(4)})`;
+      // Finger center in viewport px: the video is contain-fit so its
+      // getBoundingClientRect() is the letterboxed frame; fingers meet at
+      // ~center of the frame.
+      const rect = v.getBoundingClientRect();
+      const centerX = rect.left + rect.width * 0.5;
+      const centerY = rect.top + rect.height * 0.5;
+      onProgressRef.current?.({
+        progress,
+        videoProgress,
+        burstProgress,
+        centerX,
+        centerY,
+      });
+    };
+
     const flush = () => {
       rafId = 0;
-      if (!v.duration || Number.isNaN(v.duration)) return;
-      const next = Math.min(
-        v.duration,
-        Math.max(0, v.currentTime + pendingDelta),
-      );
-      pendingDelta = 0;
-      v.currentTime = next;
-      if (bg) bg.currentTime = next;
-      if (next >= v.duration - 0.05) fire();
+      const videoProgress = Math.min(1, progress / VIDEO_FRACTION);
+      if (v.duration && !Number.isNaN(v.duration)) {
+        const t = videoProgress * v.duration;
+        try { v.currentTime = t; } catch { /* ignore */ }
+        if (bg) { try { bg.currentTime = t; } catch { /* ignore */ } }
+      }
+      emit();
+      if (progress >= 1) fire();
     };
 
     const onWheel = (e: WheelEvent) => {
       if (firedRef.current) return;
       e.preventDefault();
-      pendingDelta += e.deltaY * SECONDS_PER_PIXEL;
+      progress = Math.min(
+        1,
+        Math.max(0, progress + e.deltaY / PIXELS_FOR_FULL_PROGRESS),
+      );
       if (!rafId) rafId = requestAnimationFrame(flush);
     };
 
     const onMeta = () => {
       ensurePaused();
+      emit();
     };
     const onError = () => {
       // Preserve fallback ONLY when media fails to load at all.
@@ -99,6 +148,7 @@ export function IntroVideo({
     // play() is called at least once; play then immediately pause.
     v.play().then(() => ensurePaused()).catch(() => ensurePaused());
     bg?.play().then(() => ensurePaused()).catch(() => ensurePaused());
+    emit();
 
     return () => {
       window.clearTimeout(errorFallback);
