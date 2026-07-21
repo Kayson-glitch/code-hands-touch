@@ -1240,6 +1240,9 @@ export function AsciiHandsFooter() {
 
   const handsVisible = stage === "hands";
   const [orbMounted, setOrbMounted] = useState(true);
+  // Where the two fingertips meet inside the video's intrinsic frame
+  // (0..1 in video coordinates). Tweak here if the fingertip drifts.
+  const FINGER_UV = { x: 0.5, y: 0.5 };
   const [burstMounted, setBurstMounted] = useState(false);
   const handleOrbClick = (e?: { clientX?: number; clientY?: number }) => {
     if (stage !== "orb") return;
@@ -1252,12 +1255,41 @@ export function AsciiHandsFooter() {
     setStage("orb-burst");
     setBurstMounted(true);
   };
+  const handleIntroEnded = (info: {
+    videoRect: DOMRect;
+    videoW: number;
+    videoH: number;
+  }) => {
+    if (stage !== "orb") return;
+    const vw = window.innerWidth;
+    const vh = window.innerHeight;
+    const { videoRect, videoW, videoH } = info;
+    let cx = vw / 2;
+    let cy = vh / 2;
+    if (videoW > 0 && videoH > 0 && videoRect.width > 0 && videoRect.height > 0) {
+      // object-fit: contain — the foreground video is letterboxed inside
+      // videoRect. Compute the actual drawn rect, then place FINGER_UV.
+      const scale = Math.min(videoRect.width / videoW, videoRect.height / videoH);
+      const drawnW = videoW * scale;
+      const drawnH = videoH * scale;
+      const drawnX = videoRect.left + (videoRect.width - drawnW) / 2;
+      const drawnY = videoRect.top + (videoRect.height - drawnH) / 2;
+      cx = drawnX + drawnW * FINGER_UV.x;
+      cy = drawnY + drawnH * FINGER_UV.y;
+    }
+    setBurstOrigin([cx / vw, 1 - cy / vh]);
+    setStage("orb-burst");
+    setBurstMounted(true);
+  };
   const handleOrbExited = () => {
     setOrbMounted(false);
   };
   const handleBurstCovered = () => {
     setStage("orb-fade");
     setBgDark(true);
+    // Video has been fully covered — safe to unmount it now without any
+    // visible cream flash.
+    setOrbMounted(false);
   };
   const handleBurstProgress = (p: number) => {
     // Once the burst is nearly done fading, prep the hands so the arm
@@ -1330,14 +1362,7 @@ export function AsciiHandsFooter() {
             pointerEvents: stage === "orb" ? "auto" : "none",
           }}
         >
-          {mounted && (
-            <IntroVideo
-              onEnded={() => {
-                handleOrbClick();
-                handleOrbExited();
-              }}
-            />
-          )}
+          {mounted && <IntroVideo onEnded={handleIntroEnded} />}
         </div>
       )}
 
