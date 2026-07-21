@@ -1234,7 +1234,10 @@ export function AsciiHandsFooter() {
     };
   }, []);
 
-  const handsVisible = stage === "hands";
+  // Show hands during the tail of the orb exit so the growth animation is
+  // visible before the orb finishes fading; orb stays mounted until
+  // onExited fires.
+  const handsVisible = stage === "hands" || stage === "orb-exit";
   const handleOrbClick = () => {
     if (stage !== "orb") return;
     setStage("orb-exit");
