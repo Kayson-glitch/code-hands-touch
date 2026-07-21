@@ -1,43 +1,50 @@
-## 问题诊断
+## 目标
 
-当前 `src/components/IntroVideo.tsx` 里滚动"卡"的主因不是平滑算法，而是**每帧都在 `video.currentTime = target` 上做 seek**：
+只优化开屏视频的鼠标滚轮控制播放手感，让滚动反馈更流畅、丝滑，避免当前 seek 卡顿；不修改导航、标题、手部 ASCII、hover、聊天框、布局等任何无关元素。
 
-- `SEEK_EPSILON = 0.04` 秒（≈1 帧）→ 只要平滑值持续追赶目标，几乎每个 rAF 都会触发一次 seek。
-- 浏览器解码非关键帧的 seek 成本很高，MP4 的 GOP 大时会出现明显掉帧/闪烁，表现就是"卡顿"。
-- 同时 `onProgress` 回调每帧都触发一次 React 状态更新（父组件 `AsciiHandsFooter` 里），也会叠加主线程压力。
+## 计划
 
-## 优化方案
+1. **保留现有视觉效果与交互流程**
+   - 保持视频阶段、burst/shader 阶段、滚轮推进逻辑、完成后进入手部动画的流程不变。
+   - 不改 `VIDEO_FRACTION`、整体滚动距离、布局、颜色、字体、手部组件等内容。
 
-改动只限于 `src/components/IntroVideo.tsx`，视觉/交互不变，只让手感更顺：
+2. **降低视频 seek 造成的解码卡顿**
+   - 避免滚轮过程中频繁给 `video.currentTime` 赋值。
+   - 将视频帧更新改成“目标进度平滑追踪 + 有节奏地提交 seek”。
+   - 对小幅滚动优先保持画面稳定，只在目标时间变化足够明显时更新视频帧。
 
-1. **Seek 节流** — 把视频 seek 从"每帧 diff > 1 帧就 seek"改成：
-   - 时间节流：最多每 ~66ms（≈15fps）seek 一次；
-   - 距离阈值放宽到 ~0.08s；
-   - 优先使用 `video.fastSeek?.(target)`，失败回退 `currentTime`。
-   这样解码压力大幅下降，画面追赶滚轮的视觉流畅度反而提升。
+3. **优化滚轮输入的平滑层**
+   - 区分触控板的小连续 delta 和鼠标滚轮的大跳变 delta。
+   - 对大跳变做更柔和的分段吸收，减少一格滚轮造成的突然追赶。
+   - 保留用户快速滚动时的响应速度，但避免每次快速滚动都触发密集 seek。
 
-2. **平滑参数微调** — `SMOOTH_RATE` 从 12 提到 ~16，让指针跟随更贴合滚轮；单 tick 上限 `MAX_PIXELS_PER_TICK` 从 180 降到 140，避免鼠标滚轮一格造成"跳跃 + 长追赶"的拖影感。
+4. **让 shader 动效继续保持高帧率**
+   - WebGL 渲染继续每帧运行，保证轻微视差、中心扩散进度、视觉反馈不会卡住。
+   - 视频纹理只在必要时更新，避免把主线程和解码线程压满。
 
-3. **`onProgress` 节流** — 仅当 `progress` 相对上次通知变化 > 0.003 时才调用，减少父组件重渲染频次；关键状态（fire / burst 起止）仍即时触发。
+5. **节流父组件进度通知**
+   - 继续避免 `onProgress` 每帧触发 React 更新。
+   - 确保关键节点仍能即时触发：扩散开始、扩散完成、进入手部动画。
 
-4. **wheel 监听优化** — 保持 `passive: false`（需要 `preventDefault`），但把累加逻辑改成只写 `targetProgress`（当前已经是这样），确认没有在 wheel 回调里做 DOM 读写。
+6. **验证**
+   - 在预览里实际滚动检查：滚轮输入是否更顺、视频是否仍能到最后一帧、最后阶段是否正常进入手部动画。
+   - 若发现视频解码本身仍限制明显，会优先微调 seek 频率和阈值，而不是改动其他组件。
 
-5. **可选**：滚动时若目标 > 当前较多（快速滚动），临时提高 `alpha` 上限，让快速滚动时视频跟得更紧、慢速滚动时保持柔和。
+## 技术范围
 
-## 不改的内容
-
-- 布局、UI、shader、burst 效果、`VIDEO_FRACTION`、总滚动像素 `PIXELS_FOR_FULL_PROGRESS` 全部保持不变。
-- 手部/标题/导航等其他组件不动。
-
-## 技术备注
-
-Seek 节流的核心代码大致如下（示意）：
+仅修改：
 
 ```text
-if (now - lastSeekAt > 66 && |target - lastSeekTime| > 0.08) {
-  (video.fastSeek ?? assignCurrentTime)(target);
-  lastSeekAt = now; lastSeekTime = target;
-}
+src/components/IntroVideo.tsx
 ```
 
-完成后我会在预览里滚一次，确认无掉帧再交付。
+不会修改：
+
+```text
+src/components/AsciiHandsFooter.tsx
+src/components/HeroCopy.tsx
+src/components/SiteNav.tsx
+src/components/FinChatDock.tsx
+src/styles.css
+路由、布局、资源文件
+```
