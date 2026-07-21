@@ -1,19 +1,223 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { Canvas, useFrame, useThree } from "@react-three/fiber";
+import * as THREE from "three";
 
 /**
- * Full-screen ink burst — 1:1 rebuild against the reference clip.
+ * Full-screen ink burst — WebGL shader rebuild.
  *
- * Layer stack (bottom→top):
- *   1. white halo polygon  — a slightly larger, softly wobbling shape;
- *      only its rim shows around the black core.
- *   2. red fringe polygon  — offset in one direction, revealed as a red
- *      edge on that side of the core.
- *   3. cyan fringe polygon — offset in the opposite direction, revealed
- *      as a cyan edge on the other side.
- *   4. black core polygon  — the actual ink mass.
- *
- * Optional horizontal glitch bars ride above the halo during mid-spread.
+ * A single full-screen quad runs a fragment shader that computes:
+ *   - organic ink mask via layered value noise on a signed distance field
+ *   - white rim just outside the mask edge
+ *   - true chromatic aberration by sampling the mask at offset UVs for R/B
+ *   - mid-spread horizontal scanline glitch on the outside rim only
  */
+
+const VERT = /* glsl */ `
+  varying vec2 vUv;
+  void main() {
+    vUv = uv;
+    gl_Position = vec4(position.xy, 0.0, 1.0);
+  }
+`;
+
+const FRAG = /* glsl */ `
+  precision highp float;
+  varying vec2 vUv;
+  uniform float uTime;
+  uniform float uProgress;
+  uniform vec2  uOrigin;      // in aspect-space (uv * vec2(aspect,1))
+  uniform vec2  uResolution;
+  uniform float uAspect;
+
+  // hash / value noise
+  float hash(vec2 p){
+    p = fract(p * vec2(123.34, 456.21));
+    p += dot(p, p + 45.32);
+    return fract(p.x * p.y);
+  }
+  float vnoise(vec2 p){
+    vec2 i = floor(p);
+    vec2 f = fract(p);
+    float a = hash(i);
+    float b = hash(i + vec2(1.0, 0.0));
+    float c = hash(i + vec2(0.0, 1.0));
+    float d = hash(i + vec2(1.0, 1.0));
+    vec2 u = f*f*(3.0-2.0*f);
+    return mix(a,b,u.x) + (c-a)*u.y*(1.0-u.x) + (d-b)*u.x*u.y;
+  }
+  float fbm(vec2 p){
+    float v = 0.0;
+    float a = 0.5;
+    for(int i=0;i<4;i++){
+      v += a * vnoise(p);
+      p *= 2.02;
+      a *= 0.5;
+    }
+    return v;
+  }
+
+  // returns ink coverage in [0,1] at aspect-space point q
+  float inkMask(vec2 q, float radius){
+    vec2 d = q - uOrigin;
+    float dist = length(d);
+    float ang = atan(d.y, d.x);
+    // low-freq lobes (pseudopods) grow as burst matures
+    float lobes = 2.0 + floor(uProgress * 2.5);
+    float lobe = sin(ang * lobes + uTime * 0.4) * 0.5;
+    // layered noise on a domain rotating with time
+    vec2 np = d * (2.2 + uProgress * 1.2) + vec2(uTime * 0.15, -uTime * 0.11);
+    float n = fbm(np) - 0.5;
+    float n2 = fbm(np * 2.7 + 3.1) - 0.5;
+    float rough = 0.16 + (1.0 - clamp(uProgress,0.0,1.0)) * 0.22;
+    float displaced = dist + (lobe * 0.55 + n * 0.6 + n2 * 0.2) * rough * radius;
+    float feather = mix(0.020, 0.008, clamp(uProgress,0.0,1.0));
+    return smoothstep(radius + feather, radius - feather, displaced);
+  }
+
+  void main(){
+    vec2 uv = vUv;
+    vec2 q = vec2(uv.x * uAspect, uv.y);
+
+    // max radius from origin to farthest corner in aspect-space
+    float maxR = 0.0;
+    maxR = max(maxR, length(vec2(0.0,0.0) - uOrigin));
+    maxR = max(maxR, length(vec2(uAspect,0.0) - uOrigin));
+    maxR = max(maxR, length(vec2(0.0,1.0) - uOrigin));
+    maxR = max(maxR, length(vec2(uAspect,1.0) - uOrigin));
+    float radius = uProgress * (maxR + 0.15);
+
+    // chromatic aberration offset — grows with progress, rotates slowly
+    float ab = (0.006 + uProgress * 0.014);
+    float ang = uTime * 0.5;
+    vec2 off = vec2(cos(ang), sin(ang)) * ab;
+
+    float mR = inkMask(q + off, radius);
+    float mG = inkMask(q,       radius);
+    float mB = inkMask(q - off, radius);
+
+    // scanline glitch — only outside the core (mR small), mid-progress only
+    float glitchWin = smoothstep(0.12,0.2,uProgress) * (1.0 - smoothstep(0.78,0.88,uProgress));
+    float row = floor(uv.y * 90.0);
+    float t8  = floor(uTime * 9.0);
+    float g   = hash(vec2(row, t8));
+    float glitchAmt = step(0.86, g) * glitchWin * 0.02;
+    vec2 qG = q + vec2(glitchAmt * (g - 0.5) * 2.0, 0.0);
+    float mGlitchC = inkMask(qG + off * 1.5, radius);
+    float mGlitchM = inkMask(qG - off * 1.5, radius);
+
+    // white rim just outside the core edge
+    float rim = clamp(mG - inkMask(q, radius * 0.985), 0.0, 1.0);
+    rim = pow(rim, 0.8);
+
+    // compose color per channel (chromatic aberration on the black ink)
+    // R channel = 1 - mR, i.e. where R-shifted mask is absent, red is visible outside offset side
+    vec3 ink = vec3(1.0 - mR, 1.0 - mG, 1.0 - mB); // white outside, black inside
+    // but we're only rendering the ink layer — invert: black core, colored fringes
+    vec3 col = vec3(0.0);
+    // core black
+    col = mix(col, vec3(0.0), mG);
+    // fringes: where one channel mask is 0 but another is 1 -> that channel shows
+    // easier formulation: additive fringe colors weighted by (mX - mG) clamped
+    float fringeR = clamp(mR - mG, 0.0, 1.0);
+    float fringeB = clamp(mB - mG, 0.0, 1.0);
+    col += vec3(1.0, 0.12, 0.22) * fringeR * 0.9;
+    col += vec3(0.0, 0.9,  1.0)  * fringeB * 0.9;
+
+    // glitch scanlines add cyan/magenta bars on the outer rim
+    float gr = clamp(mGlitchC - mG, 0.0, 1.0);
+    float gm = clamp(mGlitchM - mG, 0.0, 1.0);
+    col += vec3(0.0, 1.0, 1.0) * gr * glitchWin * 0.5;
+    col += vec3(1.0, 0.2, 0.9) * gm * glitchWin * 0.4;
+
+    // white rim overlay
+    col = mix(col, vec3(0.96, 0.94, 0.88), rim * 0.75);
+
+    // alpha = union of all masks so aberrated fringes stay opaque
+    float alpha = max(max(mR, mG), mB);
+    alpha = max(alpha, max(gr, gm) * glitchWin);
+
+    gl_FragColor = vec4(col, alpha);
+  }
+`;
+
+function BurstMesh({
+  origin,
+  spreadMs,
+  onCovered,
+  onProgress,
+}: {
+  origin: [number, number];
+  spreadMs: number;
+  onCovered: () => void;
+  onProgress?: (p: number) => void;
+}) {
+  const matRef = useRef<THREE.ShaderMaterial>(null);
+  const startRef = useRef<number | null>(null);
+  const coveredRef = useRef(false);
+  const { size } = useThree();
+
+  const uniforms = useMemo(() => {
+    const aspect = size.width / size.height;
+    return {
+      uTime: { value: 0 },
+      uProgress: { value: 0 },
+      uOrigin: { value: new THREE.Vector2(origin[0] * aspect, origin[1]) },
+      uResolution: { value: new THREE.Vector2(size.width, size.height) },
+      uAspect: { value: aspect },
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    const aspect = size.width / size.height;
+    uniforms.uAspect.value = aspect;
+    uniforms.uResolution.value.set(size.width, size.height);
+    uniforms.uOrigin.value.set(origin[0] * aspect, origin[1]);
+  }, [size.width, size.height, origin, uniforms]);
+
+  useFrame(({ clock }) => {
+    const nowMs = clock.getElapsedTime() * 1000;
+    if (startRef.current == null) startRef.current = nowMs;
+    const t = nowMs - startRef.current;
+    const rawP = Math.min(1, t / spreadMs);
+    let curved: number;
+    if (rawP < 0.25) {
+      const s = rawP / 0.25;
+      curved = 0.18 * (1 - (1 - s) * (1 - s));
+    } else if (rawP < 0.85) {
+      const s = (rawP - 0.25) / 0.6;
+      curved = 0.18 + s * 0.78;
+    } else {
+      const s = (rawP - 0.85) / 0.15;
+      curved = 0.96 + s * 0.04;
+    }
+    const endElastic = rawP > 0.85 ? Math.sin(((rawP - 0.85) / 0.15) * Math.PI) * 0.02 : 0;
+    const p = Math.max(0, Math.min(1.02, curved + endElastic));
+    uniforms.uProgress.value = p;
+    uniforms.uTime.value = clock.getElapsedTime();
+    onProgress?.(p);
+    if (rawP >= 1 && !coveredRef.current) {
+      coveredRef.current = true;
+      onCovered();
+    }
+  });
+
+  return (
+    <mesh>
+      <planeGeometry args={[2, 2]} />
+      <shaderMaterial
+        ref={matRef}
+        vertexShader={VERT}
+        fragmentShader={FRAG}
+        uniforms={uniforms}
+        transparent
+        depthTest={false}
+        depthWrite={false}
+      />
+    </mesh>
+  );
+}
+
 export function LiquidBurst({
   origin,
   onCovered,
@@ -22,7 +226,6 @@ export function LiquidBurst({
   spreadMs = 1600,
   fadeMs = 280,
 }: {
-  /** Normalized viewport origin, x∈[0,1] left→right, y∈[0,1] bottom→top (WebGL-style). */
   origin: [number, number];
   onCovered: () => void;
   onFaded: () => void;
@@ -30,222 +233,53 @@ export function LiquidBurst({
   spreadMs?: number;
   fadeMs?: number;
 }) {
-  const rafRef = useRef<number | null>(null);
-  const startRef = useRef<number | null>(null);
-  const coveredAtRef = useRef<number | null>(null);
-  const coveredRef = useRef(false);
-  const fadedRef = useRef(false);
-
   const wrapRef = useRef<HTMLDivElement>(null);
-  const haloPolyRef = useRef<SVGPolygonElement>(null);
-  const rPolyRef = useRef<SVGPolygonElement>(null);
-  const kPolyRef = useRef<SVGPolygonElement>(null);
-  const cPolyRef = useRef<SVGPolygonElement>(null);
-  const glitch1Ref = useRef<SVGRectElement>(null);
-  const glitch2Ref = useRef<SVGRectElement>(null);
-  const glitch3Ref = useRef<SVGRectElement>(null);
-
-  const [ox, oy] = origin;
-  // Convert WebGL-style y (bottom-origin) to SVG px (top-origin) in the rAF loop.
-
-  // Callbacks in refs so the rAF loop always sees the latest.
-  const cbRef = useRef({ onCovered, onFaded, onProgress });
-  cbRef.current = { onCovered, onFaded, onProgress };
-
+  const coveredAtRef = useRef<number | null>(null);
+  const fadedRef = useRef(false);
   const [ready, setReady] = useState(false);
   useEffect(() => setReady(true), []);
 
-  useEffect(() => {
-    if (!ready) return;
-    let seedT = 0;
-    let glitchLastAt = 0;
-
-    const POINTS = 48;
-
-    const hashNoise = (index: number, seed: number) => {
-      const s = Math.sin(index * 127.1 + seed * 311.7) * 43758.5453123;
-      return s - Math.floor(s);
-    };
-
-    const smoothNoise = (index: number, seed: number) => {
-      const whole = Math.floor(index);
-      const frac = index - whole;
-      const eased = frac * frac * (3 - 2 * frac);
-      const a = hashNoise(whole, seed);
-      const b = hashNoise(whole + 1, seed);
-      return a + (b - a) * eased;
-    };
-
-    const makePoints = (
-      centerX: number,
-      centerY: number,
-      radius: number,
-      roughness: number,
-      drift: number,
-      phase: number,
-      lobes: number,
-    ) => {
-      const points: string[] = [];
-
-      for (let i = 0; i < POINTS; i += 1) {
-        const angle = (i / POINTS) * Math.PI * 2;
-        // Big pseudopod lobes — grow the count as the burst matures.
-        const lobe = Math.sin(angle * lobes + phase * 0.6) * 0.5;
-        const midWave = smoothNoise(i * 0.28 - phase * 0.55, 12.3) - 0.5;
-        const tooth = smoothNoise(i * 1.05 + phase * 1.1, 29.1) - 0.5;
-        const wobble = lobe * 0.6 + midWave * 0.3 + tooth * 0.1;
-        const r = Math.max(0, radius * (1 + wobble * roughness));
-        const tangent = Math.sin(angle * 3 + phase) * drift;
-        const x = centerX + Math.cos(angle) * r + Math.cos(angle + Math.PI / 2) * tangent;
-        const y = centerY + Math.sin(angle) * r + Math.sin(angle + Math.PI / 2) * tangent;
-        points.push(`${x.toFixed(1)},${y.toFixed(1)}`);
+  const handleCovered = () => {
+    if (coveredAtRef.current != null) return;
+    coveredAtRef.current = performance.now();
+    onCovered();
+    const tick = () => {
+      if (coveredAtRef.current == null || fadedRef.current) return;
+      const fp = Math.min(1, (performance.now() - coveredAtRef.current) / fadeMs);
+      const fe = fp < 0.5 ? 2 * fp * fp : 1 - Math.pow(-2 * fp + 2, 2) / 2;
+      if (wrapRef.current) wrapRef.current.style.opacity = String(1 - fe);
+      if (fp >= 1) {
+        fadedRef.current = true;
+        onFaded();
+        return;
       }
-
-      return points.join(" ");
+      requestAnimationFrame(tick);
     };
+    requestAnimationFrame(tick);
+  };
 
-    const setPoints = (el: SVGPolygonElement | null, points: string) => {
-      if (!el) return;
-      el.setAttribute("points", points);
-    };
-
-    const tick = (now: number) => {
-      if (startRef.current == null) startRef.current = now;
-      const t = now - startRef.current;
-      const rawP = Math.min(1, t / spreadMs);
-      // Curve: quick pop off the fingertip, near-linear expansion, tiny elastic settle.
-      let curved: number;
-      if (rawP < 0.25) {
-        const s = rawP / 0.25;
-        curved = 0.18 * (1 - (1 - s) * (1 - s)); // easeOutQuad → 0.18
-      } else if (rawP < 0.85) {
-        const s = (rawP - 0.25) / 0.6;
-        curved = 0.18 + s * 0.78; // linear expansion → 0.96
-      } else {
-        const s = (rawP - 0.85) / 0.15;
-        curved = 0.96 + s * 0.04;
-      }
-      const endElastic = rawP > 0.85 ? Math.sin((rawP - 0.85) / 0.15 * Math.PI) * 0.02 : 0;
-      const p = curved + endElastic;
-
-      const width = window.innerWidth;
-      const height = window.innerHeight;
-      const centerX = ox * width;
-      const centerY = (1 - oy) * height;
-      const maxRadius = Math.hypot(
-        Math.max(centerX, width - centerX),
-        Math.max(centerY, height - centerY),
-      );
-      const settledP = Math.min(1.035, Math.max(0, p));
-      const radius = settledP * (maxRadius + 120);
-      // Wilder early shape that calms down as it fills the screen.
-      const roughness = 0.12 + (1 - Math.min(1, rawP)) * 0.18;
-      const drift = 6 + Math.min(1, rawP) * 12;
-      // Pseudopod count grows 2 → 4.
-      const lobes = 2 + Math.floor(rawP * 2.5);
-      seedT += 0.018;
-
-      // Chromatic-aberration offset — a rotating vector that widens as the burst grows.
-      const aberr = 8 + rawP * 10; // 8 → 18 px
-      const aberrAngle = seedT * 0.4;
-      const adx = Math.cos(aberrAngle) * aberr;
-      const ady = Math.sin(aberrAngle) * aberr;
-
-      // Halo sits just outside the core; shares core geometry so its rim tracks perfectly.
-      const haloPoints = makePoints(centerX, centerY, radius + 16 + drift * 0.6, roughness * 0.95, drift, seedT, lobes);
-      const redPoints = makePoints(centerX + adx, centerY + ady, radius + 8, roughness, drift, seedT, lobes);
-      const cyanPoints = makePoints(centerX - adx, centerY - ady, radius + 8, roughness, drift, seedT, lobes);
-      const blackPoints = makePoints(centerX, centerY, radius, roughness, drift * 0.75, seedT, lobes);
-
-      setPoints(haloPolyRef.current, haloPoints);
-      setPoints(rPolyRef.current, redPoints);
-      setPoints(cPolyRef.current, cyanPoints);
-      setPoints(kPolyRef.current, blackPoints);
-
-      // Horizontal glitch bars — refresh every ~150ms during mid-spread.
-      if (rawP > 0.15 && rawP < 0.85 && now - glitchLastAt > 150) {
-        glitchLastAt = now;
-        const bars = [glitch1Ref.current, glitch2Ref.current, glitch3Ref.current];
-        const colors = ["#00e5ff", "#ff2fd8", "#a855f7"];
-        bars.forEach((bar, i) => {
-          if (!bar) return;
-          const barY = Math.random() * height;
-          const barH = 2 + Math.random() * 5;
-          bar.setAttribute("x", "0");
-          bar.setAttribute("y", barY.toFixed(1));
-          bar.setAttribute("width", String(width));
-          bar.setAttribute("height", barH.toFixed(1));
-          bar.setAttribute("fill", colors[i]);
-          bar.setAttribute("opacity", (0.25 + Math.random() * 0.25).toFixed(2));
-        });
-      } else if (rawP <= 0.15 || rawP >= 0.85) {
-        [glitch1Ref.current, glitch2Ref.current, glitch3Ref.current].forEach((bar) => {
-          if (bar) bar.setAttribute("opacity", "0");
-        });
-      }
-
-      cbRef.current.onProgress?.(p);
-
-      if (rawP >= 1 && !coveredRef.current) {
-        coveredRef.current = true;
-        coveredAtRef.current = now;
-        cbRef.current.onCovered();
-      }
-
-      if (coveredAtRef.current != null && wrapRef.current) {
-        const ft = now - coveredAtRef.current;
-        const fp = Math.min(1, ft / fadeMs);
-        const fe = fp < 0.5 ? 2 * fp * fp : 1 - Math.pow(-2 * fp + 2, 2) / 2;
-        wrapRef.current.style.opacity = String(1 - fe);
-        if (fp >= 1 && !fadedRef.current) {
-          fadedRef.current = true;
-          cbRef.current.onFaded();
-          return; // stop the loop
-        }
-      }
-
-      rafRef.current = requestAnimationFrame(tick);
-    };
-
-    rafRef.current = requestAnimationFrame(tick);
-    return () => {
-      if (rafRef.current != null) cancelAnimationFrame(rafRef.current);
-    };
-  }, [ready, spreadMs, fadeMs, ox, oy]);
+  if (!ready) return null;
 
   return (
-    <div
-      className="pointer-events-none fixed inset-0"
-      style={{ zIndex: 70 }}
-      aria-hidden
-    >
+    <div className="pointer-events-none fixed inset-0" style={{ zIndex: 70 }} aria-hidden>
       <div
         ref={wrapRef}
-        style={{
-          position: "absolute",
-          inset: 0,
-          opacity: 1,
-          willChange: "opacity",
-        }}
+        style={{ position: "absolute", inset: 0, opacity: 1, willChange: "opacity" }}
       >
-        <svg
-          width="100%"
-          height="100%"
-          viewBox={`0 0 ${typeof window === "undefined" ? 1 : window.innerWidth} ${typeof window === "undefined" ? 1 : window.innerHeight}`}
-          preserveAspectRatio="none"
-          style={{
-            position: "absolute",
-            inset: 0,
-          }}
+        <Canvas
+          dpr={[1, 2]}
+          orthographic
+          camera={{ position: [0, 0, 1], zoom: 1 }}
+          gl={{ alpha: true, premultipliedAlpha: false, antialias: true }}
+          style={{ position: "absolute", inset: 0, width: "100%", height: "100%" }}
         >
-          <polygon ref={haloPolyRef} points="0,0 0,0 0,0" fill="#f4ecdd" />
-          <polygon ref={rPolyRef} points="0,0 0,0 0,0" fill="#ff2244" />
-          <polygon ref={cPolyRef} points="0,0 0,0 0,0" fill="#00e5ff" />
-          <polygon ref={kPolyRef} points="0,0 0,0 0,0" fill="#000000" />
-          <rect ref={glitch1Ref} x="0" y="0" width="0" height="0" fill="#00e5ff" opacity="0" style={{ mixBlendMode: "screen" }} />
-          <rect ref={glitch2Ref} x="0" y="0" width="0" height="0" fill="#ff2fd8" opacity="0" style={{ mixBlendMode: "screen" }} />
-          <rect ref={glitch3Ref} x="0" y="0" width="0" height="0" fill="#a855f7" opacity="0" style={{ mixBlendMode: "screen" }} />
-        </svg>
+          <BurstMesh
+            origin={origin}
+            spreadMs={spreadMs}
+            onCovered={handleCovered}
+            onProgress={onProgress}
+          />
+        </Canvas>
       </div>
     </div>
   );
