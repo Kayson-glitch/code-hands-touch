@@ -19,9 +19,6 @@ const VIDEO_FRACTION = 0.6;
 const PIXELS_FOR_FULL_PROGRESS = 3200;
 // Cap a single wheel tick so a hard mouse-wheel notch doesn't jump the progress.
 const MAX_PIXELS_PER_TICK = 140;
-// Release wheel input over a few frames instead of applying the whole notch at once.
-const WHEEL_RELEASE_RATE = 18;
-const WHEEL_BUFFER_MAX = 360;
 // Exponential smoothing rate (higher = snappier follow, lower = more inertia).
 const SMOOTH_RATE = 10;
 // Extra snappiness when the user scrolls fast (large gap between target and current).
@@ -230,7 +227,6 @@ export function IntroVideo({
 
     let progress = 0;
     let targetProgress = 0;
-    let wheelBuffer = 0;
     let lastFrameTs = performance.now();
     let lastSeekTime = -1;
     let lastSeekAt = 0;
@@ -312,10 +308,7 @@ export function IntroVideo({
       // Clamp a single tick so mouse-wheel notches don't cause jumps.
       if (dy > MAX_PIXELS_PER_TICK) dy = MAX_PIXELS_PER_TICK;
       else if (dy < -MAX_PIXELS_PER_TICK) dy = -MAX_PIXELS_PER_TICK;
-      wheelBuffer = Math.min(
-        WHEEL_BUFFER_MAX,
-        Math.max(-WHEEL_BUFFER_MAX, wheelBuffer + dy),
-      );
+      targetProgress = clamp01(targetProgress + dy / PIXELS_FOR_FULL_PROGRESS);
     };
     window.addEventListener("wheel", onWheel, { passive: false });
 
@@ -326,18 +319,6 @@ export function IntroVideo({
       const time = (now - t0) / 1000;
       const dt = Math.min(0.05, Math.max(0.001, (now - lastFrameTs) / 1000));
       lastFrameTs = now;
-
-      // Smoothly consume wheel input so coarse mouse-wheel notches don't turn into seek spikes.
-      if (Math.abs(wheelBuffer) > 0.01) {
-        const consume = wheelBuffer * (1 - Math.exp(-WHEEL_RELEASE_RATE * dt));
-        targetProgress = clamp01(targetProgress + consume / PIXELS_FOR_FULL_PROGRESS);
-        wheelBuffer -= consume;
-        if ((targetProgress <= 0 && wheelBuffer < 0) || (targetProgress >= 1 && wheelBuffer > 0)) {
-          wheelBuffer = 0;
-        }
-      } else {
-        wheelBuffer = 0;
-      }
 
       // Frame-rate-independent exponential smoothing toward the target.
       // Scale rate up when the gap is large so fast scroll feels responsive,
