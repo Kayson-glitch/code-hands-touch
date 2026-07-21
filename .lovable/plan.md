@@ -1,18 +1,20 @@
-按你选择的「更丝滑但跟手」方向，我建议只改 `src/components/IntroVideo.tsx` 顶部这 3 个常量：
+## Changes
 
-| 参数 | 当前值 | 建议值 | 预期效果 |
-|---|---|---|---|
-| `SMOOTH_RATE` | `16` | `10` | 正常滚动时惯性更大，进度变化更柔。 |
-| `SMOOTH_RATE_FAST` | `26` | `14` | 快速滚动时仍然跟手，但不会突然硬跳。 |
-| `SEEK_MIN_INTERVAL_MS` | `140` | `80` | 允许更频繁地校准 seek，减少「播放追赶追不上」导致的迟滞。 |
+### 1. Replace nav logo
+- Register the uploaded `Container.png` as a Lovable asset: `src/assets/synergy-logo.png.asset.json` (via `lovable-assets create` from `/mnt/user-uploads/Container.png`).
+- In `src/components/SiteNav.tsx`: remove the gradient "S" circle + "Synergy.AI" text, replace with a single `<img>` of the new logo, `height: 28px`, `width: auto`, `alt="Synergy.AI"`. Keep the anchor link to `/`.
 
-### 验证方式
-- 修改后本地预览滚轮控制视频，确认：
-  1. 慢滚时进度变化柔顺，没有锯齿感。
-  2. 快滚时仍能较快到达目标位置，不 lag。
-  3. 回滚（向上滚）时响应及时，不出现明显卡顿。
+### 2. Show nav above the intro video
+- In `src/components/AsciiHandsFooter.tsx`: the `IntroVideo` wrapper uses `zIndex: 60`, which covers the nav (`z-40`). Raise `SiteNav`'s stacking so it renders above the intro layer from the very first frame.
+- Change `SiteNav`'s container from `z-40` to an inline `zIndex: 80` (above intro's 60 and burst overlays). No changes to render timing — it is already mounted in `src/routes/index.tsx` before/around `AsciiHandsFooter`, so it will be visible while the intro video plays.
 
-### 范围声明
-只修改 `src/components/IntroVideo.tsx` 中这 3 个常量，不改动 GLSL、布局、其他组件或父级逻辑。
+### 3. Invert logo on light background
+- Nav already listens to `app-bg-change` and tracks `theme`. On light bg (intro stage, `#EFE7DA`), apply a CSS filter to the logo image so it renders as its dark/inverted variant; on dark bg, render as-is (logo is already dark-on-light).
+- Implementation: on the logo `<img>`, when `theme === 'light'` (light background) → no filter (logo shows its native dark artwork); when `theme === 'dark'` → apply `filter: invert(1) hue-rotate(180deg)` (or `brightness(0) invert(1)` for a clean white silhouette) so the mark stays legible on `#0a0a0a`.
+- Keep existing text color adaptation for the rest of the nav items unchanged.
 
-如果你同意这三个值，我直接修改；如果你希望其中某个值用其他数字，告诉我即可。
+## Files touched
+- `src/assets/synergy-logo.png.asset.json` (new)
+- `src/components/SiteNav.tsx` (logo swap + z-index + theme-based filter)
+
+No other components, layout, animations, or intro-video logic change.
