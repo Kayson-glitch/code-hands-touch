@@ -23,11 +23,11 @@ const MAX_PIXELS_PER_TICK = 140;
 const WHEEL_RELEASE_RATE = 18;
 const WHEEL_BUFFER_MAX = 360;
 // Exponential smoothing rate (higher = snappier follow, lower = more inertia).
-const SMOOTH_RATE = 16;
+const SMOOTH_RATE = 10;
 // Extra snappiness when the user scrolls fast (large gap between target and current).
-const SMOOTH_RATE_FAST = 26;
+const SMOOTH_RATE_FAST = 14;
 // Prefer letting the decoder play forward to the target; reserve seeks for coarse correction.
-const SEEK_MIN_INTERVAL_MS = 140;
+const SEEK_MIN_INTERVAL_MS = 80;
 const SEEK_EPSILON = 0.1;
 const VIDEO_CHASE_EPSILON = 0.035;
 const VIDEO_BACKWARD_SEEK_EPSILON = 0.12;
