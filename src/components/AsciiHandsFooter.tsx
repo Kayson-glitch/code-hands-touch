@@ -386,6 +386,10 @@ export function AsciiHandsFooter() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [mounted, setMounted] = useState(false);
   useEffect(() => { setMounted(true); }, []);
+  // Interaction flow: orb → orb-exit → hands.
+  const [stage, setStage] = useState<"orb" | "orb-exit" | "hands">("orb");
+  const stageRef = useRef(stage);
+  useEffect(() => { stageRef.current = stage; }, [stage]);
   const cellsRef = useRef<Cell[]>([]);
   const gridRef = useRef<Grid | null>(null);
   const mouseRef = useRef<{ x: number; y: number; active: boolean }>({
@@ -463,7 +467,11 @@ export function AsciiHandsFooter() {
     const io = new IntersectionObserver(
       (entries) => {
         for (const e of entries) {
-          if (e.isIntersecting && !introVisibleRef.current) {
+          if (
+            e.isIntersecting &&
+            !introVisibleRef.current &&
+            stageRef.current === "hands"
+          ) {
             introVisibleRef.current = true;
             introStartRef.current = performance.now();
             io.disconnect();
@@ -473,6 +481,15 @@ export function AsciiHandsFooter() {
       { threshold: 0.25 },
     );
     io.observe(canvas);
+
+    // When the orb finishes exiting we flip stage to "hands"; kick off the
+    // intro immediately regardless of the IO firing again.
+    const startIntro = () => {
+      if (introVisibleRef.current) return;
+      introVisibleRef.current = true;
+      introStartRef.current = performance.now();
+    };
+    (canvas as any).__startIntro = startIntro;
 
     const onMove = (e: MouseEvent) => {
       const rect = canvas.getBoundingClientRect();
