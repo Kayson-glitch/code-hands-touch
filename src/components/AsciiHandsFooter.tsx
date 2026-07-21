@@ -1248,6 +1248,12 @@ export function AsciiHandsFooter() {
     window.setTimeout(() => setOrbMounted(false), 500);
   };
   const [bgDark, setBgDark] = useState(false);
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    window.dispatchEvent(
+      new CustomEvent("app-bg-change", { detail: bgDark ? "dark" : "light" })
+    );
+  }, [bgDark]);
   return (
     <section
       className="relative w-full overflow-hidden"

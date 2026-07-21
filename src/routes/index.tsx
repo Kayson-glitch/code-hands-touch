@@ -1,5 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { AsciiHandsFooter } from "@/components/AsciiHandsFooter";
+import { SiteNav } from "@/components/SiteNav";
+import { HeroCopy } from "@/components/HeroCopy";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -22,5 +24,11 @@ export const Route = createFileRoute("/")({
 });
 
 function Index() {
-  return <AsciiHandsFooter />;
+  return (
+    <div className="relative min-h-screen">
+      <AsciiHandsFooter />
+      <SiteNav />
+      <HeroCopy />
+    </div>
+  );
 }
