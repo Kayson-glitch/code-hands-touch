@@ -183,19 +183,17 @@ export function IntroVideo({
   onProgress?: (info: IntroProgressInfo) => void;
 }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const videoRef = useRef<HTMLVideoElement>(null);
+  const imageRef = useRef<HTMLImageElement>(null);
   const firedRef = useRef(false);
   const onProgressRef = useRef(onProgress);
   useEffect(() => { onProgressRef.current = onProgress; }, [onProgress]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
-    const video = videoRef.current;
-    if (!canvas || !video) return;
+    const imageEl = imageRef.current;
+    if (!canvas || !imageEl || FRAME_URLS.length === 0) return;
 
-    video.muted = true;
-    video.playsInline = true;
-    (video as any).crossOrigin = "anonymous";
+    imageEl.src = FRAME_URLS[0];
 
     const renderer = new THREE.WebGLRenderer({ canvas, antialias: false, alpha: false });
     renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, RENDER_PIXEL_RATIO_MAX));
@@ -204,20 +202,20 @@ export function IntroVideo({
     const scene = new THREE.Scene();
     const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
 
-    const videoTex = new THREE.VideoTexture(video);
-    videoTex.minFilter = THREE.LinearFilter;
-    videoTex.magFilter = THREE.LinearFilter;
-    videoTex.format = THREE.RGBAFormat;
-    (videoTex as any).colorSpace = THREE.SRGBColorSpace;
+    const frameTex = new THREE.Texture();
+    frameTex.minFilter = THREE.LinearFilter;
+    frameTex.magFilter = THREE.LinearFilter;
+    frameTex.format = THREE.RGBAFormat;
+    (frameTex as any).colorSpace = THREE.SRGBColorSpace;
 
     const uniforms = {
-      uVideoTex: { value: videoTex },
+      uVideoTex: { value: frameTex },
       uProgress: { value: 0 },
       uBurst: { value: 0 },
       uTime: { value: 0 },
       uCenter: { value: new THREE.Vector2(0.5, 0.5) },
       uResolution: { value: new THREE.Vector2(1, 1) },
-      uVideoRes: { value: new THREE.Vector2(16, 9) },
+      uVideoRes: { value: new THREE.Vector2(FALLBACK_VIDEO_W, FALLBACK_VIDEO_H) },
       uVideoFraction: { value: VIDEO_FRACTION },
     };
 
@@ -243,118 +241,52 @@ export function IntroVideo({
     let progress = 0;
     let targetProgress = 0;
     let lastFrameTs = performance.now();
-    let lastSeekAt = 0;
-    let lastCorrectionAt = 0;
     let lastNotifiedProgress = -1;
     let lastNotifiedBurst = -1;
-    let videoPlaying = false;
+    let frameIndex = -1;
     let rafId = 0;
     let running = true;
     const t0 = performance.now();
 
-    const clamp = (value: number, min: number, max: number) => Math.min(max, Math.max(min, value));
+    const frames = FRAME_URLS.map((url) => {
+      const img = new Image();
+      img.decoding = "async";
+      img.src = url;
+      return img;
+    });
 
-    const pauseVideo = () => {
-      if (!videoPlaying) return;
-      try { video.pause(); } catch { /* ignore */ }
-      videoPlaying = false;
-    };
-
-    const playVideo = () => {
-      if (videoPlaying) return;
-      videoPlaying = true;
-      video.play().catch(() => {
-        videoPlaying = false;
-      });
-    };
-
-    const seekVideo = (target: number, now: number) => {
-      try {
-        const fs = (video as unknown as { fastSeek?: (t: number) => void }).fastSeek;
-        if (typeof fs === "function") fs.call(video, target);
-        else video.currentTime = target;
-        lastSeekAt = now;
-      } catch { /* ignore */ }
-    };
-
-    const syncVideo = (videoProgress: number, now: number) => {
-      if (!video.duration || Number.isNaN(video.duration)) return;
-
-      const duration = video.duration;
-      const target = clamp(videoProgress * duration, 0, Math.max(0, duration - 0.001));
-      const current = video.currentTime || 0;
-      const drift = target - current;
-      const absDrift = Math.abs(drift);
-
-      if (videoProgress >= 0.999) {
-        pauseVideo();
-        if (absDrift > VIDEO_REVERSE_SEEK_EPSILON && now - lastSeekAt > VIDEO_SEEK_MIN_INTERVAL_MS) {
-          seekVideo(target, now);
-        }
-        return;
-      }
-
-      if (absDrift < VIDEO_PAUSE_EPSILON) {
-        pauseVideo();
-        return;
-      }
-
-      if (drift > 0) {
-        // For normal forward scrolling, continuous playback is much smoother
-        // than repeatedly assigning currentTime. Correct only when the decoder
-        // falls far behind the scroll target.
-        if (
-          drift > VIDEO_HARD_SEEK_EPSILON &&
-          now - lastCorrectionAt > VIDEO_CORRECTION_INTERVAL_MS &&
-          now - lastSeekAt > VIDEO_SEEK_MIN_INTERVAL_MS
-        ) {
-          seekVideo(Math.max(0, target - 0.12), now);
-          lastCorrectionAt = now;
-        }
-        video.playbackRate = clamp(
-          0.35 + drift * 3.6,
-          VIDEO_PLAYBACK_RATE_MIN,
-          VIDEO_PLAYBACK_RATE_MAX,
-        );
-        playVideo();
-        return;
-      }
-
-      // Browsers cannot play video backward, so reverse scroll remains a
-      // throttled seek path. Keeping it separate prevents forward-scroll jank.
-      pauseVideo();
-      if (absDrift > VIDEO_REVERSE_SEEK_EPSILON && now - lastSeekAt > VIDEO_SEEK_MIN_INTERVAL_MS) {
-        seekVideo(target, now);
+    const setFrame = (videoProgress: number) => {
+      const nextIndex = Math.min(
+        frames.length - 1,
+        Math.max(0, Math.round(videoProgress * (frames.length - 1))),
+      );
+      if (nextIndex === frameIndex) return;
+      frameIndex = nextIndex;
+      const frame = frames[nextIndex];
+      imageEl.src = frame.src;
+      if (frame.complete && frame.naturalWidth > 0) {
+        uniforms.uVideoRes.value.set(frame.naturalWidth, frame.naturalHeight);
+        frameTex.image = frame;
+        frameTex.needsUpdate = true;
+      } else {
+        frame.onload = () => {
+          uniforms.uVideoRes.value.set(frame.naturalWidth || FALLBACK_VIDEO_W, frame.naturalHeight || FALLBACK_VIDEO_H);
+          frameTex.image = frame;
+          frameTex.needsUpdate = true;
+        };
       }
     };
+
+    setFrame(0);
 
     const fire = () => {
       if (firedRef.current) return;
       firedRef.current = true;
       onEnded({
-        videoW: video.videoWidth || 0,
-        videoH: video.videoHeight || 0,
+        videoW: uniforms.uVideoRes.value.x || FALLBACK_VIDEO_W,
+        videoH: uniforms.uVideoRes.value.y || FALLBACK_VIDEO_H,
       });
     };
-
-    const onMeta = () => {
-      if (video.videoWidth && video.videoHeight) {
-        uniforms.uVideoRes.value.set(video.videoWidth, video.videoHeight);
-      }
-      try { video.pause(); } catch { /* ignore */ }
-    };
-    video.addEventListener("loadedmetadata", onMeta);
-
-    // Start paused; play once to force first frame decode on some browsers.
-    video.play().then(() => { try { video.pause(); } catch { /* ignore */ } })
-      .catch(() => { /* ignore */ });
-
-    let errorTimer = 0;
-    const onError = () => {
-      window.clearTimeout(errorTimer);
-      errorTimer = window.setTimeout(() => fire(), 500);
-    };
-    video.addEventListener("error", onError);
 
     const onWheel = (e: WheelEvent) => {
       if (firedRef.current) return;
@@ -393,9 +325,9 @@ export function IntroVideo({
 
       const videoProgress = Math.min(1, progress / VIDEO_FRACTION);
       const burstProgress = Math.min(1, Math.max(0, (progress - VIDEO_FRACTION) / (1 - VIDEO_FRACTION)));
-      syncVideo(videoProgress, now);
+      setFrame(videoProgress);
       const videoZoom = 1 / Math.max(0.001, 1 - videoProgress * 0.10);
-      video.style.transform = `scale(${videoZoom.toFixed(4)})`;
+      imageEl.style.transform = `scale(${videoZoom.toFixed(4)})`;
       canvas.style.opacity = burstProgress > 0.001 ? "1" : "0";
       uniforms.uProgress.value = progress;
       uniforms.uBurst.value = burstProgress;
@@ -435,10 +367,7 @@ export function IntroVideo({
       cancelAnimationFrame(rafId);
       window.removeEventListener("resize", resize);
       window.removeEventListener("wheel", onWheel);
-      video.removeEventListener("loadedmetadata", onMeta);
-      video.removeEventListener("error", onError);
-      window.clearTimeout(errorTimer);
-      videoTex.dispose();
+      frameTex.dispose();
       material.dispose();
       mesh.geometry.dispose();
       renderer.dispose();
@@ -447,12 +376,10 @@ export function IntroVideo({
 
   return (
     <div style={{ position: "absolute", inset: 0, background: "#000", overflow: "hidden" }}>
-      <video
-        ref={videoRef}
-        src={videoAsset.url}
-        muted
-        playsInline
-        preload="auto"
+      <img
+        ref={imageRef}
+        src={FRAME_URLS[0]}
+        alt=""
         aria-hidden
         tabIndex={-1}
         style={{
