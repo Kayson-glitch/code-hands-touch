@@ -143,17 +143,14 @@ const FRAG = /* glsl */ `
 function BurstMesh({
   origin,
   spreadMs,
-  onCovered,
   onProgress,
 }: {
   origin: [number, number];
   spreadMs: number;
-  onCovered: () => void;
   onProgress?: (p: number) => void;
 }) {
   const matRef = useRef<THREE.ShaderMaterial>(null);
   const startRef = useRef<number | null>(null);
-  const coveredRef = useRef(false);
   const { size } = useThree();
 
   const uniforms = useMemo(() => {
@@ -196,10 +193,6 @@ function BurstMesh({
     uniforms.uProgress.value = p;
     uniforms.uTime.value = t / 1000;
     onProgress?.(p);
-    if (rawP >= 1 && !coveredRef.current) {
-      coveredRef.current = true;
-      onCovered();
-    }
   });
 
   return (
@@ -239,7 +232,7 @@ export function LiquidBurst({
   const [ready, setReady] = useState(false);
   useEffect(() => setReady(true), []);
 
-  const handleCovered = () => {
+  const handleCovered = useMemo(() => () => {
     if (coveredAtRef.current != null) return;
     coveredAtRef.current = performance.now();
     onCovered();
@@ -256,7 +249,13 @@ export function LiquidBurst({
       requestAnimationFrame(tick);
     };
     requestAnimationFrame(tick);
-  };
+  }, [fadeMs, onCovered, onFaded]);
+
+  useEffect(() => {
+    if (!ready) return;
+    const id = window.setTimeout(handleCovered, spreadMs);
+    return () => window.clearTimeout(id);
+  }, [handleCovered, ready, spreadMs]);
 
   if (!ready) return null;
 
@@ -276,7 +275,6 @@ export function LiquidBurst({
           <BurstMesh
             origin={origin}
             spreadMs={spreadMs}
-            onCovered={handleCovered}
             onProgress={onProgress}
           />
         </Canvas>
