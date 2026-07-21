@@ -37,8 +37,6 @@ export function LiquidBurst({
   const kRef = useRef<HTMLDivElement>(null);
   const cRef = useRef<HTMLDivElement>(null);
   const wrapRef = useRef<HTMLDivElement>(null);
-  const solidRef = useRef<HTMLDivElement>(null);
-  const inkRef = useRef<HTMLDivElement>(null);
   const turbRef = useRef<SVGFETurbulenceElement>(null);
   const dispRef = useRef<SVGFEDisplacementMapElement>(null);
 
@@ -71,8 +69,9 @@ export function LiquidBurst({
       // Radius as % of the viewport's diagonal, from origin. 0 → ~130%
       // ensures coverage regardless of click position.
       const fill = p * 130;
-      // Feathered outer band size (chromatic edge width in %).
-      const feather = 10 + (1 - Math.min(1, p)) * 14;
+      // Feathered outer band size (chromatic edge width in %). Kept narrow
+      // so the displacement can't tear visible see-through gaps.
+      const feather = 4 + (1 - Math.min(1, p)) * 6;
 
       const setGrad = (
         el: HTMLDivElement | null,
@@ -93,17 +92,9 @@ export function LiquidBurst({
       setGrad(kRef.current, "#000000", 0, 0);
       setGrad(cRef.current, "#00e5ff", 0.9, 0.3);
 
-      // Undisplaced solid-black underlay, kept ~6% inside the chromatic
-      // edge so the filter's displacement can't tear a see-through gap
-      // to the section background during the spread.
-      if (solidRef.current) {
-        const fillSolid = Math.max(0, fill - 6);
-        solidRef.current.style.background = `radial-gradient(circle at ${cssX}% ${cssY}%, #000 0%, #000 ${fillSolid}%, transparent ${fillSolid}%)`;
-      }
-
-      // Turbulence displacement ramps up so the front looks increasingly
-      // torn as it spreads.
-      const displace = 20 + Math.min(1, p) * 100;
+      // Turbulence displacement — capped small so edges get fine burrs
+      // rather than large waves that expose the section background.
+      const displace = 12 + Math.min(1, p) * 22;
       dispRef.current?.setAttribute("scale", displace.toFixed(1));
 
       // Advance seed every ~60ms so the wobble flows without flickering.
@@ -168,7 +159,7 @@ export function LiquidBurst({
             <feTurbulence
               ref={turbRef}
               type="fractalNoise"
-              baseFrequency="0.006 0.010"
+              baseFrequency="0.012 0.018"
               numOctaves={3}
               seed={0}
               result="noise"
@@ -191,26 +182,11 @@ export function LiquidBurst({
           position: "absolute",
           inset: 0,
           opacity: 1,
+          filter: filterUrl,
+          WebkitFilter: filterUrl,
           willChange: "opacity",
         }}
       >
-        <div
-          ref={solidRef}
-          style={{
-            position: "absolute",
-            inset: 0,
-          }}
-        />
-        <div
-          ref={inkRef}
-          style={{
-            position: "absolute",
-            inset: 0,
-            filter: filterUrl,
-            WebkitFilter: filterUrl,
-            willChange: "filter",
-          }}
-        >
         <div
           ref={rRef}
           style={{
@@ -234,7 +210,6 @@ export function LiquidBurst({
             inset: 0,
           }}
         />
-        </div>
       </div>
     </div>
   );
