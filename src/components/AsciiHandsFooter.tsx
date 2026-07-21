@@ -237,8 +237,8 @@ function sampleImage(
   mirror: boolean,
 ): { cells: Cell[]; grid: Grid } {
   const off = document.createElement("canvas");
-  const cols = Math.floor(targetRect.w / CELL_W);
-  const rows = Math.floor(targetRect.h / CELL_H);
+  const cols = Math.max(1, Math.floor(targetRect.w / CELL_W));
+  const rows = Math.max(1, Math.floor(targetRect.h / CELL_H));
   off.width = cols;
   off.height = rows;
   const octx = off.getContext("2d", { willReadFrequently: true })!;
