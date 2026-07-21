@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 
 /**
  * Full-screen ink burst.
@@ -25,6 +25,7 @@ export function LiquidBurst({
   spreadMs?: number;
   fadeMs?: number;
 }) {
+  const clipId = useId().replace(/:/g, "");
   const rafRef = useRef<number | null>(null);
   const startRef = useRef<number | null>(null);
   const coveredAtRef = useRef<number | null>(null);
@@ -35,6 +36,9 @@ export function LiquidBurst({
   const kRef = useRef<HTMLDivElement>(null);
   const cRef = useRef<HTMLDivElement>(null);
   const wrapRef = useRef<HTMLDivElement>(null);
+  const rPolyRef = useRef<SVGPolygonElement>(null);
+  const kPolyRef = useRef<SVGPolygonElement>(null);
+  const cPolyRef = useRef<SVGPolygonElement>(null);
 
   const [ox, oy] = origin;
   // Convert WebGL-style y (bottom-origin) to CSS px (top-origin) in the rAF loop.
@@ -67,7 +71,7 @@ export function LiquidBurst({
       return a + (b - a) * eased;
     };
 
-    const makeClipPath = (
+    const makePoints = (
       centerX: number,
       centerY: number,
       radius: number,
@@ -87,16 +91,15 @@ export function LiquidBurst({
         const tangent = Math.sin(angle * 3 + phase) * drift;
         const x = centerX + Math.cos(angle) * r + Math.cos(angle + Math.PI / 2) * tangent;
         const y = centerY + Math.sin(angle) * r + Math.sin(angle + Math.PI / 2) * tangent;
-        points.push(`${x.toFixed(1)}px ${y.toFixed(1)}px`);
+        points.push(`${x.toFixed(1)},${y.toFixed(1)}`);
       }
 
-      return `polygon(${points.join(",")})`;
+      return points.join(" ");
     };
 
-    const setClip = (el: HTMLDivElement | null, clipPath: string) => {
+    const setPoints = (el: SVGPolygonElement | null, points: string) => {
       if (!el) return;
-      el.style.clipPath = clipPath;
-      el.style.setProperty("-webkit-clip-path", clipPath);
+      el.setAttribute("points", points);
     };
 
     const tick = (now: number) => {
@@ -122,13 +125,13 @@ export function LiquidBurst({
       const drift = 5 + Math.min(1, rawP) * 10;
       seedT += 0.018;
 
-      const redClip = makeClipPath(centerX - 7, centerY - 3, radius + 18, roughness * 1.08, drift, seedT + 0.5);
-      const cyanClip = makeClipPath(centerX + 7, centerY + 3, radius + 16, roughness, drift, seedT + 1.8);
-      const blackClip = makeClipPath(centerX, centerY, radius, roughness * 0.92, drift * 0.72, seedT);
+      const redPoints = makePoints(centerX - 7, centerY - 3, radius + 18, roughness * 1.08, drift, seedT + 0.5);
+      const cyanPoints = makePoints(centerX + 7, centerY + 3, radius + 16, roughness, drift, seedT + 1.8);
+      const blackPoints = makePoints(centerX, centerY, radius, roughness * 0.92, drift * 0.72, seedT);
 
-      setClip(rRef.current, redClip);
-      setClip(cRef.current, cyanClip);
-      setClip(kRef.current, blackClip);
+      setPoints(rPolyRef.current, redPoints);
+      setPoints(cPolyRef.current, cyanPoints);
+      setPoints(kPolyRef.current, blackPoints);
 
       cbRef.current.onProgress?.(p);
 
@@ -165,6 +168,25 @@ export function LiquidBurst({
       style={{ zIndex: 55 }}
       aria-hidden
     >
+      <svg
+        width="0"
+        height="0"
+        style={{ position: "absolute", pointerEvents: "none" }}
+        aria-hidden
+      >
+        <defs>
+          <clipPath id={`ink-r-${clipId}`} clipPathUnits="userSpaceOnUse">
+            <polygon ref={rPolyRef} points="0,0 0,0 0,0" />
+          </clipPath>
+          <clipPath id={`ink-c-${clipId}`} clipPathUnits="userSpaceOnUse">
+            <polygon ref={cPolyRef} points="0,0 0,0 0,0" />
+          </clipPath>
+          <clipPath id={`ink-k-${clipId}`} clipPathUnits="userSpaceOnUse">
+            <polygon ref={kPolyRef} points="0,0 0,0 0,0" />
+          </clipPath>
+        </defs>
+      </svg>
+
       <div
         ref={wrapRef}
         style={{
@@ -181,9 +203,8 @@ export function LiquidBurst({
             inset: 0,
             background: "#ff2244",
             mixBlendMode: "multiply",
-            clipPath: initialClip,
-            WebkitClipPath: initialClip,
-            willChange: "clip-path",
+            clipPath: `url(#ink-r-${clipId})`,
+            WebkitClipPath: `url(#ink-r-${clipId})`,
           }}
         />
         <div
@@ -193,9 +214,8 @@ export function LiquidBurst({
             inset: 0,
             background: "#00e5ff",
             mixBlendMode: "multiply",
-            clipPath: initialClip,
-            WebkitClipPath: initialClip,
-            willChange: "clip-path",
+            clipPath: `url(#ink-c-${clipId})`,
+            WebkitClipPath: `url(#ink-c-${clipId})`,
           }}
         />
         <div
@@ -204,9 +224,8 @@ export function LiquidBurst({
             position: "absolute",
             inset: 0,
             background: "#000000",
-            clipPath: initialClip,
-            WebkitClipPath: initialClip,
-            willChange: "clip-path",
+            clipPath: `url(#ink-k-${clipId})`,
+            WebkitClipPath: `url(#ink-k-${clipId})`,
           }}
         />
       </div>
