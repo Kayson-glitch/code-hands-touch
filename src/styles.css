@@ -4,6 +4,20 @@
 
 @custom-variant dark (&:is(.dark *));
 
+@theme {
+  --font-sans: "Montserrat", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Clash Display Variable", "Clash Display", "Montserrat", sans-serif;
+}
+
+html, body {
+  font-family: "Montserrat", ui-sans-serif, system-ui, sans-serif;
+}
+
+.font-display {
+  font-family: "Clash Display Variable", "Clash Display", "Montserrat", sans-serif;
+  font-variation-settings: "wght" 500;
+}
+
 /*
  * Design system definition.
  *
