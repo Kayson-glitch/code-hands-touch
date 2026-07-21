@@ -57,7 +57,7 @@ export function LiquidMetalOrb({
   exiting = false,
   onExited,
 }: {
-  onClick?: () => void;
+  onClick?: (e: React.MouseEvent) => void;
   exiting?: boolean;
   onExited?: () => void;
 }) {
