@@ -300,11 +300,15 @@ function sampleImage(
   const hi = sorted[Math.floor(sorted.length * 0.99)];
   const span = Math.max(1e-4, hi - lo);
   // gamma < 1 lifts midtones toward highlight → brighter overall while keeping contrast.
-  const gamma = 0.92;
+  // Slightly stronger gamma plus a gentle S-curve deepens the light-to-dark
+  // transition so the hand reads as more sculptural.
+  const gamma = 0.86;
 
   const silIdx = new Int32Array(cols * rows).fill(-1);
   const seed = new Float32Array(cols * rows);
   for (let s = 0; s < seed.length; s++) seed[s] = Math.random();
+
+  const smoothstep = (x: number) => x * x * (3 - 2 * x);
 
   const cells: Cell[] = [];
   for (const r of raws) {
@@ -312,7 +316,8 @@ function sampleImage(
     // Feather partial-alpha cells toward the low end of the ramp so the
     // silhouette edge dissolves into sparser glyphs instead of stepping.
     const feather = Math.pow(r.a, 0.65);
-    const b = Math.pow(stretched, gamma) * feather;
+    const g = Math.pow(stretched, gamma);
+    const b = smoothstep(g) * feather;
     const idx = indexFor(b);
     silIdx[r.j * cols + r.i] = cells.length;
     cells.push({

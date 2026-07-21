@@ -1,34 +1,31 @@
 ## 目标
 
-将截图红圈处（"Book a Demo" 按钮底部到 ASCII 手部区域顶部）的垂直间距略微缩小，使首屏整体更紧凑。
+在不改变布局、动效、交互、颜色、字体等任何其他元素的前提下，略微增强手部 ASCII 字符的明暗过渡，使其看起来更具立体层次。
 
-## 当前布局
+## 当前实现
 
-- `HeroCopy` 标题区通过 `paddingTop` 下推，按钮再带 `mt-8`（32px）额外间距。
-- 手部画布通过 `useHeroLayout.handsTop` 定位，桌面端为 `calc(48vh - 8px)`。
-- 间距 = `handsTop` 起始位置 - 按钮底部位置，主要由 `titlePaddingTop` 和 `handsTop` 共同决定。
+`src/components/AsciiHandsFooter.tsx` 的 `sampleImage` 函数中，源图亮度经过以下步骤映射到字符密度：
+1. 百分位拉伸：`lo = 5th percentile`，`hi = 99th percentile` → 归一化到 0..1。
+2. Gamma 校正：`gamma = 0.92`，将中间调提亮。
+3. 边缘羽化：`feather = pow(alpha, 0.65)`，让半透明边缘向低密度字符溶解。
+4. 映射到字符 ramp：`b` → ramp index。
 
 ## 修改方案
 
-1. 统一小幅降低 `titlePaddingTop`，让标题/按钮整体下移约 2vh：
-   - Desktop: `20vh` → `18vh`
-   - Short: `16vh` → `14vh`
-   - Tablet: `18vh` → `16vh`
-   - Mobile: `12vh` → `10vh`
-
-2. 同步小幅上提手部画布起始位置，进一步收紧按钮与手之间的空隙：
-   - Desktop: `calc(48vh - 8px)` → `calc(46vh - 8px)`
-   - Short: `44vh` → `42vh`
-   - Tablet: `46vh` → `44vh`
-   - Mobile: `42vh` → `40vh`
-
-3. 保持 `handsHeight` 不变，手部区域大小和内部 hover/ASCII 效果不受影响。
+仅调整亮度映射曲线，使亮部更亮、暗部更暗，从而增大明暗反差：
+1. 将 gamma 从 `0.92` 略微降至 `0.86`，增强中间调向两端的分离。
+2. 在 gamma 之后增加一个非常轻微的 S 曲线（smoothstep）:
+   ```
+   b = smoothstep(b) = b * b * (3 - 2 * b)
+   ```
+   这会在不改变 0 和 1 端点的情况下，压暗暗部、提亮亮部，让手部起伏更立体。
+3. 保持 `lo`/`hi` 百分位、羽化、字符 ramp、cell size、hover/click 交互逻辑等完全不变。
 
 ## 涉及文件
 
-- `src/hooks/useHeroLayout.ts`：调整 `titlePaddingTop` 与 `handsTop` 的四个断点值。
+- `src/components/AsciiHandsFooter.tsx`：修改 `sampleImage` 内的亮度映射公式。
 
 ## 验证方式
 
-- 保存后在当前预览视口（1327×924）查看按钮与手部的间距是否明显收紧但仍保持呼吸感。
-- 快速切换桌面/平板/移动视图确认各断点未出现重叠或过度拥挤。
+- 类型检查通过。
+- 在预览中滚动到手部显示阶段，观察手掌、手指、手臂的亮面与暗面字符密度差异是否比当前更明显，同时确认字符整体仍保持可读、不出现过曝或死黑。
