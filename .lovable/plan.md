@@ -1,39 +1,39 @@
-## 目标修正
+## 目标
 
-- 标题组（标题 + 副标题 + 按钮）与手部作为一个整体，垂直居中于首屏视口。
-- 底部 Synergy.AI 大字保持吸底，不参与这个居中组。
+1. 底部 "Synergy.AI" 大字改用 Montserrat 并真正吸附在视口底部（不再被 translateY 推出视口）。
+2. 让"标题 + 副标题 + 按钮"与"手部"作为一个整体靠拢并整体居中，减少目前上下分散的感觉。
 
-## 当前状态
+## 当前状态（已核对代码）
 
-- `HeroCopy.tsx`：`absolute top-0 paddingTop:22vh`，从顶部按 vh 计算。
-- `AsciiHandsFooter.tsx` canvas：`absolute bottom-0 height:62vh`，从底部起算。
-- 两者各自贴边定位，无法作为整体居中。
+- `AsciiHandsFooter.tsx` L1270–1293：wordmark 容器 `bottom-0 height:45%`，内层 `transform: translateY(30%)` + `fontFamily: "Geist Mono"`，导致大字被推到视口下方看不到底边，字体也不是 Montserrat。
+- `AsciiHandsFooter.tsx` L1295–1306：canvas `bottom-0 height:72vh`。
+- `HeroCopy.tsx` L20–29：`absolute top-0 paddingTop:14vh`，标题在 ~14vh 位置；手掌大约位于 28vh–100vh 区间，中间空白过大。
 
-## 改动方案
+## 改动
 
-把标题组和手部包在同一个"居中组"里。做法是让二者仍然定位在容器内，但用同一个几何锚点计算位置，使"标题顶 ↔ 手指尖"这段视觉高度作为一个块整体居中：
+### 1. Synergy.AI 吸底 + Montserrat（AsciiHandsFooter.tsx）
 
-### `AsciiHandsFooter.tsx`
-- canvas 从 `bottom-0` 改为绝对定位到"垂直居中偏下"：`top: 50%`, `height: 55vh`, `transform: translateY(-2vh)`。这样手部整体位于视口中线略偏下，为上方标题留位。（数值：手顶约 20vh，手底约 75vh。）
-- 底部 Synergy.AI 大字块继续 `bottom-0`，保持吸底不变（本次不改字体/尺寸，仅确认位置）。
+- 外层容器：`bottom-0`、`height` 从 `45%` 降到 `28%`，去掉 `overflow-hidden` 造成的额外裁切（保留即可，只是不再需要靠它遮字）。
+- 内层 `<span>`：
+  - `fontFamily` 改为 `Montserrat, ui-sans-serif, system-ui, sans-serif`。
+  - 删除 `transform: translateY(30%)`，改为 `alignSelf: flex-end` + 容器 `items-end`，保证文字基线贴着视口底部。
+  - `fontSize` 保持 `clamp(8rem, 22vw, 22rem)`，`fontWeight` 改 700（Montserrat Bold，视觉与 Geist Mono bold 接近）。
+  - 颜色维持 `rgba(255,255,255,0.05)`。
 
-### `HeroCopy.tsx`
-- 标题组改为紧贴手部上沿：`absolute inset-x-0`，用 `top: 50%` + `transform: translateY(calc(-50% - 28vh))` 把标题组的中心锚到手部上方。视觉上标题底部 ≈ 手部上沿（≈20vh 处），二者作为一个整体上下居中于视口。
-- 保留 `flex flex-col items-center text-center` 与现有内间距。
+### 2. 标题与手部靠拢，整体居中（HeroCopy.tsx + AsciiHandsFooter.tsx）
 
-## 校验
+思路：把"标题组 + 手部 + 底部 wordmark"视为一个垂直堆叠的整体，向视口中间收拢。
 
-- 三段内容视觉分布：
-  - 标题组：约 8vh–22vh
-  - 手部：约 22vh–75vh
-  - 底部 Synergy.AI 大字：吸底 100vh
-- 上方留白 ≈ 8vh，下方（手底到 wordmark 顶）≈ 15vh，标题+手作为整体大致居中。
+- `HeroCopy.tsx`：`paddingTop` 从 `14vh` 提到 `22vh`，让标题下移，紧贴手部上沿。
+- `AsciiHandsFooter.tsx` canvas：`height` 从 `72vh` 降到 `62vh`，`bottom` 保持 0，让手部整体上抬留出的底部空间由 wordmark 填充；手部顶端约在 38vh 处，与标题（约 22vh 起、到 ~32vh 结束、按钮到 ~38vh）自然衔接。
+- 结果：标题底部（≈38vh）几乎接手指尖（≈38vh），形成"标题—手—底部大字"三段紧凑居中构图。
 
 ## 不改动
 
-- 手部 canvas 内部逻辑、intro 视频、SiteNav、FinChatDock、底部 wordmark 样式。
+- 手部 canvas 逻辑、hover/click/mosaic/流动/视差、intro 视频、SiteNav、FinChatDock 均保持原样。
+- 配色与文字内容不变。
 
 ## 交付
 
-- 修改 `src/components/AsciiHandsFooter.tsx`（canvas 定位/尺寸）
-- 修改 `src/components/HeroCopy.tsx`（定位方式）
+- 修改 `src/components/AsciiHandsFooter.tsx`（wordmark 容器高度、字体、去 translateY；canvas 高度 72vh→62vh）
+- 修改 `src/components/HeroCopy.tsx`（paddingTop 14vh→22vh）

@@ -19,13 +19,11 @@ export function HeroCopy() {
 
   return (
     <div
-      className="pointer-events-none absolute inset-x-0 z-30 flex flex-col items-center px-6 text-center"
+      className="pointer-events-none absolute inset-x-0 top-0 z-30 flex flex-col items-center px-6 text-center"
       style={{
-        top: "50%",
-        transform: visible
-          ? "translateY(calc(-50% - 30vh))"
-          : "translateY(calc(-50% - 30vh + 12px))",
+        paddingTop: "22vh",
         opacity: visible ? 1 : 0,
+        transform: visible ? "translateY(0)" : "translateY(12px)",
         transition: "opacity 700ms ease-out, transform 700ms ease-out",
       }}
     >
