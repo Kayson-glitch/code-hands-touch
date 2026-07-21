@@ -1273,7 +1273,7 @@ export function AsciiHandsFooter() {
         className="absolute inset-x-0 w-full"
         style={{
           zIndex: 10,
-          top: "55vh",
+          top: "calc(55vh - 20px)",
           height: "45vh",
           opacity: handsVisible ? 1 : 0,
           pointerEvents: handsVisible ? "auto" : "none",
