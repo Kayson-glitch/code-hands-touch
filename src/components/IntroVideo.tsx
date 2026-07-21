@@ -391,10 +391,15 @@ export function IntroVideo({
       const videoProgress = Math.min(1, progress / VIDEO_FRACTION);
       const burstProgress = Math.min(1, Math.max(0, (progress - VIDEO_FRACTION) / (1 - VIDEO_FRACTION)));
       syncVideo(videoProgress, now);
+      const videoZoom = 1 / Math.max(0.001, 1 - videoProgress * 0.10);
+      video.style.transform = `scale(${videoZoom.toFixed(4)})`;
+      canvas.style.opacity = burstProgress > 0.001 ? "1" : "0";
       uniforms.uProgress.value = progress;
       uniforms.uBurst.value = burstProgress;
       uniforms.uTime.value = time;
-      renderer.render(scene, camera);
+      if (burstProgress > 0.001) {
+        renderer.render(scene, camera);
+      }
 
       // Throttle parent notifications to avoid per-frame React re-renders.
       const burstBoundaryCrossed =
@@ -447,11 +452,30 @@ export function IntroVideo({
         preload="auto"
         aria-hidden
         tabIndex={-1}
-        style={{ position: "absolute", width: 1, height: 1, opacity: 0, pointerEvents: "none" }}
+        style={{
+          position: "absolute",
+          inset: 0,
+          zIndex: 0,
+          width: "100%",
+          height: "100%",
+          objectFit: "cover",
+          transformOrigin: "50% 50%",
+          willChange: "transform",
+          pointerEvents: "none",
+        }}
       />
       <canvas
         ref={canvasRef}
-        style={{ position: "absolute", inset: 0, width: "100%", height: "100%", display: "block" }}
+        style={{
+          position: "absolute",
+          inset: 0,
+          zIndex: 1,
+          width: "100%",
+          height: "100%",
+          display: "block",
+          opacity: 0,
+          pointerEvents: "none",
+        }}
       />
     </div>
   );
