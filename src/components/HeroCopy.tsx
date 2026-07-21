@@ -1,7 +1,9 @@
 import { useEffect, useState } from "react";
+import { useHeroLayout } from "@/hooks/useHeroLayout";
 
 export function HeroCopy() {
   const [visible, setVisible] = useState(false);
+  const layout = useHeroLayout();
 
   useEffect(() => {
     const onBg = (e: Event) => {
@@ -21,7 +23,7 @@ export function HeroCopy() {
     <div
       className="pointer-events-none absolute inset-x-0 top-0 z-30 flex flex-col items-center px-6 text-center"
       style={{
-        paddingTop: "24vh",
+        paddingTop: layout.titlePaddingTop,
         opacity: visible ? 1 : 0,
         transform: visible ? "translateY(0)" : "translateY(12px)",
         transition: "opacity 700ms ease-out, transform 700ms ease-out",
@@ -30,8 +32,8 @@ export function HeroCopy() {
       <h1
         className="font-display text-white"
         style={{
-          fontSize: 48,
-          lineHeight: "56px",
+          fontSize: layout.titleFontSize,
+          lineHeight: layout.titleLineHeight,
           fontWeight: 500,
           letterSpacing: "-0.01em",
           maxWidth: 900,
@@ -56,7 +58,7 @@ export function HeroCopy() {
 
       <p
         className="mt-5 text-white/60"
-        style={{ fontSize: 16, lineHeight: "24px", fontWeight: 400 }}
+        style={{ fontSize: layout.subtitleFontSize, lineHeight: layout.subtitleLineHeight, fontWeight: 400 }}
       >
         Intelligent Knowledge Engine for accurate, context-aware responses.
       </p>

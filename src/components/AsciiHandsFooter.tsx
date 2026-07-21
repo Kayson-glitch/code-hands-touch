@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import handsPairAsset from "@/assets/hands-pair.png.asset.json";
 import { IntroVideo, type IntroProgressInfo } from "./IntroVideo";
+import { useHeroLayout } from "@/hooks/useHeroLayout";
 
 // Ordered density ramp, dark → bright. Mirrors the exact 70-glyph set used by
 // good-fella.com's ASCII footer (recovered by hooking their canvas atlas).
@@ -1248,6 +1249,7 @@ export function AsciiHandsFooter() {
     window.setTimeout(() => setOrbMounted(false), 500);
   };
   const [bgDark, setBgDark] = useState(false);
+  const layout = useHeroLayout();
   useEffect(() => {
     if (typeof window === "undefined") return;
     window.dispatchEvent(
@@ -1273,8 +1275,8 @@ export function AsciiHandsFooter() {
         className="absolute inset-x-0 w-full"
         style={{
           zIndex: 10,
-          top: "calc(55vh - 20px)",
-          height: "45vh",
+          top: layout.handsTop,
+          height: layout.handsHeight,
           opacity: handsVisible ? 1 : 0,
           pointerEvents: handsVisible ? "auto" : "none",
           transition: "opacity 300ms ease-out",
