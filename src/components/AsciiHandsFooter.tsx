@@ -1236,61 +1236,11 @@ export function AsciiHandsFooter() {
 
   const handsVisible = stage === "hands";
   const [orbMounted, setOrbMounted] = useState(true);
-  // Where the two fingertips meet inside the video's intrinsic frame
-  // (0..1 in video coordinates). Tweak here if the fingertip drifts.
-  const FINGER_UV = { x: 0.5, y: 0.5 };
-  const [burstMounted, setBurstMounted] = useState(false);
-  const handleOrbClick = (e?: { clientX?: number; clientY?: number }) => {
-    if (stage !== "orb") return;
-    // Origin in normalized viewport UV (y flipped to WebGL bottom-left).
-    const vw = window.innerWidth;
-    const vh = window.innerHeight;
-    const cx = e?.clientX ?? vw / 2;
-    const cy = e?.clientY ?? vh / 2;
-    setBurstOrigin([cx / vw, 1 - cy / vh]);
-    setStage("orb-burst");
-    setBurstMounted(true);
-  };
-  const handleIntroEnded = (info: {
-    videoRect: DOMRect;
-    videoW: number;
-    videoH: number;
-  }) => {
+  const handleIntroEnded = () => {
     if (stageRef.current !== "orb") return;
-    const vw = window.innerWidth;
-    const vh = window.innerHeight;
-    const { videoRect, videoW, videoH } = info;
-    let cx = vw / 2;
-    let cy = vh / 2;
-    if (videoW > 0 && videoH > 0 && videoRect.width > 0 && videoRect.height > 0) {
-      // object-fit: contain — the foreground video is letterboxed inside
-      // videoRect. Compute the actual drawn rect, then place FINGER_UV.
-      const scale = Math.min(videoRect.width / videoW, videoRect.height / videoH);
-      const drawnW = videoW * scale;
-      const drawnH = videoH * scale;
-      const drawnX = videoRect.left + (videoRect.width - drawnW) / 2;
-      const drawnY = videoRect.top + (videoRect.height - drawnH) / 2;
-      cx = drawnX + drawnW * FINGER_UV.x;
-      cy = drawnY + drawnH * FINGER_UV.y;
-    }
-    setBurstOrigin([cx / vw, 1 - cy / vh]);
-    setBurstMounted(true);
-    setStage("orb-burst");
-  };
-  const handleOrbExited = () => {
-    setOrbMounted(false);
-  };
-  const handleBurstCovered = () => {
-    setStage("orb-fade");
     setBgDark(true);
-    // Video has been fully covered — safe to unmount it now without any
-    // visible cream flash.
+    setStage("hands");
     setOrbMounted(false);
-  };
-  const handleBurstProgress = () => {};
-  const handleBurstFaded = () => {
-    setBurstMounted(false);
-    if (stageRef.current === "orb-fade") setStage("hands");
   };
   const [bgDark, setBgDark] = useState(false);
   return (
@@ -1354,17 +1304,6 @@ export function AsciiHandsFooter() {
         >
           <IntroVideo onEnded={handleIntroEnded} />
         </div>
-      )}
-
-      {burstMounted && (
-        <LiquidBurst
-          origin={burstOrigin}
-          onCovered={handleBurstCovered}
-          onFaded={handleBurstFaded}
-          onProgress={handleBurstProgress}
-          spreadMs={2600}
-          fadeMs={280}
-        />
       )}
 
     </section>
