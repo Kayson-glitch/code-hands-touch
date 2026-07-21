@@ -11,42 +11,42 @@ export type HeroLayout = {
 };
 
 const DESKTOP: HeroLayout = {
-  titlePaddingTop: "clamp(20vh, 24vh, 26vh)",
+  titlePaddingTop: "20vh",
   titleFontSize: 48,
   titleLineHeight: "56px",
   subtitleFontSize: 16,
   subtitleLineHeight: "24px",
-  handsTop: "calc(55vh - 20px)",
-  handsHeight: "45vh",
+  handsTop: "calc(48vh - 8px)",
+  handsHeight: "51vh",
 };
 
 const SHORT: HeroLayout = {
   ...DESKTOP,
-  titlePaddingTop: "18vh",
+  titlePaddingTop: "16vh",
   titleFontSize: 44,
   titleLineHeight: "52px",
-  handsTop: "calc(52vh - 16px)",
-  handsHeight: "48vh",
+  handsTop: "44vh",
+  handsHeight: "54vh",
 };
 
 const TABLET: HeroLayout = {
   ...DESKTOP,
-  titlePaddingTop: "20vh",
+  titlePaddingTop: "18vh",
   titleFontSize: 40,
   titleLineHeight: "48px",
-  handsTop: "50vh",
-  handsHeight: "50vh",
+  handsTop: "46vh",
+  handsHeight: "52vh",
 };
 
 const MOBILE: HeroLayout = {
   ...DESKTOP,
-  titlePaddingTop: "14vh",
+  titlePaddingTop: "12vh",
   titleFontSize: 32,
   titleLineHeight: "40px",
   subtitleFontSize: 14,
   subtitleLineHeight: "22px",
-  handsTop: "46vh",
-  handsHeight: "54vh",
+  handsTop: "42vh",
+  handsHeight: "56vh",
 };
 
 function pick(): HeroLayout {

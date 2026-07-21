@@ -1272,9 +1272,12 @@ export function AsciiHandsFooter() {
       <canvas
         ref={canvasRef}
         aria-hidden
-        className="absolute inset-x-0 w-full"
+        className="absolute"
         style={{
           zIndex: 10,
+          left: "50%",
+          transform: "translateX(-50%)",
+          width: "min(100vw, 1440px)",
           top: layout.handsTop,
           height: layout.handsHeight,
           opacity: handsVisible ? 1 : 0,
