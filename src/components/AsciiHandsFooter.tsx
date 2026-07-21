@@ -50,6 +50,10 @@ const CELL_H = 10;
 const GOOEY_RADIUS_UV = 0.048;
 const GOOEY_SOFTNESS_UV = 0.028;
 const GOOEY_NOISE = 0.011;
+// Hover reveal disc is pinned to a fixed on-screen size (80px diameter) so
+// it no longer breathes when the canvas short-edge changes across viewports.
+const GOOEY_RADIUS_PX = 40;
+const GOOEY_SOFTNESS_PX = 24;
 // Max whole-scene parallax drift on hover, in CSS pixels. Small — mirrors the
 // source's "the picture leans toward the finger" feel.
 const PARALLAX_MAX = 13;
@@ -751,8 +755,8 @@ export function AsciiHandsFooter() {
 
       const mUvX = showGooey ? (discX / minWH) * aspectX : 0;
       const mUvY = showGooey ? discY / minWH : 0;
-      const R = GOOEY_RADIUS_UV * intensity;
-      const S = GOOEY_SOFTNESS_UV * intensity * 0.5;
+      const R = (GOOEY_RADIUS_PX / minWH) * intensity;
+      const S = ((GOOEY_SOFTNESS_PX * 0.5) / minWH) * intensity;
       const rLo = R - S;
       const rHi = R + S;
 
