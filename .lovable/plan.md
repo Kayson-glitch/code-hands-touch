@@ -1,22 +1,16 @@
-## 目标
-把墨迹扩散时长增加到 2.6s；消除切换阶段的"闪屏"。
+## 计划
 
-## 根因（已核对代码）
-`AsciiHandsFooter.tsx` 里调用 `LiquidBurst` 时硬编码 `spreadMs={1000}`，之前改到 1600 的默认值被 props 覆盖 —— 所以用户看到的一直是 1s。
+1. **消除中间空白阶段**
+   - 当前扩散结束后先进入 `orb-fade`，再等 `LiquidBurst` 淡出进度到 60% 才切到 `hands`，这会造成黑底/空白帧明显停留。
+   - 改为在扩散完全覆盖屏幕的同一刻就预启动手部动画，让手部在遮罩下开始生长。
 
-"闪屏"来源：`section` 背景在 `orb-fade` 阶段用 `transition: background-color 280ms ease-out` 从 `#EFE7DA` 渐变到 `#0a0a0a`。由于 `easeOutBack` 让墨迹半径先冲过 100% 再回弹，加上羽化带 `transparent` 部分，覆盖并不是 100% 不透光；背景色在这一瞬间正好在跨渐变，透过羽化带就看到底色从米色跳到黑色 —— 就是那道"闪"。
+2. **让遮罩承担转场，而不是页面背景硬切**
+   - 保持扩散层覆盖在最上方，背景切黑时不暴露空白。
+   - 在扩散层淡出期间，底下已经是手部动画的首帧/生长动画，而不是等待状态。
 
-## 修改（仅前端表现层，只改 `src/components/AsciiHandsFooter.tsx`）
+3. **微调淡出时序**
+   - 将 `LiquidBurst` 的 `onProgress` 逻辑从“淡出 60% 后才显示手部”改成“covered 后立即显示手部”。
+   - 必要时略微拉长或平滑 `fadeMs`，但不改变你刚要求的 2.6s 扩散速度。
 
-1. **加时长**：把 `<LiquidBurst spreadMs={1000} … />` 改成 `spreadMs={2600}`，`fadeMs` 保持 280。
-2. **消除闪屏**：
-   - `section` 的 `transition: background-color …` 去掉，改为在 `handleBurstCovered` 触发后立刻把背景设为 `#0a0a0a`（用一个 `bgDark` state；不再依赖 `lightBg` 派生 + CSS 过渡）。
-   - 切换时机就在墨迹 `rawP >= 1`（完全覆盖）的一帧，此时整屏被黑墨盖住，切换背景色不可见。
-   - 保留 `handsVisible` 触发的 canvas/wordmark 淡入（300–400ms），它们在黑底下淡入，不会再叠加背景变色。
-3. `LiquidBurst.tsx` 不动 —— 弹性 / 湍流 / 位移 / 羽化保持不变。
-
-## 验证
-Playwright 打开首页 → 点击球体 → 每 200ms 截图共 3.4s：
-1. 扩散约 2.6s 完成，弹性收束仍在；
-2. 墨迹达到全屏那一刻背景已经是黑色，之后墨迹淡出直接露出黑底 + 手部，无任何米色到黑色的中间过渡帧；
-3. 无 WebGL Context Lost。
+4. **验证效果**
+   - 用预览复现点击球体流程，观察：球体 → 2.6s 液态扩散 → 无闪屏地露出手部生长动画。

@@ -110,6 +110,7 @@ const ARM_ALIGN_STRENGTH = 0.45;
 // A hermite curve gives fast forearm coverage, then a distinct deceleration as
 // the reveal reaches the wrist / palm / fingers.
 const INTRO_DURATION_MS = 2400;
+const INTRO_MASK_PREROLL_MS = 1600;
 const INTRO_FRONT_WIDTH_BASE = 0.18;
 // After the reveal passes the "wrist" anchor we widen the front band so the
 // palm + fingers unfurl feels softer / more diffused, reinforcing the slowdown.
@@ -387,7 +388,7 @@ export function AsciiHandsFooter() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [mounted, setMounted] = useState(false);
   useEffect(() => { setMounted(true); }, []);
-  // Interaction flow: orb → orb-exit → hands.
+  // Interaction flow: orb → liquid burst cover → hands under the fading mask.
   const [stage, setStage] = useState<
     "orb" | "orb-burst" | "orb-fade" | "hands"
   >("orb");
@@ -409,6 +410,7 @@ export function AsciiHandsFooter() {
   const mouseSpeedRef = useRef(0);
   const lastMoveRef = useRef<{ x: number; y: number; t: number } | null>(null);
   const introStartRef = useRef<number | null>(null);
+  const introPrerollRef = useRef(0);
   const introDoneRef = useRef(false);
   const introVisibleRef = useRef(false);
   // Per-hand click lock state. `progress` tweens toward `target` each frame
@@ -496,7 +498,8 @@ export function AsciiHandsFooter() {
     startIntroRef.current = () => {
       if (introVisibleRef.current) return;
       introVisibleRef.current = true;
-      introStartRef.current = performance.now();
+      introStartRef.current = performance.now() - introPrerollRef.current;
+      introPrerollRef.current = 0;
     };
 
     const onMove = (e: MouseEvent) => {
@@ -1256,12 +1259,22 @@ export function AsciiHandsFooter() {
     setOrbMounted(false);
   };
   const handleBurstCovered = () => {
-    setStage("orb-fade");
+    // Start the hands immediately once the liquid mask fully covers the screen.
+    // This avoids a visible black/empty beat between the burst and arm intro.
+    introPrerollRef.current = INTRO_MASK_PREROLL_MS;
+    setStage("hands");
     setBgDark(true);
   };
   const handleBurstProgress = (p: number) => {
-    // Once the burst is nearly done fading, prep the hands so the arm
-    // growth animation starts as the purple veil finishes clearing.
+    // Pre-roll the hand growth while the burst still fully dominates the frame,
+    // so the reveal does not fade into an empty black beat.
+    if (stage === "orb-burst" && p >= 0.72 && stageRef.current !== "hands") {
+      introPrerollRef.current = INTRO_MASK_PREROLL_MS;
+      setStage("hands");
+      return;
+    }
+
+    // Fallback for browsers that may skip the late pre-roll frame.
     if (stage === "orb-fade" && p >= 0.6 && stageRef.current !== "hands") {
       setStage("hands");
     }
@@ -1317,7 +1330,7 @@ export function AsciiHandsFooter() {
           zIndex: 10,
           opacity: handsVisible ? 1 : 0,
           pointerEvents: handsVisible ? "auto" : "none",
-          transition: "opacity 300ms ease-out",
+          transition: handsVisible ? "none" : "opacity 120ms ease-out",
         }}
       />
 
@@ -1349,7 +1362,7 @@ export function AsciiHandsFooter() {
           onFaded={handleBurstFaded}
           onProgress={handleBurstProgress}
           spreadMs={2600}
-          fadeMs={280}
+          fadeMs={480}
         />
       )}
 
