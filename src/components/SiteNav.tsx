@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import logoAsset from "@/assets/synergy-logo.png.asset.json";
 
 export function SiteNav() {
   const [theme, setTheme] = useState<"light" | "dark">("light");
@@ -18,8 +19,8 @@ export function SiteNav() {
 
   return (
     <nav
-      className="pointer-events-none fixed inset-x-0 top-0 z-40 flex items-center justify-between px-10"
-      style={{ height: 68 }}
+      className="pointer-events-none fixed inset-x-0 top-0 flex items-center justify-between px-10"
+      style={{ height: 68, zIndex: 80 }}
     >
       {/* Logo */}
       <a
@@ -27,23 +28,16 @@ export function SiteNav() {
         className={`pointer-events-auto flex items-center gap-2 ${fg}`}
         style={{ height: 28 }}
       >
-        <span
-          className="grid place-items-center rounded-full text-[13px] font-semibold text-white"
+        <img
+          src={logoAsset.url}
+          alt="Synergy.AI"
           style={{
-            width: 28,
             height: 28,
-            background:
-              "linear-gradient(135deg, #7C5CFF 0%, #B478FF 50%, #E36BFF 100%)",
+            width: "auto",
+            display: "block",
+            filter: isDark ? "invert(1) hue-rotate(180deg)" : "none",
           }}
-        >
-          S
-        </span>
-        <span
-          className="font-medium"
-          style={{ fontSize: 14, lineHeight: "22px" }}
-        >
-          Synergy.AI
-        </span>
+        />
       </a>
 
       {/* Center menu */}
