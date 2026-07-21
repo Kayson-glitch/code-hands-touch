@@ -1,12 +1,18 @@
 import { useEffect, useRef, useState } from "react";
 
 /**
- * Full-screen ink burst.
+ * Full-screen ink burst — 1:1 rebuild against the reference clip.
  *
- * Pure SVG — no WebGL — so it never fights the orb Canvas for a GPU context.
- * Three overlapping, fully opaque polygons (red / black / cyan) form a
- * chromatic-aberration edge. The irregular outline is generated directly as
- * a continuous polygon, avoiding displacement/clip-path transparency leaks.
+ * Layer stack (bottom→top):
+ *   1. white halo polygon  — a slightly larger, softly wobbling shape;
+ *      only its rim shows around the black core.
+ *   2. red fringe polygon  — offset in one direction, revealed as a red
+ *      edge on that side of the core.
+ *   3. cyan fringe polygon — offset in the opposite direction, revealed
+ *      as a cyan edge on the other side.
+ *   4. black core polygon  — the actual ink mass.
+ *
+ * Optional horizontal glitch bars ride above the halo during mid-spread.
  */
 export function LiquidBurst({
   origin,
@@ -31,9 +37,13 @@ export function LiquidBurst({
   const fadedRef = useRef(false);
 
   const wrapRef = useRef<HTMLDivElement>(null);
+  const haloPolyRef = useRef<SVGPolygonElement>(null);
   const rPolyRef = useRef<SVGPolygonElement>(null);
   const kPolyRef = useRef<SVGPolygonElement>(null);
   const cPolyRef = useRef<SVGPolygonElement>(null);
+  const glitch1Ref = useRef<SVGRectElement>(null);
+  const glitch2Ref = useRef<SVGRectElement>(null);
+  const glitch3Ref = useRef<SVGRectElement>(null);
 
   const [ox, oy] = origin;
   // Convert WebGL-style y (bottom-origin) to SVG px (top-origin) in the rAF loop.
@@ -48,8 +58,9 @@ export function LiquidBurst({
   useEffect(() => {
     if (!ready) return;
     let seedT = 0;
+    let glitchLastAt = 0;
 
-    const POINTS = 96;
+    const POINTS = 48;
 
     const hashNoise = (index: number, seed: number) => {
       const s = Math.sin(index * 127.1 + seed * 311.7) * 43758.5453123;
@@ -72,15 +83,17 @@ export function LiquidBurst({
       roughness: number,
       drift: number,
       phase: number,
+      lobes: number,
     ) => {
       const points: string[] = [];
 
       for (let i = 0; i < POINTS; i += 1) {
         const angle = (i / POINTS) * Math.PI * 2;
-        const longWave = smoothNoise(i * 0.1 + phase * 0.35, 4.7) - 0.5;
-        const midWave = smoothNoise(i * 0.36 - phase * 0.7, 12.3) - 0.5;
-        const tooth = smoothNoise(i * 1.18 + phase * 1.2, 29.1) - 0.5;
-        const wobble = longWave * 0.44 + midWave * 0.36 + tooth * 0.2;
+        // Big pseudopod lobes — grow the count as the burst matures.
+        const lobe = Math.sin(angle * lobes + phase * 0.6) * 0.5;
+        const midWave = smoothNoise(i * 0.28 - phase * 0.55, 12.3) - 0.5;
+        const tooth = smoothNoise(i * 1.05 + phase * 1.1, 29.1) - 0.5;
+        const wobble = lobe * 0.6 + midWave * 0.3 + tooth * 0.1;
         const r = Math.max(0, radius * (1 + wobble * roughness));
         const tangent = Math.sin(angle * 3 + phase) * drift;
         const x = centerX + Math.cos(angle) * r + Math.cos(angle + Math.PI / 2) * tangent;
@@ -100,11 +113,20 @@ export function LiquidBurst({
       if (startRef.current == null) startRef.current = now;
       const t = now - startRef.current;
       const rawP = Math.min(1, t / spreadMs);
-      // Keep the 2.6s as the actual spread duration: a smooth radial grow with
-      // only a subtle elastic settle near the end, instead of an early overshoot.
-      const smoothP = rawP * rawP * (3 - 2 * rawP);
-      const endElastic = rawP > 0.82 ? Math.sin((rawP - 0.82) / 0.18 * Math.PI) * 0.035 : 0;
-      const p = smoothP + endElastic;
+      // Curve: quick pop off the fingertip, near-linear expansion, tiny elastic settle.
+      let curved: number;
+      if (rawP < 0.25) {
+        const s = rawP / 0.25;
+        curved = 0.18 * (1 - (1 - s) * (1 - s)); // easeOutQuad → 0.18
+      } else if (rawP < 0.85) {
+        const s = (rawP - 0.25) / 0.6;
+        curved = 0.18 + s * 0.78; // linear expansion → 0.96
+      } else {
+        const s = (rawP - 0.85) / 0.15;
+        curved = 0.96 + s * 0.04;
+      }
+      const endElastic = rawP > 0.85 ? Math.sin((rawP - 0.85) / 0.15 * Math.PI) * 0.02 : 0;
+      const p = curved + endElastic;
 
       const width = window.innerWidth;
       const height = window.innerHeight;
@@ -116,17 +138,51 @@ export function LiquidBurst({
       );
       const settledP = Math.min(1.035, Math.max(0, p));
       const radius = settledP * (maxRadius + 120);
-      const roughness = 0.09 + (1 - Math.min(1, rawP)) * 0.13;
-      const drift = 5 + Math.min(1, rawP) * 10;
+      // Wilder early shape that calms down as it fills the screen.
+      const roughness = 0.12 + (1 - Math.min(1, rawP)) * 0.18;
+      const drift = 6 + Math.min(1, rawP) * 12;
+      // Pseudopod count grows 2 → 4.
+      const lobes = 2 + Math.floor(rawP * 2.5);
       seedT += 0.018;
 
-      const redPoints = makePoints(centerX - 7, centerY - 3, radius + 18, roughness * 1.08, drift, seedT + 0.5);
-      const cyanPoints = makePoints(centerX + 7, centerY + 3, radius + 16, roughness, drift, seedT + 1.8);
-      const blackPoints = makePoints(centerX, centerY, radius, roughness * 0.92, drift * 0.72, seedT);
+      // Chromatic-aberration offset — a rotating vector that widens as the burst grows.
+      const aberr = 8 + rawP * 10; // 8 → 18 px
+      const aberrAngle = seedT * 0.4;
+      const adx = Math.cos(aberrAngle) * aberr;
+      const ady = Math.sin(aberrAngle) * aberr;
 
+      // Halo sits just outside the core; shares core geometry so its rim tracks perfectly.
+      const haloPoints = makePoints(centerX, centerY, radius + 16 + drift * 0.6, roughness * 0.95, drift, seedT, lobes);
+      const redPoints = makePoints(centerX + adx, centerY + ady, radius + 8, roughness, drift, seedT, lobes);
+      const cyanPoints = makePoints(centerX - adx, centerY - ady, radius + 8, roughness, drift, seedT, lobes);
+      const blackPoints = makePoints(centerX, centerY, radius, roughness, drift * 0.75, seedT, lobes);
+
+      setPoints(haloPolyRef.current, haloPoints);
       setPoints(rPolyRef.current, redPoints);
       setPoints(cPolyRef.current, cyanPoints);
       setPoints(kPolyRef.current, blackPoints);
+
+      // Horizontal glitch bars — refresh every ~150ms during mid-spread.
+      if (rawP > 0.15 && rawP < 0.85 && now - glitchLastAt > 150) {
+        glitchLastAt = now;
+        const bars = [glitch1Ref.current, glitch2Ref.current, glitch3Ref.current];
+        const colors = ["#00e5ff", "#ff2fd8", "#a855f7"];
+        bars.forEach((bar, i) => {
+          if (!bar) return;
+          const barY = Math.random() * height;
+          const barH = 2 + Math.random() * 5;
+          bar.setAttribute("x", "0");
+          bar.setAttribute("y", barY.toFixed(1));
+          bar.setAttribute("width", String(width));
+          bar.setAttribute("height", barH.toFixed(1));
+          bar.setAttribute("fill", colors[i]);
+          bar.setAttribute("opacity", (0.25 + Math.random() * 0.25).toFixed(2));
+        });
+      } else if (rawP <= 0.15 || rawP >= 0.85) {
+        [glitch1Ref.current, glitch2Ref.current, glitch3Ref.current].forEach((bar) => {
+          if (bar) bar.setAttribute("opacity", "0");
+        });
+      }
 
       cbRef.current.onProgress?.(p);
 
@@ -182,19 +238,13 @@ export function LiquidBurst({
             inset: 0,
           }}
         >
-          <polygon
-            ref={rPolyRef}
-            points="0,0 0,0 0,0"
-            fill="#ff2244"
-            style={{ mixBlendMode: "multiply" }}
-          />
-          <polygon
-            ref={cPolyRef}
-            points="0,0 0,0 0,0"
-            fill="#00e5ff"
-            style={{ mixBlendMode: "multiply" }}
-          />
+          <polygon ref={haloPolyRef} points="0,0 0,0 0,0" fill="#f4ecdd" />
+          <polygon ref={rPolyRef} points="0,0 0,0 0,0" fill="#ff2244" />
+          <polygon ref={cPolyRef} points="0,0 0,0 0,0" fill="#00e5ff" />
           <polygon ref={kPolyRef} points="0,0 0,0 0,0" fill="#000000" />
+          <rect ref={glitch1Ref} x="0" y="0" width="0" height="0" fill="#00e5ff" opacity="0" style={{ mixBlendMode: "screen" }} />
+          <rect ref={glitch2Ref} x="0" y="0" width="0" height="0" fill="#ff2fd8" opacity="0" style={{ mixBlendMode: "screen" }} />
+          <rect ref={glitch3Ref} x="0" y="0" width="0" height="0" fill="#a855f7" opacity="0" style={{ mixBlendMode: "screen" }} />
         </svg>
       </div>
     </div>
