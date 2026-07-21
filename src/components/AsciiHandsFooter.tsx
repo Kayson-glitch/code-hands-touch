@@ -1269,12 +1269,20 @@ export function AsciiHandsFooter() {
     setBurstMounted(false);
     if (stageRef.current !== "hands") setStage("hands");
   };
+  const lightBg = stage === "orb" || stage === "orb-burst";
   return (
     <section
       className="relative w-full overflow-hidden"
-      style={{ backgroundColor: "#0a0a0a", height: "100vh", minHeight: 600 }}
+      style={{
+        backgroundColor: lightBg ? "#EFE7DA" : "#0a0a0a",
+        height: "100vh",
+        minHeight: 600,
+        transition: "background-color 280ms ease-out",
+      }}
     >
-      <h1 className="sr-only">Good Fella Studio — ASCII Creation of Adam</h1>
+      <h1 className="sr-only" suppressHydrationWarning>
+        Good Fella Studio — ASCII Creation of Adam
+      </h1>
 
       {/* Giant faded wordmark behind everything */}
       <div
