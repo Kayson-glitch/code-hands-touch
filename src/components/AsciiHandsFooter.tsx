@@ -1326,7 +1326,7 @@ export function AsciiHandsFooter() {
         >
           {mounted && (
             <LiquidMetalOrb
-              onClick={(evt: any) => handleOrbClick(evt?.nativeEvent ?? evt)}
+              onClick={(evt) => handleOrbClick(evt)}
               exiting={stage !== "orb"}
               onExited={handleOrbExited}
             />
