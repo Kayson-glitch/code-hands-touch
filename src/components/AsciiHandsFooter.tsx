@@ -386,6 +386,14 @@ export function AsciiHandsFooter() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [mounted, setMounted] = useState(false);
   useEffect(() => { setMounted(true); }, []);
+  // Interaction flow: orb → orb-exit → hands.
+  const [stage, setStage] = useState<"orb" | "orb-exit" | "hands">("orb");
+  const stageRef = useRef(stage);
+  useEffect(() => { stageRef.current = stage; }, [stage]);
+  const startIntroRef = useRef<(() => void) | null>(null);
+  useEffect(() => {
+    if (stage === "hands") startIntroRef.current?.();
+  }, [stage]);
   const cellsRef = useRef<Cell[]>([]);
   const gridRef = useRef<Grid | null>(null);
   const mouseRef = useRef<{ x: number; y: number; active: boolean }>({
@@ -463,7 +471,11 @@ export function AsciiHandsFooter() {
     const io = new IntersectionObserver(
       (entries) => {
         for (const e of entries) {
-          if (e.isIntersecting && !introVisibleRef.current) {
+          if (
+            e.isIntersecting &&
+            !introVisibleRef.current &&
+            stageRef.current === "hands"
+          ) {
             introVisibleRef.current = true;
             introStartRef.current = performance.now();
             io.disconnect();
@@ -473,6 +485,14 @@ export function AsciiHandsFooter() {
       { threshold: 0.25 },
     );
     io.observe(canvas);
+
+    // When the orb finishes exiting we flip stage to "hands"; the outer
+    // effect calls startIntro via this ref to kick off arm growth.
+    startIntroRef.current = () => {
+      if (introVisibleRef.current) return;
+      introVisibleRef.current = true;
+      introStartRef.current = performance.now();
+    };
 
     const onMove = (e: MouseEvent) => {
       const rect = canvas.getBoundingClientRect();
@@ -1213,6 +1233,13 @@ export function AsciiHandsFooter() {
     };
   }, []);
 
+  const handsVisible = stage === "hands";
+  const handleOrbClick = () => {
+    if (stage !== "orb") return;
+    setStage("orb-exit");
+    // Overlap the last ~150ms of the orb exit with the arm growth intro.
+    window.setTimeout(() => setStage("hands"), 300);
+  };
   return (
     <section
       className="relative w-full overflow-hidden"
@@ -1224,7 +1251,12 @@ export function AsciiHandsFooter() {
       <div
         aria-hidden
         className="pointer-events-none absolute inset-x-0 bottom-0 flex justify-center overflow-hidden"
-        style={{ height: "45%", zIndex: 0 }}
+        style={{
+          height: "45%",
+          zIndex: 0,
+          opacity: handsVisible ? 1 : 0,
+          transition: "opacity 400ms ease-out",
+        }}
       >
         <span
           className="select-none whitespace-nowrap font-bold tracking-tight"
@@ -1244,16 +1276,33 @@ export function AsciiHandsFooter() {
         ref={canvasRef}
         aria-hidden
         className="absolute inset-0 h-full w-full"
-        style={{ zIndex: 10 }}
+        style={{
+          zIndex: 10,
+          opacity: handsVisible ? 1 : 0,
+          pointerEvents: handsVisible ? "auto" : "none",
+          transition: "opacity 300ms ease-out",
+        }}
       />
 
-      <div
-        aria-hidden
-        className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2"
-        style={{ width: 200, height: 200, zIndex: 60, isolation: "isolate" }}
-      >
-        {mounted && <LiquidMetalOrb />}
-      </div>
+      {stage !== "hands" && (
+        <div
+          className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2"
+          style={{
+            width: 200,
+            height: 200,
+            zIndex: 60,
+            isolation: "isolate",
+            pointerEvents: stage === "orb" ? "auto" : "none",
+          }}
+        >
+          {mounted && (
+            <LiquidMetalOrb
+              onClick={handleOrbClick}
+              exiting={stage === "orb-exit"}
+            />
+          )}
+        </div>
+      )}
 
     </section>
   );

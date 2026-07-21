@@ -1,25 +1,29 @@
-## 目标
-在点击展开/收回马赛克动画期间，球体始终位于所有元素之上，且不拦截手部的 hover/click 交互。
+## 目标交互流程
+1. **开屏**：黑色背景中央仅显示紫色液态金属球（`LiquidMetalOrb`），持续自转+表面扰动循环。手部 ASCII、wordmark 完全隐藏，且不占用交互。
+2. **点击球体**：触发一次"快速扩散消失"动效（~450ms）——球体在原地放大 + 表面 distort 增强 + 透明度归零，同时触发轻微径向白光/紫光冲击（可选：CSS radial-gradient 一次性 pulse），随后球体从 DOM 卸载。
+3. **手部入场**：球体消失的最后阶段（重叠 ~150ms）触发既有的手臂生长动画（`startIntroAnimation`），wordmark 与 ASCII 手正常出现，之后 hover / click 交互恢复到当前行为。
+4. **不可逆**：一旦手部出现，不再回到球体（本轮不做返回逻辑）。
 
-## 现状检查
-- `section` 是 `relative overflow-hidden`，形成堆叠上下文。
-- 背景 wordmark 容器：`absolute`，无 `z-index` → 默认 0。
-- ASCII `<canvas>`：`absolute inset-0`，无 `z-index` → 默认 0，但因 DOM 顺序在 wordmark 之后而覆盖它；点击/hover 事件由它接收。
-- 球体容器：`absolute` + `zIndex: 50` + `pointer-events-none`，DOM 顺序最后。
+## 阶段状态机
+`stage: "orb" | "orb-exit" | "hands"`
+- `orb`：只渲染球体容器，球体 `pointer-events: auto` 接收点击；ASCII canvas / wordmark 隐藏（`opacity:0` + `pointer-events:none`），IntersectionObserver 不启动生长。
+- `orb-exit`：进入 450ms 退出动画，球体禁用二次点击。到 300ms 时切到 `hands` 并调用手臂生长。
+- `hands`：卸载球体，恢复现在的全部交互（hover 破碎、点击锁定马赛克）。
 
-理论上球体已在最上层，但没有显式给 canvas 和 wordmark 分配 z-index，展开动画期间任何后续新增元素或第三方浮层都可能意外遮挡；同时应确保球体内部 R3F Canvas 也不吃事件。
-
-## 调整方案（仅调层级/事件，不动动画逻辑）
-
-**`src/components/AsciiHandsFooter.tsx`**
-- Wordmark 容器：追加 `style={{ zIndex: 0 }}`。
-- ASCII `<canvas>`：追加 `style={{ zIndex: 10 }}`（保持接收 hover/click）。
-- 球体容器：`zIndex` 由 50 提升为 `zIndex: 60`，并保留 `pointer-events-none`；再补一个 `style={{ isolation: "isolate" }}` 避免子级 Canvas 产生新的堆叠意外。
-
-**`src/components/LiquidMetalOrb.tsx`**
-- `<Canvas>` 的 `style` 已包含 `pointerEvents: "none"`，再补 `touchAction: "none"`，彻底避免移动端手势拦截。
+## 技术改动
+- **`LiquidMetalOrb.tsx`**：
+  - 接受 `onClick`、`exiting: boolean` props。
+  - 容器改为 `pointer-events: auto` 并绑定点击。
+  - `exiting=true` 时用 `useFrame` 线性驱动 `scale` 从 1 → 2.4、`distort` 从 0.45 → 1.1、材质 `opacity` 从 1 → 0（材质加 `transparent`）。
+- **`AsciiHandsFooter.tsx`**：
+  - 新增 `stage` state，初始 `"orb"`。
+  - 抽出/暴露 `startIntroAnimation` 触发口，改为由 `stage` 变 `"hands"` 时调用，而不是 IntersectionObserver。
+  - `stage !== "hands"` 时：ASCII canvas 与 wordmark 容器 `opacity: 0`、`pointer-events: none`；`stage === "hands"` 时淡入（150ms）。
+  - 球体容器 `pointer-events` 随 stage 切换；`stage === "hands"` 后卸载球体。
+  - 处理点击：`orb → orb-exit`，`setTimeout(300ms)` 切 `hands` 并调用生长动画；`setTimeout(450ms)` 卸载球体。
 
 ## 验证
-- 展开/收回动画播放中，球体始终清晰可见、不被马赛克 tile 覆盖。
-- 手部 hover 破碎效果、单击锁定/再次单击收回均正常触发。
-- DevTools Elements 面板中球体容器 z-index = 60，canvas = 10，wordmark = 0。
+- 刷新页面：只看到球体旋转，背景纯黑，无手部/wordmark。
+- 点击球体：球体在 ~0.45s 内放大变形淡出；期间 300ms 时手臂开始从两侧生长，2.4s 后停在中央。
+- 生长结束后：hover 触发马赛克破碎，单击左右手仍可各自锁定/解锁。
+- 不再显示球体，二次点击不复现。

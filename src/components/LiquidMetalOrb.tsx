@@ -3,39 +3,79 @@ import { Canvas, useFrame } from "@react-three/fiber";
 import { MeshDistortMaterial, Environment } from "@react-three/drei";
 import type { Mesh } from "three";
 
-function Orb() {
+type OrbProps = { exiting: boolean; onExited?: () => void };
+
+function Orb({ exiting, onExited }: OrbProps) {
   const ref = useRef<Mesh>(null);
+  // MeshDistortMaterial doesn't ship a clean type for the distort uniform;
+  // access it loosely to drive the exit animation.
+  const matRef = useRef<any>(null);
+  const exitT = useRef(0);
+  const doneRef = useRef(false);
   useFrame((_, dt) => {
-    if (!ref.current) return;
-    ref.current.rotation.y += dt * 0.3;
-    ref.current.rotation.x += dt * 0.1;
+    const m = ref.current;
+    if (!m) return;
+    m.rotation.y += dt * 0.3;
+    m.rotation.x += dt * 0.1;
+    if (exiting) {
+      exitT.current = Math.min(1, exitT.current + dt / 0.45);
+      const t = exitT.current;
+      const e = 1 - Math.pow(1 - t, 3); // easeOutCubic
+      const scale = 1 + e * 1.4;
+      m.scale.setScalar(scale);
+      if (matRef.current) {
+        matRef.current.distort = 0.45 + e * 0.65;
+        matRef.current.opacity = 1 - e;
+      }
+      if (t >= 1 && !doneRef.current) {
+        doneRef.current = true;
+        onExited?.();
+      }
+    }
   });
   return (
     <mesh ref={ref}>
       <icosahedronGeometry args={[1, 64]} />
       <MeshDistortMaterial
+        ref={matRef}
         color="#C5A9FF"
         metalness={0.9}
         roughness={0.15}
         distort={0.45}
         speed={1.6}
+        transparent
       />
     </mesh>
   );
 }
 
-export function LiquidMetalOrb() {
+export function LiquidMetalOrb({
+  onClick,
+  exiting = false,
+  onExited,
+}: {
+  onClick?: () => void;
+  exiting?: boolean;
+  onExited?: () => void;
+}) {
   return (
     <Canvas
       dpr={[1, 2]}
       gl={{ alpha: true, antialias: true }}
       camera={{ position: [0, 0, 2.6], fov: 45 }}
-      style={{ background: "transparent", width: "100%", height: "100%", pointerEvents: "none", touchAction: "none" }}
+      onClick={onClick}
+      style={{
+        background: "transparent",
+        width: "100%",
+        height: "100%",
+        cursor: exiting ? "default" : "pointer",
+        touchAction: "none",
+      }}
     >
       <ambientLight intensity={0.4} />
       <directionalLight position={[3, 3, 3]} intensity={1.2} />
       <Environment preset="studio" />
-      <Orb />
+      <Orb exiting={exiting} onExited={onExited} />
     </Canvas>
   );
 }
