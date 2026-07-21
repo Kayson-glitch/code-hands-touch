@@ -1,32 +1,17 @@
 ## 目标
-用上传的视频替换开屏球体，视频播放结束（最后一帧）自动触发原来的全屏液态扩散，其他流程与视觉不变。
+开屏视频始终占满整个视口，视频本身不变形不裁剪，四周空白用同一视频放大 + 模糊后作为背景填充。
 
-## 方案
+## 改动
+仅修改 `src/components/IntroVideo.tsx`：
 
-1. **上传视频到 CDN**
-   - 用 `lovable-assets` 将 `kling_20260721_...mp4` 上传，生成 `src/assets/intro-hands.mp4.asset.json` 指针。
-   - 视频规格：1916×1080，24fps，约 4.04s。
+1. 外层容器 `position: absolute; inset: 0; overflow: hidden; background: #000`。
+2. 背景层：一个 `<video>`（复用同一 src，`muted playsInline autoPlay`，与前景同步播放）
+   - `object-fit: cover`，`width/height: 100%`
+   - `filter: blur(40px) saturate(1.1)`，`transform: scale(1.15)`（避免模糊边缘露出）
+   - `aria-hidden`，不参与 `onEnded` 触发
+3. 前景层：现有 `<video>` 保持 `object-fit: contain`，完整显示、不变形不裁剪；仍然是 `onEnded` / `timeupdate` 触发扩散的唯一来源。
+4. 两个 video 同一时刻 `play()`，因为都是 muted + 同源，帧基本同步；即便有 1–2 帧偏差，模糊背景层看不出差异。
 
-2. **新增 `src/components/IntroVideo.tsx`**
-   - 全屏居中播放的 `<video>`，`autoPlay muted playsInline`，禁止循环。
-   - `object-fit: contain`，背景与当前 orb 阶段一致（`#EFE7DA`）。
-   - `onClick` 保留（可选跳过），主要监听 `onEnded` 触发扩散。
-   - 为了拿到"最后一帧起爆"的精确时机：优先用 `onEnded`；同时监听 `timeupdate`，当 `currentTime >= duration - 0.05` 时也触发（保底，防止某些浏览器不触发 `ended`）。
-   - 用 ref 保证 `onBurstStart` 只被调用一次。
-   - 扩散起点 origin 固定为屏幕中心 `[0.5, 0.5]`（原来是球体点击点，视频没有点击点，用中心最自然）。
-
-3. **改 `src/components/AsciiHandsFooter.tsx`**
-   - `stage === "orb"` 时渲染 `<IntroVideo />` 代替 `<LiquidMetalOrb />`。
-   - 视频 `onEnded` → 走原来的 `orb-burst` 流程（挂载 `LiquidBurst`，`origin=[0.5,0.5]`），后续 `onCovered` / `onFaded` → `hands` 阶段不变。
-   - 删除 orb 的 `exiting` "charge" 过渡（视频结束即扩散，不需要收束阶段）。
-   - `LiquidMetalOrb` 组件文件保留但不再引用（不删，方便回退）。
-
-4. **不改动的部分**
-   - `LiquidBurst.tsx`（2.6s 扩散、边缘、颜色）保持现状。
-   - hands 阶段的入场、ASCII、hover、点击马赛克逻辑全部不变。
-   - 背景色切换时机（`onCovered` 切黑）不变。
-
-## 技术备注
-- 视频需要 `muted` 才能在浏览器自动播放。
-- 若用户浏览器阻止 autoplay，退回：显示视频首帧 + 一个透明覆盖层，点击任意处开始播放。
-- 视频文件 ~2.9MB，通过 CDN 提供，首屏加载可接受；用 `preload="auto"` 让扩散触发时不卡顿。
+## 不改动
+- `AsciiHandsFooter.tsx` 状态机、`LiquidBurst`、hands 阶段全部保持现状。
+- 视频资源、扩散触发时机、背景色切换时机不变。
