@@ -433,6 +433,7 @@ export function AsciiHandsFooter() {
       if (!img) return;
       const w = canvas.clientWidth;
       const h = canvas.clientHeight;
+      if (w <= 0 || h <= 0) return;
 
       // Source image is 1920x1080 with both hands baked into the composition,
       // meeting near the center. Fit it to the full canvas width, centered.
