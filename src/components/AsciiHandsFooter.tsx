@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import handsPairAsset from "@/assets/hands-pair.png.asset.json";
-import { LiquidMetalOrb } from "./LiquidMetalOrb";
 import { LiquidBurst } from "./LiquidBurst";
+import { IntroVideo } from "./IntroVideo";
 
 // Ordered density ramp, dark → bright. Mirrors the exact 70-glyph set used by
 // good-fella.com's ASCII footer (recovered by hooking their canvas atlas).
@@ -1323,20 +1323,19 @@ export function AsciiHandsFooter() {
 
       {orbMounted && (
         <div
-          className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2"
+          className="absolute inset-0"
           style={{
-            width: 200,
-            height: 200,
             zIndex: 60,
             isolation: "isolate",
             pointerEvents: stage === "orb" ? "auto" : "none",
           }}
         >
           {mounted && (
-            <LiquidMetalOrb
-              onClick={(evt) => handleOrbClick(evt)}
-              exiting={stage !== "orb"}
-              onExited={handleOrbExited}
+            <IntroVideo
+              onEnded={() => {
+                handleOrbClick();
+                handleOrbExited();
+              }}
             />
           )}
         </div>
