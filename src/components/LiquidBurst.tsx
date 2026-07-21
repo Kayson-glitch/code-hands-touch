@@ -38,6 +38,7 @@ export function LiquidBurst({
 
   const [ox, oy] = origin;
   // Convert WebGL-style y (bottom-origin) to CSS px (top-origin) in the rAF loop.
+  const initialClip = `circle(0px at ${ox * 100}% ${(1 - oy) * 100}%)`;
 
   // Callbacks in refs so the rAF loop always sees the latest.
   const cbRef = useRef({ onCovered, onFaded, onProgress });
@@ -180,6 +181,8 @@ export function LiquidBurst({
             inset: 0,
             background: "#ff2244",
             mixBlendMode: "multiply",
+            clipPath: initialClip,
+            WebkitClipPath: initialClip,
             willChange: "clip-path",
           }}
         />
@@ -190,6 +193,8 @@ export function LiquidBurst({
             inset: 0,
             background: "#00e5ff",
             mixBlendMode: "multiply",
+            clipPath: initialClip,
+            WebkitClipPath: initialClip,
             willChange: "clip-path",
           }}
         />
@@ -199,6 +204,8 @@ export function LiquidBurst({
             position: "absolute",
             inset: 0,
             background: "#000000",
+            clipPath: initialClip,
+            WebkitClipPath: initialClip,
             willChange: "clip-path",
           }}
         />
