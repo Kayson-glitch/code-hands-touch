@@ -463,14 +463,16 @@ export function AsciiHandsFooter() {
       if (w <= 0 || h <= 0) return;
 
       // Source image is 1920x1080 with both hands baked into the composition,
-      // meeting near the center. Fit it to the full canvas width, centered.
+      // meeting near the center. Draw it into a 1440px-capped visual band while
+      // keeping the canvas itself full-screen so hover math matches the old build.
       const imgAR = img.naturalWidth / img.naturalHeight;
-      const bandW = w;
+      const visualRect = getHandsVisualRect(layout, w, h);
+      const bandW = visualRect.w;
       const bandH = bandW / imgAR;
-      const bandY = h * 0.5 - bandH * 0.5;
+      const bandY = visualRect.y + visualRect.h * 0.5 - bandH * 0.5;
       const sampled = sampleImage(
         img,
-        { x: 0, y: bandY, w: bandW, h: bandH },
+        { x: visualRect.x, y: bandY, w: bandW, h: bandH },
         false,
       );
       cellsRef.current = sampled.cells;
@@ -585,7 +587,13 @@ export function AsciiHandsFooter() {
       const y = e.clientY - rect.top;
       const w = canvas.clientWidth;
       const h = canvas.clientHeight;
-      if (x < 0 || y < 0 || x > w || y > h) return;
+      const visualRect = getHandsVisualRect(layout, w, h);
+      if (
+        x < visualRect.x ||
+        y < visualRect.y ||
+        x > visualRect.x + visualRect.w ||
+        y > visualRect.y + visualRect.h
+      ) return;
       const side: "left" | "right" = x < w / 2 ? "left" : "right";
       const st = lockRef.current[side];
       if (st.target > 0.5) {
@@ -777,8 +785,8 @@ export function AsciiHandsFooter() {
 
       const mUvX = showGooey ? (discX / minWH) * aspectX : 0;
       const mUvY = showGooey ? discY / minWH : 0;
-      const R = (GOOEY_RADIUS_PX / minWH) * intensity;
-      const S = ((GOOEY_SOFTNESS_PX * 0.5) / minWH) * intensity;
+      const R = GOOEY_RADIUS_UV * intensity;
+      const S = GOOEY_SOFTNESS_UV * intensity * 0.5;
       const rLo = R - S;
       const rHi = R + S;
 
@@ -1259,7 +1267,7 @@ export function AsciiHandsFooter() {
       window.removeEventListener("touchend", onLeave);
       canvas.removeEventListener("pointerdown", onDown);
     };
-  }, []);
+  }, [layout]);
 
   const handsVisible = stage === "hands";
   const [orbMounted, setOrbMounted] = useState(true);
@@ -1275,7 +1283,6 @@ export function AsciiHandsFooter() {
     window.setTimeout(() => setOrbMounted(false), 500);
   };
   const [bgDark, setBgDark] = useState(false);
-  const layout = useHeroLayout();
   useEffect(() => {
     if (typeof window === "undefined") return;
     window.dispatchEvent(
@@ -1298,14 +1305,9 @@ export function AsciiHandsFooter() {
       <canvas
         ref={canvasRef}
         aria-hidden
-        className="absolute"
+        className="absolute inset-0 h-full w-full"
         style={{
           zIndex: 10,
-          left: "50%",
-          transform: "translateX(-50%)",
-          width: "min(100vw, 1440px)",
-          top: layout.handsTop,
-          height: layout.handsHeight,
           opacity: handsVisible ? 1 : 0,
           pointerEvents: handsVisible ? "auto" : "none",
           transition: "opacity 300ms ease-out",
