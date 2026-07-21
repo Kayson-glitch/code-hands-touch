@@ -100,10 +100,11 @@ export function LiquidBurst({
       if (startRef.current == null) startRef.current = now;
       const t = now - startRef.current;
       const rawP = Math.min(1, t / spreadMs);
-      // easeOutBack — overshoots slightly for an elastic settle.
-      const c1 = 1.70158;
-      const p =
-        1 + (c1 + 1) * Math.pow(rawP - 1, 3) + c1 * Math.pow(rawP - 1, 2);
+      // Keep the 2.6s as the actual spread duration: a smooth radial grow with
+      // only a subtle elastic settle near the end, instead of an early overshoot.
+      const smoothP = rawP * rawP * (3 - 2 * rawP);
+      const endElastic = rawP > 0.82 ? Math.sin((rawP - 0.82) / 0.18 * Math.PI) * 0.035 : 0;
+      const p = smoothP + endElastic;
 
       const width = window.innerWidth;
       const height = window.innerHeight;
@@ -113,7 +114,7 @@ export function LiquidBurst({
         Math.max(centerX, width - centerX),
         Math.max(centerY, height - centerY),
       );
-      const settledP = Math.min(1.08, Math.max(0, p));
+      const settledP = Math.min(1.035, Math.max(0, p));
       const radius = settledP * (maxRadius + 120);
       const roughness = 0.09 + (1 - Math.min(1, rawP)) * 0.13;
       const drift = 5 + Math.min(1, rawP) * 10;
