@@ -1234,23 +1234,19 @@ export function AsciiHandsFooter() {
     };
   }, []);
 
-  // Show hands during the tail of the orb exit so the growth animation is
-  // visible before the orb finishes fading; orb stays mounted until
-  // onExited fires.
-  const handsVisible = stage === "hands" || stage === "orb-exit";
+  const handsVisible = stage === "hands";
+  const [orbMounted, setOrbMounted] = useState(true);
   const handleOrbClick = () => {
     if (stage !== "orb") return;
     setStage("orb-exit");
-    // Start the arm-growth animation partway through the orb exit so the
-    // two motions overlap, but keep the orb mounted until its own exit
-    // animation completes (onExited fires) — otherwise the orb visibly
-    // "pops" out mid-animation.
-    window.setTimeout(() => {
-      startIntroRef.current?.();
-    }, 300);
+    // Overlap the last ~150ms of the orb exit with the arm growth intro:
+    // flip stage to "hands" partway through so the canvas fades in while
+    // the orb finishes its exit animation. Keep the orb mounted until its
+    // own onExited callback fires — otherwise it visibly pops mid-anim.
+    window.setTimeout(() => setStage("hands"), 300);
   };
   const handleOrbExited = () => {
-    setStage("hands");
+    setOrbMounted(false);
   };
   return (
     <section
@@ -1296,7 +1292,7 @@ export function AsciiHandsFooter() {
         }}
       />
 
-      {stage !== "hands" && (
+      {orbMounted && (
         <div
           className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2"
           style={{
