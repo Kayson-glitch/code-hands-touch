@@ -1,6 +1,18 @@
 import { useEffect, useRef } from "react";
 import * as THREE from "three";
-import videoAsset from "@/assets/intro-hands.mp4.asset.json";
+
+const frameModules = import.meta.glob("../assets/intro-frames/frame-*.jpg", {
+  eager: true,
+  query: "?url",
+  import: "default",
+}) as Record<string, string>;
+
+const FRAME_URLS = Object.entries(frameModules)
+  .sort(([a], [b]) => a.localeCompare(b))
+  .map(([, url]) => url);
+
+const FALLBACK_VIDEO_W = 1280;
+const FALLBACK_VIDEO_H = 722;
 
 export type IntroVideoEndInfo = {
   videoW: number;
@@ -26,15 +38,6 @@ const SMOOTH_RATE_FAST = 38;
 // Keep the full-screen shader modest on high-DPR screens; 2x at 1550×950 costs
 // almost 6M shaded pixels per frame and makes scroll scrubbing feel sticky.
 const RENDER_PIXEL_RATIO_MAX = 1.35;
-// Let the video decoder run forward naturally instead of random-seeking every
-// frame. Seeking is reserved for reverse scrolls or large corrections.
-const VIDEO_PAUSE_EPSILON = 0.035;
-const VIDEO_REVERSE_SEEK_EPSILON = 0.045;
-const VIDEO_HARD_SEEK_EPSILON = 0.65;
-const VIDEO_SEEK_MIN_INTERVAL_MS = 90;
-const VIDEO_CORRECTION_INTERVAL_MS = 220;
-const VIDEO_PLAYBACK_RATE_MIN = 0.45;
-const VIDEO_PLAYBACK_RATE_MAX = 5.5;
 // Only notify parent when progress moved meaningfully.
 const PROGRESS_NOTIFY_EPSILON = 0.012;
 
