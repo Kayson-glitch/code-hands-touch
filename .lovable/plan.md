@@ -1,19 +1,31 @@
-当前问题：标题区域（HeroCopy）与手部 ASCII 画布（AsciiHandsFooter）之间的留白过大，导致首屏视觉重心过于分散。
+## 目标
+按参考图 1:1 复刻首屏布局比例，并移除底部大字 "Synergy.AI"。
 
-当前实测状态：
-- HeroCopy: paddingTop 为 12vh
-- 手部 canvas: top 为 32vh，height 为 56vh
-- 底部 Synergy.AI 大字：占 28% 高度并吸底
-- 标题—手部视觉间距约 20vh，整体布局偏松散
+## 参考图布局分析（1920 基准）
+- 导航栏：顶部 ~54px 高度区域，logo 左侧 ~200px，中部菜单居中，右侧 Log In + Book a Demo
+- 标题区域：垂直位置约 27%–43%（标题 + 副标题 + 按钮整体在上半屏偏上）
+  - 标题距顶 ~27vh
+  - 副标题距标题 ~24px
+  - Book a Demo 按钮距副标题 ~64px
+- 手部 ASCII：从约 55vh 开始，延伸到底部，手指尖大致在 55vh 位置，两只手左右分布顶到屏幕左右边缘
+- 底部：无大字水印，纯黑背景延伸到底
 
-修改方案：
-1. 降低标题区域顶部距离，将 HeroCopy 的 paddingTop 从 12vh 调整到 8vh。
-2. 上移手部 canvas，将 top 从 32vh 调整到 28vh，height 保持 56vh 不变（若上移后手部显得过大，可微调为 54vh）。
-3. 保持底部 Synergy.AI 大字吸底且高度不变，避免破坏吸底效果。
-4. 调整后标题—手部间距约 14vh，标题与手部作为整体仍大致位于视口垂直中心附近。
+## 修改项
 
-涉及文件：
-- src/components/HeroCopy.tsx
-- src/components/AsciiHandsFooter.tsx
+### 1. `src/components/AsciiHandsFooter.tsx`
+- 删除底部 "Synergy.AI" 大字水印 DOM 与相关样式
+- 手部 canvas 定位调整：`top: 55vh`，`height: 45vh`，`bottom: 0`，让手部占据下半屏并延伸至底边
+- 移除内部对水印的间距预留
 
-验证：在预览中检查首屏，标题、手部、底部大字三段纵向节奏应更紧凑，且手部不遮挡标题。
+### 2. `src/components/HeroCopy.tsx`
+- `paddingTop` 从 `8vh` 调整为 `24vh`，让标题落在参考图的 ~27vh 位置
+- 保持标题 / 副标题 / 按钮的内部间距（副标题上距 24px，按钮上距 64px）
+
+### 3. `src/routes/index.tsx`
+- 无需结构变更，仅确认层级顺序
+
+## 不改动
+- 导航栏 SiteNav（已符合参考）
+- 字体、颜色、按钮样式
+- 手部动画、hover、mosaic、点击、intro video 等全部交互逻辑
+- 底部对话框 FinChatDock

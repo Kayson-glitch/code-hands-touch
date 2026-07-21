@@ -1267,40 +1267,14 @@ export function AsciiHandsFooter() {
         Good Fella Studio — ASCII Creation of Adam
       </h1>
 
-      {/* Giant faded wordmark pinned to viewport bottom */}
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-x-0 bottom-0 flex items-end justify-center overflow-hidden"
-        style={{
-          height: "28%",
-          zIndex: 0,
-          opacity: handsVisible ? 1 : 0,
-          transition: "opacity 400ms ease-out",
-        }}
-      >
-        <span
-          className="select-none whitespace-nowrap tracking-tight"
-          style={{
-            fontSize: "clamp(8rem, 22vw, 22rem)",
-            lineHeight: 0.9,
-            fontWeight: 700,
-            color: "rgba(255,255,255,0.05)",
-            fontFamily:
-              'Montserrat, ui-sans-serif, system-ui, sans-serif',
-          }}
-        >
-          Synergy.AI
-        </span>
-      </div>
-
       <canvas
         ref={canvasRef}
         aria-hidden
         className="absolute inset-x-0 w-full"
         style={{
           zIndex: 10,
-          top: "28vh",
-          height: "56vh",
+          top: "55vh",
+          height: "45vh",
           opacity: handsVisible ? 1 : 0,
           pointerEvents: handsVisible ? "auto" : "none",
           transition: "opacity 300ms ease-out",
