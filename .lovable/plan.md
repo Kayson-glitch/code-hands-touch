@@ -1,17 +1,18 @@
 ## 目标
-删除所有扩散（LiquidBurst）相关代码，视频播放完直接进入手部动画阶段，其他不变。
+用鼠标滚轮控制视频播放进度，取代自动播放。滚到视频末尾时触发 `onEnded` 进入手部动画。
 
-## 改动
+## 改动 `src/components/IntroVideo.tsx`
 
-1. **删除文件**
-   - `src/components/LiquidBurst.tsx`
+1. 视频不再 autoplay：主视频与背景视频挂载后立即 `pause()`，并等 `loadedmetadata` 拿到 duration。
+2. 页面级 `wheel` 监听（`passive: false`，`preventDefault` 阻止页面滚动）：
+   - 累加 `deltaY`，按灵敏度换算为秒数：`SECONDS_PER_PIXEL = 0.004`（可微调）。
+   - `currentTime = clamp(current + delta, 0, duration)`；每帧用 `requestAnimationFrame` 合并写入，避免频繁 seek 卡顿。
+   - 主视频与背景视频 `currentTime` 保持同步。
+3. 到达 `duration - 0.05` 时调用 `fire()`（现有逻辑），并移除 wheel 监听。
+4. 移除 4300ms fallback（滚轮驱动下不需要）；保留 `error` 时的 fallback 以防视频加载失败。
+5. 只支持向前推进（可选）：默认允许双向滚动（前进/回退），停留在 plan 中确认为双向。
 
-2. **修改 `src/components/AsciiHandsFooter.tsx`**
-   - 移除 `LiquidBurst` 的 import 与渲染
-   - 移除 stage 中的 `"spread"` 状态（及 `spreadMs`、burst 起点坐标计算、相关 timer/ref）
-   - 视频 `onEnded`（含 fallback timer）后直接从 `"intro"` 切到 `"hands"` 阶段
-   - 保留背景色切换逻辑（视频结束时切到黑底），保留手部动画与其他所有效果不变
-
-3. **保留不变**
-   - `src/components/IntroVideo.tsx`（模糊背景 + contain 布局、最后一帧冻结、fallback 时长）
-   - 手部 ASCII 动画、hover、点击马赛克、字符流动等全部原有效果
+## 保留不变
+- 模糊背景 + contain 前景布局。
+- `onEnded` 回调签名。
+- 手部动画阶段的全部逻辑。
