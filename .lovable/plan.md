@@ -1,50 +1,44 @@
-## 目标
+目前 `src/components/IntroVideo.tsx` 中控制「滚轮 → 播放进度」手感的时间参数全部集中在文件顶部，下面按功能分组列出当前值和作用：
 
-只优化开屏视频的鼠标滚轮控制播放手感，让滚动反馈更流畅、丝滑，避免当前 seek 卡顿；不修改导航、标题、手部 ASCII、hover、聊天框、布局等任何无关元素。
+## 1. 滚轮输入层
+| 参数 | 当前值 | 作用 |
+|---|---|---|
+| `VIDEO_FRACTION` | `0.6` | 总滚动进度中，前 60% 分配给「视频播放」，后 40% 分配给「burst 扩散动画」。 |
+| `PIXELS_FOR_FULL_PROGRESS` | `3200` | 从滚动进度 0 到 1 所需的累计滚轮像素。值越大，需要滚得越多才能播完。 |
+| `MAX_PIXELS_PER_TICK` | `140` | 单次 `wheel` 事件最大计入的像素，防止一次猛滚跳太多。 |
+| `WHEEL_BUFFER_MAX` | `360` | 滚轮缓冲区上限，超过此值的多余滚动会被截断。 |
+| `WHEEL_RELEASE_RATE` | `18` | 滚轮缓冲按指数衰减释放到目标进度的速度。越大，单次滚轮刻度的能量释放越快。 |
 
-## 计划
+## 2. 平滑追赶层
+| 参数 | 当前值 | 作用 |
+|---|---|---|
+| `SMOOTH_RATE` | `16` | 正常/小差距时的指数平滑速率（低 = 惯性大）。 |
+| `SMOOTH_RATE_FAST` | `26` | 目标差距大时额外增加的平滑速率，让快速滚动更跟手。 |
 
-1. **保留现有视觉效果与交互流程**
-   - 保持视频阶段、burst/shader 阶段、滚轮推进逻辑、完成后进入手部动画的流程不变。
-   - 不改 `VIDEO_FRACTION`、整体滚动距离、布局、颜色、字体、手部组件等内容。
+## 3. 视频 seek / 播放策略层
+| 参数 | 当前值 | 作用 |
+|---|---|---|
+| `SEEK_MIN_INTERVAL_MS` | `140` | 两次 `seek` 之间的最小间隔，避免频繁 seek 导致卡顿。 |
+| `SEEK_EPSILON` | `0.1` | 当前时间与目标时间差距超过此值（秒）才允许 seek。 |
+| `VIDEO_CHASE_EPSILON` | `0.035` | 当目标在当前时间前方，且差距小于此值时，用「播放追赶」而不是 seek。 |
+| `VIDEO_BACKWARD_SEEK_EPSILON` | `0.12` | 当目标在当前时间后方（回滚），且差距超过此值时，直接 seek 回去。 |
+| `VIDEO_HARD_SEEK_EPSILON` | `0.48` | 当目标差距超过此值时，视为大跳，先 seek 到目标附近再播放追赶。 |
+| `MIN_CHASE_PLAYBACK_RATE` | `0.75` | 播放追赶时的最小倍速。 |
+| `MAX_CHASE_PLAYBACK_RATE` | `2.35` | 播放追赶时的最大倍速。 |
 
-2. **降低视频 seek 造成的解码卡顿**
-   - 避免滚轮过程中频繁给 `video.currentTime` 赋值。
-   - 将视频帧更新改成“目标进度平滑追踪 + 有节奏地提交 seek”。
-   - 对小幅滚动优先保持画面稳定，只在目标时间变化足够明显时更新视频帧。
+## 4. 父组件通知层
+| 参数 | 当前值 | 作用 |
+|---|---|---|
+| `PROGRESS_NOTIFY_EPSILON` | `0.003` | 进度变化超过此值才通过 `onProgress` 通知父组件，减少 React 重渲染。 |
 
-3. **优化滚轮输入的平滑层**
-   - 区分触控板的小连续 delta 和鼠标滚轮的大跳变 delta。
-   - 对大跳变做更柔和的分段吸收，减少一格滚轮造成的突然追赶。
-   - 保留用户快速滚动时的响应速度，但避免每次快速滚动都触发密集 seek。
+## 5. 运行时常量
+- 帧时间 `dt` 被 clamp 到 `[0.001, 0.05]` 秒，避免 tab 切换后的大跳变。
+- 当 `targetProgress` 与 `progress` 差距小于 `0.0005` 时直接 snap，保证 `progress >= 1` 能干净触发 `fire()`。
 
-4. **让 shader 动效继续保持高帧率**
-   - WebGL 渲染继续每帧运行，保证轻微视差、中心扩散进度、视觉反馈不会卡住。
-   - 视频纹理只在必要时更新，避免把主线程和解码线程压满。
+## 调整建议方向
+- 想要更「丝滑但跟手」：降低 `SMOOTH_RATE` / `SMOOTH_RATE_FAST`，并缩小 `SEEK_MIN_INTERVAL_MS`。
+- 想要更「直接响应」：提高 `SMOOTH_RATE`，降低 `PIXELS_FOR_FULL_PROGRESS`。
+- 想要减少卡顿：提高 `SEEK_MIN_INTERVAL_MS`、放宽 `VIDEO_CHASE_EPSILON` 让播放追赶代替 seek。
+- 想要调整视频与扩散的占比：改 `VIDEO_FRACTION`。
 
-5. **节流父组件进度通知**
-   - 继续避免 `onProgress` 每帧触发 React 更新。
-   - 确保关键节点仍能即时触发：扩散开始、扩散完成、进入手部动画。
-
-6. **验证**
-   - 在预览里实际滚动检查：滚轮输入是否更顺、视频是否仍能到最后一帧、最后阶段是否正常进入手部动画。
-   - 若发现视频解码本身仍限制明显，会优先微调 seek 频率和阈值，而不是改动其他组件。
-
-## 技术范围
-
-仅修改：
-
-```text
-src/components/IntroVideo.tsx
-```
-
-不会修改：
-
-```text
-src/components/AsciiHandsFooter.tsx
-src/components/HeroCopy.tsx
-src/components/SiteNav.tsx
-src/components/FinChatDock.tsx
-src/styles.css
-路由、布局、资源文件
-```
+你可以直接告诉我每个参数想改成多少，我按你的值只修改 `IntroVideo.tsx` 顶部常量，不改动其他逻辑。
