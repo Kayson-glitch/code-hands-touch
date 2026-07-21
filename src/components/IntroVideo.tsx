@@ -240,7 +240,6 @@ export function IntroVideo({
     let progress = 0;
     let targetProgress = 0;
     let lastFrameTs = performance.now();
-    let lastSeekTime = -1;
     let lastSeekAt = 0;
     let lastCorrectionAt = 0;
     let lastNotifiedProgress = -1;
@@ -271,7 +270,6 @@ export function IntroVideo({
         const fs = (video as unknown as { fastSeek?: (t: number) => void }).fastSeek;
         if (typeof fs === "function") fs.call(video, target);
         else video.currentTime = target;
-        lastSeekTime = target;
         lastSeekAt = now;
       } catch { /* ignore */ }
     };
