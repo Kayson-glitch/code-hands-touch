@@ -37,6 +37,8 @@ export function LiquidBurst({
   const kRef = useRef<HTMLDivElement>(null);
   const cRef = useRef<HTMLDivElement>(null);
   const wrapRef = useRef<HTMLDivElement>(null);
+  const solidRef = useRef<HTMLDivElement>(null);
+  const inkRef = useRef<HTMLDivElement>(null);
   const turbRef = useRef<SVGFETurbulenceElement>(null);
   const dispRef = useRef<SVGFEDisplacementMapElement>(null);
 
@@ -90,6 +92,14 @@ export function LiquidBurst({
       setGrad(rRef.current, "#ff2244", -0.9, -0.3);
       setGrad(kRef.current, "#000000", 0, 0);
       setGrad(cRef.current, "#00e5ff", 0.9, 0.3);
+
+      // Undisplaced solid-black underlay, kept ~6% inside the chromatic
+      // edge so the filter's displacement can't tear a see-through gap
+      // to the section background during the spread.
+      if (solidRef.current) {
+        const fillSolid = Math.max(0, fill - 6);
+        solidRef.current.style.background = `radial-gradient(circle at ${cssX}% ${cssY}%, #000 0%, #000 ${fillSolid}%, transparent ${fillSolid}%)`;
+      }
 
       // Turbulence displacement ramps up so the front looks increasingly
       // torn as it spreads.
@@ -180,12 +190,27 @@ export function LiquidBurst({
         style={{
           position: "absolute",
           inset: 0,
-          filter: filterUrl,
-          WebkitFilter: filterUrl,
           opacity: 1,
-          willChange: "opacity, filter",
+          willChange: "opacity",
         }}
       >
+        <div
+          ref={solidRef}
+          style={{
+            position: "absolute",
+            inset: 0,
+          }}
+        />
+        <div
+          ref={inkRef}
+          style={{
+            position: "absolute",
+            inset: 0,
+            filter: filterUrl,
+            WebkitFilter: filterUrl,
+            willChange: "filter",
+          }}
+        >
         <div
           ref={rRef}
           style={{
@@ -209,6 +234,7 @@ export function LiquidBurst({
             inset: 0,
           }}
         />
+        </div>
       </div>
     </div>
   );
