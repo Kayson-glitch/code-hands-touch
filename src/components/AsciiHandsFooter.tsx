@@ -1257,6 +1257,7 @@ export function AsciiHandsFooter() {
   };
   const handleBurstCovered = () => {
     setStage("orb-fade");
+    setBgDark(true);
   };
   const handleBurstProgress = (p: number) => {
     // Once the burst is nearly done fading, prep the hands so the arm
@@ -1269,15 +1270,14 @@ export function AsciiHandsFooter() {
     setBurstMounted(false);
     if (stageRef.current !== "hands") setStage("hands");
   };
-  const lightBg = stage === "orb" || stage === "orb-burst";
+  const [bgDark, setBgDark] = useState(false);
   return (
     <section
       className="relative w-full overflow-hidden"
       style={{
-        backgroundColor: lightBg ? "#EFE7DA" : "#0a0a0a",
+        backgroundColor: bgDark ? "#0a0a0a" : "#EFE7DA",
         height: "100vh",
         minHeight: 600,
-        transition: "background-color 280ms ease-out",
       }}
     >
       <h1 className="sr-only" suppressHydrationWarning>
@@ -1348,7 +1348,7 @@ export function AsciiHandsFooter() {
           onCovered={handleBurstCovered}
           onFaded={handleBurstFaded}
           onProgress={handleBurstProgress}
-          spreadMs={1000}
+          spreadMs={2600}
           fadeMs={280}
         />
       )}
