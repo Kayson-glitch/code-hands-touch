@@ -64,7 +64,7 @@ export function IntroVideo({
     };
     const onEnd = () => fire();
     const onMeta = () => armFallback();
-    const onError = () => fire();
+    const onError = () => armFallback();
     v.addEventListener("timeupdate", onTime);
     v.addEventListener("ended", onEnd);
     v.addEventListener("loadedmetadata", onMeta);
