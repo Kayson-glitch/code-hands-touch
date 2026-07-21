@@ -16,7 +16,13 @@ export type IntroProgressInfo = {
 };
 
 const VIDEO_FRACTION = 0.6;
-const PIXELS_FOR_FULL_PROGRESS = 2600;
+const PIXELS_FOR_FULL_PROGRESS = 3200;
+// Cap a single wheel tick so a hard mouse-wheel notch doesn't jump the progress.
+const MAX_PIXELS_PER_TICK = 180;
+// Exponential smoothing rate (higher = snappier follow, lower = more inertia).
+const SMOOTH_RATE = 12;
+// Only re-seek the video when the target frame drifts by more than ~1 frame.
+const SEEK_EPSILON = 0.04;
 
 const VERT = /* glsl */ `
   varying vec2 vUv;
@@ -210,6 +216,9 @@ export function IntroVideo({
     window.addEventListener("resize", resize);
 
     let progress = 0;
+    let targetProgress = 0;
+    let lastFrameTs = performance.now();
+    let lastSeekTime = -1;
     let rafId = 0;
     let running = true;
     const t0 = performance.now();
@@ -245,21 +254,41 @@ export function IntroVideo({
     const onWheel = (e: WheelEvent) => {
       if (firedRef.current) return;
       e.preventDefault();
-      progress = Math.min(1, Math.max(0, progress + e.deltaY / PIXELS_FOR_FULL_PROGRESS));
+      // Normalize delta across PIXEL/LINE/PAGE modes.
+      let dy = e.deltaY;
+      if (e.deltaMode === 1) dy *= 16;          // LINE ≈ 16px
+      else if (e.deltaMode === 2) dy *= window.innerHeight; // PAGE
+      // Clamp a single tick so mouse-wheel notches don't cause jumps.
+      if (dy > MAX_PIXELS_PER_TICK) dy = MAX_PIXELS_PER_TICK;
+      else if (dy < -MAX_PIXELS_PER_TICK) dy = -MAX_PIXELS_PER_TICK;
+      targetProgress = Math.min(
+        1,
+        Math.max(0, targetProgress + dy / PIXELS_FOR_FULL_PROGRESS),
+      );
     };
     window.addEventListener("wheel", onWheel, { passive: false });
 
     const loop = () => {
       if (!running) return;
       rafId = requestAnimationFrame(loop);
-      const time = (performance.now() - t0) / 1000;
+      const now = performance.now();
+      const time = (now - t0) / 1000;
+      const dt = Math.min(0.05, Math.max(0.001, (now - lastFrameTs) / 1000));
+      lastFrameTs = now;
+
+      // Frame-rate-independent exponential smoothing toward the target.
+      const alpha = 1 - Math.exp(-SMOOTH_RATE * dt);
+      progress += (targetProgress - progress) * alpha;
+      // Snap when essentially there so `fire()` still triggers cleanly.
+      if (Math.abs(targetProgress - progress) < 0.0005) progress = targetProgress;
+
       const videoProgress = Math.min(1, progress / VIDEO_FRACTION);
       const burstProgress = Math.min(1, Math.max(0, (progress - VIDEO_FRACTION) / (1 - VIDEO_FRACTION)));
-      // Scrub video
+      // Scrub video — only when drift exceeds ~1 frame to avoid seek thrash.
       if (video.duration && !Number.isNaN(video.duration)) {
         const target = videoProgress * video.duration;
-        if (Math.abs(video.currentTime - target) > 0.02) {
-          try { video.currentTime = target; } catch { /* ignore */ }
+        if (Math.abs(target - lastSeekTime) > SEEK_EPSILON) {
+          try { video.currentTime = target; lastSeekTime = target; } catch { /* ignore */ }
         }
       }
       uniforms.uProgress.value = progress;
