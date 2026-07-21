@@ -1233,6 +1233,13 @@ export function AsciiHandsFooter() {
     };
   }, []);
 
+  const handsVisible = stage === "hands";
+  const handleOrbClick = () => {
+    if (stage !== "orb") return;
+    setStage("orb-exit");
+    // Overlap the last ~150ms of the orb exit with the arm growth intro.
+    window.setTimeout(() => setStage("hands"), 300);
+  };
   return (
     <section
       className="relative w-full overflow-hidden"
@@ -1244,7 +1251,12 @@ export function AsciiHandsFooter() {
       <div
         aria-hidden
         className="pointer-events-none absolute inset-x-0 bottom-0 flex justify-center overflow-hidden"
-        style={{ height: "45%", zIndex: 0 }}
+        style={{
+          height: "45%",
+          zIndex: 0,
+          opacity: handsVisible ? 1 : 0,
+          transition: "opacity 400ms ease-out",
+        }}
       >
         <span
           className="select-none whitespace-nowrap font-bold tracking-tight"
@@ -1264,16 +1276,33 @@ export function AsciiHandsFooter() {
         ref={canvasRef}
         aria-hidden
         className="absolute inset-0 h-full w-full"
-        style={{ zIndex: 10 }}
+        style={{
+          zIndex: 10,
+          opacity: handsVisible ? 1 : 0,
+          pointerEvents: handsVisible ? "auto" : "none",
+          transition: "opacity 300ms ease-out",
+        }}
       />
 
-      <div
-        aria-hidden
-        className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2"
-        style={{ width: 200, height: 200, zIndex: 60, isolation: "isolate" }}
-      >
-        {mounted && <LiquidMetalOrb />}
-      </div>
+      {stage !== "hands" && (
+        <div
+          className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2"
+          style={{
+            width: 200,
+            height: 200,
+            zIndex: 60,
+            isolation: "isolate",
+            pointerEvents: stage === "orb" ? "auto" : "none",
+          }}
+        >
+          {mounted && (
+            <LiquidMetalOrb
+              onClick={handleOrbClick}
+              exiting={stage === "orb-exit"}
+            />
+          )}
+        </div>
+      )}
 
     </section>
   );
