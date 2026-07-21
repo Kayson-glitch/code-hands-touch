@@ -163,9 +163,11 @@ const FRAG = /* glsl */ `
 export function IntroVideo({
   onEnded,
   onProgress,
+  src,
 }: {
   onEnded: (info: IntroVideoEndInfo) => void;
   onProgress?: (info: IntroProgressInfo) => void;
+  src?: string;
 }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -423,7 +425,7 @@ export function IntroVideo({
     <div style={{ position: "absolute", inset: 0, background: "#000", overflow: "hidden" }}>
       <video
         ref={videoRef}
-        src={videoAsset.url}
+        src={src ?? videoAsset.url}
         muted
         playsInline
         preload="auto"
