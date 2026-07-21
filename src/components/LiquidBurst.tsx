@@ -1,13 +1,12 @@
-import { useEffect, useId, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 /**
  * Full-screen ink burst.
  *
- * Pure CSS — no WebGL — so it never fights the orb Canvas for a GPU context.
- * Three overlapping, fully opaque clipped layers (red / black / cyan) form a
- * chromatic-aberration edge. The irregular outline is generated as a continuous
- * polygon, which avoids displacing transparent pixels into the ink body and
- * prevents the light background from flashing through edge burrs.
+ * Pure SVG — no WebGL — so it never fights the orb Canvas for a GPU context.
+ * Three overlapping, fully opaque polygons (red / black / cyan) form a
+ * chromatic-aberration edge. The irregular outline is generated directly as
+ * a continuous polygon, avoiding displacement/clip-path transparency leaks.
  */
 export function LiquidBurst({
   origin,
@@ -25,24 +24,19 @@ export function LiquidBurst({
   spreadMs?: number;
   fadeMs?: number;
 }) {
-  const clipId = useId().replace(/:/g, "");
   const rafRef = useRef<number | null>(null);
   const startRef = useRef<number | null>(null);
   const coveredAtRef = useRef<number | null>(null);
   const coveredRef = useRef(false);
   const fadedRef = useRef(false);
 
-  const rRef = useRef<HTMLDivElement>(null);
-  const kRef = useRef<HTMLDivElement>(null);
-  const cRef = useRef<HTMLDivElement>(null);
   const wrapRef = useRef<HTMLDivElement>(null);
   const rPolyRef = useRef<SVGPolygonElement>(null);
   const kPolyRef = useRef<SVGPolygonElement>(null);
   const cPolyRef = useRef<SVGPolygonElement>(null);
 
   const [ox, oy] = origin;
-  // Convert WebGL-style y (bottom-origin) to CSS px (top-origin) in the rAF loop.
-  const initialClip = `circle(0px at ${ox * 100}% ${(1 - oy) * 100}%)`;
+  // Convert WebGL-style y (bottom-origin) to SVG px (top-origin) in the rAF loop.
 
   // Callbacks in refs so the rAF loop always sees the latest.
   const cbRef = useRef({ onCovered, onFaded, onProgress });
@@ -168,25 +162,6 @@ export function LiquidBurst({
       style={{ zIndex: 55 }}
       aria-hidden
     >
-      <svg
-        width="0"
-        height="0"
-        style={{ position: "absolute", pointerEvents: "none" }}
-        aria-hidden
-      >
-        <defs>
-          <clipPath id={`ink-r-${clipId}`} clipPathUnits="userSpaceOnUse">
-            <polygon ref={rPolyRef} points="0,0 0,0 0,0" />
-          </clipPath>
-          <clipPath id={`ink-c-${clipId}`} clipPathUnits="userSpaceOnUse">
-            <polygon ref={cPolyRef} points="0,0 0,0 0,0" />
-          </clipPath>
-          <clipPath id={`ink-k-${clipId}`} clipPathUnits="userSpaceOnUse">
-            <polygon ref={kPolyRef} points="0,0 0,0 0,0" />
-          </clipPath>
-        </defs>
-      </svg>
-
       <div
         ref={wrapRef}
         style={{
@@ -196,38 +171,30 @@ export function LiquidBurst({
           willChange: "opacity",
         }}
       >
-        <div
-          ref={rRef}
+        <svg
+          width="100%"
+          height="100%"
+          viewBox={`0 0 ${typeof window === "undefined" ? 1 : window.innerWidth} ${typeof window === "undefined" ? 1 : window.innerHeight}`}
+          preserveAspectRatio="none"
           style={{
             position: "absolute",
             inset: 0,
-            background: "#ff2244",
-            mixBlendMode: "multiply",
-            clipPath: `url(#ink-r-${clipId})`,
-            WebkitClipPath: `url(#ink-r-${clipId})`,
           }}
-        />
-        <div
-          ref={cRef}
-          style={{
-            position: "absolute",
-            inset: 0,
-            background: "#00e5ff",
-            mixBlendMode: "multiply",
-            clipPath: `url(#ink-c-${clipId})`,
-            WebkitClipPath: `url(#ink-c-${clipId})`,
-          }}
-        />
-        <div
-          ref={kRef}
-          style={{
-            position: "absolute",
-            inset: 0,
-            background: "#000000",
-            clipPath: `url(#ink-k-${clipId})`,
-            WebkitClipPath: `url(#ink-k-${clipId})`,
-          }}
-        />
+        >
+          <polygon
+            ref={rPolyRef}
+            points="0,0 0,0 0,0"
+            fill="#ff2244"
+            style={{ mixBlendMode: "multiply" }}
+          />
+          <polygon
+            ref={cPolyRef}
+            points="0,0 0,0 0,0"
+            fill="#00e5ff"
+            style={{ mixBlendMode: "multiply" }}
+          />
+          <polygon ref={kPolyRef} points="0,0 0,0 0,0" fill="#000000" />
+        </svg>
       </div>
     </div>
   );
