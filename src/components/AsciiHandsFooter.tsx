@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import handsPairAsset from "@/assets/hands-pair.png.asset.json";
 import { IntroVideo, type IntroProgressInfo } from "./IntroVideo";
-import { useHeroLayout } from "@/hooks/useHeroLayout";
+import { useHeroLayout, type HeroLayout } from "@/hooks/useHeroLayout";
 
 // Ordered density ramp, dark → bright. Mirrors the exact 70-glyph set used by
 // good-fella.com's ASCII footer (recovered by hooking their canvas atlas).
@@ -50,10 +50,7 @@ const CELL_H = 10;
 const GOOEY_RADIUS_UV = 0.048;
 const GOOEY_SOFTNESS_UV = 0.028;
 const GOOEY_NOISE = 0.011;
-// Hover reveal disc is pinned to a fixed on-screen size (80px diameter) so
-// it no longer breathes when the canvas short-edge changes across viewports.
-const GOOEY_RADIUS_PX = 40;
-const GOOEY_SOFTNESS_PX = 24;
+const HANDS_VISUAL_MAX_W = 1440;
 // Max whole-scene parallax drift on hover, in CSS pixels. Small — mirrors the
 // source's "the picture leans toward the finger" feel.
 const PARALLAX_MAX = 13;
