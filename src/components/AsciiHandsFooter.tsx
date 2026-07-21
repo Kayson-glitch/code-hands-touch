@@ -110,6 +110,7 @@ const ARM_ALIGN_STRENGTH = 0.45;
 // A hermite curve gives fast forearm coverage, then a distinct deceleration as
 // the reveal reaches the wrist / palm / fingers.
 const INTRO_DURATION_MS = 2400;
+const INTRO_MASK_PREROLL_MS = 900;
 const INTRO_FRONT_WIDTH_BASE = 0.18;
 // After the reveal passes the "wrist" anchor we widen the front band so the
 // palm + fingers unfurl feels softer / more diffused, reinforcing the slowdown.
@@ -409,6 +410,7 @@ export function AsciiHandsFooter() {
   const mouseSpeedRef = useRef(0);
   const lastMoveRef = useRef<{ x: number; y: number; t: number } | null>(null);
   const introStartRef = useRef<number | null>(null);
+  const introPrerollRef = useRef(0);
   const introDoneRef = useRef(false);
   const introVisibleRef = useRef(false);
   // Per-hand click lock state. `progress` tweens toward `target` each frame
@@ -496,7 +498,8 @@ export function AsciiHandsFooter() {
     startIntroRef.current = () => {
       if (introVisibleRef.current) return;
       introVisibleRef.current = true;
-      introStartRef.current = performance.now();
+      introStartRef.current = performance.now() - introPrerollRef.current;
+      introPrerollRef.current = 0;
     };
 
     const onMove = (e: MouseEvent) => {
@@ -1258,6 +1261,7 @@ export function AsciiHandsFooter() {
   const handleBurstCovered = () => {
     // Start the hands immediately once the liquid mask fully covers the screen.
     // This avoids a visible black/empty beat between the burst and arm intro.
+    introPrerollRef.current = INTRO_MASK_PREROLL_MS;
     setStage("hands");
     setBgDark(true);
   };
@@ -1350,7 +1354,7 @@ export function AsciiHandsFooter() {
           onFaded={handleBurstFaded}
           onProgress={handleBurstProgress}
           spreadMs={2600}
-          fadeMs={280}
+          fadeMs={480}
         />
       )}
 
