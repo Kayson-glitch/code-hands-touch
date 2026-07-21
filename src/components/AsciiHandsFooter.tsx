@@ -1291,13 +1291,7 @@ export function AsciiHandsFooter() {
     // visible cream flash.
     setOrbMounted(false);
   };
-  const handleBurstProgress = (p: number) => {
-    // Once the burst is nearly done fading, prep the hands so the arm
-    // growth animation starts as the purple veil finishes clearing.
-    if (stage === "orb-fade" && p >= 0.6 && stageRef.current !== "hands") {
-      setStage("hands");
-    }
-  };
+  const handleBurstProgress = () => {};
   const handleBurstFaded = () => {
     setBurstMounted(false);
     if (stageRef.current !== "hands") setStage("hands");
