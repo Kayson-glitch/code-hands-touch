@@ -1,6 +1,6 @@
 import { useRef } from "react";
 import { Canvas, useFrame } from "@react-three/fiber";
-import { MeshDistortMaterial, Environment } from "@react-three/drei";
+import { MeshDistortMaterial } from "@react-three/drei";
 import type { Mesh } from "three";
 
 type OrbProps = { exiting: boolean; onExited?: () => void };
@@ -61,7 +61,14 @@ export function LiquidMetalOrb({
   return (
     <Canvas
       dpr={[1, 2]}
-      gl={{ alpha: true, antialias: true }}
+      gl={{
+        alpha: true,
+        antialias: true,
+        powerPreference: "high-performance",
+        preserveDrawingBuffer: false,
+        failIfMajorPerformanceCaveat: false,
+      }}
+      frameloop="always"
       camera={{ position: [0, 0, 2.6], fov: 45 }}
       onClick={onClick}
       style={{
@@ -72,9 +79,10 @@ export function LiquidMetalOrb({
         touchAction: "none",
       }}
     >
-      <ambientLight intensity={0.4} />
-      <directionalLight position={[3, 3, 3]} intensity={1.2} />
-      <Environment preset="studio" />
+      <ambientLight intensity={0.35} />
+      <directionalLight position={[4, 4, 5]} intensity={1.4} />
+      <directionalLight position={[-4, -2, -3]} intensity={0.6} color="#B79BFF" />
+      <pointLight position={[0, 0, 3]} intensity={0.5} color="#ffffff" />
       <Orb exiting={exiting} onExited={onExited} />
     </Canvas>
   );
