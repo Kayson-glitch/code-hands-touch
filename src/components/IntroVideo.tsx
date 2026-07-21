@@ -19,13 +19,21 @@ const VIDEO_FRACTION = 0.6;
 const PIXELS_FOR_FULL_PROGRESS = 3200;
 // Cap a single wheel tick so a hard mouse-wheel notch doesn't jump the progress.
 const MAX_PIXELS_PER_TICK = 140;
+// Release wheel input over a few frames instead of applying the whole notch at once.
+const WHEEL_RELEASE_RATE = 18;
+const WHEEL_BUFFER_MAX = 360;
 // Exponential smoothing rate (higher = snappier follow, lower = more inertia).
 const SMOOTH_RATE = 16;
 // Extra snappiness when the user scrolls fast (large gap between target and current).
 const SMOOTH_RATE_FAST = 26;
-// Throttle video seeks — decoding non-keyframes on every rAF is what makes scroll feel janky.
-const SEEK_MIN_INTERVAL_MS = 66; // ~15fps
-const SEEK_EPSILON = 0.08;       // ~2 frames @24fps
+// Prefer letting the decoder play forward to the target; reserve seeks for coarse correction.
+const SEEK_MIN_INTERVAL_MS = 140;
+const SEEK_EPSILON = 0.1;
+const VIDEO_CHASE_EPSILON = 0.035;
+const VIDEO_BACKWARD_SEEK_EPSILON = 0.12;
+const VIDEO_HARD_SEEK_EPSILON = 0.48;
+const MIN_CHASE_PLAYBACK_RATE = 0.75;
+const MAX_CHASE_PLAYBACK_RATE = 2.35;
 // Only notify parent when progress moved meaningfully.
 const PROGRESS_NOTIFY_EPSILON = 0.003;
 
@@ -222,14 +230,49 @@ export function IntroVideo({
 
     let progress = 0;
     let targetProgress = 0;
+    let wheelBuffer = 0;
     let lastFrameTs = performance.now();
     let lastSeekTime = -1;
     let lastSeekAt = 0;
     let lastNotifiedProgress = -1;
     let lastNotifiedBurst = -1;
+    let playPending = false;
     let rafId = 0;
     let running = true;
     const t0 = performance.now();
+
+    const clamp01 = (value: number) => Math.min(1, Math.max(0, value));
+
+    const pauseVideo = () => {
+      try {
+        if (!video.paused) video.pause();
+      } catch { /* ignore */ }
+    };
+
+    const playVideoTowardTarget = (rate: number) => {
+      const playbackRate = Math.min(MAX_CHASE_PLAYBACK_RATE, Math.max(MIN_CHASE_PLAYBACK_RATE, rate));
+      try {
+        if (Math.abs(video.playbackRate - playbackRate) > 0.04) {
+          video.playbackRate = playbackRate;
+        }
+      } catch { /* ignore */ }
+      if (!video.paused || playPending) return;
+      playPending = true;
+      video.play()
+        .catch(() => { /* ignore */ })
+        .finally(() => { playPending = false; });
+    };
+
+    const commitSeek = (target: number, now: number, exact = false) => {
+      try {
+        const fs = (video as unknown as { fastSeek?: (t: number) => void }).fastSeek;
+        if (!exact && typeof fs === "function") fs.call(video, target);
+        else video.currentTime = target;
+        lastSeekTime = target;
+        lastSeekAt = now;
+        videoTex.needsUpdate = true;
+      } catch { /* ignore */ }
+    };
 
     const fire = () => {
       if (firedRef.current) return;
@@ -269,9 +312,9 @@ export function IntroVideo({
       // Clamp a single tick so mouse-wheel notches don't cause jumps.
       if (dy > MAX_PIXELS_PER_TICK) dy = MAX_PIXELS_PER_TICK;
       else if (dy < -MAX_PIXELS_PER_TICK) dy = -MAX_PIXELS_PER_TICK;
-      targetProgress = Math.min(
-        1,
-        Math.max(0, targetProgress + dy / PIXELS_FOR_FULL_PROGRESS),
+      wheelBuffer = Math.min(
+        WHEEL_BUFFER_MAX,
+        Math.max(-WHEEL_BUFFER_MAX, wheelBuffer + dy),
       );
     };
     window.addEventListener("wheel", onWheel, { passive: false });
@@ -283,6 +326,18 @@ export function IntroVideo({
       const time = (now - t0) / 1000;
       const dt = Math.min(0.05, Math.max(0.001, (now - lastFrameTs) / 1000));
       lastFrameTs = now;
+
+      // Smoothly consume wheel input so coarse mouse-wheel notches don't turn into seek spikes.
+      if (Math.abs(wheelBuffer) > 0.01) {
+        const consume = wheelBuffer * (1 - Math.exp(-WHEEL_RELEASE_RATE * dt));
+        targetProgress = clamp01(targetProgress + consume / PIXELS_FOR_FULL_PROGRESS);
+        wheelBuffer -= consume;
+        if ((targetProgress <= 0 && wheelBuffer < 0) || (targetProgress >= 1 && wheelBuffer > 0)) {
+          wheelBuffer = 0;
+        }
+      } else {
+        wheelBuffer = 0;
+      }
 
       // Frame-rate-independent exponential smoothing toward the target.
       // Scale rate up when the gap is large so fast scroll feels responsive,
@@ -296,22 +351,30 @@ export function IntroVideo({
 
       const videoProgress = Math.min(1, progress / VIDEO_FRACTION);
       const burstProgress = Math.min(1, Math.max(0, (progress - VIDEO_FRACTION) / (1 - VIDEO_FRACTION)));
-      // Scrub video — throttled in both time and distance to keep the decoder happy.
+      // Scrub video with a hybrid strategy: play forward to chase small gaps,
+      // and seek only for large jumps / reverse movement / final-frame locking.
       if (video.duration && !Number.isNaN(video.duration)) {
-        const target = videoProgress * video.duration;
-        const drift = Math.abs(target - lastSeekTime);
-        const settled = progress === targetProgress && drift > 0.001;
-        if (
-          (now - lastSeekAt > SEEK_MIN_INTERVAL_MS && drift > SEEK_EPSILON) ||
-          settled
-        ) {
-          try {
-            const fs = (video as unknown as { fastSeek?: (t: number) => void }).fastSeek;
-            if (typeof fs === "function") fs.call(video, target);
-            else video.currentTime = target;
-            lastSeekTime = target;
-            lastSeekAt = now;
-          } catch { /* ignore */ }
+        const duration = video.duration;
+        const target = Math.min(duration, Math.max(0, videoProgress * duration));
+        const current = Number.isFinite(video.currentTime)
+          ? video.currentTime
+          : Math.max(0, lastSeekTime);
+        const gap = target - current;
+        const absGap = Math.abs(gap);
+        const canSeek = now - lastSeekAt > SEEK_MIN_INTERVAL_MS && absGap > SEEK_EPSILON;
+        const lockFinalFrame = videoProgress >= 0.998 || burstProgress > 0;
+
+        if (lockFinalFrame) {
+          pauseVideo();
+          if (absGap > VIDEO_CHASE_EPSILON && canSeek) commitSeek(target, now, true);
+        } else if (gap > VIDEO_CHASE_EPSILON) {
+          if (gap > VIDEO_HARD_SEEK_EPSILON && canSeek) {
+            commitSeek(Math.max(0, target - VIDEO_CHASE_EPSILON), now, false);
+          }
+          playVideoTowardTarget(MIN_CHASE_PLAYBACK_RATE + gap * 4.2);
+        } else {
+          pauseVideo();
+          if (gap < -VIDEO_BACKWARD_SEEK_EPSILON && canSeek) commitSeek(target, now, true);
         }
       }
       uniforms.uProgress.value = progress;
@@ -353,6 +416,7 @@ export function IntroVideo({
       video.removeEventListener("loadedmetadata", onMeta);
       video.removeEventListener("error", onError);
       window.clearTimeout(errorTimer);
+      pauseVideo();
       videoTex.dispose();
       material.dispose();
       mesh.geometry.dispose();
