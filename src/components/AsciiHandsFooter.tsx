@@ -1318,7 +1318,7 @@ export function AsciiHandsFooter() {
           zIndex: 10,
           opacity: handsVisible ? 1 : 0,
           pointerEvents: handsVisible ? "auto" : "none",
-          transition: "opacity 300ms ease-out",
+          transition: handsVisible ? "none" : "opacity 120ms ease-out",
         }}
       />
 
