@@ -87,6 +87,7 @@ export function LiquidMetalOrb({
       <directionalLight position={[4, 4, 5]} intensity={1.4} />
       <directionalLight position={[-4, -2, -3]} intensity={0.6} color="#B79BFF" />
       <pointLight position={[0, 0, 3]} intensity={0.5} color="#ffffff" />
+      <directionalLight position={[0, 0, -3]} intensity={0.5} color="#1a0b3a" />
       <Orb exiting={exiting} onExited={onExited} />
     </Canvas>
   );
