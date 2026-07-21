@@ -39,8 +39,9 @@ function Orb({ exiting, onExited }: OrbProps) {
       <MeshDistortMaterial
         ref={matRef}
         color="#C5A9FF"
-        metalness={0.9}
-        roughness={0.15}
+        metalness={0.85}
+        roughness={0.2}
+        envMapIntensity={0}
         distort={0.45}
         speed={1.6}
         transparent
