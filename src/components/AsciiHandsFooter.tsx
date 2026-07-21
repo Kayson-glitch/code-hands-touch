@@ -1238,8 +1238,16 @@ export function AsciiHandsFooter() {
   const handleOrbClick = () => {
     if (stage !== "orb") return;
     setStage("orb-exit");
-    // Overlap the last ~150ms of the orb exit with the arm growth intro.
-    window.setTimeout(() => setStage("hands"), 300);
+    // Start the arm-growth animation partway through the orb exit so the
+    // two motions overlap, but keep the orb mounted until its own exit
+    // animation completes (onExited fires) — otherwise the orb visibly
+    // "pops" out mid-animation.
+    window.setTimeout(() => {
+      startIntroRef.current?.();
+    }, 300);
+  };
+  const handleOrbExited = () => {
+    setStage("hands");
   };
   return (
     <section
@@ -1300,6 +1308,7 @@ export function AsciiHandsFooter() {
             <LiquidMetalOrb
               onClick={handleOrbClick}
               exiting={stage === "orb-exit"}
+              onExited={handleOrbExited}
             />
           )}
         </div>
