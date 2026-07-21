@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import handsPairAsset from "@/assets/hands-pair.png.asset.json";
 import { LiquidMetalOrb } from "./LiquidMetalOrb";
+import { LiquidBurst } from "./LiquidBurst";
 
 // Ordered density ramp, dark → bright. Mirrors the exact 70-glyph set used by
 // good-fella.com's ASCII footer (recovered by hooking their canvas atlas).
@@ -387,7 +388,10 @@ export function AsciiHandsFooter() {
   const [mounted, setMounted] = useState(false);
   useEffect(() => { setMounted(true); }, []);
   // Interaction flow: orb → orb-exit → hands.
-  const [stage, setStage] = useState<"orb" | "orb-exit" | "hands">("orb");
+  const [stage, setStage] = useState<
+    "orb" | "orb-burst" | "orb-fade" | "hands"
+  >("orb");
+  const [burstOrigin, setBurstOrigin] = useState<[number, number]>([0.5, 0.5]);
   const stageRef = useRef(stage);
   useEffect(() => { stageRef.current = stage; }, [stage]);
   const startIntroRef = useRef<(() => void) | null>(null);
@@ -1236,17 +1240,34 @@ export function AsciiHandsFooter() {
 
   const handsVisible = stage === "hands";
   const [orbMounted, setOrbMounted] = useState(true);
-  const handleOrbClick = () => {
+  const [burstMounted, setBurstMounted] = useState(false);
+  const handleOrbClick = (e?: { clientX?: number; clientY?: number }) => {
     if (stage !== "orb") return;
-    setStage("orb-exit");
-    // Overlap the last ~150ms of the orb exit with the arm growth intro:
-    // flip stage to "hands" partway through so the canvas fades in while
-    // the orb finishes its exit animation. Keep the orb mounted until its
-    // own onExited callback fires — otherwise it visibly pops mid-anim.
-    window.setTimeout(() => setStage("hands"), 300);
+    // Origin in normalized viewport UV (y flipped to WebGL bottom-left).
+    const vw = window.innerWidth;
+    const vh = window.innerHeight;
+    const cx = e?.clientX ?? vw / 2;
+    const cy = e?.clientY ?? vh / 2;
+    setBurstOrigin([cx / vw, 1 - cy / vh]);
+    setStage("orb-burst");
+    setBurstMounted(true);
   };
   const handleOrbExited = () => {
     setOrbMounted(false);
+  };
+  const handleBurstCovered = () => {
+    setStage("orb-fade");
+  };
+  const handleBurstProgress = (p: number) => {
+    // Once the burst is nearly done fading, prep the hands so the arm
+    // growth animation starts as the purple veil finishes clearing.
+    if (stage === "orb-fade" && p >= 0.6 && stageRef.current !== "hands") {
+      setStage("hands");
+    }
+  };
+  const handleBurstFaded = () => {
+    setBurstMounted(false);
+    if (stageRef.current !== "hands") setStage("hands");
   };
   return (
     <section
@@ -1305,12 +1326,23 @@ export function AsciiHandsFooter() {
         >
           {mounted && (
             <LiquidMetalOrb
-              onClick={handleOrbClick}
-              exiting={stage === "orb-exit"}
+              onClick={(evt) => handleOrbClick(evt)}
+              exiting={stage !== "orb"}
               onExited={handleOrbExited}
             />
           )}
         </div>
+      )}
+
+      {burstMounted && mounted && (
+        <LiquidBurst
+          origin={burstOrigin}
+          onCovered={handleBurstCovered}
+          onFaded={handleBurstFaded}
+          onProgress={handleBurstProgress}
+          spreadMs={1000}
+          fadeMs={280}
+        />
       )}
 
     </section>

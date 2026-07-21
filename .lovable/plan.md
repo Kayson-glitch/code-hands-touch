@@ -1,34 +1,60 @@
-## 问题诊断
+# 点击球体 → 全屏液态金属扩散
 
-控制台里能看到 `THREE.WebGLRenderer: Context Lost.` 紧跟在球体挂载之后触发。原因是当前 `LiquidMetalOrb` 里用了 `<Environment preset="studio" />` —— 这会去 drei CDN 拉取一份 HDR 环境贴图，加载/解析异常时会让 R3F 内部 Suspense 抛出、Canvas 被卸载重建，从而"闪一下就没了"。同时：
+## 目标
 
-- `onExited` 回调虽然在 `LiquidMetalOrb` 里定义了，但 `AsciiHandsFooter` 并没有接，改用了硬编码的 `setTimeout(300ms)` 把 stage 切到 `hands`。这会在退出动画只播了不到一半时把整颗球从 DOM 里拆掉，进一步加剧"一闪而过"的感觉。
-- `sampleImage` 里的 `IndexSizeError`（`source width is 0`）在初次 mount 时也会打断 raf 循环，可能引起额外一次重渲。属于连带隐患，一并加固。
+参考 unseen.co 的过场：点击中心球体后，球体不再"放大淡出"，而是像**液态金属向外流淌**一样从球心扩散铺满整个视口，然后紫色整体淡出到黑底，再触发已有的手部生长动画。总时长约 1000ms（扩散） + ~250ms（淡出）。
 
-## 修复方案
+## 交互流程（新）
 
-**1. 去掉 Environment，避免 WebGL context 丢失**
-`src/components/LiquidMetalOrb.tsx`：
-- 移除 `<Environment preset="studio" />` 和相关 import。
-- 用纯灯光营造金属光泽：`ambientLight(0.35)` + 主光 `directionalLight([4,4,5], 1.4)` + 侧补光 `directionalLight([-4,-2,-3], 0.6, color=#B79BFF)` + 一颗轻微 `pointLight` 提亮高光。
-- `MeshDistortMaterial` 保持 `metalness=0.85, roughness=0.2`，加 `envMapIntensity={0}` 明确不依赖 envmap。
-- Canvas 增加 `gl={{ preserveDrawingBuffer: false, powerPreference: "high-performance", failIfMajorPerformanceCaveat: false }}`，并 `frameloop="always"`。
+1. `stage = "orb"`：只显示旋转的液态金属球（现状）。
+2. 点击球体 → `stage = "orb-burst"`：
+   - 球体本身在前 ~200ms 内快速收束（轻微缩小 + distort 拉高），作为"蓄力"起手。
+   - 同时启动**全屏扩散层**：以球心为圆心，紫色液态涟漪向外扩散，~1000ms 铺满视口。
+3. 铺满后 `stage = "orb-fade"`：全屏紫色在 ~250ms 内淡出到透明（露出黑底）。
+4. 淡出至 ~60% 时 `stage = "hands"`：卸载球体与扩散层，触发手部生长（现有 2400ms 动画）。
 
-**2. 用回调控制卸载时机，别在动画中途拆掉球体**
-`src/components/AsciiHandsFooter.tsx`：
-- 新增 `orbUnmountedRef` / state：`stage !== "hands"` 时保持挂载，`stage === "orb-exit"` 期间不再依赖 `setTimeout(300)` 硬切。
-- `handleOrbClick`：只 `setStage("orb-exit")`。
-- 给 `<LiquidMetalOrb onExited={...}>` 传回调：动画自然结束时才 `setStage("hands")`。
-- 保留 300ms 时提前触发手部生长（现在的过渡感觉是对的），改成在 `setStage("orb-exit")` 后独立起一个 `setTimeout(300, () => startIntroRef.current?.())`，但不再切 stage；stage 切换等 `onExited`。
-- 渲染条件从 `stage !== "hands"` 改成"退出动画未完成"标志，确保完整 450ms 动画能播完再卸载。
+## 技术方案
 
-**3. 加固 sampleImage 的 0 尺寸崩溃**
-`src/components/AsciiHandsFooter.tsx` `sampleImage`：
-- `cols`/`rows` 用 `Math.max(1, Math.floor(...))`，`resample` 里若 `w<=0 || h<=0` 直接 return，避免首个 ResizeObserver tick 抛错。
+新增一个**全屏 WebGL 扩散层**组件 `src/components/LiquidBurst.tsx`，覆盖整个 viewport（`fixed inset-0`，z-index 高于球体但低于最终 UI），仅在 `orb-burst` / `orb-fade` 阶段挂载。
+
+**Shader 思路（液态金属涟漪）**：
+
+- 全屏 `<Canvas>` + 一张 `ShaderMaterial` 铺满的 plane（或 `<Effects>` 也可，简单起见走自定义 shader）。
+- Uniforms：`uOrigin`（球心 UV，来自点击时读取的球体 DOM 中心）、`uTime`、`uProgress`（0→1，1000ms 内推进）、`uAspect`。
+- Fragment 核心：
+  ```glsl
+  float d = distance(vUv * aspect, uOrigin * aspect);
+  float radius = uProgress * maxDist * easeOutCubic;
+  // 液态边缘：用多层 fbm/simplex 噪声扰动 d
+  float n = fbm(vUv * 3.0 + uTime * 0.15) * 0.08
+          + fbm(vUv * 8.0 - uTime * 0.25) * 0.03;
+  float edge = smoothstep(radius, radius - 0.04, d + n);
+  // 金属高光：法线方向由噪声梯度算，配合 lambert 得到流动金属反光
+  vec3 base = mix(#3a1f7a, #C5A9FF, metallic);
+  gl_FragColor = vec4(base, edge * uAlpha);
+  ```
+- 附带一层轻微 **chromatic aberration / 折射** 增强"液态金属"质感（对边缘做 RGB 通道偏移）。
+- `uProgress` 用 `easeOutCubic`，让扩散前段猛、末段收；扩散完成后 `uAlpha` 用独立的 250ms `easeInOutQuad` 淡出。
+
+**为什么用 shader 层而不是复用现有球体 Canvas**：
+
+- 现有 `LiquidMetalOrb` 是 200×200 的局部 Canvas，尺寸不足以做全屏扩散；强行放大会拉伸失真。
+- 新独立层 `fixed inset-0` 天然覆盖全屏，卸载/清理干净，不影响球体本身的旋转与蓄力动画。
+
+**球心坐标传递**：
+
+- `AsciiHandsFooter` 已知球体容器位置（居中 200×200）。点击时用 `getBoundingClientRect()` 拿到球心，换算成 `[x/vw, y/vh]` 作为 `uOrigin` 传入。
+
+## 需要改动的文件
+
+- **新增** `src/components/LiquidBurst.tsx`：全屏 shader Canvas，props: `origin: [number,number]`, `onCovered: () => void`, `onFaded: () => void`。内部管理 progress / alpha 两个动画阶段。
+- **修改** `src/components/LiquidMetalOrb.tsx`：把现在的"放大淡出"退出动画改成 200ms 的"收束蓄力"（scale 0.85 + distort 上冲），到达终点后不淡出，而是等父级卸载。
+- **修改** `src/components/AsciiHandsFooter.tsx`：
+  - `stage` 枚举扩为 `"orb" | "orb-burst" | "orb-fade" | "hands"`。
+  - `handleOrbClick` 读取球心坐标，进入 `orb-burst`。
+  - 挂载 `<LiquidBurst>`，`onCovered` 后进入 `orb-fade`，淡出至 60% 时 `setStage("hands")` 并触发 `startIntroRef.current?.()`。
+  - 移除现有 `orb-exit` 相关的 `exiting` prop 传递逻辑。
 
 ## 验证
 
-改完后用 Playwright 打开 `http://localhost:8080/`：
-- 截图确认球体持续可见、旋转、有金属高光；
-- 控制台不再出现 `Context Lost` / `IndexSizeError`；
-- 点击球体后录制序列截图，看到完整的放大扭曲淡出，紧接着手部生长动画淡入。
+用 Playwright 打开 `/`：截图球体阶段 → 点击球体 → 每 200ms 截一帧记录扩散铺满 → 确认淡出后手部生长正常启动 → 控制台无 WebGL / shader 编译错误。
