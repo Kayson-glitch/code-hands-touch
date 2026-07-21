@@ -84,7 +84,8 @@ const FRAG = /* glsl */ `
     maxR = max(maxR, length(vec2(uAspect,0.0) - uOrigin));
     maxR = max(maxR, length(vec2(0.0,1.0) - uOrigin));
     maxR = max(maxR, length(vec2(uAspect,1.0) - uOrigin));
-    float radius = uProgress * (maxR + 0.15);
+    float pVisible = max(uProgress, 0.012);
+    float radius = pVisible * (maxR + 0.15);
 
     // chromatic aberration offset — grows with progress, rotates slowly
     float ab = (0.006 + uProgress * 0.014);
@@ -105,23 +106,24 @@ const FRAG = /* glsl */ `
     float mGlitchC = inkMask(qG + off * 1.5, radius);
     float mGlitchM = inkMask(qG - off * 1.5, radius);
 
-    // white rim just outside the core edge
-    float rim = clamp(mG - inkMask(q, radius * 0.985), 0.0, 1.0);
-    rim = pow(rim, 0.8);
+    // Visible edge system: black liquid core + cream rim + RGB split outside.
+    // The previous shader only made the black core opaque, which can disappear
+    // over dark video frames; this explicit outer halo keeps the burst readable.
+    float innerRim = clamp(mG - inkMask(q, radius * 0.972), 0.0, 1.0);
+    float outerA = inkMask(q + off * 0.35, radius + 0.026 + uProgress * 0.01);
+    float outerB = inkMask(q - off * 0.35, radius + 0.034 + uProgress * 0.012);
+    float outerRim = clamp(max(outerA, outerB) - mG, 0.0, 1.0);
+    float rim = pow(max(innerRim, outerRim), 0.72);
 
-    // compose color per channel (chromatic aberration on the black ink)
-    // R channel = 1 - mR, i.e. where R-shifted mask is absent, red is visible outside offset side
-    vec3 ink = vec3(1.0 - mR, 1.0 - mG, 1.0 - mB); // white outside, black inside
-    // but we're only rendering the ink layer — invert: black core, colored fringes
     vec3 col = vec3(0.0);
-    // core black
-    col = mix(col, vec3(0.0), mG);
-    // fringes: where one channel mask is 0 but another is 1 -> that channel shows
-    // easier formulation: additive fringe colors weighted by (mX - mG) clamped
-    float fringeR = clamp(mR - mG, 0.0, 1.0);
-    float fringeB = clamp(mB - mG, 0.0, 1.0);
-    col += vec3(1.0, 0.12, 0.22) * fringeR * 0.9;
-    col += vec3(0.0, 0.9,  1.0)  * fringeB * 0.9;
+    col += vec3(0.98, 0.95, 0.86) * rim * 0.95;
+
+    // Fringes: compare shifted masks against the core and halo so color is
+    // visible just outside the black mass instead of being hidden inside it.
+    float fringeR = clamp(mR - min(mG, outerRim * 0.35), 0.0, 1.0);
+    float fringeB = clamp(mB - min(mG, outerRim * 0.35), 0.0, 1.0);
+    col += vec3(1.0, 0.10, 0.22) * fringeR * 0.85;
+    col += vec3(0.0, 0.92, 1.0)  * fringeB * 0.85;
 
     // glitch scanlines add cyan/magenta bars on the outer rim
     float gr = clamp(mGlitchC - mG, 0.0, 1.0);
@@ -129,11 +131,9 @@ const FRAG = /* glsl */ `
     col += vec3(0.0, 1.0, 1.0) * gr * glitchWin * 0.5;
     col += vec3(1.0, 0.2, 0.9) * gm * glitchWin * 0.4;
 
-    // white rim overlay
-    col = mix(col, vec3(0.96, 0.94, 0.88), rim * 0.75);
-
-    // alpha = union of all masks so aberrated fringes stay opaque
+    // Alpha = black core + halo + aberrated/glitch fringes.
     float alpha = max(max(mR, mG), mB);
+    alpha = max(alpha, rim * 0.98);
     alpha = max(alpha, max(gr, gm) * glitchWin);
 
     gl_FragColor = vec4(col, alpha);
@@ -143,17 +143,14 @@ const FRAG = /* glsl */ `
 function BurstMesh({
   origin,
   spreadMs,
-  onCovered,
   onProgress,
 }: {
   origin: [number, number];
   spreadMs: number;
-  onCovered: () => void;
   onProgress?: (p: number) => void;
 }) {
   const matRef = useRef<THREE.ShaderMaterial>(null);
   const startRef = useRef<number | null>(null);
-  const coveredRef = useRef(false);
   const { size } = useThree();
 
   const uniforms = useMemo(() => {
@@ -175,8 +172,8 @@ function BurstMesh({
     uniforms.uOrigin.value.set(origin[0] * aspect, origin[1]);
   }, [size.width, size.height, origin, uniforms]);
 
-  useFrame(({ clock }) => {
-    const nowMs = clock.getElapsedTime() * 1000;
+  useFrame(() => {
+    const nowMs = performance.now();
     if (startRef.current == null) startRef.current = nowMs;
     const t = nowMs - startRef.current;
     const rawP = Math.min(1, t / spreadMs);
@@ -194,12 +191,8 @@ function BurstMesh({
     const endElastic = rawP > 0.85 ? Math.sin(((rawP - 0.85) / 0.15) * Math.PI) * 0.02 : 0;
     const p = Math.max(0, Math.min(1.02, curved + endElastic));
     uniforms.uProgress.value = p;
-    uniforms.uTime.value = clock.getElapsedTime();
+    uniforms.uTime.value = t / 1000;
     onProgress?.(p);
-    if (rawP >= 1 && !coveredRef.current) {
-      coveredRef.current = true;
-      onCovered();
-    }
   });
 
   return (
@@ -239,7 +232,7 @@ export function LiquidBurst({
   const [ready, setReady] = useState(false);
   useEffect(() => setReady(true), []);
 
-  const handleCovered = () => {
+  const handleCovered = useMemo(() => () => {
     if (coveredAtRef.current != null) return;
     coveredAtRef.current = performance.now();
     onCovered();
@@ -256,7 +249,13 @@ export function LiquidBurst({
       requestAnimationFrame(tick);
     };
     requestAnimationFrame(tick);
-  };
+  }, [fadeMs, onCovered, onFaded]);
+
+  useEffect(() => {
+    if (!ready) return;
+    const id = window.setTimeout(handleCovered, spreadMs);
+    return () => window.clearTimeout(id);
+  }, [handleCovered, ready, spreadMs]);
 
   if (!ready) return null;
 
@@ -276,7 +275,6 @@ export function LiquidBurst({
           <BurstMesh
             origin={origin}
             spreadMs={spreadMs}
-            onCovered={handleCovered}
             onProgress={onProgress}
           />
         </Canvas>

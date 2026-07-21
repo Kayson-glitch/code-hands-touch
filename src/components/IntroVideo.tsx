@@ -50,21 +50,37 @@ export function IntroVideo({
   useEffect(() => {
     const v = videoRef.current;
     if (!v) return;
+    let fallbackTimer = 0;
+    const armFallback = () => {
+      window.clearTimeout(fallbackTimer);
+      // The video is ~4.04s. If the browser misses `ended`/`timeupdate`, or
+      // media metadata stalls in preview, still trigger the transition rather
+      // than leaving the intro on a blank frame forever.
+      fallbackTimer = window.setTimeout(() => fire(), 4300);
+    };
     const onTime = () => {
       if (!v.duration || Number.isNaN(v.duration)) return;
       if (v.currentTime >= v.duration - 0.05) fire();
     };
     const onEnd = () => fire();
+    const onMeta = () => armFallback();
+    const onError = () => armFallback();
     v.addEventListener("timeupdate", onTime);
     v.addEventListener("ended", onEnd);
+    v.addEventListener("loadedmetadata", onMeta);
+    v.addEventListener("error", onError);
     // Kick off playback (some browsers need an explicit call after mount).
     v.play().catch(() => {
-      /* autoplay blocked — user click on the video will start it */
+      armFallback();
     });
     bgRef.current?.play().catch(() => {});
+    armFallback();
     return () => {
+      window.clearTimeout(fallbackTimer);
       v.removeEventListener("timeupdate", onTime);
       v.removeEventListener("ended", onEnd);
+      v.removeEventListener("loadedmetadata", onMeta);
+      v.removeEventListener("error", onError);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
