@@ -1328,9 +1328,12 @@ export function AsciiHandsFooter({
     // alone on the black screen. Re-show it in sync with the hero fade-in.
     if (typeof window !== "undefined") {
       window.dispatchEvent(new CustomEvent("app-nav-visibility", { detail: "hidden" }));
+      // Keep nav hidden through the black handoff AND the hero fade-in so it
+      // never appears alone on the transition frame. Hero fade starts ~40ms
+      // after this and lasts 900ms; reveal nav after it settles.
       window.setTimeout(() => {
         window.dispatchEvent(new CustomEvent("app-nav-visibility", { detail: "visible" }));
-      }, 160);
+      }, 900);
     }
     // Also paint html/body black immediately, so the single frame where
     // <IntroVideo> unmounts can't reveal the theme's white body background.
@@ -1343,7 +1346,7 @@ export function AsciiHandsFooter({
     // cover the hands canvas; the handoffBlack layer keeps the background
     // solid for a few frames to avoid any composite gap.
     setOrbMounted(false);
-    window.setTimeout(() => setHandoffBlack(false), 80);
+    window.setTimeout(() => setHandoffBlack(false), 40);
   };
   const [bgDark, setBgDark] = useState(false);
   useEffect(() => {
