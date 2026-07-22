@@ -75,10 +75,14 @@ export function BurnDebugPanel({
   values,
   onChange,
   onReset,
+  onJumpToBurst,
+  onFinish,
 }: {
   values: BurnParams;
   onChange: (next: BurnParams) => void;
   onReset: () => void;
+  onJumpToBurst?: () => void;
+  onFinish?: () => void;
 }) {
   const [collapsed, setCollapsed] = useState(false);
 
@@ -187,6 +191,28 @@ export function BurnDebugPanel({
           }}
         >Copy JSON</button>
       </div>
+      {(onJumpToBurst || onFinish) && (
+        <div style={{ display: "flex", gap: 6, marginTop: 6 }}>
+          {onJumpToBurst && (
+            <button
+              onClick={onJumpToBurst}
+              style={{
+                flex: 1, padding: "5px 8px", background: "rgba(255,255,255,0.08)", color: "#fff",
+                border: "1px solid rgba(255,255,255,0.14)", borderRadius: 5, cursor: "pointer", fontSize: 11,
+              }}
+            >Jump to Burst</button>
+          )}
+          {onFinish && (
+            <button
+              onClick={onFinish}
+              style={{
+                flex: 1, padding: "5px 8px", background: "rgba(197,169,255,0.28)", color: "#fff",
+                border: "1px solid rgba(197,169,255,0.5)", borderRadius: 5, cursor: "pointer", fontSize: 11,
+              }}
+            >Finish →</button>
+          )}
+        </div>
+      )}
     </div>
   );
 }
