@@ -23,26 +23,20 @@ const PIXELS_FOR_FULL_PROGRESS = 2600;
 const BURN_AUTO_MS = 1800;
 // Cap a single wheel tick so a hard mouse-wheel notch doesn't jump the progress.
 const MAX_PIXELS_PER_TICK = 260;
-// Cap RAF drain too; if decoding stalls, multiple wheel events can arrive
-// before one frame and draining them all at once reads as a jump.
-const MAX_PIXELS_PER_FRAME = 180;
-// Critically damped smoothing times. Video follows slightly tighter than the
-// shader timeline, but both are monotonic and direction-safe.
-const PROGRESS_SMOOTH_TIME = 0.11;
-const VIDEO_SMOOTH_TIME = 0.065;
+// Single critically-damped smoothing time; short enough to feel 1:1 with the
+// wheel, playbackRate chase covers the rest.
+const PROGRESS_SMOOTH_TIME = 0.05;
 const MAX_SMOOTH_DT = 1 / 30;
-// Prefer letting the decoder play forward to the target; reserve seeks for coarse correction.
-const SEEK_EPSILON = 0.1;
-const VIDEO_CHASE_EPSILON = 0.035;
-const VIDEO_BACKWARD_SEEK_EPSILON = 0.02;
-const VIDEO_HARD_SEEK_EPSILON = 0.48;
-const MIN_CHASE_PLAYBACK_RATE = 0.75;
-const MAX_CHASE_PLAYBACK_RATE = 3.2;
-// RAF-aligned seek cooldown, in frames (≈16.7ms @ 60fps).
-const SEEK_COOLDOWN_FRAMES_FWD = 1;
-const SEEK_COOLDOWN_FRAMES_BWD = 0;
+// Gap thresholds (seconds) for playbackRate vs. seek decision.
+const GAP_DEAD_ZONE = 0.03;
+const GAP_BACKWARD_SEEK = 0.35;
+const GAP_HARD_SEEK = 1.2;
+const MIN_CHASE_RATE = 0.25;
+const MAX_CHASE_RATE = 4.0;
 // Only notify parent when progress moved meaningfully.
 const PROGRESS_NOTIFY_EPSILON = 0.003;
+// Skip GL render if nothing visibly changed and no new video frame arrived.
+const PROGRESS_RENDER_EPSILON = 0.0005;
 
 const VERT = /* glsl */ `
   varying vec2 vUv;
