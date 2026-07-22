@@ -1,16 +1,13 @@
-修复计划：
+## 目标
+用你上传的两张 logo 替换现在的 `invert` 方案，避免黑底下颜色失真。
 
-1. **修复 100% 卡住的触发逻辑**
-   - 当前 `IntroPreloader` 的动画循环里，进入开场的判断使用了 React state 的旧闭包值，页面数字能显示到 `100%`，但内部完成判断没有拿到最新进度，所以不会调用 `onReady`。
-   - 改成用 `displayPctRef` 保存实时显示进度，或在 `setDisplayPct` 的 updater 内同步计算最新值，确保达到 100% 后能开始 250ms 停留计时。
-
-2. **保留现有规则不变**
-   - 继续保持 900ms 最小爬升。
-   - 继续保持 100% 后 250ms 最小停留。
-   - 保留视频预热 `loadeddata/error/timeout` 逻辑，不改动后续视频、导航栏、手部动画等效果。
-
-3. **增加防卡兜底**
-   - 当下载完成且显示进度已到 100%，即使视频预热事件异常，也仍通过现有 1500ms safety timeout 进入开场，避免再次停在加载层。
-
-4. **验证**
-   - 在预览中确认数字从 0% 爬升到 100%，短暂停留后自动淡入开场视频。
+## 实施步骤
+1. 通过 `lovable-assets` 从 `/mnt/user-uploads/Container-1.png`（深色版，用于浅底）和 `/mnt/user-uploads/Container-2.png`（白色版，用于黑底）分别生成 asset 指针：
+   - `src/assets/synergy-logo-light.png.asset.json`（Container-1）
+   - `src/assets/synergy-logo-dark.png.asset.json`（Container-2）
+2. 修改 `src/components/SiteNav.tsx`：
+   - 导入两个 asset。
+   - 根据 `isDark` 切换 `src`：黑底用 dark 版，浅底用 light 版。
+   - 移除 `filter: invert(1) hue-rotate(180deg)`，保持原始颜色。
+   - 保留 `height: 28` 及现有布局不变。
+3. 不改动其他文件与效果。
