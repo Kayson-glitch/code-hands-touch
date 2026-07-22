@@ -661,15 +661,13 @@ export function IntroVideo({
         ref={canvasRef}
         style={{ position: "absolute", inset: 0, width: "100%", height: "100%", display: "block" }}
       />
-      {debugEnabled && (
-        <BurnDebugPanel
+      <BurnDebugPanel
           values={burnParams}
           onChange={setBurnParams}
           onReset={() => setBurnParams(DEFAULT_BURN_PARAMS)}
           onJumpToBurst={() => targetProgressRef.current(0.605)}
           onFinish={() => forceFinishRef.current()}
-        />
-      )}
+      />
     </div>
   );
 }
