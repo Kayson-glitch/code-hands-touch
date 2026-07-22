@@ -1,6 +1,7 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import * as THREE from "three";
 import videoAsset from "@/assets/intro-hands.mp4.asset.json";
+import { BurnDebugPanel, DEFAULT_BURN_PARAMS, type BurnParams } from "./BurnDebugPanel";
 
 export type IntroVideoEndInfo = {
   videoW: number;
@@ -54,6 +55,22 @@ const FRAG = /* glsl */ `
   uniform vec2  uResolution;    // canvas px
   uniform vec2  uVideoRes;      // video px
   uniform float uVideoFraction;
+  // ---- Debug tunables ----
+  uniform float uWarpAmp;
+  uniform float uWarpFreq;
+  uniform float uStreakAmp;
+  uniform float uStreakFreq;
+  uniform float uAngularAmp;
+  uniform float uAngularFreq;
+  uniform float uChromaMul;
+  uniform float uShardMul;
+  uniform float uGrainMul;
+  uniform float uGlitchMul;
+  uniform float uCoreRimA;
+  uniform float uHotHaloA;
+  uniform float uCloudDiffA;
+  uniform float uMistA;
+  uniform float uHaloFalloff;
 
   // hash / value noise / fbm
   float hash(vec2 p) {
@@ -125,12 +142,12 @@ const FRAG = /* glsl */ `
     float peakK  = smoothstep(0.20, 0.55, uBurn) * (1.0 - smoothstep(0.70, 0.95, uBurn));
     float basePx = 1.6;
     // Ramp peak split up to ~11px in mid-burn.
-    float burstPx = burstK * 6.0 + peakK * 5.5;
+    float burstPx = (burstK * 6.0 + peakK * 5.5) * uChromaMul;
     // Low-frequency liquid swell for a continuous "flowing" refraction.
-    float swell = (0.5 + 0.5 * sin(uTime * 5.2)) * peakK * 3.2;
+    float swell = (0.5 + 0.5 * sin(uTime * 5.2)) * peakK * 3.2 * uChromaMul;
     // Faster, more frequent sporadic pulse -> up to ~16px spikes.
-    float pulseA = step(0.88, fract(sin(uTime * 7.4) * 43758.5453)) * burstK * 6.0;
-    float pulseB = step(0.82, fract(sin(uTime * 11.1 + 1.3) * 24634.6345)) * peakK * 4.0;
+    float pulseA = step(0.88, fract(sin(uTime * 7.4) * 43758.5453)) * burstK * 6.0 * uChromaMul;
+    float pulseB = step(0.82, fract(sin(uTime * 11.1 + 1.3) * 24634.6345)) * peakK * 4.0 * uChromaMul;
     float chromaPx = basePx + burstPx + swell + pulseA + pulseB;
 
     // ---- Content-adaptive weighting ----
@@ -163,7 +180,7 @@ const FRAG = /* glsl */ `
       float ch  = hash(cellId + vec2(floor(uTime * 20.0), 0.0));
       float ch2 = hash(cellId + vec2(7.31, floor(uTime * 20.0)));
       float cellTrig = step(0.94, ch) * shardK; // ~6% cells
-      jitteredUv += vec2((ch - 0.5) * 16.0, (ch2 - 0.5) * 5.0) * cellTrig / uResolution.xy;
+      jitteredUv += vec2((ch - 0.5) * 16.0, (ch2 - 0.5) * 5.0) * cellTrig * uShardMul / uResolution.xy;
 
       // Foreground horizontal shard bands — varying stripe heights.
       float bandTier = fract(sin(floor(uTime * 12.0)) * 12345.678);
@@ -172,7 +189,7 @@ const FRAG = /* glsl */ `
       float bh  = hash(vec2(rowId, floor(uTime * 20.0)));
       float bh2 = hash(vec2(rowId + 91.7, floor(uTime * 20.0)));
       bandTrigger = step(0.78, bh) * shardK; // ~22% bands
-      bandShiftPx = (bh2 - 0.5) * 52.0 * bandTrigger; // ±26px
+      bandShiftPx = (bh2 - 0.5) * 52.0 * bandTrigger * uShardMul; // ±26px
       jitteredUv.x += bandShiftPx / uResolution.x;
     }
 
@@ -205,22 +222,22 @@ const FRAG = /* glsl */ `
     // gated by burstK so it silently vanishes at the edges.
     if (burstK > 0.0) {
       float grain = (hash(gl_FragCoord.xy + vec2(uTime * 91.3, uTime * 57.1)) - 0.5)
-                    * 0.016 * burstK * (0.4 + 0.6 * wMid);
+                    * 0.016 * burstK * (0.4 + 0.6 * wMid) * uGrainMul;
       col += vec3(grain);
     }
 
     // Ultra-thin scanline shimmer during the peak — ±1.5% brightness ripple.
     if (peakK > 0.0) {
       float sl = sin(gl_FragCoord.y * 3.14159 + uTime * 42.0);
-      col *= 1.0 + sl * 0.015 * peakK * (0.4 + 0.6 * wMid);
+      col *= 1.0 + sl * 0.015 * peakK * (0.4 + 0.6 * wMid) * uGrainMul;
     }
     col = clamp(col, 0.0, 1.0);
 
     // Subtle brightness/gamma flicker during burn — glitch feel, no white flashes.
     if (burstK > 0.0) {
-      float flick = (fract(sin(uTime * 17.3) * 91234.123) - 0.5) * 0.08 * burstK * (0.4 + 0.6 * wMid);
+      float flick = (fract(sin(uTime * 17.3) * 91234.123) - 0.5) * 0.08 * burstK * (0.4 + 0.6 * wMid) * uGlitchMul;
       col = clamp(col * (1.0 + flick), 0.0, 1.0);
-      float g = 1.0 + (fract(sin(uTime * 5.9) * 12345.678) - 0.5) * 0.06 * peakK;
+      float g = 1.0 + (fract(sin(uTime * 5.9) * 12345.678) - 0.5) * 0.06 * peakK * uGlitchMul;
       col = pow(col, vec3(g));
     }
 
@@ -234,24 +251,24 @@ const FRAG = /* glsl */ `
       float t = uTime;
       // ---- Domain-warp the sample point so the edge is non-circular ----
       // Two low-freq fbm channels displace p → petal / tongue-like contour.
-      float wx = fbm(p * 1.3 + vec2( t * 0.09,  t * 0.06));
-      float wy = fbm(p * 1.3 + vec2(-t * 0.07,  t * 0.11) + 17.3);
-      vec2  pw = p + (vec2(wx, wy) - 0.5) * 0.55;
+      float wx = fbm(p * uWarpFreq + vec2( t * 0.09,  t * 0.06));
+      float wy = fbm(p * uWarpFreq + vec2(-t * 0.07,  t * 0.11) + 17.3);
+      vec2  pw = p + (vec2(wx, wy) - 0.5) * uWarpAmp;
 
       // Anisotropic long-streak noise (stretched horizontally) → flame tongues.
-      float streak = fbm(vec2(pw.x * 6.0, pw.y * 1.6) + vec2(t * 0.35, -t * 0.2));
+      float streak = fbm(vec2(pw.x * uStreakFreq, pw.y * 1.6) + vec2(t * 0.35, -t * 0.2));
       float hi     = fbm(pw * 9.0 - vec2(t * 0.28, t * 0.20));
 
-      float distort = (streak - 0.5) * 0.28 + (hi - 0.5) * 0.10;
+      float distort = (streak - 0.5) * uStreakAmp + (hi - 0.5) * 0.10;
 
       // easeIn (pow 3.2): fingertip lingers as a small light, then accelerates outward.
       float r = pow(b, 3.2) * 2.05;
 
       // Angle-dependent radius wobble so the front is never a perfect circle.
       float ang = atan(pw.y, pw.x);
-      float wob = sin(ang * 3.0 + t * 0.7) * 0.045
-                + sin(ang * 5.0 - t * 0.9) * 0.030
-                + sin(ang * 9.0 + t * 1.3) * 0.018;
+      float wob = (sin(ang * 3.0 * uAngularFreq + t * 0.7) * 0.045
+                +  sin(ang * 5.0 * uAngularFreq - t * 0.9) * 0.030
+                +  sin(ang * 9.0 * uAngularFreq + t * 1.3) * 0.018) * uAngularAmp;
 
       float len = length(pw);
       float d = len - r + distort * 0.55 + wob; // signed distance from the front
@@ -272,22 +289,22 @@ const FRAG = /* glsl */ `
 
       // L0 — thin core rim, near-white, opaque-ish
       float L0 = smoothstep(0.014, 0.000, abs(d)) * outside * env;
-      col += vec3(1.00, 0.99, 1.00) * L0 * 0.95;
+      col += vec3(1.00, 0.99, 1.00) * L0 * uCoreRimA;
 
       // L1 — hot halo, warm lavender-white, additive
       float L1 = smoothstep(0.055, 0.010, abs(d)) * outside * env;
-      col += vec3(0.96, 0.92, 1.00) * L1 * 0.55;
+      col += vec3(0.96, 0.92, 1.00) * L1 * uHotHaloA;
 
       // L2 — cloudy diffusion, lavender, additive, exp falloff + noise
       float cloud = fbm(pw * 5.0 + vec2(t * 0.15, -t * 0.1));
       float dOut2 = max(d, 0.0);
-      float L2 = exp(-dOut2 / 0.09) * outside * env * (0.65 + 0.55 * cloud);
-      col += vec3(0.77, 0.66, 1.00) * L2 * 0.42;
+      float L2 = exp(-dOut2 / (0.09 * uHaloFalloff)) * outside * env * (0.65 + 0.55 * cloud);
+      col += vec3(0.77, 0.66, 1.00) * L2 * uCloudDiffA;
 
       // L3 — outer misty falloff, cooler lavender, additive, grainy
       float grain = fract(sin(dot(uv * uResolution + t, vec2(12.9898, 78.233))) * 43758.5453);
-      float L3 = exp(-dOut2 / 0.22) * outside * env * (0.55 + 0.45 * grain);
-      col += vec3(0.62, 0.54, 0.95) * L3 * 0.22;
+      float L3 = exp(-dOut2 / (0.22 * uHaloFalloff)) * outside * env * (0.55 + 0.45 * grain);
+      col += vec3(0.62, 0.54, 0.95) * L3 * uMistA;
     }
 
     // Highlight roll-off again after additive glow to guarantee no white flash.
@@ -301,10 +318,12 @@ export function IntroVideo({
   onEnded,
   onProgress,
   src,
+  debug,
 }: {
   onEnded: (info: IntroVideoEndInfo) => void;
   onProgress?: (info: IntroProgressInfo) => void;
   src?: string;
+  debug?: boolean;
 }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -313,6 +332,9 @@ export function IntroVideo({
   const onProgressRef = useRef(onProgress);
   useEffect(() => { onEndedRef.current = onEnded; }, [onEnded]);
   useEffect(() => { onProgressRef.current = onProgress; }, [onProgress]);
+  const [burnParams, setBurnParams] = useState<BurnParams>(DEFAULT_BURN_PARAMS);
+  const burnParamsRef = useRef<BurnParams>(burnParams);
+  useEffect(() => { burnParamsRef.current = burnParams; }, [burnParams]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -345,6 +367,21 @@ export function IntroVideo({
       uResolution: { value: new THREE.Vector2(1, 1) },
       uVideoRes: { value: new THREE.Vector2(16, 9) },
       uVideoFraction: { value: VIDEO_FRACTION },
+      uWarpAmp: { value: DEFAULT_BURN_PARAMS.warpAmp },
+      uWarpFreq: { value: DEFAULT_BURN_PARAMS.warpFreq },
+      uStreakAmp: { value: DEFAULT_BURN_PARAMS.streakAmp },
+      uStreakFreq: { value: DEFAULT_BURN_PARAMS.streakFreq },
+      uAngularAmp: { value: DEFAULT_BURN_PARAMS.angularAmp },
+      uAngularFreq: { value: DEFAULT_BURN_PARAMS.angularFreq },
+      uChromaMul: { value: DEFAULT_BURN_PARAMS.chromaAberration },
+      uShardMul: { value: DEFAULT_BURN_PARAMS.shardDisplace },
+      uGrainMul: { value: DEFAULT_BURN_PARAMS.grainAmount },
+      uGlitchMul: { value: DEFAULT_BURN_PARAMS.glitchFlicker },
+      uCoreRimA: { value: DEFAULT_BURN_PARAMS.coreRimAlpha },
+      uHotHaloA: { value: DEFAULT_BURN_PARAMS.hotHaloAlpha },
+      uCloudDiffA: { value: DEFAULT_BURN_PARAMS.cloudDiffuseAlpha },
+      uMistA: { value: DEFAULT_BURN_PARAMS.mistAlpha },
+      uHaloFalloff: { value: DEFAULT_BURN_PARAMS.haloFalloff },
     };
 
     const material = new THREE.ShaderMaterial({
@@ -514,6 +551,23 @@ export function IntroVideo({
       }
       uniforms.uProgress.value = progress;
       uniforms.uTime.value = time;
+      // Sync debug uniforms from ref every frame (cheap, no shader recompile).
+      const bp = burnParamsRef.current;
+      uniforms.uWarpAmp.value = bp.warpAmp;
+      uniforms.uWarpFreq.value = bp.warpFreq;
+      uniforms.uStreakAmp.value = bp.streakAmp;
+      uniforms.uStreakFreq.value = bp.streakFreq;
+      uniforms.uAngularAmp.value = bp.angularAmp;
+      uniforms.uAngularFreq.value = bp.angularFreq;
+      uniforms.uChromaMul.value = bp.chromaAberration;
+      uniforms.uShardMul.value = bp.shardDisplace;
+      uniforms.uGrainMul.value = bp.grainAmount;
+      uniforms.uGlitchMul.value = bp.glitchFlicker;
+      uniforms.uCoreRimA.value = bp.coreRimAlpha;
+      uniforms.uHotHaloA.value = bp.hotHaloAlpha;
+      uniforms.uCloudDiffA.value = bp.cloudDiffuseAlpha;
+      uniforms.uMistA.value = bp.mistAlpha;
+      uniforms.uHaloFalloff.value = bp.haloFalloff;
 
       // Start burn the moment the video reaches its last frame — no extra scroll gap.
       if (!burnActive && videoProgress >= 1) {
@@ -591,6 +645,13 @@ export function IntroVideo({
         ref={canvasRef}
         style={{ position: "absolute", inset: 0, width: "100%", height: "100%", display: "block" }}
       />
+      {(debug ?? import.meta.env.DEV) && (
+        <BurnDebugPanel
+          values={burnParams}
+          onChange={setBurnParams}
+          onReset={() => setBurnParams(DEFAULT_BURN_PARAMS)}
+        />
+      )}
     </div>
   );
 }

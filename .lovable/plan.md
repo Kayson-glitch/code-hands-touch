@@ -1,29 +1,57 @@
 ## 目标
+在开屏视频阶段叠加一个浮动调参面板，让你实时调整 burn 光圈的 shader 参数，边看边调，参数即时映射到 `IntroVideo.tsx` 的 shader uniforms。
 
-让 burn 光圈：(1) 边缘轮廓更不规则、不再像圆环；(2) 发光边多层次、向外呈半透明扩散羽化，参考视频里"火纸/等离子"边缘的质感。
+## 面板位置与形态
+- 右上角固定浮层（`position: fixed; top: 88px; right: 16px; z-index: 200`），半透明深色背景 + 毛玻璃，宽约 260px。
+- 顶部标题「Burn Ring Debug」+ 折叠按钮（默认展开，可收起为小圆点，避免挡视觉）。
+- 底部两个按钮：`Reset`（回到当前代码默认值）、`Copy JSON`（把当前参数复制到剪贴板，便于我之后写回 shader 常量）。
+- 仅在开发预览时挂载（通过 prop 开关），发布态不显示。
 
-## 修改点（仅 `src/components/IntroVideo.tsx` 片段 shader，其余不动）
+## 可调参数（分 3 组，与你诉求一一对应）
 
-1. **更强的非规则形变**
-   - 现有 4 层 fbm 只做 ±0.34 的径向偏移，形态偏圆。改为域畸变（domain warp）：把 `p` 先用低频 fbm 位移得到 `pw`，再计算 `length(pw) - r`，边缘直接产生瓣状/波浪形凹凸。
-   - 加一层各向异性长条噪声（横向拉伸），得到火舌感的"外扑"分叉。
-   - 提升总 distort 幅度到约 ±0.55，并对 `r` 做角度依赖的微扰（几个不同频率 sin 叠加），避免完美圆。
+### 1. 不规则度（轮廓形状）
+- `warpAmp`：domain-warp 强度（0 – 0.5）
+- `warpFreq`：warp 噪声频率（0.5 – 6）
+- `streakAmp`：各向异性长条噪声幅度（0 – 0.4）
+- `streakFreq`：长条频率（1 – 12）
+- `angularAmp`：极角扰动幅度（0 – 0.3）
+- `angularFreq`：极角扰动波数（2 – 20）
 
-2. **多层发光边（内 → 外羽化）**
-   在现有 solid ring 外侧新增三层，都用 `1 - burned` 掩掩住内部，仅存在于 hole 外圈：
-   - L0 **核心亮边**：非常薄（≈0.012），近白 `#FFFCFF`，不透明。
-   - L1 **紧邻热辉**：宽 ≈0.05，暖白偏淡紫（≈`#F5EAFF`），additive 叠加，透明度 0.55。
-   - L2 **中层扩散**：宽 ≈0.14，淡紫 `#C5A9FF`，additive，透明度按 `exp(-d/0.09)` 衰减到 0，加上一次 fbm 抖动让辉光呈云雾状而非光滑环。
-   - L3 **外沿雾化**：宽 ≈0.30，同色更冷，透明度按 `exp(-d/0.22)` 衰减，混入 grain（低幅 hash）呈颗粒状飘散。
-   - 所有层都乘以 `appear = smoothstep(0.0, 0.10, b)`，并在 `b>0.92` 时按 `1 - smoothstep(0.92,1.0,b)` 逐步收敛为 0，避免收尾闪。
-   - 使用 additive 混合：`col += layer * alpha`，然后再做一次 0.985 硬顶防溢。
+### 2. 噪声强度（burn 阶段的故障/颗粒）
+- `chromaAberration`：径向色差像素量（0 – 20）
+- `shardDisplace`：马赛克碎片位移（0 – 40）
+- `grainAmount`：颗粒噪点强度（0 – 1）
+- `glitchFlicker`：故障闪动强度（0 – 1）
 
-3. **保持不变**
-   - 时长、缓动 (`pow(b,3.2)`)、触发时机、扩张终点、burned/black hole 逻辑、扫描线/色散/碎片/开屏视频/预加载/手部动画/UI 全部不动。
+### 3. 边缘层透明度（4 层辉光）
+- `coreRimAlpha`：核心亮边不透明度（0 – 1）
+- `hotHaloAlpha`：暖白热辉不透明度（0 – 1）
+- `cloudDiffuseAlpha`：云雾扩散层不透明度（0 – 1）
+- `mistAlpha`：颗粒外雾不透明度（0 – 1）
+- `haloFalloff`：辉光向外衰减指数（1 – 6）
 
-## 验收
+每个参数：`label + range slider + 数值输入框（可精确输入）+ 当前值显示`。
 
-用 Playwright 在 `videoProgress≈1` 后 400/900/1400/2100/2600ms 截图，确认：
-- 光圈轮廓明显偏离圆形，出现瓣状/舌状凹凸；
-- 亮边外可见 2–3 层由亮到淡的紫白辉光，透明度平滑向外衰减；
-- 收尾不再有全屏闪；黑洞扩张、进入手部动画不变。
+## 技术方案
+
+### 新文件：`src/components/BurnDebugPanel.tsx`
+- 受控组件，接收 `values`、`onChange(next)`、`onReset`、`onCopy`。
+- 内部纯 UI + slider 控件，无副作用。
+
+### 修改 `src/components/IntroVideo.tsx`
+- 抽出所有上述常量为 `DEFAULT_BURN_PARAMS` 对象。
+- 用 `useState<BurnParams>(DEFAULT_BURN_PARAMS)` 保存当前值。
+- shader 中把这些数字改为 `uniform float u_xxx`，在 render loop 里每帧从 state ref 同步到 uniforms（避免频繁重编译 shader）。
+- 顶层挂载 `<BurnDebugPanel>`，仅在 `import.meta.env.DEV` 或新 prop `debug` 为真时渲染。
+- `Copy JSON` 输出形如 `{ warpAmp: 0.18, ... }`，方便定稿后我把默认值写回代码。
+
+### 不改动
+- 光圈触发时机、时长（3600ms）、缓动曲线、扩张同步、handoff 逻辑、hero UI 淡入节奏——全部保持现状。
+- ASCII hands / preloader / nav / chat dock 均不动。
+
+## 交付后使用流程
+1. 打开预览，滚到视频末端触发 burn。
+2. 在扩散过程中拖动 slider，效果实时变化。
+3. 觉得对了点 `Copy JSON`，把值发给我，我写回 `DEFAULT_BURN_PARAMS` 并可选择性下线面板。
+
+需要我按这个方案实施吗？如要调整（比如面板位置、增删参数、发布态也保留），告诉我改动点。
