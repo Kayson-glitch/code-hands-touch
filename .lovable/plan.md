@@ -1,58 +1,78 @@
-## 诊断
-反向滚动"回弹"感来自两处：
+## 目标
 
-1. **两级级联缓动的尾部拖尾**：`rawTarget → smoothTarget → progress` 是两个串联的一阶低通滤波器，反向滚动后 stop 时，`progress` 仍有 ~150–200ms 的追尾。虽然数学上是单调下降，视觉上因为叠加了视频 `fastSeek` 的帧跳跃，被感知为"往回弹一下"。
-2. **`fastSeek` 反向抖动**：反向 scrub 时 `fastSeek` 会吸附到最近关键帧，`video.currentTime` 前后跳变；下一帧计算 `gap` 又基于跳后的值，导致相邻帧渲染的帧号先退后进，形成明显回弹。
-3. **`wheelVelocity` 惯性延迟**：`fastRate` 随速度自适应，反向刚停时速度仍高，`smoothTarget` 追得快；1–2 帧后速度衰减，smoothing 突然变慢，节奏断层被眼睛捕捉为弹跳。
+1. 大屏（>1440px、2K/4K）下字符手偏小、居中留白过大 —— 让手部尺寸与视口一起放大。
+2. 全局性能优化：减少每帧无谓工作、避免 DPR 过采样、去掉不必要的定时器/监听、复用样式对象。
 
-## 方案（仅改 `src/components/IntroVideo.tsx`）
+不改交互、动效曲线、颜色、burst 逻辑。
 
-1. **回到单级对称平滑**
-   - 删除 `smoothTarget` 中间层与速度自适应 (`RAW_SMOOTH_RATE_*` / `WHEEL_VELOCITY_FAST`)。
-   - 保留 RAF 累积 (`pendingWheelPx`)，一次性写入 `targetProgress`。
-   - `progress += (targetProgress - progress) * (1 - exp(-16 * dt))`，正反完全对称，无自适应，无二级追尾。
-   - `alpha` 上限 0.45，snap 阈值 0.0002。
+---
 
-2. **反向 seek 直接跟随 `targetProgress`（消除双滞后）**
-   - 反向时，视频 seek 的目标改用 `targetProgress`（用户最新意图）而非 `progress`，让视频立刻回退到位；shader 上的 `uProgress` 仍用平滑后的 `progress`，只有视觉滤镜是柔性的，视频帧本身不再拖泥带水。
-   - 正向仍用 `progress` 触发 `playVideoTowardTarget`（避免视频跑得比 shader 快）。
+## 一、尺寸适配（`src/hooks/useHeroLayout.ts` + `src/components/AsciiHandsFooter.tsx`）
 
-3. **反向永远用精确 seek**
-   - `commitSeek` 反向分支强制 `exact=true`（`video.currentTime = target`），彻底禁用 `fastSeek` 的关键帧吸附。
-   - 反向 `seekCooldownLeft` 降到 0（每帧都可 seek），配合精确 seek 让回退无阶梯。
+**问题**：`HANDS_VISUAL_MAX_W = 1440` 硬上限；`handsHeight = 51vh` 在超宽屏下比例不匹配；`CELL_W/H = 10` 固定 CSS px，4K 屏上字符物理尺寸偏小。
 
-4. **消除 forward 播放尾巴**
-   - 一旦本帧检测到 `gap < 0`（反向）或 `|gap| < VIDEO_CHASE_EPSILON`，立刻 `pause()` 并把 `playbackRate` 重置到 1，避免上一次 `play()` 的异步 promise 让视频在停止瞬间再走 1–2 帧（这是最直接的"回弹"来源）。
+**方案**：
+- `useHeroLayout` 新增一档 `WIDE`（w ≥ 1600）和 `ULTRA`（w ≥ 2000）：
+  - WIDE：`handsTop` 上调、`handsHeight` 提到 ~55vh、`titleFontSize` 56、`titlePaddingTop` 20vh
+  - ULTRA：`handsHeight` ~58vh、`titleFontSize` 64
+  - 返回值扩展 `handsMaxWidth`（number）与 `cellSize`（number, 10/12/14）
+- `AsciiHandsFooter`：
+  - `HANDS_VISUAL_MAX_W` 改为 `layout.handsMaxWidth`（1440 / 1720 / 2000）
+  - `CELL_W`/`CELL_H`/`FONT_PX` 改为从 `layout.cellSize` 派生（cell=10 → font 8；cell=12 → font 10；cell=14 → font 11），在 `resample`/`draw` 中读取局部常量
+  - `sampleImage` 与绘制循环使用这些局部值，保证网格间距在大屏上仍成比例
+- `getHandsVisualRect` 用 `layout.handsMaxWidth` 而非模块常量
 
-5. **保持不变**
-   - shader、UI、burn 曲线、`fire()` 逻辑、burst 阶段锁末帧、visibilitychange 守卫、debug 面板全部不动。
-   - `PIXELS_FOR_FULL_PROGRESS`、`MAX_PIXELS_PER_TICK` 保持当前值。
+---
+
+## 二、全局性能优化
+
+**A. `AsciiHandsFooter.tsx`**
+1. **DPR 上限 2**：`canvas.width = floor(w * min(dpr, 2))`，4K 屏 dpr=2/3 时像素数减半，最大瓶颈。
+2. **Font 字符串缓存**：每帧只在 `layout` 变化时重建 `ctx.font`，不在 draw 里拼字符串。
+3. **cell 循环内小优化**：把 `HR/HG/HB`、`armDx/Dy` 等常量提到 useEffect 顶层；`glyphAt` 内联；避免 `template string` 构造颜色 —— 用预分配的字符串缓冲或 `ctx.fillStyle` 只在真正变化时赋值（同一 cellAlpha/residueAlpha 时不重复 set）。
+4. **`ctx.save/restore` 只在 `useTransform` 分支使用**（已是）—— 保留。
+5. **`mousemove` 节流**：合并到 RAF，采样 `mouseRef` 时用最新事件值即可（已经这样），去掉 `mousespeed` 里每次 event 的 EMA 更新 → 改在 draw 里按 dt 更新。
+6. **`ResizeObserver` debounce 80ms**：避免拖拽窗口时反复 `resample`（重算 grid 是最贵操作）。
+
+**B. `IntroVideo.tsx`**
+1. THREE renderer `setPixelRatio(min(dpr, 1.5))`（shader fill-rate 是主要开销）。
+2. `PROGRESS_NOTIFY_EPSILON` 已在 —— 确认 `onProgress` 回调没在父组件触发 state 更新（当前 `handleIntroProgress` 是空函数 ✓，无需改）。
+3. RAF loop 内检查 `document.hidden`：隐藏时跳过 render（保留状态推进），减少后台 GPU 占用。
+4. `uTime` 已改为绑定 progress ✓。
+
+**C. `index.tsx` / 其他**
+- `IntroPreloader` 结束后立即卸载 ✓。确认 `AsciiHandsFooter` 在视频 stage 时 canvas RAF 也可以短路（`stage === "orb"` 时跳过 draw 主体）以节约首屏 CPU。
+- `HeroCopy` 的 `app-bg-change` listener OK，无需改。
+
+**D. 通用**
+- `passive: true` 已用于 wheel/touch。
+- 移除 debug 面板在 production 的挂载（保留 `?debug=1` 门控 —— 已在 `index.tsx`，检查 `IntroVideo` 是否强制显示；当前 `BurnDebugPanel` 默认可见，改为仅 `debug === true` 才 mount）。
+
+---
+
+## 三、验收
+
+- 1440 / 1920 / 2560 / 3200 宽度下截图：手部宽度分别 ≈ 1440 / 1720 / 2000 / 2000px，视觉不再"漂在正中一小块"。
+- Chrome Performance 录制一次首屏 3s：主线程 scripting 时间较基线下降；4K 下 canvas 位图不再是 ~50MP。
+- 交互（hover/click/lock/burst/滚动）行为无回归。
+- Build 通过。
+
+---
 
 ## 技术细节
+
 ```text
-常量:
-  SMOOTH_RATE = 16              // 单一对称速率
-  SEEK_COOLDOWN_FRAMES_FWD = 1
-  SEEK_COOLDOWN_FRAMES_BWD = 0
+useHeroLayout 新档:
+  WIDE  (w>=1600, h>760): handsHeight 55vh, cellSize 12, handsMaxWidth 1720, titleFontSize 56
+  ULTRA (w>=2000):        handsHeight 58vh, cellSize 14, handsMaxWidth 2000, titleFontSize 64
 
-RAF loop(dt):
-  targetProgress = clamp01(targetProgress + drain(pendingWheelPx)/PIXELS)
-  alpha = min(0.45, 1 - exp(-16*dt))
-  progress += (targetProgress - progress) * alpha
+AsciiHandsFooter:
+  const cell = layout.cellSize; const font = Math.round(cell*0.8);
+  DPR = Math.min(window.devicePixelRatio||1, 2)
+  RO debounce 80ms → resample
 
-  # 视频调度
-  target_fwd = progress * duration           # 正向以平滑值追
-  target_bwd = targetProgress * duration     # 反向以原始意图追
-  if lockFinalFrame: pause + 锁 duration
-  elif gap_fwd > +ε: playForward(rate=1+gap*6)
-  elif gap_bwd < -ε:
-      pause(); playbackRate=1
-      commitSeek(target_bwd, exact=true)    # 每帧都 seek
-  else:
-      pause(); playbackRate=1
+IntroVideo:
+  renderer.setPixelRatio(Math.min(dpr, 1.5))
+  if (document.hidden) skip render this frame
+  BurnDebugPanel: mount only when props.debug === true
 ```
-
-## 验收
-- 反向滚动过程中和停止瞬间，视频帧号严格单调下降，无任何前进帧闪现。
-- 正向手感与当前一致。
-- burst 阶段来回滚动仍平滑；无白/闪屏；构建通过。
