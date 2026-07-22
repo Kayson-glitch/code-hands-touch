@@ -30,6 +30,12 @@ export const Route = createFileRoute("/")({
 function Index() {
   const [videoSrc, setVideoSrc] = useState<string | null>(null);
   const [shown, setShown] = useState(false);
+  const [debug, setDebug] = useState(false);
+
+  useEffect(() => {
+    const p = new URLSearchParams(window.location.search);
+    if (p.get("debug") === "1" || p.get("burn") === "1") setDebug(true);
+  }, []);
 
   const handleReady = useCallback((url: string) => {
     setVideoSrc(url);
@@ -61,7 +67,7 @@ function Index() {
             transition: "opacity 350ms ease-out",
           }}
         >
-          <AsciiHandsFooter videoSrc={videoSrc} />
+          <AsciiHandsFooter videoSrc={videoSrc} debug={debug} />
           <SiteNav />
           <HeroCopy />
           <FinChatDock />
