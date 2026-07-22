@@ -31,6 +31,14 @@ const VIDEO_BACKWARD_SEEK_EPSILON = 0.02;
 const VIDEO_HARD_SEEK_EPSILON = 0.48;
 const MIN_CHASE_PLAYBACK_RATE = 0.75;
 const MAX_CHASE_PLAYBACK_RATE = 3.2;
+// RAF-aligned seek cooldown, in frames (≈16.7ms @ 60fps).
+const SEEK_COOLDOWN_FRAMES = 1;
+// Two-stage interpolation rates (frame-rate independent).
+const RAW_SMOOTH_RATE_SLOW = 18;
+const RAW_SMOOTH_RATE_FAST = 30;
+const MAIN_SMOOTH_RATE = 12;
+// Wheel velocity (px/s) at which we treat scrolling as "fast".
+const WHEEL_VELOCITY_FAST = 4000;
 // Only notify parent when progress moved meaningfully.
 const PROGRESS_NOTIFY_EPSILON = 0.003;
 
@@ -408,10 +416,14 @@ export function IntroVideo({
     window.addEventListener("resize", resize);
 
     let progress = 0;
-    let targetProgress = 0;
+    let rawTarget = 0;
+    let smoothTarget = 0;
+    let pendingWheelPx = 0;
+    let wheelVelocity = 0;
+    let seekCooldownLeft = 0;
     let lastFrameTs = performance.now();
     let lastSeekTime = -1;
-    let lastSeekAt = 0;
+    let lastSeekAt = 0; // kept for debug / possible future use
     let lastNotifiedProgress = -1;
     let lastNotifiedBurst = -1;
     let playPending = false;
@@ -424,11 +436,14 @@ export function IntroVideo({
     const t0 = performance.now();
 
     targetProgressRef.current = (v: number) => {
-      targetProgress = Math.min(1, Math.max(0, v));
+      const clamped = Math.min(1, Math.max(0, v));
+      rawTarget = clamped;
+      smoothTarget = clamped;
     };
     forceFinishRef.current = () => {
       forceFinish = true;
-      targetProgress = 1;
+      rawTarget = 1;
+      smoothTarget = 1;
     };
 
     const clamp01 = (value: number) => Math.min(1, Math.max(0, value));
@@ -460,6 +475,7 @@ export function IntroVideo({
         else video.currentTime = target;
         lastSeekTime = target;
         lastSeekAt = now;
+        seekCooldownLeft = SEEK_COOLDOWN_FRAMES;
         videoTex.needsUpdate = true;
       } catch { /* ignore */ }
     };
@@ -511,9 +527,18 @@ export function IntroVideo({
       // Clamp a single tick so mouse-wheel notches don't cause jumps.
       if (dy > MAX_PIXELS_PER_TICK) dy = MAX_PIXELS_PER_TICK;
       else if (dy < -MAX_PIXELS_PER_TICK) dy = -MAX_PIXELS_PER_TICK;
-      targetProgress = clamp01(targetProgress + dy / PIXELS_FOR_FULL_PROGRESS);
+      // Accumulate; applied once per RAF tick for natural throttling.
+      pendingWheelPx += dy;
     };
     window.addEventListener("wheel", onWheel, { passive: false });
+
+    // Freeze dt when the tab is hidden so we don't accumulate a big jump.
+    const onVisibility = () => {
+      if (document.visibilityState === "visible") {
+        lastFrameTs = performance.now();
+      }
+    };
+    document.addEventListener("visibilitychange", onVisibility);
 
     const loop = () => {
       if (!running) return;
@@ -523,11 +548,31 @@ export function IntroVideo({
       const dt = Math.min(0.05, Math.max(0.001, (now - lastFrameTs) / 1000));
       lastFrameTs = now;
 
-      // Symmetric frame-rate-independent exponential smoothing (identical
-      // response forward and backward → no reverse-scroll stutter).
-      const alpha = Math.min(0.35, 1 - Math.exp(-SMOOTH_RATE * dt));
-      progress += (targetProgress - progress) * alpha;
-      if (Math.abs(targetProgress - progress) < 0.0002) progress = targetProgress;
+      // ---- Stage 0: drain accumulated wheel delta into rawTarget ----
+      if (pendingWheelPx !== 0) {
+        rawTarget = clamp01(rawTarget + pendingWheelPx / PIXELS_FOR_FULL_PROGRESS);
+        // EMA of |velocity| in px/s → drives adaptive fast-stage rate.
+        const instVel = Math.abs(pendingWheelPx) / dt;
+        wheelVelocity = wheelVelocity * 0.75 + instVel * 0.25;
+        pendingWheelPx = 0;
+      } else {
+        wheelVelocity *= 0.85; // decay when idle
+      }
+
+      // ---- Stage 1: fast smoothing (rawTarget → smoothTarget) ----
+      // De-jitters high-frequency trackpad input; adapts to scroll speed.
+      const speedT = Math.min(1, wheelVelocity / WHEEL_VELOCITY_FAST);
+      const fastRate = RAW_SMOOTH_RATE_SLOW + (RAW_SMOOTH_RATE_FAST - RAW_SMOOTH_RATE_SLOW) * speedT;
+      const alphaFast = Math.min(0.4, 1 - Math.exp(-fastRate * dt));
+      smoothTarget += (rawTarget - smoothTarget) * alphaFast;
+      if (Math.abs(rawTarget - smoothTarget) < 0.0002) smoothTarget = rawTarget;
+
+      // ---- Stage 2: main smoothing (smoothTarget → progress), symmetric ----
+      const alphaMain = Math.min(0.4, 1 - Math.exp(-MAIN_SMOOTH_RATE * dt));
+      progress += (smoothTarget - progress) * alphaMain;
+      if (Math.abs(smoothTarget - progress) < 0.0002) progress = smoothTarget;
+
+      if (seekCooldownLeft > 0) seekCooldownLeft -= 1;
 
       const videoProgress = Math.min(1, progress / VIDEO_FRACTION);
       const burstProgress = Math.min(1, Math.max(0, (progress - VIDEO_FRACTION) / (1 - VIDEO_FRACTION)));
@@ -541,7 +586,7 @@ export function IntroVideo({
           : Math.max(0, lastSeekTime);
         const gap = target - current;
         const absGap = Math.abs(gap);
-        const canSeekTick = now - lastSeekAt > SEEK_MIN_INTERVAL_MS;
+        const canSeekTick = seekCooldownLeft === 0;
         const lockFinalFrame = videoProgress >= 0.998 || burstProgress > 0;
 
         if (lockFinalFrame) {
@@ -634,6 +679,7 @@ export function IntroVideo({
       cancelAnimationFrame(rafId);
       window.removeEventListener("resize", resize);
       window.removeEventListener("wheel", onWheel);
+      document.removeEventListener("visibilitychange", onVisibility);
       video.removeEventListener("loadedmetadata", onMeta);
       video.removeEventListener("loadeddata", markFirstFrame);
       video.removeEventListener("seeked", markFirstFrame);
