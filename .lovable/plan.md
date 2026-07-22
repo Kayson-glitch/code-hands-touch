@@ -1,23 +1,25 @@
-把 `Synergy.AI.` 渐变文字从当前生硬的「线性无限平移」改成柔和、可呼吸的缓动流动。
+略微加快字符手的入场动画，让它与 hero 文字/按钮的淡入节奏更同步。
+
+## 当前节奏
+
+- Hero 文字：从背景变黑 (`app-bg-change`) 后再等 280ms 开始，900ms 淡入完成，约 1180ms 后完全可见。
+- 字符手：当前 `INTRO_DURATION_MS = 2400ms`，再加上右臂 `120ms` 的错峰，约 2520ms 后完全出现，比 Hero 慢约 1.3s。
 
 ## 改动内容
 
-1. **更新 `src/styles.css`**
-   - 替换 `@keyframes synergy-gradient-flow`。
-   - 新动画在约 0% 位置停留，缓慢移动到约 35% 左右，再缓慢返回，整体使用 `ease-in-out` 或自定义 `cubic-bezier(0.45, 0, 0.55, 1)`，让运动有自然的加速/减速，没有线性机械感。
-   - 单个周期 8–10s，更舒缓。
+1. **缩短 `src/components/AsciiHandsFooter.tsx` 中的入场时间**
+   - `INTRO_DURATION_MS`: 2400ms → **1600ms**（只轻微加速，保留手腕处放缓）。
+   - `INTRO_SIDE_STAGGER_MS`: 120ms → **70ms**，保持两只手的错峰但同步更快。
+   - 调整 `INTRO_WRIST_ANCHOR` 或 Hermite 曲线参数，让时间压缩后「手腕处放缓」仍然明显。
 
-2. **更新 `src/components/HeroCopy.tsx`**
-   - 保持三色渐变值不变（#185DFF、#D018FF、#FF1245）。
-   - 把 `animation: "synergy-gradient-flow 6s linear infinite"` 改为新的 keyframe + 更慢时长。
-   - 可选增加非常轻微的 `brightness` 呼吸，让整体发光感更柔和，但只作为辅助，不抢戏。
+2. **同步 hero 的触发延迟**
+   - `src/components/HeroCopy.tsx` 中，背景变黑后的等待从 `280ms` 缩短到 **150ms**，让 hero 文字和手部动画几乎同时开始、几乎同时完成。
 
 3. **验证**
-   - 构建项目检查 TypeScript/CSS 是否通过。
-   - 在预览中确认渐变不再像进度条一样平移，而是缓慢来回、呼吸感强。
+   - 构建项目无错误。
+   - 在预览中确认手部动画不再比 hero 明显慢，入场收尾更同步。
 
 ## 技术细节
 
-- 使用 CSS keyframes 控制 `background-position` 在 `0%` ↔ `35%` 之间移动。
-- 关键帧 0% → 30% → 70% → 100% 营造「停留-慢移-慢回-停留」的呼吸节奏。
-- `animation-timing-function` 用全局 ease-in-out，避免 linear。
+- 保持原有的 Hermite 缓动（快启动、手腕减速）不变，只调整时间参数。
+- 不改动其他 hover、click-lock、马赛克、流动等效果。

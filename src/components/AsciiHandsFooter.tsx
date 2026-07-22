@@ -114,22 +114,22 @@ const ARM_ALIGN_STRENGTH = 0.45;
 // Intro reveal timing — arms grow from screen edge inward along the arm axis.
 // A hermite curve gives fast forearm coverage, then a distinct deceleration as
 // the reveal reaches the wrist / palm / fingers.
-const INTRO_DURATION_MS = 2400;
+const INTRO_DURATION_MS = 1600;
 const INTRO_FRONT_WIDTH_BASE = 0.18;
 // After the reveal passes the "wrist" anchor we widen the front band so the
 // palm + fingers unfurl feels softer / more diffused, reinforcing the slowdown.
 const INTRO_FRONT_WIDTH_WRIST = 0.22;
-const INTRO_WRIST_ANCHOR = 0.78; // eased-progress value at which we consider
+const INTRO_WRIST_ANCHOR = 0.72; // eased-progress value at which we consider
                                  // the reveal to have reached the wrist.
 // Right (robot) arm lags slightly behind the left so the two hands don't march
 // in lockstep — subtle narrative offset.
-const INTRO_SIDE_STAGGER_MS = 120;
+const INTRO_SIDE_STAGGER_MS = 70;
 // Post-front "settle" band: cells behind the front fade the last stretch of
 // alpha from 0.6 → 1 across this fraction of armT.
 const INTRO_SETTLE_WIDTH = 0.12;
 // Cubic hermite with tangents (fast in, slow out) chosen so that
-// introEase(0.62) ≈ 0.78 — i.e. ~78% of the arm is revealed by the time 62%
-// of the duration has elapsed, and the remaining 22% of distance takes 38% of
+// introEase(0.55) ≈ 0.72 — i.e. ~72% of the arm is revealed by the time 55%
+// of the duration has elapsed, and the remaining 28% of distance takes 45% of
 // the time. Derivative is continuous and positive across the whole range, so
 // there is no perceptible pause at the wrist — just a smooth deceleration.
 const introEase = (t: number) => {
