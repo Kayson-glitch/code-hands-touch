@@ -140,29 +140,17 @@ const FRAG = /* glsl */ `
       float ringBand = smoothstep(ringWidth, ringWidth * 0.55, abs(dOuter));
       float ring = clamp(ringBand * (1.0 - burned), 0.0, 1.0);
 
-      // Two-layer halo, biased to the outside of the ring so the video side stays clean.
-      float outsideBias = smoothstep(-0.02, 0.06, dOuter);
-      float haloInner = exp(-abs(dOuter) * 14.0) * 1.20;
-      float haloOuter = exp(-abs(dOuter) * 4.5)  * 0.55;
-      float halo = (haloInner + haloOuter) * (0.25 + 0.75 * outsideBias);
-
-      // Fade the ring/halo in from zero so the first burn frames don't flash
-      // the whole screen lavender while rOuter is still ~0.
+      // Fade the ring in from zero so the first burn frames don't pop.
       float appear = smoothstep(0.0, 0.12, b);
-      float radiusGate = smoothstep(0.02, 0.08, rOuter);
       ring *= appear;
-      halo *= appear * radiusGate;
 
-      vec3 glowCol = vec3(0.77, 0.66, 1.00); // cool lavender
       vec3 ringCol = vec3(1.00, 0.98, 1.00); // near-white solid band
 
       // Composite:
       //  - burned area → black
-      //  - ring → solid bright band overwrites video
-      //  - outside → video + soft lavender halo, no halo inside the hole
+      //  - ring → thin bright band along the hole's outer edge
       col = mix(col, vec3(0.0), burned);
       col = mix(col, ringCol, ring);
-      col += glowCol * halo * (1.0 - burned);
     }
 
     gl_FragColor = vec4(col, 1.0);
