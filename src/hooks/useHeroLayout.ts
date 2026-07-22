@@ -8,6 +8,8 @@ export type HeroLayout = {
   subtitleLineHeight: string;
   handsTop: string;
   handsHeight: string;
+  handsMaxWidth: number;
+  cellSize: number;
 };
 
 const DESKTOP: HeroLayout = {
@@ -18,6 +20,8 @@ const DESKTOP: HeroLayout = {
   subtitleLineHeight: "24px",
   handsTop: "calc(46vh - 8px)",
   handsHeight: "51vh",
+  handsMaxWidth: 1440,
+  cellSize: 10,
 };
 
 const SHORT: HeroLayout = {
@@ -49,12 +53,35 @@ const MOBILE: HeroLayout = {
   handsHeight: "56vh",
 };
 
+const WIDE: HeroLayout = {
+  ...DESKTOP,
+  titlePaddingTop: "20vh",
+  titleFontSize: 56,
+  titleLineHeight: "64px",
+  handsTop: "calc(44vh - 8px)",
+  handsHeight: "55vh",
+  handsMaxWidth: 1720,
+  cellSize: 12,
+};
+
+const ULTRA: HeroLayout = {
+  ...WIDE,
+  titleFontSize: 64,
+  titleLineHeight: "72px",
+  handsTop: "calc(42vh - 8px)",
+  handsHeight: "58vh",
+  handsMaxWidth: 2000,
+  cellSize: 14,
+};
+
 function pick(): HeroLayout {
   if (typeof window === "undefined") return DESKTOP;
   const w = window.innerWidth;
   const h = window.innerHeight;
   if (w <= 767) return MOBILE;
   if (w <= 1199) return TABLET;
+  if (w >= 2000) return ULTRA;
+  if (w >= 1600 && h > 760) return WIDE;
   if (h <= 819) return SHORT;
   return DESKTOP;
 }
