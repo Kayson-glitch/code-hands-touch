@@ -31,10 +31,8 @@ export function ScrollHint({ visible = true }: { visible?: boolean }) {
   }, [dismissed]);
 
   const on = visible && entered && !dismissed;
-  // Exit animation: soft scale-out only, no vertical displacement so the
-  // centered hint stays visually anchored as it fades away.
-  const translateY = 0;
-  const scale = dismissed ? 0.94 : 1;
+  // Exit animation: pure fade only. The container stays exactly centered and
+  // never moves, so there is zero displacement on dismissal.
 
   return (
     <div
@@ -43,12 +41,10 @@ export function ScrollHint({ visible = true }: { visible?: boolean }) {
         position: "fixed",
         left: "50%",
         top: "50%",
-        transform: `translate(-50%, calc(-50% + ${translateY}px)) scale(${scale})`,
+        transform: "translate(-50%, -50%)",
         opacity: on ? 1 : 0,
-        transition:
-          // Slower, springy transform (back-out with overshoot) + gentle opacity fade.
-          "transform 880ms cubic-bezier(0.34, 1.56, 0.44, 1), opacity 640ms cubic-bezier(0.4, 0, 0.2, 1)",
-        willChange: "transform, opacity",
+        transition: "opacity 640ms cubic-bezier(0.4, 0, 0.2, 1)",
+        willChange: "opacity",
         pointerEvents: "none",
         zIndex: 90,
         display: "flex",
@@ -56,7 +52,6 @@ export function ScrollHint({ visible = true }: { visible?: boolean }) {
         alignItems: "center",
         gap: 12,
         color: "rgba(0,0,0,0.82)",
-        animation: on ? "sh-breathe 3.2s ease-in-out infinite" : "none",
       }}
     >
       <svg width="22" height="34" viewBox="0 0 22 34" fill="none">
