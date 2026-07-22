@@ -37,10 +37,10 @@ export function SiteNav() {
   const fg = isDark ? "text-white" : "text-black";
   const hoverFg = isDark ? "hover:text-white" : "hover:text-black";
   const capsuleClass = isDark
-    ? "bg-black/55 border-white/12"
-    : "bg-white/70 border-black/10";
+    ? "bg-white/10 backdrop-blur-2xl border-white/15 shadow-lg shadow-black/25"
+    : "bg-white/75 backdrop-blur-2xl border-black/10 shadow-lg shadow-black/10";
   const loginBorder = isDark
-    ? "border-white/25 text-white/85 hover:text-white hover:border-white/50"
+    ? "border-white/30 text-white/90 hover:text-white hover:border-white/60"
     : "border-black/20 text-black/80 hover:text-black hover:border-black/45";
   const ctaClass = isDark ? "bg-white text-black" : "bg-black text-white";
 
@@ -56,8 +56,8 @@ export function SiteNav() {
       }}
     >
       <div
-        className={`pointer-events-auto flex items-center gap-8 rounded-full border backdrop-blur-xl ${capsuleClass} ${fg}`}
-        style={{ height: 52, paddingLeft: 16, paddingRight: 6 }}
+        className={`pointer-events-auto flex items-center justify-between rounded-full border ${capsuleClass} ${fg}`}
+        style={{ height: 52, width: "min(92vw, 900px)", paddingLeft: 18, paddingRight: 6 }}
       >
         {/* Logo */}
         <a href="/" className="flex items-center" style={{ height: 28 }}>
@@ -70,7 +70,7 @@ export function SiteNav() {
 
         {/* Center menu */}
         <ul
-          className="hidden items-center gap-8 md:flex"
+          className="hidden flex-1 items-center justify-center gap-8 md:flex"
           style={{ fontSize: 14, lineHeight: "22px" }}
         >
           <li className="flex cursor-pointer items-center gap-1">
