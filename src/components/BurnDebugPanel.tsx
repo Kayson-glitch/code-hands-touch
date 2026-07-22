@@ -19,11 +19,11 @@ export type BurnParams = {
 };
 
 export const DEFAULT_BURN_PARAMS: BurnParams = {
-  warpAmp: 0.62,
-  warpFreq: 1.15,
-  streakAmp: 0.40,
-  streakFreq: 6.0,
-  angularAmp: 1.4,
+  warpAmp: 0.78,
+  warpFreq: 1.05,
+  streakAmp: 0.52,
+  streakFreq: 2.7,
+  angularAmp: 1.7,
   angularFreq: 0.55,
   chromaAberration: 0.34,
   shardDisplace: 0.55,

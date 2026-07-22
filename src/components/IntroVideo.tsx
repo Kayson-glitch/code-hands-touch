@@ -20,7 +20,7 @@ export type IntroProgressInfo = {
 const VIDEO_FRACTION = 0.6;
 const PIXELS_FOR_FULL_PROGRESS = 2600;
 // Duration (ms) of the auto-driven burn-through once the video segment ends.
-const BURN_AUTO_MS = 3600;
+const BURN_AUTO_MS = 1800;
 // Cap a single wheel tick so a hard mouse-wheel notch doesn't jump the progress.
 const MAX_PIXELS_PER_TICK = 260;
 // Cap RAF drain too; if decoding stalls, multiple wheel events can arrive
@@ -259,7 +259,7 @@ const FRAG = /* glsl */ `
       float t = uTime;
       // Squash Y so the burn front is a wide ellipse (~1.75:1), matching
       // unseen.co/world's horizontally elongated silhouette.
-      vec2 pe = vec2(p.x, p.y * 1.75);
+      vec2 pe = vec2(p.x, p.y * 2.15);
       // ---- Domain-warp the sample point so the edge is non-circular ----
       // Two low-freq fbm channels displace p → petal / tongue-like contour.
       float wx = fbm(pe * uWarpFreq + vec2( t * 0.09,  t * 0.06));
@@ -280,7 +280,8 @@ const FRAG = /* glsl */ `
       float wob = (sin(ang * 3.0 * uAngularFreq + t * 0.7) * 0.045
                 +  sin(ang * 5.0 * uAngularFreq - t * 0.9) * 0.030
                 +  sin(ang * 9.0 * uAngularFreq + t * 1.3) * 0.018) * uAngularAmp
-                + 0.05 * cos(ang * 2.0); // bias horizontal lobes
+                + 0.09 * cos(ang * 2.0)
+                + 0.04 * cos(ang * 4.0 + 1.1); // bias horizontal lobes
 
       float len = length(pw);
       float d = len - r + distort * 0.55 + wob; // signed distance from the front
@@ -289,7 +290,7 @@ const FRAG = /* glsl */ `
       float burned = smoothstep(0.035, -0.015, d);
 
       // Fade-in and tail-out envelopes (avoid pop / final flash).
-      float appear = smoothstep(0.0, 0.10, b);
+      float appear = smoothstep(0.0, 0.02, b);
       float tail   = 1.0 - smoothstep(0.92, 1.00, b);
       float env    = appear * tail;
 
