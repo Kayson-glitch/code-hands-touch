@@ -1,5 +1,9 @@
 import { useEffect, useRef, useState } from "react";
 
+const MIN_CLIMB_MS = 900;
+const MIN_HOLD_MS = 250;
+const CLIMB_RATE = 100 / MIN_CLIMB_MS; // % per ms
+
 export function IntroPreloader({
   src,
   onReady,
@@ -9,14 +13,18 @@ export function IntroPreloader({
   onReady: (objectUrl: string) => void;
   onFail: () => void;
 }) {
-  const [pct, setPct] = useState(0);
+  const [displayPct, setDisplayPct] = useState(0);
   const [hasProgress, setHasProgress] = useState(true);
   const doneRef = useRef(false);
+  const realPctRef = useRef(0);
+  const downloadDoneRef = useRef(false);
+  const holdStartRef = useRef<number | null>(null);
+  const rafRef = useRef<number | null>(null);
+  const objectUrlRef = useRef<string | null>(null);
 
   useEffect(() => {
     const controller = new AbortController();
     let cancelled = false;
-    let objectUrl: string | null = null;
 
     const finish = (url: string) => {
       if (doneRef.current || cancelled) return;
@@ -38,6 +46,38 @@ export function IntroPreloader({
       try { v.load(); } catch { /* ignore */ }
     };
 
+    let lastTime = performance.now();
+
+    const tick = (now: number) => {
+      if (cancelled || doneRef.current) return;
+
+      const dt = now - lastTime;
+      lastTime = now;
+
+      // Display climbs at a bounded rate, but never exceeds real progress.
+      const target = realPctRef.current;
+      setDisplayPct((prev) => {
+        const maxAllowed = prev + CLIMB_RATE * dt;
+        return Math.min(target, maxAllowed);
+      });
+
+      const currentDisplay = Math.min(target, displayPct + CLIMB_RATE * dt);
+
+      if (downloadDoneRef.current && currentDisplay >= 100) {
+        if (holdStartRef.current === null) {
+          holdStartRef.current = now;
+        } else if (now - holdStartRef.current >= MIN_HOLD_MS) {
+          const url = objectUrlRef.current;
+          if (url) finish(url);
+          return;
+        }
+      }
+
+      rafRef.current = requestAnimationFrame(tick);
+    };
+
+    rafRef.current = requestAnimationFrame(tick);
+
     (async () => {
       try {
         const res = await fetch(src, { signal: controller.signal });
@@ -55,15 +95,21 @@ export function IntroPreloader({
             chunks.push(value);
             received += value.length;
             if (total) {
-              setPct(Math.min(100, (received / total) * 100));
+              realPctRef.current = Math.min(100, (received / total) * 100);
             }
           }
         }
         if (cancelled) return;
-        setPct(100);
+        if (total) {
+          realPctRef.current = 100;
+        }
         const blob = new Blob(chunks as BlobPart[], { type: "video/mp4" });
-        objectUrl = URL.createObjectURL(blob);
-        finish(objectUrl);
+        objectUrlRef.current = URL.createObjectURL(blob);
+        downloadDoneRef.current = true;
+        // If there was no progress, skip the climb/hold and finish immediately.
+        if (!total) {
+          finish(objectUrlRef.current);
+        }
       } catch {
         if (!cancelled) onFail();
       }
@@ -72,8 +118,11 @@ export function IntroPreloader({
     return () => {
       cancelled = true;
       controller.abort();
+      if (rafRef.current) cancelAnimationFrame(rafRef.current);
       // If we created a URL but never handed it off, revoke it.
-      if (objectUrl && !doneRef.current) URL.revokeObjectURL(objectUrl);
+      if (objectUrlRef.current && !doneRef.current) {
+        URL.revokeObjectURL(objectUrlRef.current);
+      }
     };
   }, [src, onReady, onFail]);
 
@@ -94,7 +143,7 @@ export function IntroPreloader({
         letterSpacing: "-0.01em",
       }}
     >
-      {hasProgress ? `${Math.floor(pct)}%` : ""}
+      {hasProgress ? `${Math.floor(displayPct)}%` : ""}
     </div>
   );
 }
