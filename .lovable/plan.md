@@ -1,29 +1,25 @@
-仅调整 `src/components/IntroVideo.tsx` 中 burn 期 shard/ghost 相关参数，其他效果保持不变。
+## 根因
 
-## 调整项
+`<body>` 的主题背景色是白色（`--background: oklch(1 0 0)`）。目前只有 `<section>`（AsciiHandsFooter）在 burn 完成瞬间被切成 `#0a0a0a`。当 `IntroVideo` 500ms 后卸载时，其全屏黑色 `<div>` 从 DOM 移除，浏览器在这一帧合成期间可能短暂露出 body 的白色底色，造成"扩散完成 → 白闪一下 → ASCII 手出现"的效果。
 
-**1. 前景横向 shard bands（主体，更大更清晰）**
-- 条带高度 `bandH`：`4–10px` → `10–22px`（更粗、更明显的碎片块）
-- 触发率：`step(0.85)` → `step(0.78)`（~15% → ~22%，更密集）
-- 水平位移 `bandShiftPx`：`±14px` → `±26px`（更强撕裂感）
-- 彩色描边 `shardChromaPx` 附加量：`4.5` → `7.0`，并降低 `wHi` 抑制强度，让高光区也保留清晰彩边
-- 新增：条带内部叠加 `+3% 亮度提升 * bandTrigger`，让前景碎片更"跳"出来
+我 40ms 密集截图没有捕获到这一帧，说明它是浏览器合成层面的单帧闪烁，只有在真机上偶发可见——这正符合用户描述。
 
-**2. 中景 mosaic cells（略微增大）**
-- cell 尺寸：`14/18/22px` → `22/30/38px`
-- 位移：`(±10px, ±3px)` → `(±16px, ±5px)`
-- 触发率保持 ~6%（避免画面过噪）
+## 修复
 
-**3. 背景 ghost 残影（更暗、更远，与前景拉开层次）**
-- 位移：`±16px` → `±34px`（残影拉得更远）
-- 混合权重：`0.22` → `0.30`
-- 改用 `mix(col, ghost, …)` 且乘 `(1.0 - wHi*0.5)`，让残影在暗部/中调更明显、亮部收敛
-- 附加一层轻微垂直位移（`±6px`），让 ghost 不只是纯水平
+改动只在两个地方，其他行为完全不变。
 
-**4. 时序门控保持不变**
-- `shardK` 门控窗口不动（`smoothstep(0.30,0.55)` × `1-smoothstep(0.72,0.90)`），保证进出仍然平滑
-- `burstK`、`peakK`、光圈、色散、grain、扫描线、亮度硬顶（0.985）全部不动
+**1. `src/components/AsciiHandsFooter.tsx`**
+- 在 `handleIntroEnded` 里，除了 `setBgDark(true)` 之外，同步给 `document.documentElement.style.backgroundColor` 和 `document.body.style.backgroundColor` 赋 `#0a0a0a`。
+- 这样即使 IntroVideo 卸载一帧内 section 未及时合成，露出的也是黑色 html/body 而非白色。
+- 组件卸载时不需要还原（首屏只走一次，且后续 UI 全部是深色主题）。
+
+**2. `src/components/AsciiHandsFooter.tsx`（保险层，兜底）**
+- 在 `<section>` 里额外挂一个 `position: fixed; inset: 0; background: #000; zIndex: -1` 的持久黑幕，`stage === "hands"` 时启用。这样即便未来 DOM 结构变化，也不会再出现 body 白色泄漏。
+
+（不需要修改 shader、不需要改 burn 时序、不需要动 `IntroVideo`。）
 
 ## 验证
 
-用 Playwright 在 burn 峰值期截图（触发 wheel 滚到视频末尾 + 等待 ~1.8s），比对前后碎片粗细/残影层次。
+修改后不容易在自动截图里稳定复现（因为原本也需要极窄的合成时机），但可以做静态验证：
+- 在浏览器里手动把 IntroVideo 层临时删除，确认露出的是黑色而不是白色。
+- 用 `document.body` 的 computed `background-color` 在 stage=hands 时应为 `rgb(10, 10, 10)`。

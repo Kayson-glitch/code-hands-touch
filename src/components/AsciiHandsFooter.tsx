@@ -1282,6 +1282,12 @@ export function AsciiHandsFooter({ videoSrc }: { videoSrc?: string } = {}) {
   const handleIntroEnded = () => {
     if (stageRef.current !== "orb") return;
     setBgDark(true);
+    // Also paint html/body black immediately, so the single frame where
+    // <IntroVideo> unmounts can't reveal the theme's white body background.
+    if (typeof document !== "undefined") {
+      document.documentElement.style.backgroundColor = "#0a0a0a";
+      document.body.style.backgroundColor = "#0a0a0a";
+    }
     setStage("hands");
     // Keep the intro layer mounted briefly so the burst overlay can fade out
     // on top of it, then unmount.
