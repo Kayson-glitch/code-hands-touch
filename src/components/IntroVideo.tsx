@@ -120,25 +120,17 @@ const FRAG = /* glsl */ `
       float n2 = fbm(p * 7.5 - vec2(t * 0.22, t * 0.16));
       float distort = (n1 - 0.5) * 0.16 + (n2 - 0.5) * 0.06;
 
-      // Outer radius (burn front) — easeOutCubic, expands past screen.
-      float bOuter = 1.0 - pow(1.0 - b, 3.0);
-      float rOuter = bOuter * 1.9;
-      // Inner radius (already-burned-through hole) — lags behind, delayed start.
-      float bInner = smoothstep(0.10, 0.95, b);
-      float rInner = bInner * 1.9;
+      // Single radius drives both the hole and the ring, so they expand in lock-step.
+      float r = (1.0 - pow(1.0 - b, 3.0)) * 1.9; // easeOutCubic, past screen
+      float ringWidth = 0.10;
 
       float len = length(p);
-      // Signed distances from front (positive = outside burn, negative = burning/burned)
-      float dOuter = len - rOuter + distort * 0.22;
-      float dInner = len - rInner + distort * 0.18;
+      float d = len - r + distort * 0.20; // signed distance from the front
 
-      // Burned-through mask (crisp inner hole → black)
-      float burned = smoothstep(0.015, -0.015, dInner);
-
-      // Solid bright ring band centred on dOuter with thickness ~ringWidth.
-      float ringWidth = 0.10;
-      float ringBand = smoothstep(ringWidth, ringWidth * 0.55, abs(dOuter));
-      float ring = clamp(ringBand * (1.0 - burned), 0.0, 1.0);
+      // Burned-through hole sits just inside the ring band.
+      float burned = smoothstep(ringWidth * 0.35, -ringWidth * 0.15, d);
+      // Bright ring hugs the burn front on its outer side.
+      float ring = smoothstep(ringWidth, ringWidth * 0.55, abs(d)) * (1.0 - burned);
 
       // Fade the ring in from zero so the first burn frames don't pop.
       float appear = smoothstep(0.0, 0.12, b);
