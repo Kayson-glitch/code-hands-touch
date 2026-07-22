@@ -1,27 +1,18 @@
 ## 目标
-Hero 区域的标题（含渐变的 "Synergy.AI." 部分）以 React Bits `BlurText` 的模糊+位移入场动画整体呈现；副标题与按钮保持现有行为不变。
+Hero 的标题、副标题、按钮作为**一个整体**做模糊入场动画（blur+位移+淡入），不再按词/字符分段。
 
-## 修改
+## 修改 `src/components/HeroCopy.tsx`
+- 移除 `BlurText`，恢复原 `<h1>`（含 "Synergy.AI." 渐变 span）、`<p>` 副标题、`<button>` 三个静态元素。
+- 保留 `visible` 触发时机（`app-bg-change=dark` 后 280ms）。
+- 在外层容器上应用整体动画：
+  - `initial`: `opacity: 0`, `filter: blur(12px)`, `transform: translateY(24px)`
+  - `visible`: `opacity: 1`, `filter: blur(0)`, `transform: translateY(0)`
+  - `transition`: `opacity 900ms ease-out, filter 900ms ease-out, transform 900ms cubic-bezier(0.22, 1, 0.36, 1)`
+- 加 `willChange: "opacity, filter, transform"`。
+- 不使用 motion 库（纯 CSS transition 就够；BlurText 组件保留在文件里但不再引用，或后续清理）。
 
-### 1. 新增 `src/components/BlurText.tsx`
-按提供的源码原样落地组件（TS 化后：为 props 补上类型），使用 `motion/react`。
-
-### 2. 安装依赖
-`bun add motion`
-
-### 3. `src/components/HeroCopy.tsx`
-- 引入 `BlurText`。
-- 保留现有 `visible` 触发机制（等 `app-bg-change=dark` 后 280ms），把标题从 `<h1>` 静态 JSX 换成 `BlurText`，仍然通过外层容器的 `opacity/transform` 控制整体登场时机（副标题+按钮的淡入不变）。
-- 因为标题带渐变色的 "Synergy.AI." 是 span，`BlurText` 只接收纯字符串，会破坏渐变。做法：
-  - 用两个 `BlurText` 拼一行：
-    1. `BlurText text="Support that drives revenue, powered by"` 白色。
-    2. `BlurText text="Synergy.AI."` 通过 `className` 应用渐变文字样式（`bg-clip-text text-transparent` + 内联 `background-image` 渐变），保证每个 word span 都继承渐变。
-  - 两段 flex-wrap 排在一行，视觉上等价原两行标题（原本就是 `<br />` 手动换行，这里改为让 flex 自然换行；容器居中、`max-width: 900px` 保留）。
-- `animateBy="words"`，`direction="top"`，`delay=120`，`stepDuration=0.5`，仅在 `visible=true` 时挂载 `BlurText`（key 触发一次），避免页面初始就播完。
-
-### 4. 不改动
-- `SiteNav`、`FinChatDock`、扩散动画、视频、导航栏可见性逻辑。
-- 副标题 `<p>` 与 "Book a Demo" 按钮保持现在的容器级淡入。
+## 不改动
+- 导航、扩散动画、视频、字体、颜色、布局位置。
 
 ## 验证
-预览刷新 → 视频扩散结束 → hero 出现时，标题按单词依次从上方模糊淡入落位，"Synergy.AI." 渐变颜色正确、副标题与按钮同步淡入。
+预览刷新 → 扩散完成 → hero 三行（标题+副标题+按钮）作为整体从模糊到清晰同时淡入落位。

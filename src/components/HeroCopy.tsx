@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { useHeroLayout } from "@/hooks/useHeroLayout";
-import BlurText from "./BlurText";
 
 export function HeroCopy() {
   const [visible, setVisible] = useState(false);
@@ -26,61 +25,40 @@ export function HeroCopy() {
       style={{
         paddingTop: layout.titlePaddingTop,
         opacity: visible ? 1 : 0,
-        transform: visible ? "translateY(0)" : "translateY(12px)",
-        transition: "opacity 700ms ease-out, transform 700ms ease-out",
+        filter: visible ? "blur(0px)" : "blur(12px)",
+        transform: visible ? "translateY(0)" : "translateY(24px)",
+        transition:
+          "opacity 900ms ease-out, filter 900ms ease-out, transform 900ms cubic-bezier(0.22, 1, 0.36, 1)",
+        willChange: "opacity, filter, transform",
       }}
     >
-      {visible && (
-        <h1
-          className="font-display text-white"
+      <h1
+        className="font-display text-white"
+        style={{
+          fontSize: layout.titleFontSize,
+          lineHeight: layout.titleLineHeight,
+          fontWeight: 500,
+          letterSpacing: "-0.01em",
+          maxWidth: 900,
+          margin: 0,
+        }}
+      >
+        Support that drives revenue,
+        <br />
+        powered by{" "}
+        <span
           style={{
-            fontSize: layout.titleFontSize,
-            lineHeight: layout.titleLineHeight,
-            fontWeight: 500,
-            letterSpacing: "-0.01em",
-            maxWidth: 900,
-            margin: 0,
+            background:
+              "linear-gradient(90deg, #6B4CFF 0%, #B478FF 55%, #E36BFF 100%)",
+            WebkitBackgroundClip: "text",
+            backgroundClip: "text",
+            WebkitTextFillColor: "transparent",
+            color: "transparent",
           }}
         >
-          <BlurText
-            text="Support that drives revenue, powered by"
-            animateBy="words"
-            direction="top"
-            delay={120}
-            stepDuration={0.5}
-            className="text-white"
-            style={{
-              justifyContent: "center",
-              margin: 0,
-              fontSize: "inherit",
-              lineHeight: "inherit",
-              fontWeight: "inherit",
-              letterSpacing: "inherit",
-            }}
-          />
-          <BlurText
-            text="Synergy.AI."
-            animateBy="words"
-            direction="top"
-            delay={120}
-            stepDuration={0.5}
-            style={{
-              justifyContent: "center",
-              margin: 0,
-              fontSize: "inherit",
-              lineHeight: "inherit",
-              fontWeight: "inherit",
-              letterSpacing: "inherit",
-              backgroundImage:
-                "linear-gradient(90deg, #6B4CFF 0%, #B478FF 55%, #E36BFF 100%)",
-              WebkitBackgroundClip: "text",
-              backgroundClip: "text",
-              WebkitTextFillColor: "transparent",
-              color: "transparent",
-            }}
-          />
-        </h1>
-      )}
+          Synergy.AI.
+        </span>
+      </h1>
 
       <p
         className="mt-5 text-white/60"
