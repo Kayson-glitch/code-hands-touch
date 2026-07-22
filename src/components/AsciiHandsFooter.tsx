@@ -1309,8 +1309,16 @@ export function AsciiHandsFooter({
   const handsVisible = stage === "hands";
   const [orbMounted, setOrbMounted] = useState(true);
   const [handoffBlack, setHandoffBlack] = useState(false);
-  const handleIntroProgress = (_info: IntroProgressInfo) => {
-    /* shader draws burst internally; no external state needed */
+  const navHiddenRef = useRef(false);
+  const handleIntroProgress = (info: IntroProgressInfo) => {
+    // As soon as the burst starts, hide the nav so it doesn't sit
+    // on the black transition frame.
+    if (!navHiddenRef.current && info.burstProgress > 0) {
+      navHiddenRef.current = true;
+      if (typeof window !== "undefined") {
+        window.dispatchEvent(new CustomEvent("app-nav-visibility", { detail: "hidden" }));
+      }
+    }
   };
   const handleIntroEnded = () => {
     if (stageRef.current !== "orb") return;
@@ -1322,7 +1330,7 @@ export function AsciiHandsFooter({
       window.dispatchEvent(new CustomEvent("app-nav-visibility", { detail: "hidden" }));
       window.setTimeout(() => {
         window.dispatchEvent(new CustomEvent("app-nav-visibility", { detail: "visible" }));
-      }, 850);
+      }, 320);
     }
     // Also paint html/body black immediately, so the single frame where
     // <IntroVideo> unmounts can't reveal the theme's white body background.
@@ -1335,7 +1343,7 @@ export function AsciiHandsFooter({
     // cover the hands canvas; the handoffBlack layer keeps the background
     // solid for a few frames to avoid any composite gap.
     setOrbMounted(false);
-    window.setTimeout(() => setHandoffBlack(false), 300);
+    window.setTimeout(() => setHandoffBlack(false), 160);
   };
   const [bgDark, setBgDark] = useState(false);
   useEffect(() => {

@@ -4,7 +4,16 @@ import logoDark from "@/assets/synergy-logo-dark.png.asset.json";
 
 export function SiteNav() {
   const [theme, setTheme] = useState<"light" | "dark">("light");
-  const [hidden, setHidden] = useState(false);
+  const [hidden, setHidden] = useState(true);
+
+  useEffect(() => {
+    // Nav starts hidden through the intro video + burst. Only show it
+    // once we've received an explicit "visible" signal (after the black
+    // handoff). Fallback: if no burst is ever dispatched (e.g. reduced
+    // motion path), reveal after a short delay so the site is usable.
+    const t = window.setTimeout(() => setHidden(false), 4000);
+    return () => window.clearTimeout(t);
+  }, []);
 
   useEffect(() => {
     const onBg = (e: Event) => {
