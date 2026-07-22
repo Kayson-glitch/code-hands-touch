@@ -1,18 +1,10 @@
-## Plan
+## 目标
+让 1.8s 内的扩散动画保持匀速（线性），去掉当前的缓动曲线。
 
-**1. `src/components/IntroVideo.tsx` — faster, immediate burn**
-- `BURN_AUTO_MS` 3600 → 1800.
-- Shader: `appear = smoothstep(0.0, 0.10, b)` → `smoothstep(0.0, 0.02, b)` so the edge is visible immediately.
-- Video-end trigger unchanged (fires the frame `videoProgress >= 1`).
+## 修改
+- 文件：`src/components/IntroVideo.tsx`
+- 定位自动扩散驱动中对进度 `b`（0→1）的缓动处理（当前使用类似 `pow(b, 3.2)` 的 ease-in），改为直接使用线性 `b`，让 shader 的 `uProgress` 在 1.8s 内以恒定速率从 0 增长到 1。
+- 不修改视频滚动、形状、噪声、导航栏等其他任何逻辑。
 
-**2. Shader shape — more irregular ellipse**
-- Ellipse ratio: `pe = vec2(p.x, p.y * 1.75)` → `p.y * 2.15`.
-- Stronger horizontal lobe bias in `wob`: `+ 0.05 * cos(ang * 2.0)` → `+ 0.09 * cos(ang * 2.0) + 0.04 * cos(ang * 4.0 + 1.1)`.
-- Bump `DEFAULT_BURN_PARAMS` in `src/components/BurnDebugPanel.tsx`:
-  - `warpAmp` 0.62 → 0.78
-  - `warpFreq` 1.15 → 1.05
-  - `streakAmp` 0.40 → 0.52
-  - `streakFreq` 2.4 → 2.7
-  - `angularAmp` 1.4 → 1.7
-
-**Not changed:** scroll→video mapping, glitch/chroma layers, halo layers, colors, hero UI.
+## 验证
+预览刷新，滚动至视频结束后观察扩散：整个 1.8s 全程速度均匀，无先慢后快。
