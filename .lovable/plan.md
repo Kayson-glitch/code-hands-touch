@@ -1,16 +1,40 @@
-## 目标
+Apply the provided burn parameter set as the new default values for the burn-through shader.
 
-恢复实时调参面板 `BurnDebugPanel`（之前接入过，现在只在 `?debug=1` 时显示，希望能直接看到）。
+## What I will do
 
-## 改动
+1. Update `src/components/BurnDebugPanel.tsx`:
+   - Replace the current `DEFAULT_BURN_PARAMS` object with the exact values you provided:
+     ```json
+     {
+       "warpAmp": 0.55,
+       "warpFreq": 1.3,
+       "streakAmp": 0.28,
+       "streakFreq": 6,
+       "angularAmp": 0.55,
+       "angularFreq": 0.55,
+       "chromaAberration": 0.34,
+       "shardDisplace": 0.55,
+       "grainAmount": 1,
+       "glitchFlicker": 0,
+       "coreRimAlpha": 0.95,
+       "hotHaloAlpha": 0.55,
+       "cloudDiffuseAlpha": 0.29,
+       "mistAlpha": 0.2,
+       "haloFalloff": 0.52
+     }
+     ```
+   - Keep all slider ranges, groups, and panel behavior unchanged.
 
-`src/components/IntroVideo.tsx`
-- 让面板默认渲染：把渲染条件 `debugEnabled` 改成常显，`debug` prop 保留但不再决定可见性。
-- 保留面板的 "Jump to Burst" 和 "Finish" 按钮；现在扩散已经是滚轮驱动、可回滚，这两个按钮仍能用来快速跳到扩散段或强制进入下一屏。
-- 移除已废弃的 `debugRef` 分支残留（burn 现在始终跟随 `burstProgress`，无需再判 debug）。
+2. Verify the change propagates automatically:
+   - `IntroVideo.tsx` already initializes its shader uniforms from `DEFAULT_BURN_PARAMS` and resets the panel with it, so no second source of truth needs to be edited.
 
-不改动其它组件、路由、样式。
+3. Validate:
+   - Run a build check / typecheck to ensure no errors after editing the object literal.
 
-## 确认
+## What is not changing
 
-需要我在生产发布时也保留这个面板吗？默认按"始终显示"来做；如果只想开发时看到，请告诉我我改成只在带 `?debug=1` 时显示。
+- Shader logic, scroll/wheel behavior, video playback, UI components, layout, navigation, or any other source files besides `BurnDebugPanel.tsx`.
+
+## Outcome
+
+The debug panel will open with these values, and the burn-through effect will use them from the first render. Resetting the panel will also revert to these values.
