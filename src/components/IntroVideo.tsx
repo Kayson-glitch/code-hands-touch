@@ -633,6 +633,7 @@ export function IntroVideo({
       );
 
       if (seekCooldownLeft > 0) seekCooldownLeft -= 1;
+      if (seekInFlight && !video.seeking) flushQueuedSeek();
 
       const videoProgress = Math.min(1, progress / VIDEO_FRACTION);
       const burstProgress = Math.min(1, Math.max(0, (progress - VIDEO_FRACTION) / (1 - VIDEO_FRACTION)));
