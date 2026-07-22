@@ -1,11 +1,17 @@
-## Changes to `src/components/GlitchGrainOverlay.tsx`
-- Remove the canvas-based grain layer and its jitter animation entirely.
-- Keep only the scanline layer (`repeating-linear-gradient`) with the current subtle intensity.
-- Simplify the component to a single fixed `<div>` with the scanline background.
+## Goal
+Hide the nav during the brief all-black handoff between the burst finishing and the ASCII hands / hero copy fading in, so it doesn't sit alone on the black screen.
 
-## Changes to `src/components/IntroVideo.tsx`
-- Render the same scanline overlay on top of the video canvas during the burn/expansion phase so the growing black hole also carries the scanlines.
-- Mount it as a fixed full-screen layer above the video canvas but below UI, gated on the burn being active (or always visible during the IntroVideo lifecycle, matching the dark backdrop).
-- Reuse `GlitchGrainOverlay` (now scanline-only) to keep a single source of truth for the scanline style.
+## Changes
 
-No other behavior, timing, or visual effects change.
+### `src/components/AsciiHandsFooter.tsx`
+- Add a `navHidden` state (default `false`).
+- When `handleIntroEnded` fires (burst complete → switching to hands): set `navHidden = true` immediately, then schedule `setNavHidden(false)` at ~850ms so it re-appears in sync with `HeroCopy` / `FinChatDock`.
+- Broadcast this via a `CustomEvent("app-nav-visibility", { detail: hidden|visible })` on the window, mirroring the existing `app-bg-change` pattern.
+
+### `src/components/SiteNav.tsx`
+- Subscribe to `app-nav-visibility` and hold a `hidden` state.
+- Apply `opacity: hidden ? 0 : 1`, `pointerEvents: hidden ? "none" : "auto"`, and a short `opacity 260ms ease-out` transition on the nav root. No layout or color logic changes.
+
+## Not changed
+- Nav during preloader / intro video playback / after hands are shown — behavior stays as today.
+- Burst timing, video, hero copy, chat dock — unchanged.

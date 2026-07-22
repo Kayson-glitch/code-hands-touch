@@ -1316,6 +1316,14 @@ export function AsciiHandsFooter({
     if (stageRef.current !== "orb") return;
     setBgDark(true);
     setHandoffBlack(true);
+    // Hide the nav during the brief all-black handoff so it doesn't sit
+    // alone on the black screen. Re-show it in sync with the hero fade-in.
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(new CustomEvent("app-nav-visibility", { detail: "hidden" }));
+      window.setTimeout(() => {
+        window.dispatchEvent(new CustomEvent("app-nav-visibility", { detail: "visible" }));
+      }, 850);
+    }
     // Also paint html/body black immediately, so the single frame where
     // <IntroVideo> unmounts can't reveal the theme's white body background.
     if (typeof document !== "undefined") {
