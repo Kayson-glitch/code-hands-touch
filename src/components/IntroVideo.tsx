@@ -18,13 +18,17 @@ export type IntroProgressInfo = {
 
 const VIDEO_FRACTION = 0.6;
 const PIXELS_FOR_FULL_PROGRESS = 2600;
-const BURN_DURATION_MS = 3600;
 // Cap a single wheel tick so a hard mouse-wheel notch doesn't jump the progress.
 const MAX_PIXELS_PER_TICK = 260;
-// Symmetric exponential smoothing rate (identical for forward & backward).
-const SMOOTH_RATE = 16;
+// Cap RAF drain too; if decoding stalls, multiple wheel events can arrive
+// before one frame and draining them all at once reads as a jump.
+const MAX_PIXELS_PER_FRAME = 180;
+// Critically damped smoothing times. Video follows slightly tighter than the
+// shader timeline, but both are monotonic and direction-safe.
+const PROGRESS_SMOOTH_TIME = 0.11;
+const VIDEO_SMOOTH_TIME = 0.065;
+const MAX_SMOOTH_DT = 1 / 30;
 // Prefer letting the decoder play forward to the target; reserve seeks for coarse correction.
-const SEEK_MIN_INTERVAL_MS = 24;
 const SEEK_EPSILON = 0.1;
 const VIDEO_CHASE_EPSILON = 0.035;
 const VIDEO_BACKWARD_SEEK_EPSILON = 0.02;
@@ -411,22 +415,26 @@ export function IntroVideo({
     window.addEventListener("resize", resize);
 
     let progress = 0;
+    let progressVelocity = 0;
+    let videoDriverProgress = 0;
+    let videoDriverVelocity = 0;
     let targetProgress = 0;
     let pendingWheelPx = 0;
     let seekCooldownLeft = 0;
     let lastFrameTs = performance.now();
     let lastSeekTime = -1;
-    let lastSeekAt = 0; // kept for debug / possible future use
     let lastNotifiedProgress = -1;
     let lastNotifiedBurst = -1;
     let playPending = false;
+    let wantsForwardPlayback = false;
+    let seekInFlight = false;
+    let queuedSeekTarget: number | null = null;
+    let queuedSeekExact = false;
     let firstFrameReady = false;
     let rafId = 0;
     let running = true;
-    let burnStartedAt = 0;
     let burnActive = false;
     let forceFinish = false;
-    const t0 = performance.now();
 
     targetProgressRef.current = (v: number) => {
       targetProgress = Math.min(1, Math.max(0, v));
@@ -438,13 +446,54 @@ export function IntroVideo({
 
     const clamp01 = (value: number) => Math.min(1, Math.max(0, value));
 
+    const drainWheelPixels = () => {
+      if (pendingWheelPx === 0) return 0;
+      const drained = Math.min(MAX_PIXELS_PER_FRAME, Math.max(-MAX_PIXELS_PER_FRAME, pendingWheelPx));
+      pendingWheelPx -= drained;
+      if (Math.abs(pendingWheelPx) < 0.01) pendingWheelPx = 0;
+      return drained;
+    };
+
+    const smoothProgress = (
+      current: number,
+      target: number,
+      velocity: number,
+      smoothTime: number,
+      dt: number,
+    ): [number, number] => {
+      const distance = target - current;
+      if (Math.abs(distance) < 0.00015) return [target, 0];
+
+      const omega = 2 / Math.max(0.0001, smoothTime);
+      const x = omega * dt;
+      const exp = 1 / (1 + x + 0.48 * x * x + 0.235 * x * x * x);
+      const change = current - target;
+      const temp = (velocity + omega * change) * dt;
+      let nextVelocity = (velocity - omega * temp) * exp;
+      let next = target + (change + temp) * exp;
+      const moved = next - current;
+
+      if (moved * distance < 0) {
+        next = current;
+        nextVelocity = 0;
+      } else if (Math.abs(moved) > Math.abs(distance)) {
+        next = target;
+        nextVelocity = 0;
+      }
+
+      return [clamp01(next), nextVelocity];
+    };
+
     const pauseVideo = () => {
+      wantsForwardPlayback = false;
       try {
         if (!video.paused) video.pause();
+        if (video.playbackRate !== 1) video.playbackRate = 1;
       } catch { /* ignore */ }
     };
 
     const playVideoTowardTarget = (rate: number) => {
+      wantsForwardPlayback = true;
       const playbackRate = Math.min(MAX_CHASE_PLAYBACK_RATE, Math.max(MIN_CHASE_PLAYBACK_RATE, rate));
       try {
         if (Math.abs(video.playbackRate - playbackRate) > 0.04) {
@@ -454,20 +503,41 @@ export function IntroVideo({
       if (!video.paused || playPending) return;
       playPending = true;
       video.play()
+        .then(() => {
+          if (!wantsForwardPlayback) pauseVideo();
+        })
         .catch(() => { /* ignore */ })
         .finally(() => { playPending = false; });
     };
 
-    const commitSeek = (target: number, now: number, exact = false) => {
+    const commitSeek = (target: number, now: number, exact = false, force = false) => {
+      if (!force && (video.seeking || seekInFlight)) {
+        queuedSeekTarget = target;
+        queuedSeekExact = queuedSeekExact || exact;
+        return;
+      }
       try {
         const fs = (video as unknown as { fastSeek?: (t: number) => void }).fastSeek;
         if (!exact && typeof fs === "function") fs.call(video, target);
         else video.currentTime = target;
+        seekInFlight = true;
         lastSeekTime = target;
-        lastSeekAt = now;
-        seekCooldownLeft = SEEK_COOLDOWN_FRAMES_FWD;
+        seekCooldownLeft = exact ? SEEK_COOLDOWN_FRAMES_BWD : SEEK_COOLDOWN_FRAMES_FWD;
         videoTex.needsUpdate = true;
       } catch { /* ignore */ }
+    };
+
+    const flushQueuedSeek = () => {
+      seekInFlight = false;
+      if (queuedSeekTarget === null) return;
+      const target = queuedSeekTarget;
+      const exact = queuedSeekExact;
+      queuedSeekTarget = null;
+      queuedSeekExact = false;
+      const current = Number.isFinite(video.currentTime) ? video.currentTime : lastSeekTime;
+      if (Math.abs(target - current) > VIDEO_BACKWARD_SEEK_EPSILON) {
+        commitSeek(target, performance.now(), exact, true);
+      }
     };
 
     const fire = () => {
@@ -492,6 +562,7 @@ export function IntroVideo({
     const markFirstFrame = () => {
       videoTex.needsUpdate = true;
       firstFrameReady = true;
+      flushQueuedSeek();
     };
     video.addEventListener("loadeddata", markFirstFrame);
     video.addEventListener("seeked", markFirstFrame);
@@ -534,21 +605,32 @@ export function IntroVideo({
       if (!running) return;
       rafId = requestAnimationFrame(loop);
       const now = performance.now();
-      const time = (now - t0) / 1000;
-      const dt = Math.min(0.05, Math.max(0.001, (now - lastFrameTs) / 1000));
+      const dt = Math.min(MAX_SMOOTH_DT, Math.max(0.001, (now - lastFrameTs) / 1000));
       lastFrameTs = now;
 
       // Drain accumulated wheel delta once per RAF tick (natural throttling).
-      if (pendingWheelPx !== 0) {
-        targetProgress = clamp01(targetProgress + pendingWheelPx / PIXELS_FOR_FULL_PROGRESS);
-        pendingWheelPx = 0;
+      const wheelPx = drainWheelPixels();
+      if (wheelPx !== 0) {
+        targetProgress = clamp01(targetProgress + wheelPx / PIXELS_FOR_FULL_PROGRESS);
       }
 
-      // Single-stage symmetric exponential smoothing — no cascade, no
-      // adaptive rate; forward and backward have identical response.
-      const alpha = Math.min(0.45, 1 - Math.exp(-SMOOTH_RATE * dt));
-      progress += (targetProgress - progress) * alpha;
-      if (Math.abs(targetProgress - progress) < 0.0002) progress = targetProgress;
+      // Monotonic critically damped smoothing. It avoids time-related recoil
+      // from carried velocity when the wheel direction reverses.
+      [progress, progressVelocity] = smoothProgress(
+        progress,
+        targetProgress,
+        progressVelocity,
+        PROGRESS_SMOOTH_TIME,
+        dt,
+      );
+      const videoTargetProgress = targetProgress >= VIDEO_FRACTION ? VIDEO_FRACTION : targetProgress;
+      [videoDriverProgress, videoDriverVelocity] = smoothProgress(
+        videoDriverProgress,
+        videoTargetProgress,
+        videoDriverVelocity,
+        VIDEO_SMOOTH_TIME,
+        dt,
+      );
 
       if (seekCooldownLeft > 0) seekCooldownLeft -= 1;
 
@@ -556,47 +638,35 @@ export function IntroVideo({
       const burstProgress = Math.min(1, Math.max(0, (progress - VIDEO_FRACTION) / (1 - VIDEO_FRACTION)));
       if (video.duration && !Number.isNaN(video.duration)) {
         const duration = video.duration;
-        // Video seek target: forward uses smoothed progress (so decoder can
-        // play into it); backward uses the raw wheel target so frames snap
-        // to the user's latest intent — kills the perceived rebound.
-        const targetVideoP = Math.min(1, targetProgress / VIDEO_FRACTION);
-        const targetFwd = Math.min(duration, Math.max(0, videoProgress * duration));
-        const targetBwd = Math.min(duration, Math.max(0, targetVideoP * duration));
-        const current = Number.isFinite(video.currentTime)
+        const targetVideoP = Math.min(1, videoDriverProgress / VIDEO_FRACTION);
+        const targetTime = Math.min(duration, Math.max(0, targetVideoP * duration));
+        const current = video.seeking && lastSeekTime >= 0
+          ? lastSeekTime
+          : Number.isFinite(video.currentTime)
           ? video.currentTime
           : Math.max(0, lastSeekTime);
-        const gapFwd = targetFwd - current;
-        const gapBwd = targetBwd - current;
+        const gap = targetTime - current;
         const canSeekTick = seekCooldownLeft === 0;
-        const lockFinalFrame = videoProgress >= 0.998 || burstProgress > 0;
 
-        if (lockFinalFrame) {
-          pauseVideo();
-          try { if (video.playbackRate !== 1) video.playbackRate = 1; } catch { /* ignore */ }
-          const endTarget = duration;
-          if (Math.abs(endTarget - current) > VIDEO_CHASE_EPSILON && canSeekTick) {
-            commitSeek(endTarget, now, true);
-          }
-        } else if (gapFwd > VIDEO_CHASE_EPSILON && gapBwd >= -VIDEO_BACKWARD_SEEK_EPSILON) {
+        if (gap > VIDEO_CHASE_EPSILON) {
           // Forward: let the decoder play; hard-seek only on huge gaps.
-          if (gapFwd > VIDEO_HARD_SEEK_EPSILON && canSeekTick && Math.abs(gapFwd) > SEEK_EPSILON) {
-            commitSeek(Math.max(0, targetFwd - VIDEO_CHASE_EPSILON), now, false);
+          if (gap > VIDEO_HARD_SEEK_EPSILON && canSeekTick && Math.abs(gap) > SEEK_EPSILON) {
+            commitSeek(Math.max(0, targetTime - VIDEO_CHASE_EPSILON), now, false);
           }
-          playVideoTowardTarget(1 + gapFwd * 6);
-        } else if (gapBwd < -VIDEO_BACKWARD_SEEK_EPSILON) {
-          // Backward: pause immediately + exact seek every frame → no rebound.
+          playVideoTowardTarget(1 + gap * 6);
+        } else if (gap < -VIDEO_BACKWARD_SEEK_EPSILON) {
+          // Backward: pause immediately and seek through a single-flight queue;
+          // avoids currentTime write thrash while remaining scroll-locked.
           pauseVideo();
-          try { if (video.playbackRate !== 1) video.playbackRate = 1; } catch { /* ignore */ }
-          // Backward has no cooldown — seek every frame for smooth reverse.
-          commitSeek(targetBwd, now, true);
-          seekCooldownLeft = SEEK_COOLDOWN_FRAMES_BWD;
+          if (canSeekTick) commitSeek(targetTime, now, true);
         } else {
           pauseVideo();
-          try { if (video.playbackRate !== 1) video.playbackRate = 1; } catch { /* ignore */ }
         }
       }
       uniforms.uProgress.value = progress;
-      uniforms.uTime.value = time;
+      // Tie shader time to scroll progress, not wall-clock time. When the user
+      // stops scrolling, the burn/glitch stops too instead of drifting forward.
+      uniforms.uTime.value = progress * 18;
       // Sync debug uniforms from ref every frame (cheap, no shader recompile).
       const bp = burnParamsRef.current;
       uniforms.uWarpAmp.value = bp.warpAmp;
@@ -622,7 +692,6 @@ export function IntroVideo({
       if (videoProgress >= 1) {
         if (!burnActive) {
           burnActive = true;
-          burnStartedAt = now;
         }
         pauseVideo();
       } else if (burnActive) {
