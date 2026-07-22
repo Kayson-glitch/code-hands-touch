@@ -134,7 +134,34 @@ const FRAG = /* glsl */ `
     float pulseA = step(0.88, fract(sin(uTime * 7.4) * 43758.5453)) * burstK * 6.0;
     float pulseB = step(0.82, fract(sin(uTime * 11.1 + 1.3) * 24634.6345)) * peakK * 4.0;
     float chromaPx = basePx + burstPx + swell + pulseA + pulseB;
-    vec3 col = sampleChroma(sampleUv, chromaPx, peakK);
+
+    // High-frequency micro-jitter on the sample coord — small horizontal
+    // "data-tear" blocks (~6px tall) driven by a per-row hash. Tiny amplitude
+    // (<= 1.2px) so it reads as texture, not motion.
+    vec2 jitteredUv = sampleUv;
+    if (burstK > 0.0) {
+      float rowSize = 6.0;
+      float row = floor(gl_FragCoord.y / rowSize);
+      float rh = hash(vec2(row, floor(uTime * 24.0)));
+      float trigger = step(0.86, rh) * burstK;
+      float shiftPx = (rh - 0.5) * 2.4 * trigger;
+      jitteredUv.x += shiftPx / uResolution.x;
+    }
+    vec3 col = sampleChroma(jitteredUv, chromaPx, peakK);
+
+    // Fine-grain high-frequency noise: per-pixel ±0.8% luminance dither,
+    // gated by burstK so it silently vanishes at the edges.
+    if (burstK > 0.0) {
+      float grain = (hash(gl_FragCoord.xy + vec2(uTime * 91.3, uTime * 57.1)) - 0.5) * 0.016 * burstK;
+      col += vec3(grain);
+    }
+
+    // Ultra-thin scanline shimmer during the peak — ±1.5% brightness ripple.
+    if (peakK > 0.0) {
+      float sl = sin(gl_FragCoord.y * 3.14159 + uTime * 42.0);
+      col *= 1.0 + sl * 0.015 * peakK;
+    }
+    col = clamp(col, 0.0, 1.0);
 
     // Subtle brightness/gamma flicker during burn — glitch feel, no white flashes.
     if (burstK > 0.0) {
