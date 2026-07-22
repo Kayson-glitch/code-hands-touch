@@ -104,12 +104,6 @@ export function ScrollHint({ visible = true }: { visible?: boolean }) {
             "linear-gradient(to bottom, rgba(0,0,0,0.45), rgba(0,0,0,0))",
         }}
       />
-      <style>{`
-        @keyframes sh-breathe {
-          0%, 100% { transform: translate(-50%, 0); }
-          50% { transform: translate(-50%, 2px); }
-        }
-      `}</style>
     </div>
   );
 }
