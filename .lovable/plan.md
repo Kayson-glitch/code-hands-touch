@@ -1,54 +1,58 @@
-## 目标
-将 `src/components/IntroVideo.tsx` 的滚轮输入迁移到"输入累积 + RAF 单点插值"模型，消除高频 wheel 事件抖动与丢帧感。
+## 诊断
+反向滚动"回弹"感来自两处：
 
-## 现状问题
-- `onWheel` 直接写 `targetProgress`：高频触控板事件（120–240Hz）在同一帧内多次更新目标值，但缓动只在 RAF 里跑一次，节奏不稳。
-- 缓动只有一层 (`target → progress`)，没有对"原始输入速度"做归一化，快速滚动的 delta 分布不均导致视觉顿挫。
-- 反向 seek 依赖 wall-clock 冷却，与 RAF 帧率解耦，出现跨帧抖动。
+1. **两级级联缓动的尾部拖尾**：`rawTarget → smoothTarget → progress` 是两个串联的一阶低通滤波器，反向滚动后 stop 时，`progress` 仍有 ~150–200ms 的追尾。虽然数学上是单调下降，视觉上因为叠加了视频 `fastSeek` 的帧跳跃，被感知为"往回弹一下"。
+2. **`fastSeek` 反向抖动**：反向 scrub 时 `fastSeek` 会吸附到最近关键帧，`video.currentTime` 前后跳变；下一帧计算 `gap` 又基于跳后的值，导致相邻帧渲染的帧号先退后进，形成明显回弹。
+3. **`wheelVelocity` 惯性延迟**：`fastRate` 随速度自适应，反向刚停时速度仍高，`smoothTarget` 追得快；1–2 帧后速度衰减，smoothing 突然变慢，节奏断层被眼睛捕捉为弹跳。
 
-## 方案
+## 方案（仅改 `src/components/IntroVideo.tsx`）
 
-1. **输入累积到 RAF 边界**
-   - `onWheel` 只累加 `pendingWheelPx += dy`（clamp 单 tick），不再直接算 `targetProgress`。
-   - 在 RAF loop 顶部一次性把 `pendingWheelPx / PIXELS_FOR_FULL_PROGRESS` 加到 `targetProgress`，随后清零。→ 每帧一次处理，天然节流。
+1. **回到单级对称平滑**
+   - 删除 `smoothTarget` 中间层与速度自适应 (`RAW_SMOOTH_RATE_*` / `WHEEL_VELOCITY_FAST`)。
+   - 保留 RAF 累积 (`pendingWheelPx`)，一次性写入 `targetProgress`。
+   - `progress += (targetProgress - progress) * (1 - exp(-16 * dt))`，正反完全对称，无自适应，无二级追尾。
+   - `alpha` 上限 0.45，snap 阈值 0.0002。
 
-2. **两级插值 (rawTarget → smoothTarget → progress)**
-   - `rawTarget`：滚轮累积后的目标（跳变）。
-   - `smoothTarget`：对 `rawTarget` 做一次快速指数平滑（rate ≈ 22），去掉高频输入毛刺。
-   - `progress`：对 `smoothTarget` 做主缓动（rate ≈ 12，正反对称）→ 最终用于视频/shader。
-   - 两级都是 frame-rate independent (`1 - exp(-rate*dt)`)，`alpha` clamp 0.4，snap 阈值 0.0002。
+2. **反向 seek 直接跟随 `targetProgress`（消除双滞后）**
+   - 反向时，视频 seek 的目标改用 `targetProgress`（用户最新意图）而非 `progress`，让视频立刻回退到位；shader 上的 `uProgress` 仍用平滑后的 `progress`，只有视觉滤镜是柔性的，视频帧本身不再拖泥带水。
+   - 正向仍用 `progress` 触发 `playVideoTowardTarget`（避免视频跑得比 shader 快）。
 
-3. **速度感知的自适应插值（对称）**
-   - 记录 `wheelVelocity = EMA(|pendingWheelPx| / dt)`。速度高时 `smoothTarget` 的 rate 提升到 30，避免快速滚动时明显滞后；速度低时降到 18，保留细腻感。主缓动 rate 保持恒定，保证正反手感一致。
+3. **反向永远用精确 seek**
+   - `commitSeek` 反向分支强制 `exact=true`（`video.currentTime = target`），彻底禁用 `fastSeek` 的关键帧吸附。
+   - 反向 `seekCooldownLeft` 降到 0（每帧都可 seek），配合精确 seek 让回退无阶梯。
 
-4. **RAF 对齐的 seek 冷却**
-   - `SEEK_MIN_INTERVAL_MS` 改为按帧计数（`seekCooldownFrames`，默认 1）：每次 seek 后至少跳过 1 帧，避免与浏览器解码抢帧；替换现在的 wall-clock 判断。
+4. **消除 forward 播放尾巴**
+   - 一旦本帧检测到 `gap < 0`（反向）或 `|gap| < VIDEO_CHASE_EPSILON`，立刻 `pause()` 并把 `playbackRate` 重置到 1，避免上一次 `play()` 的异步 promise 让视频在停止瞬间再走 1–2 帧（这是最直接的"回弹"来源）。
 
-5. **RAF 生命周期健壮性**
-   - 使用 `document.visibilityState` 监听：切到后台时暂停 loop 并冻结 `lastFrameTs`，回前台首帧 `dt` 归零，避免长时间累积后一次性追赶造成跳变。
-
-6. **保持不变**
-   - shader、UI、burn 曲线、视频 cover-fit、debug 面板、`fire()` 逻辑与阈值均不动。
-   - burst 阶段仍锁定视频末帧，`uBurn` 直接跟随 `progress`。
+5. **保持不变**
+   - shader、UI、burn 曲线、`fire()` 逻辑、burst 阶段锁末帧、visibilitychange 守卫、debug 面板全部不动。
+   - `PIXELS_FOR_FULL_PROGRESS`、`MAX_PIXELS_PER_TICK` 保持当前值。
 
 ## 技术细节
 ```text
-onWheel(e):
-  pendingWheelPx += clamp(dy, ±MAX_PIXELS_PER_TICK)
+常量:
+  SMOOTH_RATE = 16              // 单一对称速率
+  SEEK_COOLDOWN_FRAMES_FWD = 1
+  SEEK_COOLDOWN_FRAMES_BWD = 0
 
 RAF loop(dt):
-  rawTarget   = clamp01(rawTarget + pendingWheelPx / PIXELS_FOR_FULL_PROGRESS)
-  wheelVel    = EMA(|pendingWheelPx| / dt, 0.25)
-  pendingWheelPx = 0
-  fastRate    = lerp(18, 30, clamp01(wheelVel / 4000))
-  smoothTarget += (rawTarget - smoothTarget) * (1 - exp(-fastRate*dt))
-  progress    += (smoothTarget - progress)  * (1 - exp(-12*dt))
-  # ... 现有视频 seek / shader uniform 更新
+  targetProgress = clamp01(targetProgress + drain(pendingWheelPx)/PIXELS)
+  alpha = min(0.45, 1 - exp(-16*dt))
+  progress += (targetProgress - progress) * alpha
+
+  # 视频调度
+  target_fwd = progress * duration           # 正向以平滑值追
+  target_bwd = targetProgress * duration     # 反向以原始意图追
+  if lockFinalFrame: pause + 锁 duration
+  elif gap_fwd > +ε: playForward(rate=1+gap*6)
+  elif gap_bwd < -ε:
+      pause(); playbackRate=1
+      commitSeek(target_bwd, exact=true)    # 每帧都 seek
+  else:
+      pause(); playbackRate=1
 ```
 
 ## 验收
-- 触控板高频快速滚动：视频/burn 平滑跟随，无锯齿或跳格。
-- 慢速微调：进度细腻可控，无抖动。
-- 切到后台再回来：不出现瞬间跳跃。
-- 反向滚动仍与之前一致的丝滑度。
-- 构建无 TS 错误。
+- 反向滚动过程中和停止瞬间，视频帧号严格单调下降，无任何前进帧闪现。
+- 正向手感与当前一致。
+- burst 阶段来回滚动仍平滑；无白/闪屏；构建通过。
