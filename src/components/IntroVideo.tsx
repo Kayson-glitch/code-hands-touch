@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import * as THREE from "three";
 import videoAsset from "@/assets/intro-hands.mp4.asset.json";
 import { BurnDebugPanel, DEFAULT_BURN_PARAMS, type BurnParams } from "./BurnDebugPanel";
+import { ScrollHint } from "./ScrollHint";
 
 export type IntroVideoEndInfo = {
   videoW: number;
