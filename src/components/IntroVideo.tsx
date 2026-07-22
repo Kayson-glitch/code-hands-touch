@@ -171,7 +171,13 @@ const FRAG = /* glsl */ `
     float wHi   = 1.0 - smoothstep(0.72, 0.98, Lb);
     float wMid  = smoothstep(0.05, 0.35, Lb) * (1.0 - smoothstep(0.85, 1.0, Lb));
     float wEdge = clamp(length(vec2(Lx1 - Lx0, Ly1 - Ly0)) * 6.0, 0.0, 1.0);
-    float chromaGain = wHi * (0.7 + 0.6 * wEdge);
+    // During burst, video is frozen on the last frame — if that frame is dark,
+    // content-adaptive weights collapse to 0 and the glitch disappears. Lift a
+    // baseline for burst so the effect is visible independent of luminance.
+    float wHiB   = max(wHi,  burstK * 0.85);
+    float wMidB  = max(wMid, burstK * 0.75);
+    float wEdgeB = max(wEdge, burstK * 0.35);
+    float chromaGain = wHiB * (0.7 + 0.6 * wEdgeB);
     chromaPx *= chromaGain;
 
     // Shard activity is gated to the mid peak so front/back shards silently
@@ -223,7 +229,7 @@ const FRAG = /* glsl */ `
       float ghostShiftPy = (gv - 0.5) * 12.0;
       vec2 ghostUv = sampleUv + vec2(ghostShiftPx / uResolution.x, ghostShiftPy / uResolution.y);
       vec3 ghost = sampleChroma(ghostUv, chromaDir * (chromaPx + 3.0));
-      float ghostMix = 0.30 * shardK * (0.35 + 0.65 * wMid) * (1.0 - wHi * 0.5);
+      float ghostMix = 0.30 * shardK * (0.35 + 0.65 * wMidB) * (1.0 - wHiB * 0.5);
       col = mix(col, mix(col, ghost, 0.75), ghostMix);
     }
 
@@ -231,20 +237,20 @@ const FRAG = /* glsl */ `
     // gated by burstK so it silently vanishes at the edges.
     if (burstK > 0.0) {
       float grain = (hash(gl_FragCoord.xy + vec2(uTime * 91.3, uTime * 57.1)) - 0.5)
-                    * 0.016 * burstK * (0.4 + 0.6 * wMid) * uGrainMul;
+                    * 0.016 * burstK * (0.4 + 0.6 * wMidB) * uGrainMul;
       col += vec3(grain);
     }
 
     // Ultra-thin scanline shimmer during the peak — ±1.5% brightness ripple.
     if (peakK > 0.0) {
       float sl = sin(gl_FragCoord.y * 3.14159 + uTime * 42.0);
-      col *= 1.0 + sl * 0.015 * peakK * (0.4 + 0.6 * wMid) * uGrainMul;
+      col *= 1.0 + sl * 0.015 * peakK * (0.4 + 0.6 * wMidB) * uGrainMul;
     }
     col = clamp(col, 0.0, 1.0);
 
     // Subtle brightness/gamma flicker during burn — glitch feel, no white flashes.
     if (burstK > 0.0) {
-      float flick = (fract(sin(uTime * 17.3) * 91234.123) - 0.5) * 0.08 * burstK * (0.4 + 0.6 * wMid) * uGlitchMul;
+      float flick = (fract(sin(uTime * 17.3) * 91234.123) - 0.5) * 0.08 * burstK * (0.4 + 0.6 * wMidB) * uGlitchMul;
       col = clamp(col * (1.0 + flick), 0.0, 1.0);
       float g = 1.0 + (fract(sin(uTime * 5.9) * 12345.678) - 0.5) * 0.06 * peakK * uGlitchMul;
       col = pow(col, vec3(g));
