@@ -133,6 +133,21 @@ const FRAG = /* glsl */ `
     float pulseB = step(0.82, fract(sin(uTime * 11.1 + 1.3) * 24634.6345)) * peakK * 4.0;
     float chromaPx = basePx + burstPx + swell + pulseA + pulseB;
 
+    // ---- Content-adaptive weighting ----
+    // Sample base luminance and neighbors to derive highlight / midtone / edge weights.
+    vec3 baseCol = texture2D(uVideoTex, sampleUv).rgb;
+    float Lb = dot(baseCol, vec3(0.2126, 0.7152, 0.0722));
+    vec2 px = 1.0 / uResolution.xy;
+    float Lx1 = dot(texture2D(uVideoTex, sampleUv + vec2(px.x, 0.0)).rgb, vec3(0.2126, 0.7152, 0.0722));
+    float Lx0 = dot(texture2D(uVideoTex, sampleUv - vec2(px.x, 0.0)).rgb, vec3(0.2126, 0.7152, 0.0722));
+    float Ly1 = dot(texture2D(uVideoTex, sampleUv + vec2(0.0, px.y)).rgb, vec3(0.2126, 0.7152, 0.0722));
+    float Ly0 = dot(texture2D(uVideoTex, sampleUv - vec2(0.0, px.y)).rgb, vec3(0.2126, 0.7152, 0.0722));
+    float wHi   = 1.0 - smoothstep(0.72, 0.98, Lb);
+    float wMid  = smoothstep(0.05, 0.35, Lb) * (1.0 - smoothstep(0.85, 1.0, Lb));
+    float wEdge = clamp(length(vec2(Lx1 - Lx0, Ly1 - Ly0)) * 6.0, 0.0, 1.0);
+    float chromaGain = wHi * (0.7 + 0.6 * wEdge);
+    chromaPx *= chromaGain;
+
     // Shard activity is gated to the mid peak so front/back shards silently
     // vanish before and after the burst.
     float shardK = smoothstep(0.30, 0.55, uBurn) * (1.0 - smoothstep(0.72, 0.90, uBurn));
@@ -167,7 +182,8 @@ const FRAG = /* glsl */ `
     float rlen = max(length(radial * aspect), 1e-4);
     vec2 chromaDir = mix(vec2(1.0, 0.0), radial * aspect / rlen, burstK);
     // Extra radial split inside active shard bands → colored fringe on shards.
-    float shardChromaPx = chromaPx + bandTrigger * 4.5;
+    // Fringe suppressed in highlights to avoid over-exposure blowouts.
+    float shardChromaPx = chromaPx + bandTrigger * 4.5 * wHi;
     vec3 col = sampleChroma(jitteredUv, chromaDir * shardChromaPx);
 
     // Background ghost / afterimage: a low-opacity large-offset copy of the
@@ -177,26 +193,27 @@ const FRAG = /* glsl */ `
       float ghostShiftPx = (gh - 0.5) * 16.0;
       vec2 ghostUv = sampleUv + vec2(ghostShiftPx / uResolution.x, 0.0);
       vec3 ghost = sampleChroma(ghostUv, chromaDir * (chromaPx + 3.0));
-      col = mix(col, max(col, ghost), 0.22 * shardK);
+      col = mix(col, max(col, ghost), 0.22 * shardK * (0.35 + 0.65 * wMid));
     }
 
     // Fine-grain high-frequency noise: per-pixel ±0.8% luminance dither,
     // gated by burstK so it silently vanishes at the edges.
     if (burstK > 0.0) {
-      float grain = (hash(gl_FragCoord.xy + vec2(uTime * 91.3, uTime * 57.1)) - 0.5) * 0.016 * burstK;
+      float grain = (hash(gl_FragCoord.xy + vec2(uTime * 91.3, uTime * 57.1)) - 0.5)
+                    * 0.016 * burstK * (0.4 + 0.6 * wMid);
       col += vec3(grain);
     }
 
     // Ultra-thin scanline shimmer during the peak — ±1.5% brightness ripple.
     if (peakK > 0.0) {
       float sl = sin(gl_FragCoord.y * 3.14159 + uTime * 42.0);
-      col *= 1.0 + sl * 0.015 * peakK;
+      col *= 1.0 + sl * 0.015 * peakK * (0.4 + 0.6 * wMid);
     }
     col = clamp(col, 0.0, 1.0);
 
     // Subtle brightness/gamma flicker during burn — glitch feel, no white flashes.
     if (burstK > 0.0) {
-      float flick = (fract(sin(uTime * 17.3) * 91234.123) - 0.5) * 0.08 * burstK;
+      float flick = (fract(sin(uTime * 17.3) * 91234.123) - 0.5) * 0.08 * burstK * (0.4 + 0.6 * wMid);
       col = clamp(col * (1.0 + flick), 0.0, 1.0);
       float g = 1.0 + (fract(sin(uTime * 5.9) * 12345.678) - 0.5) * 0.06 * peakK;
       col = pow(col, vec3(g));
