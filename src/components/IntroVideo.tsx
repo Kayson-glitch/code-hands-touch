@@ -17,22 +17,20 @@ export type IntroProgressInfo = {
 };
 
 const VIDEO_FRACTION = 0.6;
-const PIXELS_FOR_FULL_PROGRESS = 3200;
+const PIXELS_FOR_FULL_PROGRESS = 2600;
 const BURN_DURATION_MS = 3600;
 // Cap a single wheel tick so a hard mouse-wheel notch doesn't jump the progress.
-const MAX_PIXELS_PER_TICK = 140;
-// Exponential smoothing rate (higher = snappier follow, lower = more inertia).
-const SMOOTH_RATE = 10;
-// Extra snappiness when the user scrolls fast (large gap between target and current).
-const SMOOTH_RATE_FAST = 14;
+const MAX_PIXELS_PER_TICK = 260;
+// Symmetric exponential smoothing rate (identical for forward & backward).
+const SMOOTH_RATE = 12;
 // Prefer letting the decoder play forward to the target; reserve seeks for coarse correction.
-const SEEK_MIN_INTERVAL_MS = 80;
+const SEEK_MIN_INTERVAL_MS = 24;
 const SEEK_EPSILON = 0.1;
 const VIDEO_CHASE_EPSILON = 0.035;
-const VIDEO_BACKWARD_SEEK_EPSILON = 0.12;
+const VIDEO_BACKWARD_SEEK_EPSILON = 0.02;
 const VIDEO_HARD_SEEK_EPSILON = 0.48;
 const MIN_CHASE_PLAYBACK_RATE = 0.75;
-const MAX_CHASE_PLAYBACK_RATE = 2.35;
+const MAX_CHASE_PLAYBACK_RATE = 3.2;
 // Only notify parent when progress moved meaningfully.
 const PROGRESS_NOTIFY_EPSILON = 0.003;
 
