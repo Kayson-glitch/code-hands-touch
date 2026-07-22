@@ -55,7 +55,7 @@ export function HeroCopy() {
             backgroundClip: "text",
             WebkitTextFillColor: "transparent",
             color: "transparent",
-            animation: "synergy-gradient-flow 6s linear infinite",
+            animation: "synergy-gradient-flow 8s ease-in-out infinite",
           }}
         >
           Synergy.AI.

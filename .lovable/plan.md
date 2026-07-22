@@ -1,18 +1,23 @@
-## 目标
-Hero 的标题、副标题、按钮作为**一个整体**做模糊入场动画（blur+位移+淡入），不再按词/字符分段。
+把 `Synergy.AI.` 渐变文字从当前生硬的「线性无限平移」改成柔和、可呼吸的缓动流动。
 
-## 修改 `src/components/HeroCopy.tsx`
-- 移除 `BlurText`，恢复原 `<h1>`（含 "Synergy.AI." 渐变 span）、`<p>` 副标题、`<button>` 三个静态元素。
-- 保留 `visible` 触发时机（`app-bg-change=dark` 后 280ms）。
-- 在外层容器上应用整体动画：
-  - `initial`: `opacity: 0`, `filter: blur(12px)`, `transform: translateY(24px)`
-  - `visible`: `opacity: 1`, `filter: blur(0)`, `transform: translateY(0)`
-  - `transition`: `opacity 900ms ease-out, filter 900ms ease-out, transform 900ms cubic-bezier(0.22, 1, 0.36, 1)`
-- 加 `willChange: "opacity, filter, transform"`。
-- 不使用 motion 库（纯 CSS transition 就够；BlurText 组件保留在文件里但不再引用，或后续清理）。
+## 改动内容
 
-## 不改动
-- 导航、扩散动画、视频、字体、颜色、布局位置。
+1. **更新 `src/styles.css`**
+   - 替换 `@keyframes synergy-gradient-flow`。
+   - 新动画在约 0% 位置停留，缓慢移动到约 35% 左右，再缓慢返回，整体使用 `ease-in-out` 或自定义 `cubic-bezier(0.45, 0, 0.55, 1)`，让运动有自然的加速/减速，没有线性机械感。
+   - 单个周期 8–10s，更舒缓。
 
-## 验证
-预览刷新 → 扩散完成 → hero 三行（标题+副标题+按钮）作为整体从模糊到清晰同时淡入落位。
+2. **更新 `src/components/HeroCopy.tsx`**
+   - 保持三色渐变值不变（#185DFF、#D018FF、#FF1245）。
+   - 把 `animation: "synergy-gradient-flow 6s linear infinite"` 改为新的 keyframe + 更慢时长。
+   - 可选增加非常轻微的 `brightness` 呼吸，让整体发光感更柔和，但只作为辅助，不抢戏。
+
+3. **验证**
+   - 构建项目检查 TypeScript/CSS 是否通过。
+   - 在预览中确认渐变不再像进度条一样平移，而是缓慢来回、呼吸感强。
+
+## 技术细节
+
+- 使用 CSS keyframes 控制 `background-position` 在 `0%` ↔ `35%` 之间移动。
+- 关键帧 0% → 30% → 70% → 100% 营造「停留-慢移-慢回-停留」的呼吸节奏。
+- `animation-timing-function` 用全局 ease-in-out，避免 linear。
