@@ -1291,10 +1291,11 @@ export function AsciiHandsFooter({ videoSrc }: { videoSrc?: string } = {}) {
       document.body.style.backgroundColor = "#0a0a0a";
     }
     setStage("hands");
-    // Keep the intro layer mounted briefly so the burst overlay can fade out
-    // on top of it, then unmount.
-    window.setTimeout(() => setOrbMounted(false), 500);
-    window.setTimeout(() => setHandoffBlack(false), 900);
+    // Unmount the intro video immediately so its final black frame doesn't
+    // cover the hands canvas; the handoffBlack layer keeps the background
+    // solid for a few frames to avoid any composite gap.
+    setOrbMounted(false);
+    window.setTimeout(() => setHandoffBlack(false), 300);
   };
   const [bgDark, setBgDark] = useState(false);
   useEffect(() => {
@@ -1339,7 +1340,7 @@ export function AsciiHandsFooter({ videoSrc }: { videoSrc?: string } = {}) {
           zIndex: 10,
           opacity: handsVisible ? 1 : 0,
           pointerEvents: handsVisible ? "auto" : "none",
-          transition: "opacity 300ms ease-out",
+          transition: "opacity 120ms ease-out",
         }}
       />
 

@@ -9,8 +9,8 @@ export function HeroCopy() {
     const onBg = (e: Event) => {
       const detail = (e as CustomEvent<"light" | "dark">).detail;
       if (detail === "dark") {
-        // Fade in shortly after the hands stage begins
-        window.setTimeout(() => setVisible(true), 350);
+        // Let the hands intro animation breathe first, then fade in.
+        window.setTimeout(() => setVisible(true), 700);
       } else {
         setVisible(false);
       }

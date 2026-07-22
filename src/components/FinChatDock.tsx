@@ -21,7 +21,7 @@ export function FinChatDock() {
   useEffect(() => {
     const onBg = (e: Event) => {
       const detail = (e as CustomEvent<"light" | "dark">).detail;
-      if (detail === "dark") window.setTimeout(() => setVisible(true), 500);
+      if (detail === "dark") window.setTimeout(() => setVisible(true), 850);
       else setVisible(false);
     };
     window.addEventListener("app-bg-change", onBg);

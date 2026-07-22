@@ -1,15 +1,30 @@
-计划：尽快做一个小范围修复，只动交接层相关代码。
+## 问题定位
 
-1. **阻止 IntroVideo 在结束瞬间重置**
-   - 当前 `IntroVideo` 的 WebGL effect 依赖 `onEnded`，而父组件在 burn 完成后会更新状态，可能导致 intro canvas 被重新初始化，短暂回到视频/页面亮底。
-   - 改成 `onEndedRef` 持有回调，让 WebGL 生命周期只跟视频 `src` 绑定，不因父组件状态变化重启。
+Burn 结束后中间那段"黑屏"其实是两层叠加造成的：
+1. `IntroVideo` 在 burn 完成后仍以 `zIndex:60` 挂载 500ms，其最终画面就是一个整屏黑洞，把下方 canvas 完全盖住。
+2. `AsciiHandsFooter` 的 canvas 用 300ms 淡入 + 2400ms 手臂入场动画，早期几乎全黑。
+   →  综合观感：burn 结束 → 停顿一段黑 → 手才慢慢长出来 → 标题淡入。
 
-2. **加一个真正盖住全屏的黑色 handoff 层**
-   - 现有黑色兜底层是 `zIndex: -1`，在某些堆叠上下文里可能挡不住根背景。
-   - burn 完成后立刻显示一个 fixed 黑色遮罩，覆盖 intro 卸载和 hands/UI 淡入之间的空档；随后再淡出，保留你要的“先黑一下再淡入 UI”。
+## 目标
 
-3. **同步锁定全局背景为黑色**
-   - 在 handoff 期间继续把 `html/body` 背景设为黑色，避免任何未绘制帧露出默认白底。
+Burn 完成的那一帧立刻看到字符手部入场动画，然后标题/导航/对话框再渐入。
 
-4. **验证**
-   - 用浏览器截图跑到视频最后一帧和 burn 完成后的交接点，确认没有整屏白屏，只剩黑屏过渡后进入手部动画。
+## 修改方案（仅 UI/时序，不动业务逻辑）
+
+1. **`src/components/AsciiHandsFooter.tsx` — `handleIntroEnded`**
+   - `setStage("hands")` 后立即 `setOrbMounted(false)`（去掉 500ms 延迟），让 `IntroVideo` 立刻卸载，露出下面的黑底 + canvas。
+   - `handoffBlack` 兜底层保留，但缩短到 ~300ms 再移除，防止卸载那一帧漏白。
+   - canvas 淡入时间从 300ms → ~120ms，让手部入场动画从第一帧就可见。
+
+2. **`src/components/HeroCopy.tsx` / `SiteNav.tsx` / `FinChatDock.tsx`**
+   - 现在它们监听 `app-bg-change` 立即触发 fade（700ms），会和手部入场"抢镜"。
+   - 改为收到 dark 事件后 **延迟 ~600ms** 再开始淡入（给手臂长出一段时间），淡入时长保持 700ms。可以在各组件本地 `setTimeout` 实现，不新增全局状态。
+
+3. **不改动**：burn shader、预加载、手部动画曲线、字符效果、点击马赛克等。
+
+## 验收
+
+- 用 Playwright 在 burn 结束瞬间连续截图（0ms / 150ms / 400ms / 800ms / 1500ms），确认：
+  - 0–150ms：已看到手臂开始从两侧生长；
+  - 无整屏纯黑停顿；
+  - 标题/导航在手臂初步成型后（~600–800ms）才开始淡入。
