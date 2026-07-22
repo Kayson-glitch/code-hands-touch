@@ -23,26 +23,20 @@ const PIXELS_FOR_FULL_PROGRESS = 2600;
 const BURN_AUTO_MS = 1800;
 // Cap a single wheel tick so a hard mouse-wheel notch doesn't jump the progress.
 const MAX_PIXELS_PER_TICK = 260;
-// Cap RAF drain too; if decoding stalls, multiple wheel events can arrive
-// before one frame and draining them all at once reads as a jump.
-const MAX_PIXELS_PER_FRAME = 180;
-// Critically damped smoothing times. Video follows slightly tighter than the
-// shader timeline, but both are monotonic and direction-safe.
-const PROGRESS_SMOOTH_TIME = 0.11;
-const VIDEO_SMOOTH_TIME = 0.065;
+// Single critically-damped smoothing time; short enough to feel 1:1 with the
+// wheel, playbackRate chase covers the rest.
+const PROGRESS_SMOOTH_TIME = 0.05;
 const MAX_SMOOTH_DT = 1 / 30;
-// Prefer letting the decoder play forward to the target; reserve seeks for coarse correction.
-const SEEK_EPSILON = 0.1;
-const VIDEO_CHASE_EPSILON = 0.035;
-const VIDEO_BACKWARD_SEEK_EPSILON = 0.02;
-const VIDEO_HARD_SEEK_EPSILON = 0.48;
-const MIN_CHASE_PLAYBACK_RATE = 0.75;
-const MAX_CHASE_PLAYBACK_RATE = 3.2;
-// RAF-aligned seek cooldown, in frames (≈16.7ms @ 60fps).
-const SEEK_COOLDOWN_FRAMES_FWD = 1;
-const SEEK_COOLDOWN_FRAMES_BWD = 0;
+// Gap thresholds (seconds) for playbackRate vs. seek decision.
+const GAP_DEAD_ZONE = 0.03;
+const GAP_BACKWARD_SEEK = 0.35;
+const GAP_HARD_SEEK = 1.2;
+const MIN_CHASE_RATE = 0.25;
+const MAX_CHASE_RATE = 4.0;
 // Only notify parent when progress moved meaningfully.
 const PROGRESS_NOTIFY_EPSILON = 0.003;
+// Skip GL render if nothing visibly changed and no new video frame arrived.
+const PROGRESS_RENDER_EPSILON = 0.0005;
 
 const VERT = /* glsl */ `
   varying vec2 vUv;
@@ -448,26 +442,26 @@ export function IntroVideo({
 
     let progress = 0;
     let progressVelocity = 0;
-    let videoDriverProgress = 0;
-    let videoDriverVelocity = 0;
     let targetProgress = 0;
     let pendingWheelPx = 0;
-    let seekCooldownLeft = 0;
     let lastFrameTs = performance.now();
-    let lastSeekTime = -1;
     let lastNotifiedProgress = -1;
     let lastNotifiedBurst = -1;
+    let lastRenderedProgress = -1;
     let playPending = false;
     let wantsForwardPlayback = false;
-    let seekInFlight = false;
-    let queuedSeekTarget: number | null = null;
-    let queuedSeekExact = false;
+    let pendingSeekTarget: number | null = null;
+    // Authoritative "current media time" — updated by rVFC when available,
+    // otherwise falls back to video.currentTime reads.
+    let mediaTime = 0;
+    let mediaFrameDirty = false;
     let firstFrameReady = false;
     // If we adopted a pre-warmed video, its first frame is already decoded
     // and its seek path is already primed — skip the cold-start warmup.
     if (adoptedHandoff && video.readyState >= 2) {
       firstFrameReady = true;
       videoTex.needsUpdate = true;
+      mediaFrameDirty = true;
     }
     let rafId = 0;
     let running = true;
@@ -488,11 +482,9 @@ export function IntroVideo({
     const clamp01 = (value: number) => Math.min(1, Math.max(0, value));
 
     const drainWheelPixels = () => {
-      if (pendingWheelPx === 0) return 0;
-      const drained = Math.min(MAX_PIXELS_PER_FRAME, Math.max(-MAX_PIXELS_PER_FRAME, pendingWheelPx));
-      pendingWheelPx -= drained;
-      if (Math.abs(pendingWheelPx) < 0.01) pendingWheelPx = 0;
-      return drained;
+      const px = pendingWheelPx;
+      pendingWheelPx = 0;
+      return px;
     };
 
     const smoothProgress = (
@@ -533,9 +525,9 @@ export function IntroVideo({
       } catch { /* ignore */ }
     };
 
-    const playVideoTowardTarget = (rate: number) => {
+    const setChasePlayback = (rate: number) => {
       wantsForwardPlayback = true;
-      const playbackRate = Math.min(MAX_CHASE_PLAYBACK_RATE, Math.max(MIN_CHASE_PLAYBACK_RATE, rate));
+      const playbackRate = Math.min(MAX_CHASE_RATE, Math.max(MIN_CHASE_RATE, rate));
       try {
         if (Math.abs(video.playbackRate - playbackRate) > 0.04) {
           video.playbackRate = playbackRate;
@@ -551,34 +543,21 @@ export function IntroVideo({
         .finally(() => { playPending = false; });
     };
 
-    const commitSeek = (target: number, exact = false, force = false) => {
-      if (!force && (video.seeking || seekInFlight)) {
-        queuedSeekTarget = target;
-        queuedSeekExact = queuedSeekExact || exact;
+    // Seek is the emergency lane. We only ever hold at most ONE outstanding
+    // seek target and coalesce anything that arrives while `video.seeking`.
+    const requestSeek = (target: number) => {
+      const clamped = Math.max(0, target);
+      if (video.seeking) {
+        pendingSeekTarget = clamped;
         return;
       }
+      pendingSeekTarget = null;
       try {
         const fs = (video as unknown as { fastSeek?: (t: number) => void }).fastSeek;
-        if (!exact && typeof fs === "function") fs.call(video, target);
-        else video.currentTime = target;
-        seekInFlight = true;
-        lastSeekTime = target;
-        seekCooldownLeft = exact ? SEEK_COOLDOWN_FRAMES_BWD : SEEK_COOLDOWN_FRAMES_FWD;
-        videoTex.needsUpdate = true;
+        if (typeof fs === "function") fs.call(video, clamped);
+        else video.currentTime = clamped;
+        mediaTime = clamped;
       } catch { /* ignore */ }
-    };
-
-    const flushQueuedSeek = () => {
-      seekInFlight = false;
-      if (queuedSeekTarget === null) return;
-      const target = queuedSeekTarget;
-      const exact = queuedSeekExact;
-      queuedSeekTarget = null;
-      queuedSeekExact = false;
-      const current = Number.isFinite(video.currentTime) ? video.currentTime : lastSeekTime;
-      if (Math.abs(target - current) > VIDEO_BACKWARD_SEEK_EPSILON) {
-        commitSeek(target, exact, true);
-      }
     };
 
     const fire = () => {
@@ -601,12 +580,42 @@ export function IntroVideo({
     video.addEventListener("loadedmetadata", onMeta);
 
     const markFirstFrame = () => {
-      videoTex.needsUpdate = true;
       firstFrameReady = true;
-      flushQueuedSeek();
+      mediaFrameDirty = true;
+      if (Number.isFinite(video.currentTime)) mediaTime = video.currentTime;
     };
     video.addEventListener("loadeddata", markFirstFrame);
-    video.addEventListener("seeked", markFirstFrame);
+    const onSeeked = () => {
+      mediaFrameDirty = true;
+      if (Number.isFinite(video.currentTime)) mediaTime = video.currentTime;
+      // If new wheel input landed while we were seeking, immediately reissue.
+      if (pendingSeekTarget !== null) {
+        const t = pendingSeekTarget;
+        pendingSeekTarget = null;
+        if (Math.abs(t - mediaTime) > 0.02) requestSeek(t);
+      }
+    };
+    video.addEventListener("seeked", onSeeked);
+
+    // requestVideoFrameCallback → authoritative frame + time source.
+    type RVFCMeta = { mediaTime: number };
+    type RVFCVideo = HTMLVideoElement & {
+      requestVideoFrameCallback?: (cb: (now: number, meta: RVFCMeta) => void) => number;
+      cancelVideoFrameCallback?: (id: number) => void;
+    };
+    const rvfcVideo = video as RVFCVideo;
+    const hasRVFC = typeof rvfcVideo.requestVideoFrameCallback === "function";
+    let rvfcId = 0;
+    const onVideoFrame = (_now: number, meta: RVFCMeta) => {
+      mediaTime = meta.mediaTime;
+      mediaFrameDirty = true;
+      if (running && hasRVFC) {
+        rvfcId = rvfcVideo.requestVideoFrameCallback!(onVideoFrame);
+      }
+    };
+    if (hasRVFC) {
+      rvfcId = rvfcVideo.requestVideoFrameCallback!(onVideoFrame);
+    }
 
     if (adoptedHandoff && video.videoWidth && video.videoHeight) {
       uniforms.uVideoRes.value.set(video.videoWidth, video.videoHeight);
@@ -643,7 +652,11 @@ export function IntroVideo({
       // Clamp a single tick so mouse-wheel notches don't cause jumps.
       if (dy > MAX_PIXELS_PER_TICK) dy = MAX_PIXELS_PER_TICK;
       else if (dy < -MAX_PIXELS_PER_TICK) dy = -MAX_PIXELS_PER_TICK;
-      // Accumulate; applied once per RAF tick for natural throttling.
+      // Direction reversal → drop carried velocity so the reversal is instant.
+      if (dy !== 0 && pendingWheelPx !== 0 && Math.sign(dy) !== Math.sign(pendingWheelPx)) {
+        pendingWheelPx = 0;
+        progressVelocity = 0;
+      }
       pendingWheelPx += dy;
     };
     window.addEventListener("wheel", onWheel, { passive: false });
@@ -663,7 +676,8 @@ export function IntroVideo({
       const dt = Math.min(MAX_SMOOTH_DT, Math.max(0.001, (now - lastFrameTs) / 1000));
       lastFrameTs = now;
 
-      // Drain accumulated wheel delta once per RAF tick (natural throttling).
+      // Drain the full accumulated wheel delta this tick — no artificial cap,
+      // playbackRate chase handles long distances gracefully.
       const wheelPx = drainWheelPixels();
       if (wheelPx !== 0) {
         targetProgress = Math.min(
@@ -672,8 +686,7 @@ export function IntroVideo({
         );
       }
 
-      // Monotonic critically damped smoothing. It avoids time-related recoil
-      // from carried velocity when the wheel direction reverses.
+      // Single critically-damped smoothing channel drives both shader and video.
       [progress, progressVelocity] = smoothProgress(
         progress,
         targetProgress,
@@ -681,17 +694,12 @@ export function IntroVideo({
         PROGRESS_SMOOTH_TIME,
         dt,
       );
-      const videoTargetProgress = targetProgress >= VIDEO_FRACTION ? VIDEO_FRACTION : targetProgress;
-      [videoDriverProgress, videoDriverVelocity] = smoothProgress(
-        videoDriverProgress,
-        videoTargetProgress,
-        videoDriverVelocity,
-        VIDEO_SMOOTH_TIME,
-        dt,
-      );
 
-      if (seekCooldownLeft > 0) seekCooldownLeft -= 1;
-      if (seekInFlight && !video.seeking) flushQueuedSeek();
+      // rVFC-less fallback: read currentTime each frame.
+      if (!hasRVFC && Number.isFinite(video.currentTime)) {
+        const t = video.currentTime;
+        if (t !== mediaTime) { mediaTime = t; mediaFrameDirty = true; }
+      }
 
       const videoProgress = Math.min(1, progress / VIDEO_FRACTION);
       // Auto-burst: once the video segment is complete, drive the burn
@@ -708,31 +716,32 @@ export function IntroVideo({
         1,
         Math.min(progress, VIDEO_FRACTION) + burstProgress * (1 - VIDEO_FRACTION),
       );
-      if (video.duration && !Number.isNaN(video.duration)) {
+      // ---- Video chase: playbackRate is primary, seek is emergency lane ----
+      if (video.duration && !Number.isNaN(video.duration) && firstFrameReady) {
         const duration = video.duration;
-        const targetVideoP = Math.min(1, videoDriverProgress / VIDEO_FRACTION);
-        const targetTime = Math.min(duration, Math.max(0, targetVideoP * duration));
-        const reversingVideo = targetProgress < videoDriverProgress - 0.0002 || videoDriverVelocity < -0.0001;
-        const current = video.seeking && lastSeekTime >= 0
-          ? lastSeekTime
-          : Number.isFinite(video.currentTime)
-          ? video.currentTime
-          : Math.max(0, lastSeekTime);
-        const gap = targetTime - current;
-        const canSeekTick = seekCooldownLeft === 0;
+        const targetTime = Math.min(
+          duration,
+          Math.max(0, Math.min(1, progress / VIDEO_FRACTION) * duration),
+        );
+        const gap = targetTime - mediaTime;
+        const absGap = Math.abs(gap);
 
-        if (gap > VIDEO_CHASE_EPSILON && !reversingVideo) {
-          // Forward: let the decoder play; hard-seek only on huge gaps.
-          if (gap > VIDEO_HARD_SEEK_EPSILON && canSeekTick && Math.abs(gap) > SEEK_EPSILON) {
-            commitSeek(Math.max(0, targetTime - VIDEO_CHASE_EPSILON), false);
-          }
-          playVideoTowardTarget(1 + gap * 6);
-        } else if (gap < -VIDEO_BACKWARD_SEEK_EPSILON) {
-          // Backward: pause immediately and seek through a single-flight queue;
-          // avoids currentTime write thrash while remaining scroll-locked.
+        if (absGap > GAP_HARD_SEEK) {
+          // Huge jump → single seek, do not thrash.
           pauseVideo();
-          if (canSeekTick) commitSeek(targetTime, true);
+          requestSeek(Math.max(0, targetTime - 0.05));
+        } else if (gap > GAP_DEAD_ZONE) {
+          // Forward chase — proportional rate, no seek.
+          setChasePlayback(1 + gap * 4.5);
+        } else if (gap < -GAP_BACKWARD_SEEK) {
+          // Large backward gap → single seek to catch up.
+          pauseVideo();
+          requestSeek(targetTime);
+        } else if (gap < -GAP_DEAD_ZONE) {
+          // Small backward gap → pause and let target roll into us.
+          pauseVideo();
         } else {
+          // Inside dead zone → hold still, no writes to currentTime/playbackRate.
           pauseVideo();
         }
       }
@@ -772,8 +781,19 @@ export function IntroVideo({
         burnStartTs = -1;
       }
       uniforms.uBurn.value = burstProgress;
-      if (firstFrameReady && !document.hidden) {
+
+      // Only upload a new video texture when a new frame actually arrived.
+      if (mediaFrameDirty) {
+        videoTex.needsUpdate = true;
+        mediaFrameDirty = false;
+      }
+      const progressChanged = Math.abs(compositeProgress - lastRenderedProgress) > PROGRESS_RENDER_EPSILON;
+      const needsRender = firstFrameReady && !document.hidden && (
+        videoTex.needsUpdate || progressChanged || burnActive || burstProgress > 0
+      );
+      if (needsRender) {
         renderer.render(scene, camera);
+        lastRenderedProgress = compositeProgress;
       }
 
       // Throttle parent notifications to avoid per-frame React re-renders.
@@ -805,12 +825,15 @@ export function IntroVideo({
     return () => {
       running = false;
       cancelAnimationFrame(rafId);
+      if (hasRVFC && rvfcId && typeof rvfcVideo.cancelVideoFrameCallback === "function") {
+        try { rvfcVideo.cancelVideoFrameCallback(rvfcId); } catch { /* ignore */ }
+      }
       window.removeEventListener("resize", resize);
       window.removeEventListener("wheel", onWheel);
       document.removeEventListener("visibilitychange", onVisibility);
       video.removeEventListener("loadedmetadata", onMeta);
       video.removeEventListener("loadeddata", markFirstFrame);
-      video.removeEventListener("seeked", markFirstFrame);
+      video.removeEventListener("seeked", onSeeked);
       video.removeEventListener("error", onError);
       window.clearTimeout(errorTimer);
       pauseVideo();
