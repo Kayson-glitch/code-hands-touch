@@ -105,7 +105,7 @@ export function SiteNav() {
           width: "100%",
           height: 1,
           background:
-            "linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.1) 20%, rgba(255,255,255,0.1) 80%, transparent 100%)",
+            "linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.1) 50%, transparent 100%)",
         }}
       />
     </nav>
