@@ -19,11 +19,11 @@ export type BurnParams = {
 };
 
 export const DEFAULT_BURN_PARAMS: BurnParams = {
-  warpAmp: 0.55,
-  warpFreq: 1.3,
-  streakAmp: 0.28,
+  warpAmp: 0.62,
+  warpFreq: 1.15,
+  streakAmp: 0.40,
   streakFreq: 6.0,
-  angularAmp: 0.55,
+  angularAmp: 1.4,
   angularFreq: 0.55,
   chromaAberration: 0.34,
   shardDisplace: 0.55,
@@ -33,7 +33,7 @@ export const DEFAULT_BURN_PARAMS: BurnParams = {
   hotHaloAlpha: 0.55,
   cloudDiffuseAlpha: 0.29,
   mistAlpha: 0.2,
-  haloFalloff: 0.52,
+  haloFalloff: 0.72,
 };
 
 type Range = { min: number; max: number; step: number };
