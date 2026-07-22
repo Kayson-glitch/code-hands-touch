@@ -1,22 +1,28 @@
 ## Goal
-Add an elegant "scroll to explore" hint during the intro video that guides users to scroll, then disappears on first scroll input.
+Make the burn-through hole and glow read as a wide, irregular ellipse (like unseen.co/world), not the current near-circular blob.
 
-## New component: `src/components/ScrollHint.tsx`
-- Fixed, centered near bottom of viewport (`bottom: 40px`).
-- Vertical stack, centered:
-  - A minimalist SVG mouse outline (~22×34px, 1.25px stroke) containing a small wheel dot that animates downward on loop (~1.6s, ease-in-out, fade at ends) — signals scroll direction.
-  - Small text "SCROLL TO EXPLORE" — Montserrat, 11px, letter-spacing 0.22em, uppercase, `rgba(255,255,255,0.72)`.
-  - A thin vertical hairline (1px × 18px, `rgba(255,255,255,0.35)`) below text with a subtle downward gradient.
-- Entrance: fade + 6px upward slide, 600ms ease-out, delayed 500ms after mount.
-- Exit: fade + 6px downward slide, 300ms ease-out; unmount after transition ends.
-- Idle micro-motion: whole group breathes ±2px vertically, 3.2s ease-in-out infinite (very subtle).
-- `pointer-events: none`, `z-index: 90` (above burst overlay z:60, below handoff black z:120).
-- Props: `visible: boolean`.
+## Changes — `src/components/IntroVideo.tsx` (fragment shader only)
 
-## Wiring: `src/components/IntroVideo.tsx`
-- Track `hasScrolled` state: set `true` on the first wheel/touchmove/keydown(PageDown/ArrowDown/Space) event handled by the existing scroll listener.
-- Render `<ScrollHint visible={!hasScrolled} />` inside the intro video host so it lives only during the intro stage and unmounts with the video.
+1. **Elliptical base shape**
+   - After computing aspect-corrected `p`, squash the vertical axis so the front is naturally wider than tall:
+     - `vec2 pe = vec2(p.x, p.y * 1.75);` (ellipse ratio ≈ 1.75:1, close to the reference frame)
+   - Use `pe` in place of `p` for `len`, `ang`, and the warp/streak/hi sampling. Keep the shader input `p` as-is for chroma/other layers.
+
+2. **Stronger irregular edge** (petal/tongue silhouette rather than gentle wobble)
+   - Bump default warp: `uWarpAmp` default 0.42 → ~0.62; `uWarpFreq` 1.3 → ~1.15 (bigger lobes).
+   - Bump streak: `uStreakAmp` 0.28 → 0.40, `uStreakFreq` 1.9 → 2.4 (longer horizontal tongues, matches the ref's side flares).
+   - Angular wobble: raise `uAngularAmp` 1.0 → 1.4 and skew harmonics so horizontal lobes dominate:
+     - Add `+ 0.05 * cos(ang * 2.0)` bias to `wob` so left/right bulge more than top/bottom.
+
+3. **Slightly softer, wider outer halo** (the reference glow is broad and diffuse around the ellipse)
+   - Raise `uHaloFalloff` default 1.0 → 1.25.
+   - Keep core rim / hot halo alphas unchanged so the ring stays crisp.
+
+4. **Debug panel defaults** — update `DEFAULT_BURN_PARAMS` in `src/components/BurnDebugPanel.tsx` to match new values so the panel reflects the shipped look.
 
 ## Not changed
-- Video, burst, nav, hero copy, preloader — all unchanged.
-- No new dependencies; pure CSS + inline SVG.
+- Timeline, easing, scroll mapping, video parallax, chroma/shard/glitch layers, center point.
+- No new uniforms; ellipse ratio is a hardcoded constant (can be lifted to a uniform later if needed).
+
+## Verification
+- Load `/?debug=1`, scroll to trigger burn, screenshot at ~30 %, ~60 %, ~90 % burn and compare silhouette to the reference (wide, lobed, horizontally elongated).
