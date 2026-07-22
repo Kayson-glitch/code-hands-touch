@@ -31,8 +31,10 @@ export function ScrollHint({ visible = true }: { visible?: boolean }) {
   }, [dismissed]);
 
   const on = visible && entered && !dismissed;
-  // Exit animation: drift up ~64px and fade over ~520ms with an ease-out curve.
-  const translateY = dismissed ? -64 : 0;
+  // Exit animation: bouncy lift with a small pre-dip, then a soft overshoot
+  // handled entirely by a spring-like cubic-bezier on transform.
+  const translateY = dismissed ? -72 : 0;
+  const scale = dismissed ? 0.94 : 1;
 
   return (
     <div
@@ -41,10 +43,12 @@ export function ScrollHint({ visible = true }: { visible?: boolean }) {
         position: "fixed",
         left: "50%",
         top: "50%",
-        transform: `translate(-50%, calc(-50% + ${translateY}px))`,
+        transform: `translate(-50%, calc(-50% + ${translateY}px)) scale(${scale})`,
         opacity: on ? 1 : 0,
         transition:
-          "opacity 520ms cubic-bezier(0.22, 1, 0.36, 1), transform 620ms cubic-bezier(0.22, 1, 0.36, 1)",
+          // Slower, springy transform (back-out with overshoot) + gentle opacity fade.
+          "transform 880ms cubic-bezier(0.34, 1.56, 0.44, 1), opacity 640ms cubic-bezier(0.4, 0, 0.2, 1)",
+        willChange: "transform, opacity",
         pointerEvents: "none",
         zIndex: 90,
         display: "flex",
