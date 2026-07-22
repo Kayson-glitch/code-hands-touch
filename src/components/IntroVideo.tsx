@@ -95,9 +95,9 @@ const FRAG = /* glsl */ `
   }
 
   // ---- Chromatic-aberration sampler: RGB split along a slowly rotating axis ----
-  vec3 sampleChroma(vec2 sUv, float pxAmount) {
+  vec3 sampleChroma(vec2 sUv, float pxAmount, float spinBoost) {
     float t = uTime;
-    float ang = t * 0.4;
+    float ang = t * (0.4 + spinBoost * 1.8);
     vec2 dir = vec2(cos(ang), sin(ang)) * (pxAmount / uResolution.x);
     float r = texture2D(uVideoTex, sUv + dir).r;
     float g = texture2D(uVideoTex, sUv).g;
@@ -121,14 +121,28 @@ const FRAG = /* glsl */ `
     vec2 sampleUv = coverUV(videoUv, uResolution, uVideoRes);
 
     // Base chromatic aberration is always on but very subtle (edge fringe only).
-    // During burn, ramp it up and add a low-frequency "liquid" jitter.
-    float burstK = smoothstep(0.0, 0.18, uBurn) * (1.0 - smoothstep(0.85, 1.0, uBurn));
+    // During burn, ramp it up dramatically and add liquid-pulse jitter.
+    // Non-linear envelope: soft in, big mid-burst punch, gentle release.
+    float burstK = smoothstep(0.0, 0.15, uBurn) * (1.0 - smoothstep(0.9, 1.0, uBurn));
+    float peakK  = smoothstep(0.20, 0.55, uBurn) * (1.0 - smoothstep(0.70, 0.95, uBurn));
     float basePx = 1.6;
-    float burstPx = burstK * 5.0;
-    // Sporadic quick pulse -> instant fringe up to ~9px, then relax.
-    float pulse = step(0.94, fract(sin(uTime * 3.7) * 43758.5453)) * burstK;
-    float chromaPx = basePx + burstPx + pulse * 4.0;
-    vec3 col = sampleChroma(sampleUv, chromaPx);
+    // Ramp peak split up to ~11px in mid-burn.
+    float burstPx = burstK * 6.0 + peakK * 5.5;
+    // Low-frequency liquid swell for a continuous "flowing" refraction.
+    float swell = (0.5 + 0.5 * sin(uTime * 5.2)) * peakK * 3.2;
+    // Faster, more frequent sporadic pulse -> up to ~16px spikes.
+    float pulseA = step(0.88, fract(sin(uTime * 7.4) * 43758.5453)) * burstK * 6.0;
+    float pulseB = step(0.82, fract(sin(uTime * 11.1 + 1.3) * 24634.6345)) * peakK * 4.0;
+    float chromaPx = basePx + burstPx + swell + pulseA + pulseB;
+    vec3 col = sampleChroma(sampleUv, chromaPx, peakK);
+
+    // Subtle brightness/gamma flicker during burn — glitch feel, no white flashes.
+    if (burstK > 0.0) {
+      float flick = (fract(sin(uTime * 17.3) * 91234.123) - 0.5) * 0.08 * burstK;
+      col = clamp(col * (1.0 + flick), 0.0, 1.0);
+      float g = 1.0 + (fract(sin(uTime * 5.9) * 12345.678) - 0.5) * 0.06 * peakK;
+      col = pow(col, vec3(g));
+    }
 
     // ---- Burn-through: paper burns from center outward, revealing black ----
     float b = clamp(uBurn, 0.0, 1.0);
