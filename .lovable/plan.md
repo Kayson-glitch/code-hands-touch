@@ -1,57 +1,39 @@
 ## 目标
-在开屏视频阶段叠加一个浮动调参面板，让你实时调整 burn 光圈的 shader 参数，边看边调，参数即时映射到 `IntroVideo.tsx` 的 shader uniforms。
+让 burn 光圈扩散过程也由鼠标滚轮控制，方便对着调参面板反复来回预览。调参完毕后可切回自动。
 
-## 面板位置与形态
-- 右上角固定浮层（`position: fixed; top: 88px; right: 16px; z-index: 200`），半透明深色背景 + 毛玻璃，宽约 260px。
-- 顶部标题「Burn Ring Debug」+ 折叠按钮（默认展开，可收起为小圆点，避免挡视觉）。
-- 底部两个按钮：`Reset`（回到当前代码默认值）、`Copy JSON`（把当前参数复制到剪贴板，便于我之后写回 shader 常量）。
-- 仅在开发预览时挂载（通过 prop 开关），发布态不显示。
+## 现状
+- 滚轮 `progress` 分两段：`0 → VIDEO_FRACTION(0.6)` 控制视频，`VIDEO_FRACTION → 1` 目前**未使用**。
+- 一旦 `videoProgress >= 1` 就置 `burnActive=true`，随后 `uBurn` 由 `performance.now()` 时间线自动跑到 1 并 `fire()`（进入下一阶段）。
 
-## 可调参数（分 3 组，与你诉求一一对应）
+## 改动方案（仅 `src/components/IntroVideo.tsx`）
 
-### 1. 不规则度（轮廓形状）
-- `warpAmp`：domain-warp 强度（0 – 0.5）
-- `warpFreq`：warp 噪声频率（0.5 – 6）
-- `streakAmp`：各向异性长条噪声幅度（0 – 0.4）
-- `streakFreq`：长条频率（1 – 12）
-- `angularAmp`：极角扰动幅度（0 – 0.3）
-- `angularFreq`：极角扰动波数（2 – 20）
+1. **burn 进度改为滚动驱动**
+   - 复用已有的 `burstProgress = (progress - VIDEO_FRACTION) / (1 - VIDEO_FRACTION)`，作为 `uBurn` 的目标值。
+   - 保留现有的平滑（`progress` 已经过 `SMOOTH_RATE` 指数平滑），无需再加额外缓动，滚动手感与视频阶段一致。
+   - 删除 `burnStartedAt` / `BURN_DURATION_MS` 的时间推进；`uBurn.value = burstProgress`。
 
-### 2. 噪声强度（burn 阶段的故障/颗粒）
-- `chromaAberration`：径向色差像素量（0 – 20）
-- `shardDisplace`：马赛克碎片位移（0 – 40）
-- `grainAmount`：颗粒噪点强度（0 – 1）
-- `glitchFlicker`：故障闪动强度（0 – 1）
+2. **调试模式下可来回滚**
+   - 新增 `debug` prop（`IntroVideo` 已在上一版加）参与逻辑：
+     - `debug=true`：允许 `progress` 在 burn 段内**双向**滚动（向上滚回到视频段也可以），且 `burstProgress >= 1` 时**不触发** `fire()`——一直停在满扩散状态，方便观察终态；只有点击 Debug 面板新增的「Finish」按钮才 `fire()`。
+     - `debug=false`（默认/生产）：保持"触发后不可逆"——一旦 `burstProgress > 0` 就锁定 `targetProgress` 只增不减；`burstProgress >= 1` 时正常 `fire()`。
+   - 移除 `burnActive` 状态里那段"锁定 targetProgress=1、pause 视频"的逻辑对 debug 的干扰，仅在非 debug 时执行锁定。
 
-### 3. 边缘层透明度（4 层辉光）
-- `coreRimAlpha`：核心亮边不透明度（0 – 1）
-- `hotHaloAlpha`：暖白热辉不透明度（0 – 1）
-- `cloudDiffuseAlpha`：云雾扩散层不透明度（0 – 1）
-- `mistAlpha`：颗粒外雾不透明度（0 – 1）
-- `haloFalloff`：辉光向外衰减指数（1 – 6）
+3. **视频保持在最后一帧**
+   - 无论 debug 与否，`videoProgress >= 1` 时依旧 `pauseVideo()` 并把 `currentTime` 精准 seek 到 `duration`，避免 burn 阶段视频退帧。
 
-每个参数：`label + range slider + 数值输入框（可精确输入）+ 当前值显示`。
+4. **Debug 面板补两颗按钮**（`BurnDebugPanel.tsx`）
+   - `Jump to Burst`：外部回调把 `targetProgress` 设到 `VIDEO_FRACTION + 0.001`（一键跳到扩散起点）。
+   - `Finish`：把 `targetProgress` 设到 1 并允许 `fire()`（退出调试进入下一阶段）。
+   - 通过新 prop `onJumpToBurst` / `onFinish` 传入；`IntroVideo` 内实现这两个回调操作内部 `targetProgress` 变量（通过 ref 暴露）。
 
-## 技术方案
+## 不改动
+- 视频段滚动逻辑、平滑参数、seek 策略
+- 光圈 shader 效果、颜色、层次
+- ASCII hands / preloader / nav / chat dock / hero UI
 
-### 新文件：`src/components/BurnDebugPanel.tsx`
-- 受控组件，接收 `values`、`onChange(next)`、`onReset`、`onCopy`。
-- 内部纯 UI + slider 控件，无副作用。
+## 交付效果
+- 拖到视频末尾后继续向下滚 → 光圈从指尖逐步扩张；向上滚 → 光圈缩回（debug 模式）。
+- 面板参数改动 + 滚动来回，即可对比不同扩散阶段的形状与辉光。
+- 调完点 `Finish` 或滚到底部进入 hands 阶段。
 
-### 修改 `src/components/IntroVideo.tsx`
-- 抽出所有上述常量为 `DEFAULT_BURN_PARAMS` 对象。
-- 用 `useState<BurnParams>(DEFAULT_BURN_PARAMS)` 保存当前值。
-- shader 中把这些数字改为 `uniform float u_xxx`，在 render loop 里每帧从 state ref 同步到 uniforms（避免频繁重编译 shader）。
-- 顶层挂载 `<BurnDebugPanel>`，仅在 `import.meta.env.DEV` 或新 prop `debug` 为真时渲染。
-- `Copy JSON` 输出形如 `{ warpAmp: 0.18, ... }`，方便定稿后我把默认值写回代码。
-
-### 不改动
-- 光圈触发时机、时长（3600ms）、缓动曲线、扩张同步、handoff 逻辑、hero UI 淡入节奏——全部保持现状。
-- ASCII hands / preloader / nav / chat dock 均不动。
-
-## 交付后使用流程
-1. 打开预览，滚到视频末端触发 burn。
-2. 在扩散过程中拖动 slider，效果实时变化。
-3. 觉得对了点 `Copy JSON`，把值发给我，我写回 `DEFAULT_BURN_PARAMS` 并可选择性下线面板。
-
-需要我按这个方案实施吗？如要调整（比如面板位置、增删参数、发布态也保留），告诉我改动点。
+需要我按这个方案实施吗？
