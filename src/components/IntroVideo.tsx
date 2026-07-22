@@ -19,6 +19,8 @@ export type IntroProgressInfo = {
 
 const VIDEO_FRACTION = 0.6;
 const PIXELS_FOR_FULL_PROGRESS = 2600;
+// Duration (ms) of the auto-driven burn-through once the video segment ends.
+const BURN_AUTO_MS = 3600;
 // Cap a single wheel tick so a hard mouse-wheel notch doesn't jump the progress.
 const MAX_PIXELS_PER_TICK = 260;
 // Cap RAF drain too; if decoding stalls, multiple wheel events can arrive
@@ -470,9 +472,12 @@ export function IntroVideo({
     let running = true;
     let burnActive = false;
     let forceFinish = false;
+    let burnStartTs = -1;
 
     targetProgressRef.current = (v: number) => {
-      targetProgress = Math.min(1, Math.max(0, v));
+      // Wheel/debug can only advance up to the end of the video segment;
+      // the burst is driven automatically after that.
+      targetProgress = Math.min(VIDEO_FRACTION, Math.max(0, v));
     };
     forceFinishRef.current = () => {
       forceFinish = true;
@@ -660,7 +665,10 @@ export function IntroVideo({
       // Drain accumulated wheel delta once per RAF tick (natural throttling).
       const wheelPx = drainWheelPixels();
       if (wheelPx !== 0) {
-        targetProgress = clamp01(targetProgress + wheelPx / PIXELS_FOR_FULL_PROGRESS);
+        targetProgress = Math.min(
+          VIDEO_FRACTION,
+          Math.max(0, targetProgress + wheelPx / PIXELS_FOR_FULL_PROGRESS),
+        );
       }
 
       // Monotonic critically damped smoothing. It avoids time-related recoil
@@ -685,7 +693,20 @@ export function IntroVideo({
       if (seekInFlight && !video.seeking) flushQueuedSeek();
 
       const videoProgress = Math.min(1, progress / VIDEO_FRACTION);
-      const burstProgress = Math.min(1, Math.max(0, (progress - VIDEO_FRACTION) / (1 - VIDEO_FRACTION)));
+      // Auto-burst: once the video segment is complete, drive the burn
+      // through independently of scroll.
+      if (videoProgress >= 1) {
+        if (burnStartTs < 0) burnStartTs = now;
+      }
+      const burstProgress = burnStartTs < 0
+        ? 0
+        : clamp01((now - burnStartTs) / BURN_AUTO_MS);
+      // Synthesize a total progress value that includes the auto burst so
+      // uProgress / uTime / parent notifications stay consistent.
+      const compositeProgress = Math.min(
+        1,
+        Math.min(progress, VIDEO_FRACTION) + burstProgress * (1 - VIDEO_FRACTION),
+      );
       if (video.duration && !Number.isNaN(video.duration)) {
         const duration = video.duration;
         const targetVideoP = Math.min(1, videoDriverProgress / VIDEO_FRACTION);
@@ -714,10 +735,10 @@ export function IntroVideo({
           pauseVideo();
         }
       }
-      uniforms.uProgress.value = progress;
+      uniforms.uProgress.value = compositeProgress;
       // Tie shader time to scroll progress, not wall-clock time. When the user
       // stops scrolling, the burn/glitch stops too instead of drifting forward.
-      uniforms.uTime.value = progress * 18;
+      uniforms.uTime.value = compositeProgress * 18;
       // Sync debug uniforms from ref every frame (cheap, no shader recompile).
       const bp = burnParamsRef.current;
       uniforms.uWarpAmp.value = bp.warpAmp;
@@ -747,6 +768,7 @@ export function IntroVideo({
         pauseVideo();
       } else if (burnActive) {
         burnActive = false;
+        burnStartTs = -1;
       }
       uniforms.uBurn.value = burstProgress;
       if (firstFrameReady && !document.hidden) {
@@ -758,20 +780,20 @@ export function IntroVideo({
         (lastNotifiedBurst <= 0 && burstProgress > 0) ||
         (lastNotifiedBurst < 1 && burstProgress >= 1);
       if (
-        Math.abs(progress - lastNotifiedProgress) > PROGRESS_NOTIFY_EPSILON ||
+        Math.abs(compositeProgress - lastNotifiedProgress) > PROGRESS_NOTIFY_EPSILON ||
         burstBoundaryCrossed ||
-        progress >= 1
+        compositeProgress >= 1
       ) {
         const w = window.innerWidth;
         const h = window.innerHeight;
         onProgressRef.current?.({
-          progress,
+          progress: compositeProgress,
           videoProgress,
           burstProgress,
           centerX: uniforms.uCenter.value.x * w,
           centerY: uniforms.uCenter.value.y * h,
         });
-        lastNotifiedProgress = progress;
+        lastNotifiedProgress = compositeProgress;
         lastNotifiedBurst = burstProgress;
       }
 
