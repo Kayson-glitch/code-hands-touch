@@ -510,7 +510,7 @@ export function IntroVideo({
         .finally(() => { playPending = false; });
     };
 
-    const commitSeek = (target: number, now: number, exact = false, force = false) => {
+    const commitSeek = (target: number, exact = false, force = false) => {
       if (!force && (video.seeking || seekInFlight)) {
         queuedSeekTarget = target;
         queuedSeekExact = queuedSeekExact || exact;
@@ -536,7 +536,7 @@ export function IntroVideo({
       queuedSeekExact = false;
       const current = Number.isFinite(video.currentTime) ? video.currentTime : lastSeekTime;
       if (Math.abs(target - current) > VIDEO_BACKWARD_SEEK_EPSILON) {
-        commitSeek(target, performance.now(), exact, true);
+        commitSeek(target, exact, true);
       }
     };
 
@@ -640,6 +640,7 @@ export function IntroVideo({
         const duration = video.duration;
         const targetVideoP = Math.min(1, videoDriverProgress / VIDEO_FRACTION);
         const targetTime = Math.min(duration, Math.max(0, targetVideoP * duration));
+        const reversingVideo = targetProgress < videoDriverProgress - 0.0002 || videoDriverVelocity < -0.0001;
         const current = video.seeking && lastSeekTime >= 0
           ? lastSeekTime
           : Number.isFinite(video.currentTime)
@@ -648,17 +649,17 @@ export function IntroVideo({
         const gap = targetTime - current;
         const canSeekTick = seekCooldownLeft === 0;
 
-        if (gap > VIDEO_CHASE_EPSILON) {
+        if (gap > VIDEO_CHASE_EPSILON && !reversingVideo) {
           // Forward: let the decoder play; hard-seek only on huge gaps.
           if (gap > VIDEO_HARD_SEEK_EPSILON && canSeekTick && Math.abs(gap) > SEEK_EPSILON) {
-            commitSeek(Math.max(0, targetTime - VIDEO_CHASE_EPSILON), now, false);
+            commitSeek(Math.max(0, targetTime - VIDEO_CHASE_EPSILON), false);
           }
           playVideoTowardTarget(1 + gap * 6);
         } else if (gap < -VIDEO_BACKWARD_SEEK_EPSILON) {
           // Backward: pause immediately and seek through a single-flight queue;
           // avoids currentTime write thrash while remaining scroll-locked.
           pauseVideo();
-          if (canSeekTick) commitSeek(targetTime, now, true);
+          if (canSeekTick) commitSeek(targetTime, true);
         } else {
           pauseVideo();
         }
