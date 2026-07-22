@@ -357,7 +357,9 @@ export function IntroVideo({
     (video as any).crossOrigin = "anonymous";
 
     const renderer = new THREE.WebGLRenderer({ canvas, antialias: false, alpha: false });
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+    // Shader fill-rate is the main cost; 1.5x DPR keeps the burn/glitch
+    // effects sharp without paying for 2x/3x pixel count on retina/4K.
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5));
     renderer.setClearColor(0x000000, 1);
 
     const scene = new THREE.Scene();
