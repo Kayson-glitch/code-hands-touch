@@ -94,11 +94,9 @@ const FRAG = /* glsl */ `
     return (uv - 0.5) * scale + 0.5;
   }
 
-  // ---- Chromatic-aberration sampler: RGB split along a slowly rotating axis ----
-  vec3 sampleChroma(vec2 sUv, float pxAmount, float spinBoost) {
-    float t = uTime;
-    float ang = t * (0.4 + spinBoost * 1.8);
-    vec2 dir = vec2(cos(ang), sin(ang)) * (pxAmount / uResolution.x);
+  // ---- Chromatic-aberration sampler with an explicit direction (px units) ----
+  vec3 sampleChroma(vec2 sUv, vec2 dirPx) {
+    vec2 dir = dirPx / uResolution.xy;
     float r = texture2D(uVideoTex, sUv + dir).r;
     float g = texture2D(uVideoTex, sUv).g;
     float b = texture2D(uVideoTex, sUv - dir).b;
@@ -135,19 +133,28 @@ const FRAG = /* glsl */ `
     float pulseB = step(0.82, fract(sin(uTime * 11.1 + 1.3) * 24634.6345)) * peakK * 4.0;
     float chromaPx = basePx + burstPx + swell + pulseA + pulseB;
 
-    // High-frequency micro-jitter on the sample coord — small horizontal
-    // "data-tear" blocks (~6px tall) driven by a per-row hash. Tiny amplitude
-    // (<= 1.2px) so it reads as texture, not motion.
+    // Mosaic-shard displacement: quantize screen into cells, occasionally
+    // offset a few cells by a small amount to read as "data-block breakage".
+    // Cell size jitters between 3 discrete tiers over time.
     vec2 jitteredUv = sampleUv;
-    if (burstK > 0.0) {
-      float rowSize = 6.0;
-      float row = floor(gl_FragCoord.y / rowSize);
-      float rh = hash(vec2(row, floor(uTime * 24.0)));
-      float trigger = step(0.86, rh) * burstK;
-      float shiftPx = (rh - 0.5) * 2.4 * trigger;
-      jitteredUv.x += shiftPx / uResolution.x;
+    if (peakK > 0.0) {
+      float tierPick = fract(sin(floor(uTime * 6.0)) * 43758.5453);
+      float cell = mix(14.0, 22.0, step(0.33, tierPick)) + step(0.66, tierPick) * 4.0;
+      vec2 cellId = floor(gl_FragCoord.xy / cell);
+      float ch = hash(cellId + vec2(floor(uTime * 18.0), 0.0));
+      float trigger = step(0.90, ch) * peakK; // ~10% of cells
+      float ch2 = hash(cellId + vec2(7.31, floor(uTime * 18.0)));
+      // Bias toward horizontal shard shifts, small vertical component.
+      vec2 shiftPx = vec2((ch - 0.5) * 12.0, (ch2 - 0.5) * 4.0) * trigger;
+      jitteredUv += shiftPx / uResolution.xy;
     }
-    vec3 col = sampleChroma(jitteredUv, chromaPx, peakK);
+
+    // Chromatic aberration direction: radial from burn center → liquid outward
+    // flow when burn is active; falls back to a fixed axis at rest.
+    vec2 radial = uv - uCenter;
+    float rlen = max(length(radial * aspect), 1e-4);
+    vec2 chromaDir = mix(vec2(1.0, 0.0), radial * aspect / rlen, burstK);
+    vec3 col = sampleChroma(jitteredUv, chromaDir * chromaPx);
 
     // Fine-grain high-frequency noise: per-pixel ±0.8% luminance dither,
     // gated by burstK so it silently vanishes at the edges.
