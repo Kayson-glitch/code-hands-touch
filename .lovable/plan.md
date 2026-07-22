@@ -1,39 +1,32 @@
-## 目标
-让 burn 光圈扩散过程也由鼠标滚轮控制，方便对着调参面板反复来回预览。调参完毕后可切回自动。
+## 问题
+预览环境是生产构建，`import.meta.env.DEV=false`，导致：
+- `BurnDebugPanel` 没渲染（你也没看到面板）
+- `debugRef.current=false`，`onWheel` 在 `burnActive` 后 `preventDefault` 并直接 return，`uBurn` 由 `performance.now()` 时间线自动跑
+- 结果：滚到视频末尾后光圈自动扩散，滚轮完全失效
 
-## 现状
-- 滚轮 `progress` 分两段：`0 → VIDEO_FRACTION(0.6)` 控制视频，`VIDEO_FRACTION → 1` 目前**未使用**。
-- 一旦 `videoProgress >= 1` 就置 `burnActive=true`，随后 `uBurn` 由 `performance.now()` 时间线自动跑到 1 并 `fire()`（进入下一阶段）。
+上一次改动加了 debug 分支，但没有任何入口在预览环境把 debug 打开。
 
-## 改动方案（仅 `src/components/IntroVideo.tsx`）
+## 方案（只改 2 个文件）
 
-1. **burn 进度改为滚动驱动**
-   - 复用已有的 `burstProgress = (progress - VIDEO_FRACTION) / (1 - VIDEO_FRACTION)`，作为 `uBurn` 的目标值。
-   - 保留现有的平滑（`progress` 已经过 `SMOOTH_RATE` 指数平滑），无需再加额外缓动，滚动手感与视频阶段一致。
-   - 删除 `burnStartedAt` / `BURN_DURATION_MS` 的时间推进；`uBurn.value = burstProgress`。
+### 1. `src/routes/index.tsx`
+读取 URL 查询参数 `?debug=1`（或 `?burn=1`），存到 state，透传给 `AsciiHandsFooter`（现有 `debug` prop 走通到 `IntroVideo`）。SSR 期间读不到 window，用 `useEffect` 客户端再打开，避免 hydration 报错。
 
-2. **调试模式下可来回滚**
-   - 新增 `debug` prop（`IntroVideo` 已在上一版加）参与逻辑：
-     - `debug=true`：允许 `progress` 在 burn 段内**双向**滚动（向上滚回到视频段也可以），且 `burstProgress >= 1` 时**不触发** `fire()`——一直停在满扩散状态，方便观察终态；只有点击 Debug 面板新增的「Finish」按钮才 `fire()`。
-     - `debug=false`（默认/生产）：保持"触发后不可逆"——一旦 `burstProgress > 0` 就锁定 `targetProgress` 只增不减；`burstProgress >= 1` 时正常 `fire()`。
-   - 移除 `burnActive` 状态里那段"锁定 targetProgress=1、pause 视频"的逻辑对 debug 的干扰，仅在非 debug 时执行锁定。
+### 2. `src/components/IntroVideo.tsx`
+- `debug` prop 现在是必传/明确布尔，不再回退到 `import.meta.env.DEV`（去掉 `debug ?? import.meta.env.DEV`），改为 `const debugEnabled = !!debug`。这样只要 URL 带 `?debug=1`，任何环境（生产 / 预览 / dev）都进入 debug 分支：
+  - 面板出现
+  - 滚轮双向驱动 `uBurn`
+  - `Finish →` 才 `fire()`
+- 不改 shader、平滑、seek 逻辑、时间常数。
 
-3. **视频保持在最后一帧**
-   - 无论 debug 与否，`videoProgress >= 1` 时依旧 `pauseVideo()` 并把 `currentTime` 精准 seek 到 `duration`，避免 burn 阶段视频退帧。
+### 3.（如果 `AsciiHandsFooter` 里没往下传 debug）
+在 `<IntroVideo ... />` 那一行补 `debug={debug}`，并在组件 props 里加 `debug?: boolean`。上面 `rg` 已经确认目前调用点是 `<IntroVideo onEnded={...} onProgress={...} src={videoSrc} />`，没有 debug prop，需要补。
 
-4. **Debug 面板补两颗按钮**（`BurnDebugPanel.tsx`）
-   - `Jump to Burst`：外部回调把 `targetProgress` 设到 `VIDEO_FRACTION + 0.001`（一键跳到扩散起点）。
-   - `Finish`：把 `targetProgress` 设到 1 并允许 `fire()`（退出调试进入下一阶段）。
-   - 通过新 prop `onJumpToBurst` / `onFinish` 传入；`IntroVideo` 内实现这两个回调操作内部 `targetProgress` 变量（通过 ref 暴露）。
+## 使用方式
+- 调参：打开 `/?debug=1` → 视频段正常滚 → 到末帧继续向下滚，光圈随滚轮扩张 / 向上滚缩回 → 面板改参数实时预览 → 点 `Finish →` 进入 hands。
+- 正式访问 `/` 不受影响，仍是"滚到末帧自动扩散"的生产行为。
 
 ## 不改动
-- 视频段滚动逻辑、平滑参数、seek 策略
-- 光圈 shader 效果、颜色、层次
-- ASCII hands / preloader / nav / chat dock / hero UI
-
-## 交付效果
-- 拖到视频末尾后继续向下滚 → 光圈从指尖逐步扩张；向上滚 → 光圈缩回（debug 模式）。
-- 面板参数改动 + 滚动来回，即可对比不同扩散阶段的形状与辉光。
-- 调完点 `Finish` 或滚到底部进入 hands 阶段。
-
-需要我按这个方案实施吗？
+- Shader / 光圈层次 / 颜色 / 时长
+- 视频段滚动与 seek 策略
+- Preloader / Nav / Hero / ChatDock
+- 生产环境的不可逆行为
