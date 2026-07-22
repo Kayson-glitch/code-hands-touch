@@ -523,15 +523,11 @@ export function IntroVideo({
       const dt = Math.min(0.05, Math.max(0.001, (now - lastFrameTs) / 1000));
       lastFrameTs = now;
 
-      // Frame-rate-independent exponential smoothing toward the target.
-      // Scale rate up when the gap is large so fast scroll feels responsive,
-      // while slow scroll retains a softer, inertial follow.
-      const gap = Math.abs(targetProgress - progress);
-      const rate = SMOOTH_RATE + (SMOOTH_RATE_FAST - SMOOTH_RATE) * Math.min(1, gap * 8);
-      const alpha = 1 - Math.exp(-rate * dt);
+      // Symmetric frame-rate-independent exponential smoothing (identical
+      // response forward and backward → no reverse-scroll stutter).
+      const alpha = Math.min(0.35, 1 - Math.exp(-SMOOTH_RATE * dt));
       progress += (targetProgress - progress) * alpha;
-      // Snap when essentially there so `fire()` still triggers cleanly.
-      if (Math.abs(targetProgress - progress) < 0.0005) progress = targetProgress;
+      if (Math.abs(targetProgress - progress) < 0.0002) progress = targetProgress;
 
       const videoProgress = Math.min(1, progress / VIDEO_FRACTION);
       const burstProgress = Math.min(1, Math.max(0, (progress - VIDEO_FRACTION) / (1 - VIDEO_FRACTION)));
