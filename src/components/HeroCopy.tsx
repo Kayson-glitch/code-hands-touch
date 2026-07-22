@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useHeroLayout } from "@/hooks/useHeroLayout";
+import BlurText from "./BlurText";
 
 export function HeroCopy() {
   const [visible, setVisible] = useState(false);
@@ -29,32 +30,57 @@ export function HeroCopy() {
         transition: "opacity 700ms ease-out, transform 700ms ease-out",
       }}
     >
-      <h1
-        className="font-display text-white"
-        style={{
-          fontSize: layout.titleFontSize,
-          lineHeight: layout.titleLineHeight,
-          fontWeight: 500,
-          letterSpacing: "-0.01em",
-          maxWidth: 900,
-        }}
-      >
-        Support that drives revenue,
-        <br />
-        powered by{" "}
-        <span
+      {visible && (
+        <h1
+          className="font-display text-white"
           style={{
-            background:
-              "linear-gradient(90deg, #6B4CFF 0%, #B478FF 55%, #E36BFF 100%)",
-            WebkitBackgroundClip: "text",
-            backgroundClip: "text",
-            WebkitTextFillColor: "transparent",
-            color: "transparent",
+            fontSize: layout.titleFontSize,
+            lineHeight: layout.titleLineHeight,
+            fontWeight: 500,
+            letterSpacing: "-0.01em",
+            maxWidth: 900,
+            margin: 0,
           }}
         >
-          Synergy.AI.
-        </span>
-      </h1>
+          <BlurText
+            text="Support that drives revenue, powered by"
+            animateBy="words"
+            direction="top"
+            delay={120}
+            stepDuration={0.5}
+            className="text-white"
+            style={{
+              justifyContent: "center",
+              margin: 0,
+              fontSize: "inherit",
+              lineHeight: "inherit",
+              fontWeight: "inherit",
+              letterSpacing: "inherit",
+            }}
+          />
+          <BlurText
+            text="Synergy.AI."
+            animateBy="words"
+            direction="top"
+            delay={120}
+            stepDuration={0.5}
+            style={{
+              justifyContent: "center",
+              margin: 0,
+              fontSize: "inherit",
+              lineHeight: "inherit",
+              fontWeight: "inherit",
+              letterSpacing: "inherit",
+              backgroundImage:
+                "linear-gradient(90deg, #6B4CFF 0%, #B478FF 55%, #E36BFF 100%)",
+              WebkitBackgroundClip: "text",
+              backgroundClip: "text",
+              WebkitTextFillColor: "transparent",
+              color: "transparent",
+            }}
+          />
+        </h1>
+      )}
 
       <p
         className="mt-5 text-white/60"
