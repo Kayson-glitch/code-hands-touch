@@ -42,15 +42,19 @@ type Grid = {
 // 3.5×5.5 CSS px — i.e. glyphs sit roughly at 8-9-px optical size with plenty
 // of horizontal & vertical air around them. FONT_PX 9 with weight 500 lands
 // on the same on-screen glyph size (~4×5.5 CSS px) inside the 10-px cell.
-const FONT_PX = 8;
-const CELL_W = 10;
-const CELL_H = 10;
+// Cell + font size are layout-driven (see useHeroLayout). These are updated
+// from the effect before any sampleImage/draw runs, so both module-scope
+// helpers and the render loop read the same values.
+let FONT_PX = 8;
+let CELL_W = 10;
+let CELL_H = 10;
 // Source (good-fella.com ASCIIEffect) uniforms — expressed in UV space,
 // aspect-corrected. See docs/plan.md notes.
 const GOOEY_RADIUS_UV = 0.048;
 const GOOEY_SOFTNESS_UV = 0.028;
 const GOOEY_NOISE = 0.011;
-const HANDS_VISUAL_MAX_W = 1440;
+// Default cap; real cap comes from layout.handsMaxWidth.
+const HANDS_VISUAL_MAX_W_DEFAULT = 1440;
 // Max whole-scene parallax drift on hover, in CSS pixels. Small — mirrors the
 // source's "the picture leans toward the finger" feel.
 const PARALLAX_MAX = 13;
@@ -404,7 +408,8 @@ function resolveViewportLength(value: string, viewportW: number, viewportH: numb
 }
 
 function getHandsVisualRect(layout: HeroLayout, viewportW: number, viewportH: number) {
-  const visualW = Math.min(viewportW, HANDS_VISUAL_MAX_W);
+  const cap = layout.handsMaxWidth ?? HANDS_VISUAL_MAX_W_DEFAULT;
+  const visualW = Math.min(viewportW, cap);
   return {
     x: (viewportW - visualW) * 0.5,
     y: resolveViewportLength(layout.handsTop, viewportW, viewportH),
