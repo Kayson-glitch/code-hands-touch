@@ -94,46 +94,15 @@ const FRAG = /* glsl */ `
     return (uv - 0.5) * scale + 0.5;
   }
 
-  // ---- Glitch sampler: RGB split + scanlines + occasional horizontal tear ----
-  vec3 sampleGlitched(vec2 sUv, float intensity, float burstK) {
-    vec2 res = uResolution;
+  // ---- Chromatic-aberration sampler: RGB split along a slowly rotating axis ----
+  vec3 sampleChroma(vec2 sUv, float pxAmount) {
     float t = uTime;
-
-    // Per-row jitter (stable per scanline, evolves with time)
-    float rowH = hash(vec2(floor(sUv.y * res.y * 0.5), floor(t * 6.0)));
-    float baseShift = (rowH - 0.5) * 2.0; // -1..1
-
-    // Occasional horizontal tear bands
-    float tearRate = mix(0.9, 3.2, burstK);
-    float tearSeed = hash(vec2(floor(sUv.y * res.y / 4.0), floor(t * tearRate)));
-    float tearGate = step(mix(0.985, 0.94, burstK), tearSeed);
-    float tearShift = (hash(vec2(tearSeed, floor(t * tearRate))) - 0.5) * 8.0 * (0.5 + burstK * 2.5);
-
-    // Whole-frame flash-shift during burst
-    float flashGate = step(0.7, hash(vec2(floor(t * 11.0), 3.7))) * burstK;
-    float flashShift = (hash(vec2(floor(t * 11.0), 9.1)) - 0.5) * 6.0 * flashGate;
-
-    float baseAmp = mix(0.8, 2.4, intensity) * (1.0 + burstK * 2.5);
-    float totalPx = baseShift * baseAmp + tearShift * tearGate + flashShift;
-    float dx = totalPx / res.x;
-
-    vec2 uvR = sUv + vec2( dx, 0.0);
-    vec2 uvG = sUv;
-    vec2 uvB = sUv - vec2( dx, 0.0);
-
-    float r = texture2D(uVideoTex, uvR).r;
-    float g = texture2D(uVideoTex, uvG).g;
-    float b = texture2D(uVideoTex, uvB).b;
-    vec3 c = vec3(r, g, b);
-
-    // Scanlines
-    float scan = sin(sUv.y * res.y * 1.2) * (0.04 + burstK * 0.05);
-    c *= (1.0 - scan);
-
-    // Brightness spike on flash frames
-    c += vec3(flashGate * 0.08);
-
-    return c;
+    float ang = t * 0.4;
+    vec2 dir = vec2(cos(ang), sin(ang)) * (pxAmount / uResolution.x);
+    float r = texture2D(uVideoTex, sUv + dir).r;
+    float g = texture2D(uVideoTex, sUv).g;
+    float b = texture2D(uVideoTex, sUv - dir).b;
+    return vec3(r, g, b);
   }
 
   void main() {
@@ -151,8 +120,15 @@ const FRAG = /* glsl */ `
     // Cover-fit to preserve aspect (no stretch)
     vec2 sampleUv = coverUV(videoUv, uResolution, uVideoRes);
 
-    float burstK = smoothstep(0.0, 0.15, uBurn) * (1.0 - smoothstep(0.85, 1.0, uBurn));
-    vec3 col = sampleGlitched(sampleUv, 0.35, burstK);
+    // Base chromatic aberration is always on but very subtle (edge fringe only).
+    // During burn, ramp it up and add a low-frequency "liquid" jitter.
+    float burstK = smoothstep(0.0, 0.18, uBurn) * (1.0 - smoothstep(0.85, 1.0, uBurn));
+    float basePx = 1.6;
+    float burstPx = burstK * 5.0;
+    // Sporadic quick pulse -> instant fringe up to ~9px, then relax.
+    float pulse = step(0.94, fract(sin(uTime * 3.7) * 43758.5453)) * burstK;
+    float chromaPx = basePx + burstPx + pulse * 4.0;
+    vec3 col = sampleChroma(sampleUv, chromaPx);
 
     // ---- Burn-through: paper burns from center outward, revealing black ----
     float b = clamp(uBurn, 0.0, 1.0);
