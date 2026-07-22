@@ -31,9 +31,9 @@ export function ScrollHint({ visible = true }: { visible?: boolean }) {
   }, [dismissed]);
 
   const on = visible && entered && !dismissed;
-  // Exit animation: bouncy lift with a small pre-dip, then a soft overshoot
-  // handled entirely by a spring-like cubic-bezier on transform.
-  const translateY = dismissed ? -72 : 0;
+  // Exit animation: soft scale-out only, no vertical displacement so the
+  // centered hint stays visually anchored as it fades away.
+  const translateY = 0;
   const scale = dismissed ? 0.94 : 1;
 
   return (
