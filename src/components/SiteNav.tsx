@@ -35,8 +35,7 @@ export function SiteNav() {
 
   const isDark = theme === "dark";
   const fg = isDark ? "text-white" : "text-black";
-  const subtle = isDark ? "text-white/70" : "text-black/70";
-  const hoverFg = isDark ? "hover:text-white" : "hover:text-black";
+  const navItem = `${fg} opacity-50 hover:opacity-100 transition-opacity duration-200`;
   const ctaClass = isDark
     ? "bg-white text-black"
     : "bg-black text-white";
@@ -70,23 +69,23 @@ export function SiteNav() {
 
       {/* Center menu */}
       <ul
-        className={`pointer-events-auto hidden items-center gap-10 md:flex ${fg}`}
+        className="pointer-events-auto hidden items-center gap-10 md:flex"
         style={{ fontSize: 14, lineHeight: "22px" }}
       >
-        <li className="flex cursor-pointer items-center gap-1">
+        <li className={`flex cursor-pointer items-center gap-1 ${navItem}`}>
           Platform <Chevron />
         </li>
-        <li className="flex cursor-pointer items-center gap-1">
+        <li className={`flex cursor-pointer items-center gap-1 ${navItem}`}>
           Solution <Chevron />
         </li>
-        <li className="cursor-pointer">Pricing</li>
-        <li className="cursor-pointer">Company Hub</li>
+        <li className={`cursor-pointer ${navItem}`}>Pricing</li>
+        <li className={`cursor-pointer ${navItem}`}>Company Hub</li>
       </ul>
 
       {/* Right actions */}
       <div className="pointer-events-auto flex items-center gap-4">
         <button
-          className={`${subtle} ${hoverFg} transition-colors`}
+          className={navItem}
           style={{ fontSize: 14, lineHeight: "22px" }}
         >
           Log In
@@ -98,6 +97,17 @@ export function SiteNav() {
           Book a Demo
         </button>
       </div>
+
+      {/* Bottom divider: white at 10% opacity as a soft gradient */}
+      <div
+        className="pointer-events-none absolute bottom-0 left-1/2 -translate-x-1/2"
+        style={{
+          width: "100%",
+          height: 1,
+          background:
+            "linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.1) 50%, transparent 100%)",
+        }}
+      />
     </nav>
   );
 }
@@ -109,7 +119,6 @@ function Chevron() {
       height="10"
       viewBox="0 0 10 10"
       fill="none"
-      className="opacity-70"
     >
       <path
         d="M2 3.5L5 6.5L8 3.5"
