@@ -15,6 +15,7 @@ export function IntroPreloader({
 }) {
   const [displayPct, setDisplayPct] = useState(0);
   const [hasProgress, setHasProgress] = useState(true);
+  const displayPctRef = useRef(0);
   const doneRef = useRef(false);
   const realPctRef = useRef(0);
   const downloadDoneRef = useRef(false);
@@ -56,12 +57,9 @@ export function IntroPreloader({
 
       // Display climbs at a bounded rate, but never exceeds real progress.
       const target = realPctRef.current;
-      setDisplayPct((prev) => {
-        const maxAllowed = prev + CLIMB_RATE * dt;
-        return Math.min(target, maxAllowed);
-      });
-
-      const currentDisplay = Math.min(target, displayPct + CLIMB_RATE * dt);
+      const currentDisplay = Math.min(target, displayPctRef.current + CLIMB_RATE * dt);
+      displayPctRef.current = currentDisplay;
+      setDisplayPct(currentDisplay);
 
       if (downloadDoneRef.current && currentDisplay >= 100) {
         if (holdStartRef.current === null) {
