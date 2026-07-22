@@ -173,15 +173,15 @@ const FRAG = /* glsl */ `
     // During burst, video is frozen on the last frame — if that frame is dark,
     // content-adaptive weights collapse to 0 and the glitch disappears. Lift a
     // baseline for burst so the effect is visible independent of luminance.
-    float wHiB   = max(wHi,  burstK * 0.85);
-    float wMidB  = max(wMid, burstK * 0.75);
-    float wEdgeB = max(wEdge, burstK * 0.35);
+    float wHiB   = max(wHi,  burstK * 0.95);
+    float wMidB  = max(wMid, burstK * 0.90);
+    float wEdgeB = max(wEdge, burstK * 0.55);
     float chromaGain = wHiB * (0.7 + 0.6 * wEdgeB);
     chromaPx *= chromaGain;
 
     // Shard activity is gated to the mid peak so front/back shards silently
     // vanish before and after the burst.
-    float shardK = smoothstep(0.30, 0.55, uBurn) * (1.0 - smoothstep(0.72, 0.90, uBurn));
+    float shardK = smoothstep(0.10, 0.35, uBurn) * (1.0 - smoothstep(0.82, 0.96, uBurn));
 
     // Mid-ground mosaic cells (subtle, low trigger).
     vec2 jitteredUv = sampleUv;
@@ -193,8 +193,15 @@ const FRAG = /* glsl */ `
       vec2 cellId = floor(gl_FragCoord.xy / cell);
       float ch  = hash(cellId + vec2(floor(uTime * 20.0), 0.0));
       float ch2 = hash(cellId + vec2(7.31, floor(uTime * 20.0)));
-      float cellTrig = step(0.94, ch) * shardK; // ~6% cells
-      jitteredUv += vec2((ch - 0.5) * 16.0, (ch2 - 0.5) * 5.0) * cellTrig * uShardMul / uResolution.xy;
+      float cellTrig = step(0.90, ch) * shardK; // ~10% cells
+      jitteredUv += vec2((ch - 0.5) * 22.0, (ch2 - 0.5) * 7.0) * cellTrig * uShardMul / uResolution.xy;
+
+      // Micro-tremor on each active mosaic cell so shards jitter continuously
+      // instead of only snapping between hash frames.
+      float jPhase = ch * 6.2831;
+      float jx = sin(uTime * 58.0 + jPhase) + sin(uTime * 91.0 + jPhase * 2.3);
+      float jy = cos(uTime * 47.0 + jPhase * 1.7) + sin(uTime * 73.0 + jPhase * 0.9);
+      jitteredUv += vec2(jx * 1.4, jy * 0.9) * cellTrig * uShardMul / uResolution.xy;
 
       // Foreground horizontal shard bands — varying stripe heights.
       float bandTier = fract(sin(floor(uTime * 12.0)) * 12345.678);
@@ -202,9 +209,12 @@ const FRAG = /* glsl */ `
       float rowId = floor(gl_FragCoord.y / bandH);
       float bh  = hash(vec2(rowId, floor(uTime * 20.0)));
       float bh2 = hash(vec2(rowId + 91.7, floor(uTime * 20.0)));
-      bandTrigger = step(0.78, bh) * shardK; // ~22% bands
-      bandShiftPx = (bh2 - 0.5) * 52.0 * bandTrigger * uShardMul; // ±26px
-      jitteredUv.x += bandShiftPx / uResolution.x;
+      bandTrigger = step(0.72, bh) * shardK; // ~28% bands
+      bandShiftPx = (bh2 - 0.5) * 66.0 * bandTrigger * uShardMul;
+      // High-frequency horizontal tremor superimposed on active bands.
+      float bandTremor = sin(uTime * 84.0 + rowId * 1.37) * 2.4 * bandTrigger * uShardMul;
+      jitteredUv.x += (bandShiftPx + bandTremor) / uResolution.x;
+      jitteredUv.y += sin(uTime * 63.0 + rowId * 0.83) * 0.9 * bandTrigger * uShardMul / uResolution.y;
     }
 
     // Chromatic aberration direction: radial from burn center → liquid outward
@@ -236,22 +246,22 @@ const FRAG = /* glsl */ `
     // gated by burstK so it silently vanishes at the edges.
     if (burstK > 0.0) {
       float grain = (hash(gl_FragCoord.xy + vec2(uTime * 91.3, uTime * 57.1)) - 0.5)
-                    * 0.016 * burstK * (0.4 + 0.6 * wMidB) * uGrainMul;
+                    * 0.032 * burstK * (0.4 + 0.6 * wMidB) * uGrainMul;
       col += vec3(grain);
     }
 
     // Ultra-thin scanline shimmer during the peak — ±1.5% brightness ripple.
     if (peakK > 0.0) {
       float sl = sin(gl_FragCoord.y * 3.14159 + uTime * 42.0);
-      col *= 1.0 + sl * 0.015 * peakK * (0.4 + 0.6 * wMidB) * uGrainMul;
+      col *= 1.0 + sl * 0.030 * peakK * (0.4 + 0.6 * wMidB) * uGrainMul;
     }
     col = clamp(col, 0.0, 1.0);
 
     // Subtle brightness/gamma flicker during burn — glitch feel, no white flashes.
     if (burstK > 0.0) {
-      float flick = (fract(sin(uTime * 17.3) * 91234.123) - 0.5) * 0.08 * burstK * (0.4 + 0.6 * wMidB) * uGlitchMul;
+      float flick = (fract(sin(uTime * 17.3) * 91234.123) - 0.5) * 0.16 * burstK * (0.4 + 0.6 * wMidB) * uGlitchMul;
       col = clamp(col * (1.0 + flick), 0.0, 1.0);
-      float g = 1.0 + (fract(sin(uTime * 5.9) * 12345.678) - 0.5) * 0.06 * peakK * uGlitchMul;
+      float g = 1.0 + (fract(sin(uTime * 5.9) * 12345.678) - 0.5) * 0.12 * peakK * uGlitchMul;
       col = pow(col, vec3(g));
     }
 
