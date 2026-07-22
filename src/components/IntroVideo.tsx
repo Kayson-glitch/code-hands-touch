@@ -255,11 +255,14 @@ const FRAG = /* glsl */ `
     float b = clamp(uBurn, 0.0, 1.0);
     if (b > 0.0) {
       float t = uTime;
+      // Squash Y so the burn front is a wide ellipse (~1.75:1), matching
+      // unseen.co/world's horizontally elongated silhouette.
+      vec2 pe = vec2(p.x, p.y * 1.75);
       // ---- Domain-warp the sample point so the edge is non-circular ----
       // Two low-freq fbm channels displace p → petal / tongue-like contour.
-      float wx = fbm(p * uWarpFreq + vec2( t * 0.09,  t * 0.06));
-      float wy = fbm(p * uWarpFreq + vec2(-t * 0.07,  t * 0.11) + 17.3);
-      vec2  pw = p + (vec2(wx, wy) - 0.5) * uWarpAmp;
+      float wx = fbm(pe * uWarpFreq + vec2( t * 0.09,  t * 0.06));
+      float wy = fbm(pe * uWarpFreq + vec2(-t * 0.07,  t * 0.11) + 17.3);
+      vec2  pw = pe + (vec2(wx, wy) - 0.5) * uWarpAmp;
 
       // Anisotropic long-streak noise (stretched horizontally) → flame tongues.
       float streak = fbm(vec2(pw.x * uStreakFreq, pw.y * 1.6) + vec2(t * 0.35, -t * 0.2));
@@ -274,7 +277,8 @@ const FRAG = /* glsl */ `
       float ang = atan(pw.y, pw.x);
       float wob = (sin(ang * 3.0 * uAngularFreq + t * 0.7) * 0.045
                 +  sin(ang * 5.0 * uAngularFreq - t * 0.9) * 0.030
-                +  sin(ang * 9.0 * uAngularFreq + t * 1.3) * 0.018) * uAngularAmp;
+                +  sin(ang * 9.0 * uAngularFreq + t * 1.3) * 0.018) * uAngularAmp
+                + 0.05 * cos(ang * 2.0); // bias horizontal lobes
 
       float len = length(pw);
       float d = len - r + distort * 0.55 + wob; // signed distance from the front
