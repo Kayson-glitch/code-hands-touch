@@ -366,10 +366,12 @@ export function IntroVideo({
       uniforms.uProgress.value = progress;
       uniforms.uTime.value = time;
 
-      // Start burn once scroll reaches the end; drive its own 1.6s timeline.
-      if (!burnActive && progress >= 1) {
+      // Start burn the moment the video reaches its last frame — no extra scroll gap.
+      if (!burnActive && videoProgress >= 1) {
         burnActive = true;
         burnStartedAt = now;
+        progress = 1;
+        targetProgress = 1;
         pauseVideo();
       }
       if (burnActive) {
