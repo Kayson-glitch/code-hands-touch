@@ -475,6 +475,14 @@ export function IntroVideo({
     let burnActive = false;
     let forceFinish = false;
     let burnStartTs = -1;
+    // Monotonic shader clock — advances every frame while burn is active so
+    // sin(uTime * ...) terms never rewind (rewinding causes a visible flash).
+    let burnClock = 0;
+    // One-shot: pause video and freeze texture uploads the instant burst starts.
+    let burnVideoFrozen = false;
+    // Hold `fire()` for one extra rendered frame after burstProgress hits 1
+    // so the parent scene switch happens on a fully-drawn final state.
+    let finalFrameRendered = false;
 
     targetProgressRef.current = (v: number) => {
       // Wheel/debug can only advance up to the end of the video segment;
@@ -712,20 +720,35 @@ export function IntroVideo({
       const videoProgress = Math.min(1, progress / VIDEO_FRACTION);
       // Auto-burst: once the video segment is complete, drive the burn
       // through independently of scroll.
+      if (videoProgress >= 1 && burnStartTs < 0) {
+        burnStartTs = now;
+      }
+      // Once burst has started it is irreversible; user scroll-back cannot
+      // retract it (that used to cause the burst to restart from 0 = flash).
+      const burstEngaged = burnStartTs >= 0;
+      if (burstEngaged) {
+        // Clamp target so the video-phase state can't be pulled back below the
+        // burst boundary and won't rewind uProgress / video mediaTime.
+        if (targetProgress < VIDEO_FRACTION) targetProgress = VIDEO_FRACTION;
+        if (progress < VIDEO_FRACTION) progress = VIDEO_FRACTION;
+      }
+      const burstProgress = burstEngaged
+        ? clamp01((now - burnStartTs) / BURN_AUTO_MS)
+        : 0;
+      // Composite: while bursting, freeze the video-segment contribution at
+      // VIDEO_FRACTION so uProgress advances purely with burstProgress.
+      const compositeProgress = burstEngaged
+        ? Math.min(1, VIDEO_FRACTION + burstProgress * (1 - VIDEO_FRACTION))
+        : Math.min(progress, VIDEO_FRACTION);
+      if (burstEngaged) {
+        burnClock += dt;
+      }
+      // Legacy no-op branch kept for readability
       if (videoProgress >= 1) {
         if (burnStartTs < 0) burnStartTs = now;
       }
-      const burstProgress = burnStartTs < 0
-        ? 0
-        : clamp01((now - burnStartTs) / BURN_AUTO_MS);
-      // Synthesize a total progress value that includes the auto burst so
-      // uProgress / uTime / parent notifications stay consistent.
-      const compositeProgress = Math.min(
-        1,
-        Math.min(progress, VIDEO_FRACTION) + burstProgress * (1 - VIDEO_FRACTION),
-      );
       // ---- Video chase: playbackRate is primary, seek is emergency lane ----
-      if (video.duration && !Number.isNaN(video.duration) && firstFrameReady) {
+      if (!burstEngaged && video.duration && !Number.isNaN(video.duration) && firstFrameReady) {
         const duration = video.duration;
         const targetTime = Math.min(
           duration,
@@ -754,9 +777,12 @@ export function IntroVideo({
         }
       }
       uniforms.uProgress.value = compositeProgress;
-      // Tie shader time to scroll progress, not wall-clock time. When the user
-      // stops scrolling, the burn/glitch stops too instead of drifting forward.
-      uniforms.uTime.value = compositeProgress * 18;
+      // Pre-burst: tie shader time to scroll progress (glitch stops when
+      // the user stops scrolling). During burst: use a monotonic clock so
+      // sin(uTime * ...) phases never rewind, which would flash.
+      uniforms.uTime.value = burstEngaged
+        ? VIDEO_FRACTION * 18 + burnClock * 6.0
+        : compositeProgress * 18;
       // Sync debug uniforms from ref every frame (cheap, no shader recompile).
       const bp = burnParamsRef.current;
       uniforms.uWarpAmp.value = bp.warpAmp;
@@ -775,24 +801,25 @@ export function IntroVideo({
       uniforms.uMistA.value = bp.mistAlpha;
       uniforms.uHaloFalloff.value = bp.haloFalloff;
 
-      // Burn is fully scroll-driven and reversible: uBurn tracks the second
-      // segment of `progress` directly. Stops when the wheel stops, retracts
-      // when the wheel goes back up. Entering the next screen (fire below) is
-      // the only irreversible step.
-      if (videoProgress >= 1) {
-        if (!burnActive) {
-          burnActive = true;
-        }
+      // Burst is irreversible: once engaged it only moves forward. Freeze the
+      // video (pause + stop uploading new frames) exactly once at start so a
+      // stray decoded frame can't refresh the canvas mid-burn.
+      if (burstEngaged && !burnActive) {
+        burnActive = true;
+      }
+      if (burstEngaged && !burnVideoFrozen) {
         pauseVideo();
-      } else if (burnActive) {
-        burnActive = false;
-        burnStartTs = -1;
+        mediaFrameDirty = false;
+        videoTex.needsUpdate = false;
+        burnVideoFrozen = true;
       }
       uniforms.uBurn.value = burstProgress;
 
       // Only upload a new video texture when a new frame actually arrived.
-      if (mediaFrameDirty) {
+      if (mediaFrameDirty && !burstEngaged) {
         videoTex.needsUpdate = true;
+        mediaFrameDirty = false;
+      } else if (burstEngaged) {
         mediaFrameDirty = false;
       }
       const progressChanged = Math.abs(compositeProgress - lastRenderedProgress) > PROGRESS_RENDER_EPSILON;
@@ -826,7 +853,14 @@ export function IntroVideo({
         lastNotifiedBurst = burstProgress;
       }
 
-      if ((burnActive && burstProgress >= 1) || forceFinish) fire();
+      // Hold `fire()` for one extra rendered frame after burst completes so
+      // the parent scene switch happens on a fully-drawn final state (no
+      // flash from swapping mid-composite).
+      if (burnActive && burstProgress >= 1) {
+        if (finalFrameRendered) fire();
+        else if (needsRender) finalFrameRendered = true;
+      }
+      if (forceFinish) fire();
     };
     rafId = requestAnimationFrame(loop);
 
