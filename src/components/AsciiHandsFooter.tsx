@@ -1282,6 +1282,12 @@ export function AsciiHandsFooter({ videoSrc }: { videoSrc?: string } = {}) {
   const handleIntroEnded = () => {
     if (stageRef.current !== "orb") return;
     setBgDark(true);
+    // Also paint html/body black immediately, so the single frame where
+    // <IntroVideo> unmounts can't reveal the theme's white body background.
+    if (typeof document !== "undefined") {
+      document.documentElement.style.backgroundColor = "#0a0a0a";
+      document.body.style.backgroundColor = "#0a0a0a";
+    }
     setStage("hands");
     // Keep the intro layer mounted briefly so the burst overlay can fade out
     // on top of it, then unmount.
@@ -1303,6 +1309,21 @@ export function AsciiHandsFooter({ videoSrc }: { videoSrc?: string } = {}) {
         minHeight: 600,
       }}
     >
+      {/* Fallback black underlay: once the burn ends, keep an always-black
+          full-viewport layer behind everything so no white body background
+          can leak through during single-frame compositing gaps. */}
+      {bgDark && (
+        <div
+          aria-hidden
+          style={{
+            position: "fixed",
+            inset: 0,
+            background: "#000",
+            zIndex: -1,
+            pointerEvents: "none",
+          }}
+        />
+      )}
       <h1 className="sr-only" suppressHydrationWarning>
         Good Fella Studio — ASCII Creation of Adam
       </h1>
