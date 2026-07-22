@@ -29,6 +29,7 @@ export const Route = createFileRoute("/")({
 
 function Index() {
   const [videoSrc, setVideoSrc] = useState<string | null>(null);
+  const [handoffVideo, setHandoffVideo] = useState<HTMLVideoElement | null>(null);
   const [shown, setShown] = useState(false);
   const [debug, setDebug] = useState(false);
 
@@ -37,7 +38,8 @@ function Index() {
     if (p.get("debug") === "1" || p.get("burn") === "1") setDebug(true);
   }, []);
 
-  const handleReady = useCallback((url: string) => {
+  const handleReady = useCallback((url: string, v: HTMLVideoElement | null) => {
+    setHandoffVideo(v);
     setVideoSrc(url);
     // next frame → fade in
     requestAnimationFrame(() => requestAnimationFrame(() => setShown(true)));
@@ -67,7 +69,7 @@ function Index() {
             transition: "opacity 350ms ease-out",
           }}
         >
-          <AsciiHandsFooter videoSrc={videoSrc} debug={debug} />
+          <AsciiHandsFooter videoSrc={videoSrc} debug={debug} handoffVideo={handoffVideo} />
           <SiteNav />
           <HeroCopy />
           <FinChatDock />
