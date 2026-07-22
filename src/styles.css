@@ -164,3 +164,25 @@ html, body {
   75%  { background-position: 60% 50%;  background-size: 260% 240%; }
   100% { background-position: 0% 50%;   background-size: 220% 220%; }
 }
+
+@keyframes aurora-drift-a {
+  0%   { background-position: 0% 0%;   background-size: 160% 160%; }
+  50%  { background-position: 35% 15%; background-size: 195% 185%; }
+  100% { background-position: 0% 0%;   background-size: 160% 160%; }
+}
+
+@keyframes aurora-drift-b {
+  0%   { background-position: 100% 0%; background-size: 170% 170%; }
+  50%  { background-position: 65% 20%; background-size: 205% 195%; }
+  100% { background-position: 100% 0%; background-size: 170% 170%; }
+}
+
+@keyframes aurora-drift-c {
+  0%   { background-position: 50% 0%;  background-size: 150% 150%; }
+  50%  { background-position: 45% 25%; background-size: 185% 175%; }
+  100% { background-position: 50% 0%;  background-size: 150% 150%; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [style*="aurora-drift"] { animation: none !important; }
+}
