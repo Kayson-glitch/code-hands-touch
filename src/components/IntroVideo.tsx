@@ -219,6 +219,10 @@ const FRAG = /* glsl */ `
       col = pow(col, vec3(g));
     }
 
+    // Highlight roll-off: hard-cap channels at ~0.985 to prevent any bright
+    // flash frame from the combined chroma/glitch layers.
+    col = col - max(vec3(0.0), col - vec3(0.985));
+
     // ---- Burn-through: paper burns from center outward, revealing black ----
     float b = clamp(uBurn, 0.0, 1.0);
     if (b > 0.0) {
