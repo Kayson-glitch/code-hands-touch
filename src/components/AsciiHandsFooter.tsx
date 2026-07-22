@@ -42,15 +42,19 @@ type Grid = {
 // 3.5×5.5 CSS px — i.e. glyphs sit roughly at 8-9-px optical size with plenty
 // of horizontal & vertical air around them. FONT_PX 9 with weight 500 lands
 // on the same on-screen glyph size (~4×5.5 CSS px) inside the 10-px cell.
-const FONT_PX = 8;
-const CELL_W = 10;
-const CELL_H = 10;
+// Cell + font size are layout-driven (see useHeroLayout). These are updated
+// from the effect before any sampleImage/draw runs, so both module-scope
+// helpers and the render loop read the same values.
+let FONT_PX = 8;
+let CELL_W = 10;
+let CELL_H = 10;
 // Source (good-fella.com ASCIIEffect) uniforms — expressed in UV space,
 // aspect-corrected. See docs/plan.md notes.
 const GOOEY_RADIUS_UV = 0.048;
 const GOOEY_SOFTNESS_UV = 0.028;
 const GOOEY_NOISE = 0.011;
-const HANDS_VISUAL_MAX_W = 1440;
+// Default cap; real cap comes from layout.handsMaxWidth.
+const HANDS_VISUAL_MAX_W_DEFAULT = 1440;
 // Max whole-scene parallax drift on hover, in CSS pixels. Small — mirrors the
 // source's "the picture leans toward the finger" feel.
 const PARALLAX_MAX = 13;
@@ -404,7 +408,8 @@ function resolveViewportLength(value: string, viewportW: number, viewportH: numb
 }
 
 function getHandsVisualRect(layout: HeroLayout, viewportW: number, viewportH: number) {
-  const visualW = Math.min(viewportW, HANDS_VISUAL_MAX_W);
+  const cap = layout.handsMaxWidth ?? HANDS_VISUAL_MAX_W_DEFAULT;
+  const visualW = Math.min(viewportW, cap);
   return {
     x: (viewportW - visualW) * 0.5,
     y: resolveViewportLength(layout.handsTop, viewportW, viewportH),
@@ -454,6 +459,12 @@ export function AsciiHandsFooter({ videoSrc, debug }: { videoSrc?: string; debug
     let raf = 0;
     let running = true;
 
+    // Sync module-scope cell/font from current layout tier so both sampling
+    // and drawing use the same units. Large screens get bigger cells.
+    CELL_W = layout.cellSize;
+    CELL_H = layout.cellSize;
+    FONT_PX = Math.max(6, Math.round(layout.cellSize * 0.8));
+
     const prefersReduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     if (prefersReduce) {
       introDoneRef.current = true;
@@ -485,7 +496,10 @@ export function AsciiHandsFooter({ videoSrc, debug }: { videoSrc?: string; debug
     };
 
     const resize = () => {
-      const dpr = window.devicePixelRatio || 1;
+      // Cap DPR at 2 — on 3x mobile / 4K retina the fill-rate saving is huge
+      // and the ASCII glyphs stay crisp because the source grid is already
+      // coarse (10-14 CSS px per cell).
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
       const w = canvas.clientWidth;
       const h = canvas.clientHeight;
       canvas.width = Math.floor(w * dpr);
@@ -499,7 +513,14 @@ export function AsciiHandsFooter({ videoSrc, debug }: { videoSrc?: string; debug
       resize();
     });
 
-    const ro = new ResizeObserver(resize);
+    // Debounce resize/resample — dragging the window fires ResizeObserver
+    // hundreds of times per second, and resample is the most expensive path.
+    let resizeTimer = 0;
+    const scheduleResize = () => {
+      window.clearTimeout(resizeTimer);
+      resizeTimer = window.setTimeout(resize, 80);
+    };
+    const ro = new ResizeObserver(scheduleResize);
     ro.observe(canvas);
 
     // Trigger intro on first visibility.
@@ -644,6 +665,12 @@ export function AsciiHandsFooter({ videoSrc, debug }: { videoSrc?: string; debug
     const draw = () => {
       if (!running) return;
       frame++;
+      // While the intro video stage is active the hands canvas is invisible
+      // (opacity 0). Skip all glyph work to keep first-screen CPU quiet.
+      if (stageRef.current === "orb") {
+        raf = requestAnimationFrame(draw);
+        return;
+      }
       const now = performance.now();
       const dt = Math.min(64, now - lastT);
       lastT = now;
@@ -1264,6 +1291,7 @@ export function AsciiHandsFooter({ videoSrc, debug }: { videoSrc?: string; debug
     return () => {
       running = false;
       cancelAnimationFrame(raf);
+      window.clearTimeout(resizeTimer);
       ro.disconnect();
       io.disconnect();
       window.removeEventListener("mousemove", onMove);

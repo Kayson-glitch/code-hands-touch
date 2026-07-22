@@ -357,7 +357,9 @@ export function IntroVideo({
     (video as any).crossOrigin = "anonymous";
 
     const renderer = new THREE.WebGLRenderer({ canvas, antialias: false, alpha: false });
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+    // Shader fill-rate is the main cost; 1.5x DPR keeps the burn/glitch
+    // effects sharp without paying for 2x/3x pixel count on retina/4K.
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5));
     renderer.setClearColor(0x000000, 1);
 
     const scene = new THREE.Scene();
@@ -700,7 +702,7 @@ export function IntroVideo({
         burnActive = false;
       }
       uniforms.uBurn.value = burstProgress;
-      if (firstFrameReady) {
+      if (firstFrameReady && !document.hidden) {
         renderer.render(scene, camera);
       }
 
@@ -765,13 +767,15 @@ export function IntroVideo({
         ref={canvasRef}
         style={{ position: "absolute", inset: 0, width: "100%", height: "100%", display: "block" }}
       />
-      <BurnDebugPanel
+      {debugEnabled && (
+        <BurnDebugPanel
           values={burnParams}
           onChange={setBurnParams}
           onReset={() => setBurnParams(DEFAULT_BURN_PARAMS)}
           onJumpToBurst={() => targetProgressRef.current(0.605)}
           onFinish={() => forceFinishRef.current()}
-      />
+        />
+      )}
     </div>
   );
 }
