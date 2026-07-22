@@ -10,7 +10,7 @@ export function HeroCopy() {
       const detail = (e as CustomEvent<"light" | "dark">).detail;
       if (detail === "dark") {
         // Let the hands intro animation start, then fade in together.
-        window.setTimeout(() => setVisible(true), 80);
+        window.setTimeout(() => setVisible(true), 40);
       } else {
         setVisible(false);
       }
