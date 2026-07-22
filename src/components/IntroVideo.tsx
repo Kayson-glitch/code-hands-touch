@@ -335,6 +335,12 @@ export function IntroVideo({
   const [burnParams, setBurnParams] = useState<BurnParams>(DEFAULT_BURN_PARAMS);
   const burnParamsRef = useRef<BurnParams>(burnParams);
   useEffect(() => { burnParamsRef.current = burnParams; }, [burnParams]);
+  const debugEnabled = debug ?? import.meta.env.DEV;
+  const debugRef = useRef(debugEnabled);
+  useEffect(() => { debugRef.current = debugEnabled; }, [debugEnabled]);
+  // Exposed to the debug panel so it can jump / finish.
+  const targetProgressRef = useRef<(v: number) => void>(() => {});
+  const forceFinishRef = useRef<() => void>(() => {});
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -416,7 +422,16 @@ export function IntroVideo({
     let running = true;
     let burnStartedAt = 0;
     let burnActive = false;
+    let forceFinish = false;
     const t0 = performance.now();
+
+    targetProgressRef.current = (v: number) => {
+      targetProgress = Math.min(1, Math.max(0, v));
+    };
+    forceFinishRef.current = () => {
+      forceFinish = true;
+      targetProgress = 1;
+    };
 
     const clamp01 = (value: number) => Math.min(1, Math.max(0, value));
 
@@ -490,7 +505,8 @@ export function IntroVideo({
 
     const onWheel = (e: WheelEvent) => {
       if (firedRef.current) return;
-      if (burnActive) { e.preventDefault(); return; }
+      // In debug mode allow scrolling through and back out of the burn phase.
+      if (burnActive && !debugRef.current) { e.preventDefault(); return; }
       e.preventDefault();
       // Normalize delta across PIXEL/LINE/PAGE modes.
       let dy = e.deltaY;
@@ -569,17 +585,24 @@ export function IntroVideo({
       uniforms.uMistA.value = bp.mistAlpha;
       uniforms.uHaloFalloff.value = bp.haloFalloff;
 
-      // Start burn the moment the video reaches its last frame — no extra scroll gap.
+      // Burn is now scroll-driven via the second segment of `progress`.
+      // Enter burn state the moment the video reaches its last frame.
       if (!burnActive && videoProgress >= 1) {
         burnActive = true;
         burnStartedAt = now;
-        progress = 1;
-        targetProgress = 1;
         pauseVideo();
       }
       if (burnActive) {
-        const bt = Math.min(1, (now - burnStartedAt) / BURN_DURATION_MS);
-        uniforms.uBurn.value = bt;
+        if (debugRef.current) {
+          // Debug: fully scroll-driven, reversible. uBurn tracks burstProgress directly.
+          uniforms.uBurn.value = burstProgress;
+        } else {
+          // Production: keep the original time-based auto-run, irreversible.
+          const bt = Math.min(1, (now - burnStartedAt) / BURN_DURATION_MS);
+          uniforms.uBurn.value = bt;
+          // Lock target so upward scroll can't reverse the burn.
+          if (targetProgress < 1) targetProgress = 1;
+        }
       }
       if (firstFrameReady) {
         renderer.render(scene, camera);
@@ -607,7 +630,9 @@ export function IntroVideo({
         lastNotifiedBurst = burstProgress;
       }
 
-      if (burnActive && uniforms.uBurn.value >= 1) fire();
+      if (burnActive && uniforms.uBurn.value >= 1) {
+        if (!debugRef.current || forceFinish) fire();
+      }
     };
     rafId = requestAnimationFrame(loop);
 
