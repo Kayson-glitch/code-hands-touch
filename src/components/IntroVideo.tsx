@@ -147,16 +147,15 @@ const FRAG = /* glsl */ `
     // Base chromatic aberration is always on but very subtle (edge fringe only).
     // During burn, ramp it up dramatically and add liquid-pulse jitter.
     // Non-linear envelope: soft in, big mid-burst punch, gentle release.
-    float burstK = smoothstep(0.0, 0.15, uBurn) * (1.0 - smoothstep(0.9, 1.0, uBurn));
-    float peakK  = smoothstep(0.20, 0.55, uBurn) * (1.0 - smoothstep(0.70, 0.95, uBurn));
+    // Widen active windows so glitch/shard read across the full diffusion.
+    float burstK = smoothstep(0.0, 0.08, uBurn) * (1.0 - smoothstep(0.94, 1.0, uBurn));
+    float peakK  = smoothstep(0.10, 0.40, uBurn) * (1.0 - smoothstep(0.80, 0.98, uBurn));
     float basePx = 1.6;
-    // Ramp peak split up to ~11px in mid-burn.
-    float burstPx = (burstK * 6.0 + peakK * 5.5) * uChromaMul;
-    // Low-frequency liquid swell for a continuous "flowing" refraction.
-    float swell = (0.5 + 0.5 * sin(uTime * 5.2)) * peakK * 3.2 * uChromaMul;
-    // Faster, more frequent sporadic pulse -> up to ~16px spikes.
-    float pulseA = step(0.88, fract(sin(uTime * 7.4) * 43758.5453)) * burstK * 6.0 * uChromaMul;
-    float pulseB = step(0.82, fract(sin(uTime * 11.1 + 1.3) * 24634.6345)) * peakK * 4.0 * uChromaMul;
+    // Stronger split — the frozen last frame is often dark, so we need more punch.
+    float burstPx = (burstK * 9.0 + peakK * 8.5) * uChromaMul;
+    float swell = (0.5 + 0.5 * sin(uTime * 5.2)) * peakK * 5.0 * uChromaMul;
+    float pulseA = step(0.84, fract(sin(uTime * 7.4) * 43758.5453)) * burstK * 9.0 * uChromaMul;
+    float pulseB = step(0.78, fract(sin(uTime * 11.1 + 1.3) * 24634.6345)) * peakK * 6.5 * uChromaMul;
     float chromaPx = basePx + burstPx + swell + pulseA + pulseB;
 
     // ---- Content-adaptive weighting ----
