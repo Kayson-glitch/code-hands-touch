@@ -3,7 +3,6 @@ import { useEffect, useState } from "react";
 export function ScrollHint({ visible = true }: { visible?: boolean }) {
   const [dismissed, setDismissed] = useState(false);
   const [entered, setEntered] = useState(false);
-  const [offset, setOffset] = useState(0);
 
   useEffect(() => {
     const t = window.setTimeout(() => setEntered(true), 500);
@@ -12,52 +11,28 @@ export function ScrollHint({ visible = true }: { visible?: boolean }) {
 
   useEffect(() => {
     if (dismissed) return;
-    let acc = 0;
-    let raf = 0;
-    const schedule = () => {
-      if (raf) return;
-      raf = window.requestAnimationFrame(() => {
-        raf = 0;
-        setOffset(acc);
-        if (Math.abs(acc) > 140) setDismissed(true);
-      });
-    };
-    const onWheel = (e: WheelEvent) => {
-      acc += e.deltaY;
-      schedule();
-    };
-    let lastTouch: number | null = null;
-    const onTouchStart = (e: TouchEvent) => {
-      lastTouch = e.touches[0]?.clientY ?? null;
-    };
-    const onTouchMove = (e: TouchEvent) => {
-      const y = e.touches[0]?.clientY ?? null;
-      if (lastTouch != null && y != null) {
-        acc += (lastTouch - y);
-        lastTouch = y;
-        schedule();
-      }
-    };
+    // Any scroll intent (wheel / touch / key) triggers the exit animation
+    // once. No follow-scroll — the CSS transition owns the motion so it stays
+    // silky regardless of wheel cadence.
+    const dismiss = () => setDismissed(true);
+    const onWheel = () => dismiss();
+    const onTouchMove = () => dismiss();
     const onKey = (e: KeyboardEvent) => {
-      if (["ArrowDown", "PageDown", "Space", " "].includes(e.key)) { acc += 80; schedule(); }
-      else if (["ArrowUp", "PageUp"].includes(e.key)) { acc -= 80; schedule(); }
+      if (["ArrowDown", "PageDown", "ArrowUp", "PageUp", "Space", " "].includes(e.key)) dismiss();
     };
-    window.addEventListener("wheel", onWheel, { passive: true });
-    window.addEventListener("touchstart", onTouchStart, { passive: true });
-    window.addEventListener("touchmove", onTouchMove, { passive: true });
+    window.addEventListener("wheel", onWheel, { passive: true, once: true });
+    window.addEventListener("touchmove", onTouchMove, { passive: true, once: true });
     window.addEventListener("keydown", onKey);
     return () => {
       window.removeEventListener("wheel", onWheel);
-      window.removeEventListener("touchstart", onTouchStart);
       window.removeEventListener("touchmove", onTouchMove);
       window.removeEventListener("keydown", onKey);
-      if (raf) window.cancelAnimationFrame(raf);
     };
   }, [dismissed]);
 
   const on = visible && entered && !dismissed;
-  const scrollFade = Math.max(0, 1 - Math.abs(offset) / 140);
-  const translateY = on ? -offset * 0.6 : dismissed ? -offset * 0.6 : -6;
+  // Exit animation: drift up ~64px and fade over ~520ms with an ease-out curve.
+  const translateY = dismissed ? -64 : 0;
 
   return (
     <div
@@ -67,12 +42,9 @@ export function ScrollHint({ visible = true }: { visible?: boolean }) {
         left: "50%",
         top: "50%",
         transform: `translate(-50%, calc(-50% + ${translateY}px))`,
-        opacity: on ? scrollFade : 0,
-        transition: dismissed
-          ? "opacity 500ms ease-out"
-          : offset !== 0
-            ? "opacity 120ms linear, transform 120ms linear"
-            : "opacity 600ms ease-out, transform 600ms ease-out",
+        opacity: on ? 1 : 0,
+        transition:
+          "opacity 520ms cubic-bezier(0.22, 1, 0.36, 1), transform 620ms cubic-bezier(0.22, 1, 0.36, 1)",
         pointerEvents: "none",
         zIndex: 90,
         display: "flex",
@@ -80,7 +52,7 @@ export function ScrollHint({ visible = true }: { visible?: boolean }) {
         alignItems: "center",
         gap: 12,
         color: "rgba(0,0,0,0.82)",
-        animation: on && offset === 0 ? "sh-breathe 3.2s ease-in-out infinite" : "none",
+        animation: on ? "sh-breathe 3.2s ease-in-out infinite" : "none",
       }}
     >
       <svg width="22" height="34" viewBox="0 0 22 34" fill="none">
