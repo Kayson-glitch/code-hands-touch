@@ -675,6 +675,8 @@ export function IntroVideo({
           values={burnParams}
           onChange={setBurnParams}
           onReset={() => setBurnParams(DEFAULT_BURN_PARAMS)}
+          onJumpToBurst={() => targetProgressRef.current(0.605)}
+          onFinish={() => forceFinishRef.current()}
         />
       )}
     </div>
