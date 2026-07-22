@@ -10,7 +10,7 @@ export function IntroPreloader({
   onFail,
 }: {
   src: string;
-  onReady: (objectUrl: string) => void;
+  onReady: (objectUrl: string, videoEl: HTMLVideoElement | null) => void;
   onFail: () => void;
 }) {
   const [displayPct, setDisplayPct] = useState(0);
@@ -22,29 +22,112 @@ export function IntroPreloader({
   const holdStartRef = useRef<number | null>(null);
   const rafRef = useRef<number | null>(null);
   const objectUrlRef = useRef<string | null>(null);
+  const handshakeVideoRef = useRef<HTMLVideoElement | null>(null);
+  const handedOffRef = useRef(false);
 
   useEffect(() => {
     const controller = new AbortController();
     let cancelled = false;
 
-    const finish = (url: string) => {
-      if (doneRef.current || cancelled) return;
-      // Prewarm a hidden <video> so first-frame decode has happened before we hand off.
+    // Staged decode handshake:
+    //   A. metadata ready (dims + duration)
+    //   B. first-frame decoded (loadeddata / readyState>=2)
+    //   C. canplay (readyState>=3) so subsequent seeks are cheap
+    //   D. warmup seek to 0 and back (primes the seek path)
+    //   E. one play()/pause() cycle to wake the decoder
+    //   F. requestVideoFrameCallback tick (confirms a frame is compositable)
+    // Any single step may fall through on a 1.5s safety timeout; the whole
+    // handshake is best-effort — if it fails we still hand off the URL and
+    // IntroVideo falls back to its own cold-start path.
+    const waitEvent = (target: HTMLVideoElement, name: string, timeoutMs: number) =>
+      new Promise<void>((resolve) => {
+        let settled = false;
+        const finish = () => {
+          if (settled) return;
+          settled = true;
+          target.removeEventListener(name, finish);
+          resolve();
+        };
+        target.addEventListener(name, finish, { once: true });
+        setTimeout(finish, timeoutMs);
+      });
+
+    const waitFrame = (target: HTMLVideoElement, timeoutMs: number) =>
+      new Promise<void>((resolve) => {
+        let settled = false;
+        const finish = () => { if (settled) return; settled = true; resolve(); };
+        const rvfc = (target as unknown as {
+          requestVideoFrameCallback?: (cb: () => void) => number;
+        }).requestVideoFrameCallback;
+        if (typeof rvfc !== "function") { finish(); return; }
+        try { rvfc.call(target, finish); } catch { finish(); return; }
+        setTimeout(finish, timeoutMs);
+      });
+
+    const runHandshake = async (url: string): Promise<HTMLVideoElement | null> => {
       const v = document.createElement("video");
       v.muted = true;
       v.playsInline = true;
+      v.setAttribute("playsinline", "");
       v.preload = "auto";
+      (v as HTMLVideoElement & { crossOrigin?: string }).crossOrigin = "anonymous";
+      Object.assign(v.style, {
+        position: "fixed",
+        left: "0",
+        top: "0",
+        width: "1px",
+        height: "1px",
+        opacity: "0",
+        pointerEvents: "none",
+        zIndex: "-1",
+      });
+      document.body.appendChild(v);
+      handshakeVideoRef.current = v;
       v.src = url;
-      const done = () => {
-        if (doneRef.current || cancelled) return;
-        doneRef.current = true;
-        onReady(url);
-      };
-      v.addEventListener("loadeddata", done, { once: true });
-      v.addEventListener("error", done, { once: true });
-      // Safety: don't block the UI forever if events never fire.
-      setTimeout(done, 1500);
       try { v.load(); } catch { /* ignore */ }
+      try {
+        // A + B — metadata and first decoded frame
+        if (v.readyState < 1) await waitEvent(v, "loadedmetadata", 1500);
+        if (cancelled) return null;
+        if (v.readyState < 2) await waitEvent(v, "loadeddata", 1500);
+        if (cancelled) return null;
+        // C — canplay (readyState>=3). Skip wait if already there.
+        if (v.readyState < 3) await waitEvent(v, "canplay", 1200);
+        if (cancelled) return null;
+        // D — seek warmup
+        try {
+          v.currentTime = 0;
+          await waitEvent(v, "seeked", 800);
+        } catch { /* ignore */ }
+        if (cancelled) return null;
+        // E — decoder warmup via play/pause
+        try {
+          const p = v.play();
+          if (p && typeof (p as Promise<void>).then === "function") await p;
+          v.pause();
+          try { v.currentTime = 0; } catch { /* ignore */ }
+        } catch { /* ignore (autoplay policy, blob quirks) */ }
+        if (cancelled) return null;
+        // F — one compositable frame
+        await waitFrame(v, 500);
+      } catch { /* fall through */ }
+      return v;
+    };
+
+    const finish = (url: string) => {
+      if (doneRef.current || cancelled) return;
+      doneRef.current = true;
+      runHandshake(url)
+        .then((v) => {
+          if (cancelled) return;
+          handedOffRef.current = true;
+          onReady(url, v);
+        })
+        .catch(() => {
+          if (cancelled) return;
+          handedOffRef.current = true;
+          onReady(url, null);
+        });
     };
 
     let lastTime = performance.now();
@@ -120,6 +203,13 @@ export function IntroPreloader({
       // If we created a URL but never handed it off, revoke it.
       if (objectUrlRef.current && !doneRef.current) {
         URL.revokeObjectURL(objectUrlRef.current);
+      }
+      // If a handshake video was created but never handed off, clean it up.
+      const v = handshakeVideoRef.current;
+      if (v && !handedOffRef.current) {
+        try { v.pause(); } catch { /* ignore */ }
+        try { v.removeAttribute("src"); v.load(); } catch { /* ignore */ }
+        if (v.parentNode) v.parentNode.removeChild(v);
       }
     };
   }, [src, onReady, onFail]);
