@@ -22,7 +22,7 @@ const BURN_DURATION_MS = 3600;
 // Cap a single wheel tick so a hard mouse-wheel notch doesn't jump the progress.
 const MAX_PIXELS_PER_TICK = 260;
 // Symmetric exponential smoothing rate (identical for forward & backward).
-const SMOOTH_RATE = 12;
+const SMOOTH_RATE = 16;
 // Prefer letting the decoder play forward to the target; reserve seeks for coarse correction.
 const SEEK_MIN_INTERVAL_MS = 24;
 const SEEK_EPSILON = 0.1;
@@ -32,13 +32,8 @@ const VIDEO_HARD_SEEK_EPSILON = 0.48;
 const MIN_CHASE_PLAYBACK_RATE = 0.75;
 const MAX_CHASE_PLAYBACK_RATE = 3.2;
 // RAF-aligned seek cooldown, in frames (≈16.7ms @ 60fps).
-const SEEK_COOLDOWN_FRAMES = 1;
-// Two-stage interpolation rates (frame-rate independent).
-const RAW_SMOOTH_RATE_SLOW = 18;
-const RAW_SMOOTH_RATE_FAST = 30;
-const MAIN_SMOOTH_RATE = 12;
-// Wheel velocity (px/s) at which we treat scrolling as "fast".
-const WHEEL_VELOCITY_FAST = 4000;
+const SEEK_COOLDOWN_FRAMES_FWD = 1;
+const SEEK_COOLDOWN_FRAMES_BWD = 0;
 // Only notify parent when progress moved meaningfully.
 const PROGRESS_NOTIFY_EPSILON = 0.003;
 
