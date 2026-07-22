@@ -17,7 +17,7 @@ export type IntroProgressInfo = {
 
 const VIDEO_FRACTION = 0.6;
 const PIXELS_FOR_FULL_PROGRESS = 3200;
-const BURN_DURATION_MS = 1600;
+const BURN_DURATION_MS = 2600;
 // Cap a single wheel tick so a hard mouse-wheel notch doesn't jump the progress.
 const MAX_PIXELS_PER_TICK = 140;
 // Exponential smoothing rate (higher = snappier follow, lower = more inertia).
@@ -145,6 +145,13 @@ const FRAG = /* glsl */ `
       float haloInner = exp(-abs(dOuter) * 14.0) * 1.20;
       float haloOuter = exp(-abs(dOuter) * 4.5)  * 0.55;
       float halo = (haloInner + haloOuter) * (0.25 + 0.75 * outsideBias);
+
+      // Fade the ring/halo in from zero so the first burn frames don't flash
+      // the whole screen lavender while rOuter is still ~0.
+      float appear = smoothstep(0.0, 0.12, b);
+      float radiusGate = smoothstep(0.02, 0.08, rOuter);
+      ring *= appear;
+      halo *= appear * radiusGate;
 
       vec3 glowCol = vec3(0.77, 0.66, 1.00); // cool lavender
       vec3 ringCol = vec3(1.00, 0.98, 1.00); // near-white solid band
