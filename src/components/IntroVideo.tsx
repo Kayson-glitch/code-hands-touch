@@ -17,22 +17,20 @@ export type IntroProgressInfo = {
 };
 
 const VIDEO_FRACTION = 0.6;
-const PIXELS_FOR_FULL_PROGRESS = 3200;
+const PIXELS_FOR_FULL_PROGRESS = 2600;
 const BURN_DURATION_MS = 3600;
 // Cap a single wheel tick so a hard mouse-wheel notch doesn't jump the progress.
-const MAX_PIXELS_PER_TICK = 140;
-// Exponential smoothing rate (higher = snappier follow, lower = more inertia).
-const SMOOTH_RATE = 10;
-// Extra snappiness when the user scrolls fast (large gap between target and current).
-const SMOOTH_RATE_FAST = 14;
+const MAX_PIXELS_PER_TICK = 260;
+// Symmetric exponential smoothing rate (identical for forward & backward).
+const SMOOTH_RATE = 12;
 // Prefer letting the decoder play forward to the target; reserve seeks for coarse correction.
-const SEEK_MIN_INTERVAL_MS = 80;
+const SEEK_MIN_INTERVAL_MS = 24;
 const SEEK_EPSILON = 0.1;
 const VIDEO_CHASE_EPSILON = 0.035;
-const VIDEO_BACKWARD_SEEK_EPSILON = 0.12;
+const VIDEO_BACKWARD_SEEK_EPSILON = 0.02;
 const VIDEO_HARD_SEEK_EPSILON = 0.48;
 const MIN_CHASE_PLAYBACK_RATE = 0.75;
-const MAX_CHASE_PLAYBACK_RATE = 2.35;
+const MAX_CHASE_PLAYBACK_RATE = 3.2;
 // Only notify parent when progress moved meaningfully.
 const PROGRESS_NOTIFY_EPSILON = 0.003;
 
@@ -525,15 +523,11 @@ export function IntroVideo({
       const dt = Math.min(0.05, Math.max(0.001, (now - lastFrameTs) / 1000));
       lastFrameTs = now;
 
-      // Frame-rate-independent exponential smoothing toward the target.
-      // Scale rate up when the gap is large so fast scroll feels responsive,
-      // while slow scroll retains a softer, inertial follow.
-      const gap = Math.abs(targetProgress - progress);
-      const rate = SMOOTH_RATE + (SMOOTH_RATE_FAST - SMOOTH_RATE) * Math.min(1, gap * 8);
-      const alpha = 1 - Math.exp(-rate * dt);
+      // Symmetric frame-rate-independent exponential smoothing (identical
+      // response forward and backward → no reverse-scroll stutter).
+      const alpha = Math.min(0.35, 1 - Math.exp(-SMOOTH_RATE * dt));
       progress += (targetProgress - progress) * alpha;
-      // Snap when essentially there so `fire()` still triggers cleanly.
-      if (Math.abs(targetProgress - progress) < 0.0005) progress = targetProgress;
+      if (Math.abs(targetProgress - progress) < 0.0002) progress = targetProgress;
 
       const videoProgress = Math.min(1, progress / VIDEO_FRACTION);
       const burstProgress = Math.min(1, Math.max(0, (progress - VIDEO_FRACTION) / (1 - VIDEO_FRACTION)));
@@ -547,20 +541,28 @@ export function IntroVideo({
           : Math.max(0, lastSeekTime);
         const gap = target - current;
         const absGap = Math.abs(gap);
-        const canSeek = now - lastSeekAt > SEEK_MIN_INTERVAL_MS && absGap > SEEK_EPSILON;
+        const canSeekTick = now - lastSeekAt > SEEK_MIN_INTERVAL_MS;
         const lockFinalFrame = videoProgress >= 0.998 || burstProgress > 0;
 
         if (lockFinalFrame) {
+          // Burn phase: keep video on the last frame; burn is shader-driven.
           pauseVideo();
-          if (absGap > VIDEO_CHASE_EPSILON && canSeek) commitSeek(target, now, true);
+          const endTarget = duration;
+          if (Math.abs(endTarget - current) > VIDEO_CHASE_EPSILON && canSeekTick) {
+            commitSeek(endTarget, now, true);
+          }
         } else if (gap > VIDEO_CHASE_EPSILON) {
-          if (gap > VIDEO_HARD_SEEK_EPSILON && canSeek) {
+          // Forward: let the decoder play; hard-seek only on huge gaps.
+          if (gap > VIDEO_HARD_SEEK_EPSILON && canSeekTick && absGap > SEEK_EPSILON) {
             commitSeek(Math.max(0, target - VIDEO_CHASE_EPSILON), now, false);
           }
-          playVideoTowardTarget(MIN_CHASE_PLAYBACK_RATE + gap * 4.2);
+          playVideoTowardTarget(1 + gap * 6);
+        } else if (gap < -VIDEO_BACKWARD_SEEK_EPSILON) {
+          // Backward: continuous per-tick fastSeek → smooth reverse scrub.
+          pauseVideo();
+          if (canSeekTick) commitSeek(target, now, absGap <= VIDEO_HARD_SEEK_EPSILON);
         } else {
           pauseVideo();
-          if (gap < -VIDEO_BACKWARD_SEEK_EPSILON && canSeek) commitSeek(target, now, true);
         }
       }
       uniforms.uProgress.value = progress;
