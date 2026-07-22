@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import logoAsset from "@/assets/synergy-logo.png.asset.json";
+import logoLight from "@/assets/synergy-logo-light.png.asset.json";
+import logoDark from "@/assets/synergy-logo-dark.png.asset.json";
 
 export function SiteNav() {
   const [theme, setTheme] = useState<"light" | "dark">("light");
@@ -29,13 +30,12 @@ export function SiteNav() {
         style={{ height: 28 }}
       >
         <img
-          src={logoAsset.url}
+          src={isDark ? logoDark.url : logoLight.url}
           alt="Synergy.AI"
           style={{
             height: 28,
             width: "auto",
             display: "block",
-            filter: isDark ? "invert(1) hue-rotate(180deg)" : "none",
           }}
         />
       </a>
