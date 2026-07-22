@@ -1,40 +1,16 @@
-Apply the provided burn parameter set as the new default values for the burn-through shader.
+## 目标
+让导航栏中间菜单和右侧按钮跟随背景色（黑/白）反相，与 logo 的适配逻辑保持一致。
 
-## What I will do
+## 当前问题
+- 中间菜单和「Log In」文本已经用 `fg/subtle` 跟随主题，OK。
+- 「Book a Demo」按钮固定为 `bg-white text-black`：在浅色背景（视频阶段）下白底白 nav 融为一体、几乎不可见；深色背景下反而正常。需要反相。
 
-1. Update `src/components/BurnDebugPanel.tsx`:
-   - Replace the current `DEFAULT_BURN_PARAMS` object with the exact values you provided:
-     ```json
-     {
-       "warpAmp": 0.55,
-       "warpFreq": 1.3,
-       "streakAmp": 0.28,
-       "streakFreq": 6,
-       "angularAmp": 0.55,
-       "angularFreq": 0.55,
-       "chromaAberration": 0.34,
-       "shardDisplace": 0.55,
-       "grainAmount": 1,
-       "glitchFlicker": 0,
-       "coreRimAlpha": 0.95,
-       "hotHaloAlpha": 0.55,
-       "cloudDiffuseAlpha": 0.29,
-       "mistAlpha": 0.2,
-       "haloFalloff": 0.52
-     }
-     ```
-   - Keep all slider ranges, groups, and panel behavior unchanged.
+## 修改
+`src/components/SiteNav.tsx`：
+- 「Book a Demo」按钮根据 `isDark` 切换：
+  - dark 背景 → `bg-white text-black`（保持现状）
+  - light 背景 → `bg-black text-white`
+- 「Log In」的 hover 用条件类名代替 `hover:${fg}`（Tailwind 不支持动态拼接 hover 前缀，当前 hover 其实没生效），改成 `hover:text-black` / `hover:text-white`。
+- Chevron 已用 `currentColor`，随 `fg` 自动反相，无需改动。
 
-2. Verify the change propagates automatically:
-   - `IntroVideo.tsx` already initializes its shader uniforms from `DEFAULT_BURN_PARAMS` and resets the panel with it, so no second source of truth needs to be edited.
-
-3. Validate:
-   - Run a build check / typecheck to ensure no errors after editing the object literal.
-
-## What is not changing
-
-- Shader logic, scroll/wheel behavior, video playback, UI components, layout, navigation, or any other source files besides `BurnDebugPanel.tsx`.
-
-## Outcome
-
-The debug panel will open with these values, and the burn-through effect will use them from the first render. Resetting the panel will also revert to these values.
+不改动其他文件、不改布局尺寸、不改 logo 逻辑。

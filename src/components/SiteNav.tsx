@@ -17,6 +17,10 @@ export function SiteNav() {
   const isDark = theme === "dark";
   const fg = isDark ? "text-white" : "text-black";
   const subtle = isDark ? "text-white/70" : "text-black/70";
+  const hoverFg = isDark ? "hover:text-white" : "hover:text-black";
+  const ctaClass = isDark
+    ? "bg-white text-black"
+    : "bg-black text-white";
 
   return (
     <nav
@@ -58,13 +62,13 @@ export function SiteNav() {
       {/* Right actions */}
       <div className="pointer-events-auto flex items-center gap-4">
         <button
-          className={`${subtle} transition-colors hover:${fg}`}
+          className={`${subtle} ${hoverFg} transition-colors`}
           style={{ fontSize: 14, lineHeight: "22px" }}
         >
           Log In
         </button>
         <button
-          className="rounded-full bg-white px-4 font-medium text-black transition-transform hover:scale-[1.02]"
+          className={`${ctaClass} rounded-full px-4 font-medium transition-transform hover:scale-[1.02]`}
           style={{ height: 32, fontSize: 14, lineHeight: "22px" }}
         >
           Book a Demo
