@@ -133,20 +133,32 @@ const FRAG = /* glsl */ `
     float pulseB = step(0.82, fract(sin(uTime * 11.1 + 1.3) * 24634.6345)) * peakK * 4.0;
     float chromaPx = basePx + burstPx + swell + pulseA + pulseB;
 
-    // Mosaic-shard displacement: quantize screen into cells, occasionally
-    // offset a few cells by a small amount to read as "data-block breakage".
-    // Cell size jitters between 3 discrete tiers over time.
+    // Shard activity is gated to the mid peak so front/back shards silently
+    // vanish before and after the burst.
+    float shardK = smoothstep(0.30, 0.55, uBurn) * (1.0 - smoothstep(0.72, 0.90, uBurn));
+
+    // Mid-ground mosaic cells (subtle, low trigger).
     vec2 jitteredUv = sampleUv;
-    if (peakK > 0.0) {
+    float bandTrigger = 0.0;
+    float bandShiftPx = 0.0;
+    if (shardK > 0.0) {
       float tierPick = fract(sin(floor(uTime * 6.0)) * 43758.5453);
       float cell = mix(14.0, 22.0, step(0.33, tierPick)) + step(0.66, tierPick) * 4.0;
       vec2 cellId = floor(gl_FragCoord.xy / cell);
-      float ch = hash(cellId + vec2(floor(uTime * 18.0), 0.0));
-      float trigger = step(0.90, ch) * peakK; // ~10% of cells
-      float ch2 = hash(cellId + vec2(7.31, floor(uTime * 18.0)));
-      // Bias toward horizontal shard shifts, small vertical component.
-      vec2 shiftPx = vec2((ch - 0.5) * 12.0, (ch2 - 0.5) * 4.0) * trigger;
-      jitteredUv += shiftPx / uResolution.xy;
+      float ch  = hash(cellId + vec2(floor(uTime * 20.0), 0.0));
+      float ch2 = hash(cellId + vec2(7.31, floor(uTime * 20.0)));
+      float cellTrig = step(0.94, ch) * shardK; // ~6% cells
+      jitteredUv += vec2((ch - 0.5) * 10.0, (ch2 - 0.5) * 3.0) * cellTrig / uResolution.xy;
+
+      // Foreground horizontal shard bands — varying stripe heights.
+      float bandTier = fract(sin(floor(uTime * 12.0)) * 12345.678);
+      float bandH = mix(4.0, 10.0, bandTier);
+      float rowId = floor(gl_FragCoord.y / bandH);
+      float bh  = hash(vec2(rowId, floor(uTime * 20.0)));
+      float bh2 = hash(vec2(rowId + 91.7, floor(uTime * 20.0)));
+      bandTrigger = step(0.85, bh) * shardK; // ~15% bands
+      bandShiftPx = (bh2 - 0.5) * 28.0 * bandTrigger; // ±14px
+      jitteredUv.x += bandShiftPx / uResolution.x;
     }
 
     // Chromatic aberration direction: radial from burn center → liquid outward
@@ -154,7 +166,19 @@ const FRAG = /* glsl */ `
     vec2 radial = uv - uCenter;
     float rlen = max(length(radial * aspect), 1e-4);
     vec2 chromaDir = mix(vec2(1.0, 0.0), radial * aspect / rlen, burstK);
-    vec3 col = sampleChroma(jitteredUv, chromaDir * chromaPx);
+    // Extra radial split inside active shard bands → colored fringe on shards.
+    float shardChromaPx = chromaPx + bandTrigger * 4.5;
+    vec3 col = sampleChroma(jitteredUv, chromaDir * shardChromaPx);
+
+    // Background ghost / afterimage: a low-opacity large-offset copy of the
+    // video texture, only during the shard peak.
+    if (shardK > 0.0) {
+      float gh = hash(vec2(floor(uTime * 10.0), 3.14));
+      float ghostShiftPx = (gh - 0.5) * 16.0;
+      vec2 ghostUv = sampleUv + vec2(ghostShiftPx / uResolution.x, 0.0);
+      vec3 ghost = sampleChroma(ghostUv, chromaDir * (chromaPx + 3.0));
+      col = mix(col, max(col, ghost), 0.22 * shardK);
+    }
 
     // Fine-grain high-frequency noise: per-pixel ±0.8% luminance dither,
     // gated by burstK so it silently vanishes at the edges.
