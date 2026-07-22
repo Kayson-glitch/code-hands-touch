@@ -128,8 +128,8 @@ const INTRO_SIDE_STAGGER_MS = 70;
 // alpha from 0.6 → 1 across this fraction of armT.
 const INTRO_SETTLE_WIDTH = 0.12;
 // Cubic hermite with tangents (fast in, slow out) chosen so that
-// introEase(0.62) ≈ 0.78 — i.e. ~78% of the arm is revealed by the time 62%
-// of the duration has elapsed, and the remaining 22% of distance takes 38% of
+// introEase(0.55) ≈ 0.72 — i.e. ~72% of the arm is revealed by the time 55%
+// of the duration has elapsed, and the remaining 28% of distance takes 45% of
 // the time. Derivative is continuous and positive across the whole range, so
 // there is no perceptible pause at the wrist — just a smooth deceleration.
 const introEase = (t: number) => {
