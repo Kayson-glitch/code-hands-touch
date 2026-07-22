@@ -1,28 +1,29 @@
 ## Goal
-Make the burn-through hole and glow read as a wide, irregular ellipse (like unseen.co/world), not the current near-circular blob.
+1. Restyle the scroll hint (icon + text + hairline) to black and shift the whole group up by 20px.
+2. Temporarily disable wheel-driven burn animation — the intro plays and bursts through automatically once the preloader hands off.
 
-## Changes — `src/components/IntroVideo.tsx` (fragment shader only)
+## Changes
 
-1. **Elliptical base shape**
-   - After computing aspect-corrected `p`, squash the vertical axis so the front is naturally wider than tall:
-     - `vec2 pe = vec2(p.x, p.y * 1.75);` (ellipse ratio ≈ 1.75:1, close to the reference frame)
-   - Use `pe` in place of `p` for `len`, `ang`, and the warp/streak/hi sampling. Keep the shader input `p` as-is for chroma/other layers.
+### `src/components/ScrollHint.tsx`
+- Change `bottom: 40` → `bottom: 60` (up 20px).
+- Swap the container `color` and text/hairline colors to black:
+  - container `color: "rgba(0,0,0,0.82)"`
+  - text `color: "rgba(0,0,0,0.72)"`
+  - hairline gradient `rgba(0,0,0,0.45)` → `rgba(0,0,0,0)`.
+- SVG uses `currentColor`, so it follows automatically.
 
-2. **Stronger irregular edge** (petal/tongue silhouette rather than gentle wobble)
-   - Bump default warp: `uWarpAmp` default 0.42 → ~0.62; `uWarpFreq` 1.3 → ~1.15 (bigger lobes).
-   - Bump streak: `uStreakAmp` 0.28 → 0.40, `uStreakFreq` 1.9 → 2.4 (longer horizontal tongues, matches the ref's side flares).
-   - Angular wobble: raise `uAngularAmp` 1.0 → 1.4 and skew harmonics so horizontal lobes dominate:
-     - Add `+ 0.05 * cos(ang * 2.0)` bias to `wob` so left/right bulge more than top/bottom.
-
-3. **Slightly softer, wider outer halo** (the reference glow is broad and diffuse around the ellipse)
-   - Raise `uHaloFalloff` default 1.0 → 1.25.
-   - Keep core rim / hot halo alphas unchanged so the ring stays crisp.
-
-4. **Debug panel defaults** — update `DEFAULT_BURN_PARAMS` in `src/components/BurnDebugPanel.tsx` to match new values so the panel reflects the shipped look.
+### `src/components/IntroVideo.tsx` (auto playback)
+- Remove the `window.addEventListener("wheel", onWheel, ...)` binding and its cleanup; also drop the `pendingWheelPx` drain path in the RAF loop (leave the helper but stop feeding it).
+- Add an auto driver: on mount (after `firstFrameReady`), start a linear ramp of `targetProgress` from 0 → 1 over a fixed duration:
+  - Video segment: ~4.5s to reach `VIDEO_FRACTION` (0.6) — feels like natural playback.
+  - Burst segment: ~2.2s from `VIDEO_FRACTION` → 1.
+  - Implement as `targetProgress += dt / TOTAL_DURATION` inside the existing RAF loop, where `TOTAL_DURATION ≈ 6.7s`. Everything else (smoothing, video chase, seek logic, burn shader, `fire()`) keeps working unchanged.
+- Keep `ScrollHint` mounted for now (still fades out on user scroll/keydown), since the user only asked to disable scroll → burn control, not remove the hint itself.
 
 ## Not changed
-- Timeline, easing, scroll mapping, video parallax, chroma/shard/glitch layers, center point.
-- No new uniforms; ellipse ratio is a hardcoded constant (can be lifted to a uniform later if needed).
+- Shader, burn shape, glitch layers, nav visibility events, preloader handoff, hero UI.
+- ScrollHint dismissal listeners remain (harmless — they no longer drive progress).
 
 ## Verification
-- Load `/?debug=1`, scroll to trigger burn, screenshot at ~30 %, ~60 %, ~90 % burn and compare silhouette to the reference (wide, lobed, horizontally elongated).
+- Reload preview: after preloader, the video should play through and the burst should complete on its own in ~6–7s, landing on the hero.
+- Confirm scroll hint sits 20px higher and reads as black text/icon.
