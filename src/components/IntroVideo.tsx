@@ -18,14 +18,21 @@ export type IntroProgressInfo = {
 };
 
 const VIDEO_FRACTION = 0.6;
-const PIXELS_FOR_FULL_PROGRESS = 2600;
+// Reference project (Synergy AI Launchpad) maps ~2200px of wheel travel to the
+// full video duration. Because our progress spans video + burst, we scale that
+// number so the video segment alone consumes the same wheel distance:
+// 2200 / VIDEO_FRACTION ≈ 3667 for the full 0..1 progress range.
+const PIXELS_FOR_FULL_PROGRESS = 2200 / VIDEO_FRACTION;
 // Duration (ms) of the auto-driven burn-through once the video segment ends.
 const BURN_AUTO_MS = 1800;
 // Cap a single wheel tick so a hard mouse-wheel notch doesn't jump the progress.
-const MAX_PIXELS_PER_TICK = 260;
-// Single critically-damped smoothing time; short enough to feel 1:1 with the
-// wheel, playbackRate chase covers the rest.
-const PROGRESS_SMOOTH_TIME = 0.05;
+// Matches the reference project's ±180px clamp for calmer notch response.
+const MAX_PIXELS_PER_TICK = 180;
+// Critically-damped smoothing time chosen so the per-frame catch-up rate at
+// 60fps matches the reference project's simple `diff * 0.22` lerp
+// (≈ 1 - (1-0.22) ≈ 22%/frame → ~75ms smooth time). Feels visibly silkier
+// than the previous 50ms while still tracking the wheel closely.
+const PROGRESS_SMOOTH_TIME = 0.075;
 const MAX_SMOOTH_DT = 1 / 30;
 // Gap thresholds (seconds) for playbackRate vs. seek decision.
 const GAP_DEAD_ZONE = 0.03;
@@ -647,8 +654,9 @@ export function IntroVideo({
       e.preventDefault();
       // Normalize delta across PIXEL/LINE/PAGE modes.
       let dy = e.deltaY;
-      if (e.deltaMode === 1) dy *= 16;          // LINE ≈ 16px
-      else if (e.deltaMode === 2) dy *= window.innerHeight; // PAGE
+      // Match reference project line/page multipliers (LINE ≈ 18px, PAGE ≈ 360px).
+      if (e.deltaMode === 1) dy *= 18;
+      else if (e.deltaMode === 2) dy *= 360;
       // Clamp a single tick so mouse-wheel notches don't cause jumps.
       if (dy > MAX_PIXELS_PER_TICK) dy = MAX_PIXELS_PER_TICK;
       else if (dy < -MAX_PIXELS_PER_TICK) dy = -MAX_PIXELS_PER_TICK;
