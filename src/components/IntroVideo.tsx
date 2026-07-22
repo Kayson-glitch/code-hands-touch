@@ -341,8 +341,6 @@ export function IntroVideo({
   // Exposed to the debug panel so it can jump / finish.
   const targetProgressRef = useRef<(v: number) => void>(() => {});
   const forceFinishRef = useRef<() => void>(() => {});
-  const burnProgressRef = useRef(0);
-  const parallaxWrapRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -599,7 +597,6 @@ export function IntroVideo({
         burnActive = false;
       }
       uniforms.uBurn.value = burstProgress;
-      burnProgressRef.current = burstProgress;
       if (firstFrameReady) {
         renderer.render(scene, camera);
       }
@@ -649,46 +646,7 @@ export function IntroVideo({
   }, [src]);
 
   return (
-    <div
-      style={{ position: "absolute", inset: 0, background: "#000", overflow: "hidden", perspective: "1200px" }}
-      onMouseMove={(e) => {
-        const el = e.currentTarget;
-        const r = el.getBoundingClientRect();
-        const nx = ((e.clientX - r.left) / r.width) * 2 - 1;
-        const ny = ((e.clientY - r.top) / r.height) * 2 - 1;
-        (el as any)._pxTarget = { x: nx, y: ny };
-      }}
-      onMouseLeave={(e) => {
-        (e.currentTarget as any)._pxTarget = { x: 0, y: 0 };
-      }}
-      ref={(el) => {
-        if (!el) return;
-        if ((el as any)._pxInit) return;
-        (el as any)._pxInit = true;
-        (el as any)._pxTarget = { x: 0, y: 0 };
-        const state = { x: 0, y: 0 };
-        const tick = () => {
-          const t = (el as any)._pxTarget || { x: 0, y: 0 };
-          state.x += (t.x - state.x) * 0.08;
-          state.y += (t.y - state.y) * 0.08;
-          const damp = 1 - Math.min(1, burnProgressRef.current * 1.5);
-          const tx = state.x * 12 * damp;
-          const ty = state.y * 12 * damp;
-          const ry = state.x * 2 * damp;
-          const rx = -state.y * 2 * damp;
-          const wrap = parallaxWrapRef.current;
-          if (wrap) {
-            wrap.style.transform = `translate3d(${tx}px, ${ty}px, 0) rotateX(${rx}deg) rotateY(${ry}deg)`;
-          }
-          (el as any)._pxRaf = requestAnimationFrame(tick);
-        };
-        (el as any)._pxRaf = requestAnimationFrame(tick);
-      }}
-    >
-      <div
-        ref={parallaxWrapRef}
-        style={{ position: "absolute", inset: 0, willChange: "transform", transformStyle: "preserve-3d" }}
-      >
+    <div style={{ position: "absolute", inset: 0, background: "#000", overflow: "hidden" }}>
       <video
         ref={videoRef}
         src={src ?? videoAsset.url}
@@ -703,7 +661,6 @@ export function IntroVideo({
         ref={canvasRef}
         style={{ position: "absolute", inset: 0, width: "100%", height: "100%", display: "block" }}
       />
-      </div>
       <BurnDebugPanel
           values={burnParams}
           onChange={setBurnParams}

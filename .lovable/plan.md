@@ -1,20 +1,16 @@
 ## 目标
-为开场视频增加鼠标移入时的轻微视差效果。
+让导航栏中间菜单和右侧按钮跟随背景色（黑/白）反相，与 logo 的适配逻辑保持一致。
 
-## 方案
-在 `src/components/IntroVideo.tsx` 中：
+## 当前问题
+- 中间菜单和「Log In」文本已经用 `fg/subtle` 跟随主题，OK。
+- 「Book a Demo」按钮固定为 `bg-white text-black`：在浅色背景（视频阶段）下白底白 nav 融为一体、几乎不可见；深色背景下反而正常。需要反相。
 
-1. 在视频容器上监听 `mousemove` / `mouseleave`，将鼠标相对容器中心的位置归一化为 `(-1, 1)` 范围。
-2. 使用 `requestAnimationFrame` + lerp 平滑跟随（factor ≈ 0.08），避免抖动。
-3. 将平滑后的偏移量以 CSS transform 施加在视频层：
-   - 位移：最大 ±12px
-   - 轻微 3D 倾斜：`rotateX` / `rotateY` 最大 ±2deg
-   - 容器加 `perspective: 1200px`
-4. 保持现有的 zoom / 故障 / 光圈 shader 效果不变，视差只作用在视频 DOM 层的外层 wrapper transform 上，不影响 WebGL 采样。
-5. 鼠标离开时平滑回到中心 (0,0)。
-6. 扩散阶段（burnProgress > 0）时逐渐衰减视差强度到 0，避免与黑孔扩张冲突。
+## 修改
+`src/components/SiteNav.tsx`：
+- 「Book a Demo」按钮根据 `isDark` 切换：
+  - dark 背景 → `bg-white text-black`（保持现状）
+  - light 背景 → `bg-black text-white`
+- 「Log In」的 hover 用条件类名代替 `hover:${fg}`（Tailwind 不支持动态拼接 hover 前缀，当前 hover 其实没生效），改成 `hover:text-black` / `hover:text-white`。
+- Chevron 已用 `currentColor`，随 `fg` 自动反相，无需改动。
 
-## 技术要点
-- 只改 `IntroVideo.tsx`，不动其他组件。
-- 视差 wrapper 与 canvas 共享同一 transform 层，或单独包一层 div，确保 shader 采样区域一致。
-- 使用 `will-change: transform` 优化性能。
+不改动其他文件、不改布局尺寸、不改 logo 逻辑。
