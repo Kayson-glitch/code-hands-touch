@@ -17,7 +17,7 @@ export type IntroProgressInfo = {
 
 const VIDEO_FRACTION = 0.6;
 const PIXELS_FOR_FULL_PROGRESS = 3200;
-const BURN_DURATION_MS = 2600;
+const BURN_DURATION_MS = 3600;
 // Cap a single wheel tick so a hard mouse-wheel notch doesn't jump the progress.
 const MAX_PIXELS_PER_TICK = 140;
 // Exponential smoothing rate (higher = snappier follow, lower = more inertia).
@@ -121,7 +121,8 @@ const FRAG = /* glsl */ `
       float distort = (n1 - 0.5) * 0.16 + (n2 - 0.5) * 0.06;
 
       // Single radius drives both the hole and the ring, so they expand in lock-step.
-      float r = (1.0 - pow(1.0 - b, 3.0)) * 1.9; // easeOutCubic, past screen
+      // easeIn (pow 3.2): fingertip lingers as a small light, then accelerates outward.
+      float r = pow(b, 3.2) * 2.05;
       float ringWidth = 0.10;
 
       float len = length(p);
@@ -133,7 +134,7 @@ const FRAG = /* glsl */ `
       float ring = smoothstep(ringWidth, ringWidth * 0.55, abs(d)) * (1.0 - burned);
 
       // Fade the ring in from zero so the first burn frames don't pop.
-      float appear = smoothstep(0.0, 0.12, b);
+      float appear = smoothstep(0.0, 0.08, b);
       ring *= appear;
 
       vec3 ringCol = vec3(1.00, 0.98, 1.00); // near-white solid band
