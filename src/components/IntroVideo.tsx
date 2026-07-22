@@ -341,6 +341,8 @@ export function IntroVideo({
   // Exposed to the debug panel so it can jump / finish.
   const targetProgressRef = useRef<(v: number) => void>(() => {});
   const forceFinishRef = useRef<() => void>(() => {});
+  const burnProgressRef = useRef(0);
+  const parallaxWrapRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -597,6 +599,7 @@ export function IntroVideo({
         burnActive = false;
       }
       uniforms.uBurn.value = burstProgress;
+      burnProgressRef.current = burstProgress;
       if (firstFrameReady) {
         renderer.render(scene, camera);
       }
