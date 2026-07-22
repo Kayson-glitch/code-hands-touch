@@ -324,14 +324,17 @@ export function IntroVideo({
   onProgress,
   src,
   debug,
+  handoffVideo,
 }: {
   onEnded: (info: IntroVideoEndInfo) => void;
   onProgress?: (info: IntroProgressInfo) => void;
   src?: string;
   debug?: boolean;
+  handoffVideo?: HTMLVideoElement | null;
 }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
+  const videoHostRef = useRef<HTMLDivElement>(null);
   const firedRef = useRef(false);
   const onEndedRef = useRef(onEnded);
   const onProgressRef = useRef(onProgress);
@@ -349,7 +352,26 @@ export function IntroVideo({
 
   useEffect(() => {
     const canvas = canvasRef.current;
-    const video = videoRef.current;
+    // Prefer the pre-warmed video handed off by the preloader; it already
+    // has metadata + first frame decoded + seek path primed. Fall back to
+    // our internal <video> element if handoff is unavailable.
+    const host = videoHostRef.current;
+    let video: HTMLVideoElement | null = handoffVideo ?? videoRef.current;
+    let adoptedHandoff = false;
+    if (handoffVideo && host) {
+      // Move the pre-warmed element into our container without recreating it.
+      Object.assign(handoffVideo.style, {
+        position: "absolute",
+        width: "1px",
+        height: "1px",
+        opacity: "0",
+        pointerEvents: "none",
+        left: "0",
+        top: "0",
+      });
+      host.appendChild(handoffVideo);
+      adoptedHandoff = true;
+    }
     if (!canvas || !video) return;
 
     video.muted = true;
@@ -433,6 +455,12 @@ export function IntroVideo({
     let queuedSeekTarget: number | null = null;
     let queuedSeekExact = false;
     let firstFrameReady = false;
+    // If we adopted a pre-warmed video, its first frame is already decoded
+    // and its seek path is already primed — skip the cold-start warmup.
+    if (adoptedHandoff && video.readyState >= 2) {
+      firstFrameReady = true;
+      videoTex.needsUpdate = true;
+    }
     let rafId = 0;
     let running = true;
     let burnActive = false;
@@ -569,9 +597,23 @@ export function IntroVideo({
     video.addEventListener("loadeddata", markFirstFrame);
     video.addEventListener("seeked", markFirstFrame);
 
-    // Start paused; play once to force first frame decode on some browsers.
-    video.play().then(() => { try { video.pause(); } catch { /* ignore */ } })
-      .catch(() => { /* ignore */ });
+    if (adoptedHandoff && video.videoWidth && video.videoHeight) {
+      uniforms.uVideoRes.value.set(video.videoWidth, video.videoHeight);
+    }
+    if (!adoptedHandoff) {
+      // Start paused; play once to force first frame decode on some browsers.
+      video.play().then(() => { try { video.pause(); } catch { /* ignore */ } })
+        .catch(() => { /* ignore */ });
+    } else {
+      try { video.pause(); } catch { /* ignore */ }
+    }
+
+    // GPU warmup: push one frame through the shader pipeline before the
+    // wheel handler is active so the first user-driven frame doesn't pay
+    // the texture-upload / shader-compile cost.
+    try {
+      if (firstFrameReady) renderer.render(scene, camera);
+    } catch { /* ignore */ }
 
     let errorTimer = 0;
     const onError = () => {
@@ -748,21 +790,30 @@ export function IntroVideo({
       material.dispose();
       mesh.geometry.dispose();
       renderer.dispose();
+      // Return the adopted element to detached state so the preloader's
+      // revoke logic (or React unmount) can safely dispose the URL.
+      if (adoptedHandoff && video && video.parentNode) {
+        try { video.parentNode.removeChild(video); } catch { /* ignore */ }
+      }
     };
-  }, [src]);
+  }, [src, handoffVideo]);
 
   return (
     <div style={{ position: "absolute", inset: 0, background: "#000", overflow: "hidden" }}>
-      <video
-        ref={videoRef}
-        src={src ?? videoAsset.url}
-        muted
-        playsInline
-        preload="auto"
-        aria-hidden
-        tabIndex={-1}
-        style={{ position: "absolute", width: 1, height: 1, opacity: 0, pointerEvents: "none" }}
-      />
+      <div ref={videoHostRef} aria-hidden style={{ position: "absolute", inset: 0, pointerEvents: "none" }}>
+        {!handoffVideo && (
+          <video
+            ref={videoRef}
+            src={src ?? videoAsset.url}
+            muted
+            playsInline
+            preload="auto"
+            aria-hidden
+            tabIndex={-1}
+            style={{ position: "absolute", width: 1, height: 1, opacity: 0, pointerEvents: "none" }}
+          />
+        )}
+      </div>
       <canvas
         ref={canvasRef}
         style={{ position: "absolute", inset: 0, width: "100%", height: "100%", display: "block" }}
