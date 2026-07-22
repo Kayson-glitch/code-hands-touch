@@ -35,8 +35,7 @@ export function SiteNav() {
 
   const isDark = theme === "dark";
   const fg = isDark ? "text-white" : "text-black";
-  const subtle = isDark ? "text-white/70" : "text-black/70";
-  const hoverFg = isDark ? "hover:text-white" : "hover:text-black";
+  const navItem = `${fg} opacity-50 hover:opacity-100 transition-opacity duration-200`;
   const ctaClass = isDark
     ? "bg-white text-black"
     : "bg-black text-white";
