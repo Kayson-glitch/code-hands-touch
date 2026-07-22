@@ -35,69 +35,68 @@ export function SiteNav() {
 
   const isDark = theme === "dark";
   const fg = isDark ? "text-white" : "text-black";
+  const subtle = isDark ? "text-white/70" : "text-black/70";
   const hoverFg = isDark ? "hover:text-white" : "hover:text-black";
-  const capsuleClass = isDark
-    ? "bg-gradient-to-br from-white/15 via-white/5 to-white/10 backdrop-blur-3xl border-white/20"
-    : "bg-gradient-to-br from-white/95 via-white/75 to-white/90 backdrop-blur-3xl border-black/10";
-  const loginBorder = isDark
-    ? "border-white/30 text-white/90 hover:text-white hover:border-white/60"
-    : "border-black/20 text-black/80 hover:text-black hover:border-black/45";
-  const ctaClass = isDark ? "bg-white text-black" : "bg-black text-white";
+  const ctaClass = isDark
+    ? "bg-white text-black"
+    : "bg-black text-white";
 
   return (
     <nav
-      className="pointer-events-none fixed inset-x-0 top-0 flex justify-center px-6"
+      className="pointer-events-none fixed inset-x-0 top-0 flex items-center justify-between px-10"
       style={{
         height: 68,
-        paddingTop: 20,
         zIndex: 80,
         opacity: hidden ? 0 : 1,
         transition: "opacity 260ms ease-out",
       }}
     >
-      <div
-        className={`pointer-events-auto flex items-center justify-between rounded-full border ${capsuleClass} ${fg}`}
-        style={{ height: 52, width: "min(92vw, 1200px)", paddingLeft: 20, paddingRight: 6 }}
+      {/* Logo */}
+      <a
+        href="/"
+        className={`pointer-events-auto flex items-center gap-2 ${fg}`}
+        style={{ height: 28 }}
       >
-        {/* Logo */}
-        <a href="/" className="flex items-center" style={{ height: 28 }}>
-          <img
-            src={isDark ? logoDark.url : logoLight.url}
-            alt="Synergy.AI"
-            style={{ height: 28, width: "auto", display: "block" }}
-          />
-        </a>
+        <img
+          src={isDark ? logoDark.url : logoLight.url}
+          alt="Synergy.AI"
+          style={{
+            height: 28,
+            width: "auto",
+            display: "block",
+          }}
+        />
+      </a>
 
-        {/* Center menu */}
-        <ul
-          className="hidden flex-1 items-center justify-center gap-8 md:flex"
+      {/* Center menu */}
+      <ul
+        className={`pointer-events-auto hidden items-center gap-10 md:flex ${fg}`}
+        style={{ fontSize: 14, lineHeight: "22px" }}
+      >
+        <li className="flex cursor-pointer items-center gap-1">
+          Platform <Chevron />
+        </li>
+        <li className="flex cursor-pointer items-center gap-1">
+          Solution <Chevron />
+        </li>
+        <li className="cursor-pointer">Pricing</li>
+        <li className="cursor-pointer">Company Hub</li>
+      </ul>
+
+      {/* Right actions */}
+      <div className="pointer-events-auto flex items-center gap-4">
+        <button
+          className={`${subtle} ${hoverFg} transition-colors`}
           style={{ fontSize: 14, lineHeight: "22px" }}
         >
-          <li className="flex cursor-pointer items-center gap-1">
-            Platform <Chevron />
-          </li>
-          <li className="flex cursor-pointer items-center gap-1">
-            Solution <Chevron />
-          </li>
-          <li className="cursor-pointer">Pricing</li>
-          <li className="cursor-pointer">Company Hub</li>
-        </ul>
-
-        {/* Right actions */}
-        <div className="flex items-center gap-2 pl-2">
-          <button
-            className={`rounded-full border transition-colors ${loginBorder} ${hoverFg}`}
-            style={{ height: 32, padding: "0 16px", fontSize: 14, lineHeight: "22px" }}
-          >
-            Log In
-          </button>
-          <button
-            className={`${ctaClass} rounded-full px-4 font-medium transition-transform hover:scale-[1.02]`}
-            style={{ height: 32, fontSize: 14, lineHeight: "22px" }}
-          >
-            Book a Demo
-          </button>
-        </div>
+          Log In
+        </button>
+        <button
+          className={`${ctaClass} rounded-full px-4 font-medium transition-transform hover:scale-[1.02]`}
+          style={{ height: 32, fontSize: 14, lineHeight: "22px" }}
+        >
+          Book a Demo
+        </button>
       </div>
     </nav>
   );
