@@ -702,7 +702,7 @@ export function IntroVideo({
         burnActive = false;
       }
       uniforms.uBurn.value = burstProgress;
-      if (firstFrameReady) {
+      if (firstFrameReady && !document.hidden) {
         renderer.render(scene, camera);
       }
 
