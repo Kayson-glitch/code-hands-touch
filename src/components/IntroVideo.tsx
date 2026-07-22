@@ -627,8 +627,20 @@ export function IntroVideo({
     };
     video.addEventListener("error", onError);
 
-    // Wheel-driven progress temporarily disabled; intro auto-plays.
-    const AUTO_TOTAL_DURATION = 6.7; // seconds, 0 → 1 progress
+    const onWheel = (e: WheelEvent) => {
+      if (firedRef.current) return;
+      e.preventDefault();
+      // Normalize delta across PIXEL/LINE/PAGE modes.
+      let dy = e.deltaY;
+      if (e.deltaMode === 1) dy *= 16;          // LINE ≈ 16px
+      else if (e.deltaMode === 2) dy *= window.innerHeight; // PAGE
+      // Clamp a single tick so mouse-wheel notches don't cause jumps.
+      if (dy > MAX_PIXELS_PER_TICK) dy = MAX_PIXELS_PER_TICK;
+      else if (dy < -MAX_PIXELS_PER_TICK) dy = -MAX_PIXELS_PER_TICK;
+      // Accumulate; applied once per RAF tick for natural throttling.
+      pendingWheelPx += dy;
+    };
+    window.addEventListener("wheel", onWheel, { passive: false });
 
     // Freeze dt when the tab is hidden so we don't accumulate a big jump.
     const onVisibility = () => {
@@ -645,11 +657,10 @@ export function IntroVideo({
       const dt = Math.min(MAX_SMOOTH_DT, Math.max(0.001, (now - lastFrameTs) / 1000));
       lastFrameTs = now;
 
-      // Auto-advance target progress at a steady rate once the first frame
-      // is decoded. Everything downstream (smoothing, video chase, burn) is
-      // unchanged, so the burst still completes and fires `onEnded`.
-      if (firstFrameReady && !forceFinish) {
-        targetProgress = clamp01(targetProgress + dt / AUTO_TOTAL_DURATION);
+      // Drain accumulated wheel delta once per RAF tick (natural throttling).
+      const wheelPx = drainWheelPixels();
+      if (wheelPx !== 0) {
+        targetProgress = clamp01(targetProgress + wheelPx / PIXELS_FOR_FULL_PROGRESS);
       }
 
       // Monotonic critically damped smoothing. It avoids time-related recoil
@@ -772,6 +783,7 @@ export function IntroVideo({
       running = false;
       cancelAnimationFrame(rafId);
       window.removeEventListener("resize", resize);
+      window.removeEventListener("wheel", onWheel);
       document.removeEventListener("visibilitychange", onVisibility);
       video.removeEventListener("loadedmetadata", onMeta);
       video.removeEventListener("loadeddata", markFirstFrame);

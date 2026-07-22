@@ -33,7 +33,7 @@ export function ScrollHint({ visible = true }: { visible?: boolean }) {
       style={{
         position: "fixed",
         left: "50%",
-        bottom: 60,
+        bottom: 40,
         transform: `translate(-50%, ${on ? 0 : dismissed ? 6 : -6}px)`,
         opacity: on ? 1 : 0,
         transition: "opacity 600ms ease-out, transform 600ms ease-out",
@@ -43,7 +43,7 @@ export function ScrollHint({ visible = true }: { visible?: boolean }) {
         flexDirection: "column",
         alignItems: "center",
         gap: 12,
-        color: "rgba(0,0,0,0.82)",
+        color: "rgba(255,255,255,0.82)",
         animation: on ? "sh-breathe 3.2s ease-in-out infinite" : "none",
       }}
     >
@@ -84,7 +84,7 @@ export function ScrollHint({ visible = true }: { visible?: boolean }) {
           letterSpacing: "0.22em",
           textTransform: "uppercase",
           fontWeight: 500,
-          color: "rgba(0,0,0,0.72)",
+          color: "rgba(255,255,255,0.72)",
         }}
       >
         Scroll to explore
@@ -94,7 +94,7 @@ export function ScrollHint({ visible = true }: { visible?: boolean }) {
           width: 1,
           height: 18,
           background:
-            "linear-gradient(to bottom, rgba(0,0,0,0.45), rgba(0,0,0,0))",
+            "linear-gradient(to bottom, rgba(255,255,255,0.45), rgba(255,255,255,0))",
         }}
       />
       <style>{`
