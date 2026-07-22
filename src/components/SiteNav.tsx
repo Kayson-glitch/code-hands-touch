@@ -4,6 +4,7 @@ import logoDark from "@/assets/synergy-logo-dark.png.asset.json";
 
 export function SiteNav() {
   const [theme, setTheme] = useState<"light" | "dark">("light");
+  const [hidden, setHidden] = useState(false);
 
   useEffect(() => {
     const onBg = (e: Event) => {
@@ -12,6 +13,15 @@ export function SiteNav() {
     };
     window.addEventListener("app-bg-change", onBg);
     return () => window.removeEventListener("app-bg-change", onBg);
+  }, []);
+
+  useEffect(() => {
+    const onVis = (e: Event) => {
+      const detail = (e as CustomEvent<"hidden" | "visible">).detail;
+      setHidden(detail === "hidden");
+    };
+    window.addEventListener("app-nav-visibility", onVis);
+    return () => window.removeEventListener("app-nav-visibility", onVis);
   }, []);
 
   const isDark = theme === "dark";
@@ -25,7 +35,12 @@ export function SiteNav() {
   return (
     <nav
       className="pointer-events-none fixed inset-x-0 top-0 flex items-center justify-between px-10"
-      style={{ height: 68, zIndex: 80 }}
+      style={{
+        height: 68,
+        zIndex: 80,
+        opacity: hidden ? 0 : 1,
+        transition: "opacity 260ms ease-out",
+      }}
     >
       {/* Logo */}
       <a
