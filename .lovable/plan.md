@@ -1,39 +1,41 @@
-## 问题定位
+## 目标
 
-`IntroVideo.tsx` 中 `VIDEO_FRACTION = 0.6` 把总滚动预算切成两段：
-- `0 → 0.6`：驱动视频从第一帧到最后一帧
-- `0.6 → 1.0`：**空滚动区**，视频已停在最后一帧，但没有任何视觉反馈
-- `progress >= 1` 才触发 burn
+只改 `src/components/IntroVideo.tsx`，其它文件、组件、流程、UI 全部不动。
 
-所以视频看似播完后，用户还需继续滚 40% 预算（约 1280px 滚轮距离）才能看到扩张动画 —— 这就是"手指不动了还要滚很久"的原因。
+## 1. 找回故障风滤镜（常驻视频阶段）
 
-## 修复方案
+之前视频采样后有一层轻度故障风滤镜（RGB 通道横向错位 + 扫描线 + 偶发水平撕裂），后来在改 burn 效果时被删掉。方案：
 
-让扩张动画在视频到达最后一帧的瞬间无缝接上，不再需要额外滚动：
+- 在片元着色器里恢复 `glitch()` 采样函数：
+  - **RGB 分离**：R/B 通道基于 `uTime` + 每行 hash 做 ±(0.6~1.8)px 水平位移，G 通道保持原位。
+  - **扫描线**：`sin(uv.y * uResolution.y * 1.2) * 0.04` 叠加到亮度上。
+  - **偶发水平撕裂**：每 ~1.1s 出现 1~2 条高度 2~6px 的窄带，整带做 3~8px 位移。用 `step(0.985, hash(floor(uTime*0.9)))` 触发。
+- 常驻强度 `uGlitchBase = 0.35`（低调、不抢戏），burn 阶段会被下面第 3 步临时拉高。
 
-1. 把 burn 触发条件从 `progress >= 1` 改为 `videoProgress >= 1`（即 `progress >= VIDEO_FRACTION`）。
-2. 触发时把 `targetProgress` 和 `progress` 直接锁到 `1`，让后续 wheel 事件即使有惯性也不会再对齐到 `0.6` 附近，`burnActive` 已经会 `preventDefault` 忽略新的 wheel。
-3. `burstProgress` 通知给父级的映射保持不变（仍由 `burnActive` 后的 `uBurn` 时间线驱动，父级用它做 UI 淡入即可）；为一致性，触发瞬间把 `burstProgress` 通知为 `>0`，让外部状态机进入 burst 阶段。
+## 2. 光圈边缘再不规则一点
 
-不改动：
-- burn 的时长（3.6s）、缓动曲线、亮环样式
-- 视频播放 / seek 策略
-- 预加载器、SiteNav、Hero 等其它组件
+只调噪声，不改时长 / 缓动 / 亮度：
 
-## 技术细节
+- fbm 层数 5 → 6，频率再加一层高频 (`p * 14.0`)。
+- 边缘位移 `distort * 0.20` → `distort * 0.34`；再加一个低频大扰动 (`fbm(p*1.6) * 0.10`) 制造大尺度凹凸。
+- 保留现在的 ring / burned 合成方式，环仍是干净亮白。
 
-在 `loop()` 中：
-```
-- if (!burnActive && progress >= 1) {
-+ if (!burnActive && videoProgress >= 1) {
-    burnActive = true;
-    burnStartedAt = now;
-+   progress = 1;
-+   targetProgress = 1;
-    pauseVideo();
-  }
-```
+## 3. 光圈期间叠加故障风闪动
 
-可选微调：把 `VIDEO_FRACTION` 直接设为 `1.0`，让整段滚动预算都用于视频（避免用户在视频阶段感觉滚得太快）。上面的补丁已经能解决卡顿感，是否同时调 fraction 由你决定 —— 见下方问题。
+burn 开始到结束这段（`uBurn > 0`），临时把故障强度拉高并加"闪":
 
-验证：修改后用 Playwright 模拟连续滚轮，观察 `videoProgress` 到 1 的瞬间 `uBurn` 是否立刻开始递增、canvas 上是否直接出现扩张亮环。
+- `uGlitchBurst = smoothstep(0, 0.15, uBurn) * (1.0 - smoothstep(0.85, 1.0, uBurn))`，前段起、末段收。
+- 在这段时间：RGB 位移倍率 ×3、扫描线强度 ×2，并每 ~90ms 出现一次 1~2 帧的整帧位移 + 亮度 spike（`step(0.7, hash(floor(uTime*11.0)))`）。
+- 撕裂带频率提升到 ~3 条/秒。
+- 只作用于视频颜色，不污染 ring 亮白（`col = mix(glitchedVideo, ringCol, ring)` 的顺序保证亮环不被拉色）。
+
+## 4. 不改动
+
+时长（视频 fraction / burn 3.6s）、缓动、亮环样式、rolloff、滚动逻辑、预加载器、Hero/Nav/Chat、其它任何组件。
+
+## 验证
+
+Playwright：滚动到视频最后一帧，截 3 张（burn 早/中/晚），确认：
+- 视频阶段能看到轻微 RGB 错位（zoom 到边缘对比）；
+- 环边缘明显更破碎；
+- burn 期视频有明显闪动，亮环颜色不受影响。

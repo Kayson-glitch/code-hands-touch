@@ -72,7 +72,7 @@ const FRAG = /* glsl */ `
   float fbm(vec2 p) {
     float v = 0.0;
     float a = 0.5;
-    for (int i = 0; i < 5; i++) {
+    for (int i = 0; i < 6; i++) {
       v += a * vnoise(p);
       p *= 2.02;
       a *= 0.5;
@@ -94,6 +94,48 @@ const FRAG = /* glsl */ `
     return (uv - 0.5) * scale + 0.5;
   }
 
+  // ---- Glitch sampler: RGB split + scanlines + occasional horizontal tear ----
+  vec3 sampleGlitched(vec2 sUv, float intensity, float burstK) {
+    vec2 res = uResolution;
+    float t = uTime;
+
+    // Per-row jitter (stable per scanline, evolves with time)
+    float rowH = hash(vec2(floor(sUv.y * res.y * 0.5), floor(t * 6.0)));
+    float baseShift = (rowH - 0.5) * 2.0; // -1..1
+
+    // Occasional horizontal tear bands
+    float tearRate = mix(0.9, 3.2, burstK);
+    float tearSeed = hash(vec2(floor(sUv.y * res.y / 4.0), floor(t * tearRate)));
+    float tearGate = step(mix(0.985, 0.94, burstK), tearSeed);
+    float tearShift = (hash(vec2(tearSeed, floor(t * tearRate))) - 0.5) * 8.0 * (0.5 + burstK * 2.5);
+
+    // Whole-frame flash-shift during burst
+    float flashGate = step(0.7, hash(vec2(floor(t * 11.0), 3.7))) * burstK;
+    float flashShift = (hash(vec2(floor(t * 11.0), 9.1)) - 0.5) * 6.0 * flashGate;
+
+    float baseAmp = mix(0.8, 2.4, intensity) * (1.0 + burstK * 2.5);
+    float totalPx = baseShift * baseAmp + tearShift * tearGate + flashShift;
+    float dx = totalPx / res.x;
+
+    vec2 uvR = sUv + vec2( dx, 0.0);
+    vec2 uvG = sUv;
+    vec2 uvB = sUv - vec2( dx, 0.0);
+
+    float r = texture2D(uVideoTex, uvR).r;
+    float g = texture2D(uVideoTex, uvG).g;
+    float b = texture2D(uVideoTex, uvB).b;
+    vec3 c = vec3(r, g, b);
+
+    // Scanlines
+    float scan = sin(sUv.y * res.y * 1.2) * (0.04 + burstK * 0.05);
+    c *= (1.0 - scan);
+
+    // Brightness spike on flash frames
+    c += vec3(flashGate * 0.08);
+
+    return c;
+  }
+
   void main() {
     vec2 uv = vUv;
 
@@ -109,16 +151,22 @@ const FRAG = /* glsl */ `
     // Cover-fit to preserve aspect (no stretch)
     vec2 sampleUv = coverUV(videoUv, uResolution, uVideoRes);
 
-    vec3 col = texture2D(uVideoTex, sampleUv).rgb;
+    float burstK = smoothstep(0.0, 0.15, uBurn) * (1.0 - smoothstep(0.85, 1.0, uBurn));
+    vec3 col = sampleGlitched(sampleUv, 0.35, burstK);
 
     // ---- Burn-through: paper burns from center outward, revealing black ----
     float b = clamp(uBurn, 0.0, 1.0);
     if (b > 0.0) {
       float t = uTime;
       // fbm distortion for irregular edge
+      float n0 = fbm(p * 1.6 + vec2(t * 0.08,  t * 0.05));
       float n1 = fbm(p * 3.2 + vec2(t * 0.18, -t * 0.12));
       float n2 = fbm(p * 7.5 - vec2(t * 0.22, t * 0.16));
-      float distort = (n1 - 0.5) * 0.16 + (n2 - 0.5) * 0.06;
+      float n3 = fbm(p * 14.0 + vec2(-t * 0.30, t * 0.24));
+      float distort = (n0 - 0.5) * 0.20
+                    + (n1 - 0.5) * 0.18
+                    + (n2 - 0.5) * 0.08
+                    + (n3 - 0.5) * 0.04;
 
       // Single radius drives both the hole and the ring, so they expand in lock-step.
       // easeIn (pow 3.2): fingertip lingers as a small light, then accelerates outward.
@@ -126,7 +174,7 @@ const FRAG = /* glsl */ `
       float ringWidth = 0.10;
 
       float len = length(p);
-      float d = len - r + distort * 0.20; // signed distance from the front
+      float d = len - r + distort * 0.34; // signed distance from the front
 
       // Burned-through hole sits just inside the ring band.
       float burned = smoothstep(ringWidth * 0.35, -ringWidth * 0.15, d);
