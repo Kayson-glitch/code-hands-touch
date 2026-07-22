@@ -47,7 +47,7 @@ export function ScrollHint({ visible = true }: { visible?: boolean }) {
         transform: `translate(-50%, calc(-50% + ${translateY}px)) scale(${scale})`,
         opacity: on ? 1 : 0,
         transition:
-          "transform 1400ms cubic-bezier(0.2, 1.05, 0.45, 1), opacity 1400ms cubic-bezier(0.2, 1.05, 0.45, 1)",
+          "transform 2600ms cubic-bezier(0.34, 1.55, 0.64, 1), opacity 2600ms cubic-bezier(0.34, 1.55, 0.64, 1)",
         willChange: "transform, opacity",
         pointerEvents: "none",
         zIndex: 90,
