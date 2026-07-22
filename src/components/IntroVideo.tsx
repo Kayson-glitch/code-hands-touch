@@ -118,7 +118,7 @@ const FRAG = /* glsl */ `
       // fbm distortion for irregular edge
       float n1 = fbm(p * 3.2 + vec2(t * 0.18, -t * 0.12));
       float n2 = fbm(p * 7.5 - vec2(t * 0.22, t * 0.16));
-      float distort = (n1 - 0.5) * 0.30 + (n2 - 0.5) * 0.10;
+      float distort = (n1 - 0.5) * 0.16 + (n2 - 0.5) * 0.06;
 
       // Outer radius (burn front) — easeOutCubic, expands past screen.
       float bOuter = 1.0 - pow(1.0 - b, 3.0);
@@ -132,25 +132,30 @@ const FRAG = /* glsl */ `
       float dOuter = len - rOuter + distort * 0.22;
       float dInner = len - rInner + distort * 0.18;
 
-      // Burned-through mask (fully transparent → black)
-      float burned = smoothstep(0.02, -0.04, dInner);
-      // Ring mask (between inner and outer): still-burning edge
-      float ringOuter = smoothstep(0.04, -0.02, dOuter); // 1 inside outer
-      float ring = clamp(ringOuter - burned, 0.0, 1.0);
+      // Burned-through mask (crisp inner hole → black)
+      float burned = smoothstep(0.015, -0.015, dInner);
 
-      // Soft glow halo around the burn front (both sides of outer edge)
-      float halo = exp(-abs(dOuter) * 7.0);
+      // Solid bright ring band centred on dOuter with thickness ~ringWidth.
+      float ringWidth = 0.10;
+      float ringBand = smoothstep(ringWidth, ringWidth * 0.55, abs(dOuter));
+      float ring = clamp(ringBand * (1.0 - burned), 0.0, 1.0);
+
+      // Two-layer halo, biased to the outside of the ring so the video side stays clean.
+      float outsideBias = smoothstep(-0.02, 0.06, dOuter);
+      float haloInner = exp(-abs(dOuter) * 14.0) * 1.20;
+      float haloOuter = exp(-abs(dOuter) * 4.5)  * 0.55;
+      float halo = (haloInner + haloOuter) * (0.25 + 0.75 * outsideBias);
+
       vec3 glowCol = vec3(0.77, 0.66, 1.00); // cool lavender
-      // Hot core near the ring itself (slightly warmer highlight, subtle)
-      vec3 ringCol = mix(glowCol, vec3(1.0, 0.96, 1.0), 0.35);
+      vec3 ringCol = vec3(1.00, 0.98, 1.00); // near-white solid band
 
       // Composite:
       //  - burned area → black
-      //  - ring area → darken video + add ring highlight + glow
-      //  - outside → video + faint outer halo as front approaches
+      //  - ring → solid bright band overwrites video
+      //  - outside → video + soft lavender halo, no halo inside the hole
       col = mix(col, vec3(0.0), burned);
-      col = mix(col, col * 0.15 + ringCol * 0.9, ring);
-      col += glowCol * halo * (0.35 + ring * 0.6) * (1.0 - burned);
+      col = mix(col, ringCol, ring);
+      col += glowCol * halo * (1.0 - burned);
     }
 
     gl_FragColor = vec4(col, 1.0);
