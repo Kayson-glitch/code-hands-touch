@@ -1,31 +1,27 @@
 ## 目标
-1. 缩短「扩散动画结束 → UI 出现」之间的纯黑屏停留。
-2. 该黑屏阶段内不能出现导航栏（当前实现里 nav 在扩散完成瞬间就会短暂显示，然后被 hide 再 show，观感上仍能看到）。
-
-## 现状
-- `IntroVideo` 扩散完成 → `AsciiHandsFooter.handleIntroEnded` 触发：
-  - `setBgDark(true)` → `HeroCopy` 收到 `app-bg-change=dark`，**再等 700ms** 才 fade in（`src/components/HeroCopy.tsx:13`）。
-  - 同时 dispatch `app-nav-visibility=hidden`，**850ms 后**再 `visible`（`src/components/AsciiHandsFooter.tsx:1321-1325`）。
-- `SiteNav` 默认状态是 `hidden=false`（可见），在整个视频/扩散阶段其实一直挂着。扩散过程中背景变黑时，nav 会在黑屏上短暂出现，直到 `handleIntroEnded` 才被隐藏。
+Hero 区域的标题（含渐变的 "Synergy.AI." 部分）以 React Bits `BlurText` 的模糊+位移入场动画整体呈现；副标题与按钮保持现有行为不变。
 
 ## 修改
 
-### `src/components/AsciiHandsFooter.tsx`
-- 在**扩散开始时**（`handleIntroProgress` 首次收到 `progress > 0` 或 burst 起点）就 dispatch `app-nav-visibility=hidden`，保证整个黑屏过渡期间 nav 都是隐藏的。
-- 把 `handleIntroEnded` 里重新显示 nav 的延时从 `850ms` 缩短到 `320ms`，与新的 hero fade-in 时机对齐。
-- `handoffBlack` 覆盖层的 `setTimeout(..., 300)` 缩短到 `160ms`，减少纯黑帧数量。
+### 1. 新增 `src/components/BlurText.tsx`
+按提供的源码原样落地组件（TS 化后：为 props 补上类型），使用 `motion/react`。
 
-### `src/components/HeroCopy.tsx`
-- 将 `app-bg-change=dark` 后的 fade-in 延时从 `700ms` 降到 `280ms`，让 UI 更快浮出。
+### 2. 安装依赖
+`bun add motion`
 
-### `src/components/SiteNav.tsx`
-- 初始 `hidden` 默认值改为 `true`，只有收到 `visible` 事件才显示，避免视频阶段外露及扩散黑屏瞬间闪现。
+### 3. `src/components/HeroCopy.tsx`
+- 引入 `BlurText`。
+- 保留现有 `visible` 触发机制（等 `app-bg-change=dark` 后 280ms），把标题从 `<h1>` 静态 JSX 换成 `BlurText`，仍然通过外层容器的 `opacity/transform` 控制整体登场时机（副标题+按钮的淡入不变）。
+- 因为标题带渐变色的 "Synergy.AI." 是 span，`BlurText` 只接收纯字符串，会破坏渐变。做法：
+  - 用两个 `BlurText` 拼一行：
+    1. `BlurText text="Support that drives revenue, powered by"` 白色。
+    2. `BlurText text="Synergy.AI."` 通过 `className` 应用渐变文字样式（`bg-clip-text text-transparent` + 内联 `background-image` 渐变），保证每个 word span 都继承渐变。
+  - 两段 flex-wrap 排在一行，视觉上等价原两行标题（原本就是 `<br />` 手动换行，这里改为让 flex 自然换行；容器居中、`max-width: 900px` 保留）。
+- `animateBy="words"`，`direction="top"`，`delay=120`，`stepDuration=0.5`，仅在 `visible=true` 时挂载 `BlurText`（key 触发一次），避免页面初始就播完。
 
-## 不改动
-- 扩散动画本身的时长、形状、shader 逻辑。
-- 视频滚动、preloader、ASCII 手部动画逻辑。
+### 4. 不改动
+- `SiteNav`、`FinChatDock`、扩散动画、视频、导航栏可见性逻辑。
+- 副标题 `<p>` 与 "Book a Demo" 按钮保持现在的容器级淡入。
 
 ## 验证
-预览刷新，滚动播放至视频结束 → 扩散 1.8s 匀速完成 → 观察：
-- 扩散过程中及结束后的黑屏期间导航栏不可见；
-- 黑屏时长明显缩短（≈150–300ms 内 hero 文案/按钮开始淡入，nav 同步出现）。
+预览刷新 → 视频扩散结束 → hero 出现时，标题按单词依次从上方模糊淡入落位，"Synergy.AI." 渐变颜色正确、副标题与按钮同步淡入。
