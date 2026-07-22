@@ -459,6 +459,12 @@ export function AsciiHandsFooter({ videoSrc, debug }: { videoSrc?: string; debug
     let raf = 0;
     let running = true;
 
+    // Sync module-scope cell/font from current layout tier so both sampling
+    // and drawing use the same units. Large screens get bigger cells.
+    CELL_W = layout.cellSize;
+    CELL_H = layout.cellSize;
+    FONT_PX = Math.max(6, Math.round(layout.cellSize * 0.8));
+
     const prefersReduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     if (prefersReduce) {
       introDoneRef.current = true;
@@ -490,7 +496,10 @@ export function AsciiHandsFooter({ videoSrc, debug }: { videoSrc?: string; debug
     };
 
     const resize = () => {
-      const dpr = window.devicePixelRatio || 1;
+      // Cap DPR at 2 — on 3x mobile / 4K retina the fill-rate saving is huge
+      // and the ASCII glyphs stay crisp because the source grid is already
+      // coarse (10-14 CSS px per cell).
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
       const w = canvas.clientWidth;
       const h = canvas.clientHeight;
       canvas.width = Math.floor(w * dpr);
@@ -504,7 +513,14 @@ export function AsciiHandsFooter({ videoSrc, debug }: { videoSrc?: string; debug
       resize();
     });
 
-    const ro = new ResizeObserver(resize);
+    // Debounce resize/resample — dragging the window fires ResizeObserver
+    // hundreds of times per second, and resample is the most expensive path.
+    let resizeTimer = 0;
+    const scheduleResize = () => {
+      window.clearTimeout(resizeTimer);
+      resizeTimer = window.setTimeout(resize, 80);
+    };
+    const ro = new ResizeObserver(scheduleResize);
     ro.observe(canvas);
 
     // Trigger intro on first visibility.
@@ -649,6 +665,12 @@ export function AsciiHandsFooter({ videoSrc, debug }: { videoSrc?: string; debug
     const draw = () => {
       if (!running) return;
       frame++;
+      // While the intro video stage is active the hands canvas is invisible
+      // (opacity 0). Skip all glyph work to keep first-screen CPU quiet.
+      if (stageRef.current === "orb") {
+        raf = requestAnimationFrame(draw);
+        return;
+      }
       const now = performance.now();
       const dt = Math.min(64, now - lastT);
       lastT = now;
@@ -1269,6 +1291,7 @@ export function AsciiHandsFooter({ videoSrc, debug }: { videoSrc?: string; debug
     return () => {
       running = false;
       cancelAnimationFrame(raf);
+      window.clearTimeout(resizeTimer);
       ro.disconnect();
       io.disconnect();
       window.removeEventListener("mousemove", onMove);
