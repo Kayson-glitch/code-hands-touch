@@ -232,41 +232,66 @@ const FRAG = /* glsl */ `
     float b = clamp(uBurn, 0.0, 1.0);
     if (b > 0.0) {
       float t = uTime;
-      // fbm distortion for irregular edge
-      float n0 = fbm(p * 1.6 + vec2(t * 0.08,  t * 0.05));
-      float n1 = fbm(p * 3.2 + vec2(t * 0.18, -t * 0.12));
-      float n2 = fbm(p * 7.5 - vec2(t * 0.22, t * 0.16));
-      float n3 = fbm(p * 14.0 + vec2(-t * 0.30, t * 0.24));
-      float distort = (n0 - 0.5) * 0.20
-                    + (n1 - 0.5) * 0.18
-                    + (n2 - 0.5) * 0.08
-                    + (n3 - 0.5) * 0.04;
+      // ---- Domain-warp the sample point so the edge is non-circular ----
+      // Two low-freq fbm channels displace p → petal / tongue-like contour.
+      float wx = fbm(p * 1.3 + vec2( t * 0.09,  t * 0.06));
+      float wy = fbm(p * 1.3 + vec2(-t * 0.07,  t * 0.11) + 17.3);
+      vec2  pw = p + (vec2(wx, wy) - 0.5) * 0.55;
 
-      // Single radius drives both the hole and the ring, so they expand in lock-step.
+      // Anisotropic long-streak noise (stretched horizontally) → flame tongues.
+      float streak = fbm(vec2(pw.x * 6.0, pw.y * 1.6) + vec2(t * 0.35, -t * 0.2));
+      float hi     = fbm(pw * 9.0 - vec2(t * 0.28, t * 0.20));
+
+      float distort = (streak - 0.5) * 0.28 + (hi - 0.5) * 0.10;
+
       // easeIn (pow 3.2): fingertip lingers as a small light, then accelerates outward.
       float r = pow(b, 3.2) * 2.05;
-      float ringWidth = 0.10;
 
-      float len = length(p);
-      float d = len - r + distort * 0.34; // signed distance from the front
+      // Angle-dependent radius wobble so the front is never a perfect circle.
+      float ang = atan(pw.y, pw.x);
+      float wob = sin(ang * 3.0 + t * 0.7) * 0.045
+                + sin(ang * 5.0 - t * 0.9) * 0.030
+                + sin(ang * 9.0 + t * 1.3) * 0.018;
 
-      // Burned-through hole sits just inside the ring band.
-      float burned = smoothstep(ringWidth * 0.35, -ringWidth * 0.15, d);
-      // Bright ring hugs the burn front on its outer side.
-      float ring = smoothstep(ringWidth, ringWidth * 0.55, abs(d)) * (1.0 - burned);
+      float len = length(pw);
+      float d = len - r + distort * 0.55 + wob; // signed distance from the front
 
-      // Fade the ring in from zero so the first burn frames don't pop.
-      float appear = smoothstep(0.0, 0.08, b);
-      ring *= appear;
+      // Burned-through hole sits just inside the front.
+      float burned = smoothstep(0.035, -0.015, d);
 
-      vec3 ringCol = vec3(1.00, 0.98, 1.00); // near-white solid band
+      // Fade-in and tail-out envelopes (avoid pop / final flash).
+      float appear = smoothstep(0.0, 0.10, b);
+      float tail   = 1.0 - smoothstep(0.92, 1.00, b);
+      float env    = appear * tail;
 
-      // Composite:
-      //  - burned area → black
-      //  - ring → thin bright band along the hole's outer edge
+      // ---- Composite: black hole first ----
       col = mix(col, vec3(0.0), burned);
-      col = mix(col, ringCol, ring);
+
+      // ---- Multi-layer glowing edge (only outside the burned hole) ----
+      float outside = 1.0 - burned;
+
+      // L0 — thin core rim, near-white, opaque-ish
+      float L0 = smoothstep(0.014, 0.000, abs(d)) * outside * env;
+      col += vec3(1.00, 0.99, 1.00) * L0 * 0.95;
+
+      // L1 — hot halo, warm lavender-white, additive
+      float L1 = smoothstep(0.055, 0.010, abs(d)) * outside * env;
+      col += vec3(0.96, 0.92, 1.00) * L1 * 0.55;
+
+      // L2 — cloudy diffusion, lavender, additive, exp falloff + noise
+      float cloud = fbm(pw * 5.0 + vec2(t * 0.15, -t * 0.1));
+      float dOut2 = max(d, 0.0);
+      float L2 = exp(-dOut2 / 0.09) * outside * env * (0.65 + 0.55 * cloud);
+      col += vec3(0.77, 0.66, 1.00) * L2 * 0.42;
+
+      // L3 — outer misty falloff, cooler lavender, additive, grainy
+      float grain = fract(sin(dot(uv * uResolution + t, vec2(12.9898, 78.233))) * 43758.5453);
+      float L3 = exp(-dOut2 / 0.22) * outside * env * (0.55 + 0.45 * grain);
+      col += vec3(0.62, 0.54, 0.95) * L3 * 0.22;
     }
+
+    // Highlight roll-off again after additive glow to guarantee no white flash.
+    col = col - max(vec3(0.0), col - vec3(0.985));
 
     gl_FragColor = vec4(col, 1.0);
   }
