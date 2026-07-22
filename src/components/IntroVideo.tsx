@@ -335,7 +335,7 @@ export function IntroVideo({
   const [burnParams, setBurnParams] = useState<BurnParams>(DEFAULT_BURN_PARAMS);
   const burnParamsRef = useRef<BurnParams>(burnParams);
   useEffect(() => { burnParamsRef.current = burnParams; }, [burnParams]);
-  const debugEnabled = debug ?? import.meta.env.DEV;
+  const debugEnabled = !!debug;
   const debugRef = useRef(debugEnabled);
   useEffect(() => { debugRef.current = debugEnabled; }, [debugEnabled]);
   // Exposed to the debug panel so it can jump / finish.
@@ -670,7 +670,7 @@ export function IntroVideo({
         ref={canvasRef}
         style={{ position: "absolute", inset: 0, width: "100%", height: "100%", display: "block" }}
       />
-      {(debug ?? import.meta.env.DEV) && (
+      {debugEnabled && (
         <BurnDebugPanel
           values={burnParams}
           onChange={setBurnParams}

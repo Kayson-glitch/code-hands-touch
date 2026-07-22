@@ -413,7 +413,7 @@ function getHandsVisualRect(layout: HeroLayout, viewportW: number, viewportH: nu
   };
 }
 
-export function AsciiHandsFooter({ videoSrc }: { videoSrc?: string } = {}) {
+export function AsciiHandsFooter({ videoSrc, debug }: { videoSrc?: string; debug?: boolean } = {}) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const layout = useHeroLayout();
   const [mounted, setMounted] = useState(false);
@@ -1353,7 +1353,7 @@ export function AsciiHandsFooter({ videoSrc }: { videoSrc?: string } = {}) {
             pointerEvents: stage === "orb" ? "auto" : "none",
           }}
         >
-          <IntroVideo onEnded={handleIntroEnded} onProgress={handleIntroProgress} src={videoSrc} />
+          <IntroVideo onEnded={handleIntroEnded} onProgress={handleIntroProgress} src={videoSrc} debug={debug} />
         </div>
       )}
 
