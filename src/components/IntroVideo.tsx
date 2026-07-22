@@ -273,7 +273,7 @@ const FRAG = /* glsl */ `
       float distort = (streak - 0.5) * uStreakAmp + (hi - 0.5) * 0.10;
 
       // easeIn (pow 3.2): fingertip lingers as a small light, then accelerates outward.
-      float r = pow(b, 3.2) * 2.05;
+      float r = b * 2.05;
 
       // Angle-dependent radius wobble so the front is never a perfect circle.
       float ang = atan(pw.y, pw.x);
