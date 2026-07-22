@@ -1330,7 +1330,7 @@ export function AsciiHandsFooter({
       window.dispatchEvent(new CustomEvent("app-nav-visibility", { detail: "hidden" }));
       window.setTimeout(() => {
         window.dispatchEvent(new CustomEvent("app-nav-visibility", { detail: "visible" }));
-      }, 320);
+      }, 160);
     }
     // Also paint html/body black immediately, so the single frame where
     // <IntroVideo> unmounts can't reveal the theme's white body background.
@@ -1343,7 +1343,7 @@ export function AsciiHandsFooter({
     // cover the hands canvas; the handoffBlack layer keeps the background
     // solid for a few frames to avoid any composite gap.
     setOrbMounted(false);
-    window.setTimeout(() => setHandoffBlack(false), 160);
+    window.setTimeout(() => setHandoffBlack(false), 80);
   };
   const [bgDark, setBgDark] = useState(false);
   useEffect(() => {
