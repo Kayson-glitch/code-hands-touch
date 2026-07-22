@@ -49,13 +49,13 @@ export function HeroCopy() {
         <span
           style={{
             background:
-              "linear-gradient(90deg, #185DFF 0%, #D018FF 50%, #FF1245 100%, #D018FF 150%, #185DFF 200%)",
-            backgroundSize: "200% 100%",
+              "linear-gradient(115deg, #185DFF 0%, #4B3AFF 18%, #8B22FF 34%, #D018FF 50%, #E81A8A 66%, #FF1245 82%, #D018FF 100%)",
+            backgroundSize: "220% 220%",
             WebkitBackgroundClip: "text",
             backgroundClip: "text",
             WebkitTextFillColor: "transparent",
             color: "transparent",
-            animation: "synergy-gradient-flow 8s ease-in-out infinite",
+            animation: "synergy-gradient-flow 11s ease-in-out infinite",
           }}
         >
           Synergy.AI.
