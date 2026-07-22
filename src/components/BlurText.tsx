@@ -1,4 +1,4 @@
-import { motion, type Transition } from "motion/react";
+import { motion, type TargetAndTransition, type Transition } from "motion/react";
 import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 
 type Snapshot = Record<string, string | number>;
@@ -24,9 +24,11 @@ const buildKeyframes = (from: Snapshot, steps: Snapshot[]) => {
     ...Object.keys(from),
     ...steps.flatMap((s) => Object.keys(s)),
   ]);
-  const keyframes: Record<string, Array<string | number | undefined>> = {};
+  const keyframes: Record<string, Array<string | number>> = {};
   keys.forEach((k) => {
-    keyframes[k] = [from[k], ...steps.map((s) => s[k])];
+    keyframes[k] = [from[k], ...steps.map((s) => s[k])].filter(
+      (v): v is string | number => v !== undefined
+    );
   });
   return keyframes;
 };
@@ -97,7 +99,10 @@ const BlurText = ({
       style={{ display: "flex", flexWrap: "wrap", ...style }}
     >
       {elements.map((segment, index) => {
-        const animateKeyframes = buildKeyframes(fromSnapshot, toSnapshots);
+        const animateKeyframes = buildKeyframes(
+          fromSnapshot,
+          toSnapshots
+        ) as TargetAndTransition;
         const spanTransition: Transition = {
           duration: totalDuration,
           times,
