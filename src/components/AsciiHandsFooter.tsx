@@ -1276,12 +1276,14 @@ export function AsciiHandsFooter({ videoSrc }: { videoSrc?: string } = {}) {
 
   const handsVisible = stage === "hands";
   const [orbMounted, setOrbMounted] = useState(true);
+  const [handoffBlack, setHandoffBlack] = useState(false);
   const handleIntroProgress = (_info: IntroProgressInfo) => {
     /* shader draws burst internally; no external state needed */
   };
   const handleIntroEnded = () => {
     if (stageRef.current !== "orb") return;
     setBgDark(true);
+    setHandoffBlack(true);
     // Also paint html/body black immediately, so the single frame where
     // <IntroVideo> unmounts can't reveal the theme's white body background.
     if (typeof document !== "undefined") {
@@ -1292,6 +1294,7 @@ export function AsciiHandsFooter({ videoSrc }: { videoSrc?: string } = {}) {
     // Keep the intro layer mounted briefly so the burst overlay can fade out
     // on top of it, then unmount.
     window.setTimeout(() => setOrbMounted(false), 500);
+    window.setTimeout(() => setHandoffBlack(false), 900);
   };
   const [bgDark, setBgDark] = useState(false);
   useEffect(() => {
@@ -1352,6 +1355,19 @@ export function AsciiHandsFooter({ videoSrc }: { videoSrc?: string } = {}) {
           <IntroVideo onEnded={handleIntroEnded} onProgress={handleIntroProgress} src={videoSrc} />
         </div>
       )}
+
+      <div
+        aria-hidden
+        style={{
+          position: "fixed",
+          inset: 0,
+          zIndex: 120,
+          background: "#000",
+          opacity: handoffBlack ? 1 : 0,
+          pointerEvents: "none",
+          transition: handoffBlack ? "none" : "opacity 360ms ease-out",
+        }}
+      />
 
     </section>
   );

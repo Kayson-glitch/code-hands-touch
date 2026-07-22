@@ -284,7 +284,9 @@ export function IntroVideo({
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const firedRef = useRef(false);
+  const onEndedRef = useRef(onEnded);
   const onProgressRef = useRef(onProgress);
+  useEffect(() => { onEndedRef.current = onEnded; }, [onEnded]);
   useEffect(() => { onProgressRef.current = onProgress; }, [onProgress]);
 
   useEffect(() => {
@@ -390,7 +392,7 @@ export function IntroVideo({
     const fire = () => {
       if (firedRef.current) return;
       firedRef.current = true;
-      onEnded({
+      onEndedRef.current({
         videoW: video.videoWidth || 0,
         videoH: video.videoHeight || 0,
       });
@@ -546,7 +548,7 @@ export function IntroVideo({
       mesh.geometry.dispose();
       renderer.dispose();
     };
-  }, [onEnded]);
+  }, [src]);
 
   return (
     <div style={{ position: "absolute", inset: 0, background: "#000", overflow: "hidden" }}>
