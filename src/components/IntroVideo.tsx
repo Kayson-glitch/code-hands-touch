@@ -158,21 +158,21 @@ const FRAG = /* glsl */ `
     float bandShiftPx = 0.0;
     if (shardK > 0.0) {
       float tierPick = fract(sin(floor(uTime * 6.0)) * 43758.5453);
-      float cell = mix(14.0, 22.0, step(0.33, tierPick)) + step(0.66, tierPick) * 4.0;
+      float cell = mix(22.0, 30.0, step(0.33, tierPick)) + step(0.66, tierPick) * 8.0;
       vec2 cellId = floor(gl_FragCoord.xy / cell);
       float ch  = hash(cellId + vec2(floor(uTime * 20.0), 0.0));
       float ch2 = hash(cellId + vec2(7.31, floor(uTime * 20.0)));
       float cellTrig = step(0.94, ch) * shardK; // ~6% cells
-      jitteredUv += vec2((ch - 0.5) * 10.0, (ch2 - 0.5) * 3.0) * cellTrig / uResolution.xy;
+      jitteredUv += vec2((ch - 0.5) * 16.0, (ch2 - 0.5) * 5.0) * cellTrig / uResolution.xy;
 
       // Foreground horizontal shard bands — varying stripe heights.
       float bandTier = fract(sin(floor(uTime * 12.0)) * 12345.678);
-      float bandH = mix(4.0, 10.0, bandTier);
+      float bandH = mix(10.0, 22.0, bandTier);
       float rowId = floor(gl_FragCoord.y / bandH);
       float bh  = hash(vec2(rowId, floor(uTime * 20.0)));
       float bh2 = hash(vec2(rowId + 91.7, floor(uTime * 20.0)));
-      bandTrigger = step(0.85, bh) * shardK; // ~15% bands
-      bandShiftPx = (bh2 - 0.5) * 28.0 * bandTrigger; // ±14px
+      bandTrigger = step(0.78, bh) * shardK; // ~22% bands
+      bandShiftPx = (bh2 - 0.5) * 52.0 * bandTrigger; // ±26px
       jitteredUv.x += bandShiftPx / uResolution.x;
     }
 
@@ -183,17 +183,22 @@ const FRAG = /* glsl */ `
     vec2 chromaDir = mix(vec2(1.0, 0.0), radial * aspect / rlen, burstK);
     // Extra radial split inside active shard bands → colored fringe on shards.
     // Fringe suppressed in highlights to avoid over-exposure blowouts.
-    float shardChromaPx = chromaPx + bandTrigger * 4.5 * wHi;
+    float shardChromaPx = chromaPx + bandTrigger * 7.0 * (0.55 + 0.45 * wHi);
     vec3 col = sampleChroma(jitteredUv, chromaDir * shardChromaPx);
+    // Slight brightness lift on foreground shards so they pop against ghosts.
+    col *= 1.0 + 0.03 * bandTrigger;
 
     // Background ghost / afterimage: a low-opacity large-offset copy of the
     // video texture, only during the shard peak.
     if (shardK > 0.0) {
       float gh = hash(vec2(floor(uTime * 10.0), 3.14));
-      float ghostShiftPx = (gh - 0.5) * 16.0;
-      vec2 ghostUv = sampleUv + vec2(ghostShiftPx / uResolution.x, 0.0);
+      float gv = hash(vec2(floor(uTime * 10.0) + 17.0, 2.71));
+      float ghostShiftPx = (gh - 0.5) * 68.0;
+      float ghostShiftPy = (gv - 0.5) * 12.0;
+      vec2 ghostUv = sampleUv + vec2(ghostShiftPx / uResolution.x, ghostShiftPy / uResolution.y);
       vec3 ghost = sampleChroma(ghostUv, chromaDir * (chromaPx + 3.0));
-      col = mix(col, max(col, ghost), 0.22 * shardK * (0.35 + 0.65 * wMid));
+      float ghostMix = 0.30 * shardK * (0.35 + 0.65 * wMid) * (1.0 - wHi * 0.5);
+      col = mix(col, mix(col, ghost, 0.75), ghostMix);
     }
 
     // Fine-grain high-frequency noise: per-pixel ±0.8% luminance dither,
