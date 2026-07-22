@@ -56,7 +56,7 @@ export function SiteNav() {
       }}
     >
       <div
-        className={`pointer-events-auto flex items-center justify-between gap-8 rounded-full border ${capsuleClass} ${fg}`}
+        className={`pointer-events-auto flex items-center justify-between rounded-full border ${capsuleClass} ${fg}`}
         style={{ height: 52, width: "min(92vw, 900px)", paddingLeft: 18, paddingRight: 6 }}
       >
         {/* Logo */}
@@ -70,7 +70,7 @@ export function SiteNav() {
 
         {/* Center menu */}
         <ul
-          className="hidden items-center gap-8 md:flex"
+          className="hidden flex-1 items-center justify-center gap-8 md:flex"
           style={{ fontSize: 14, lineHeight: "22px" }}
         >
           <li className="flex cursor-pointer items-center gap-1">
