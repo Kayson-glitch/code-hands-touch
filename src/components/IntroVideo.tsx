@@ -17,6 +17,7 @@ export type IntroProgressInfo = {
 
 const VIDEO_FRACTION = 0.6;
 const PIXELS_FOR_FULL_PROGRESS = 3200;
+const BURN_DURATION_MS = 1600;
 // Cap a single wheel tick so a hard mouse-wheel notch doesn't jump the progress.
 const MAX_PIXELS_PER_TICK = 140;
 // Exponential smoothing rate (higher = snappier follow, lower = more inertia).
@@ -47,7 +48,7 @@ const FRAG = /* glsl */ `
   varying vec2 vUv;
   uniform sampler2D uVideoTex;
   uniform float uProgress;      // 0..1 total; burst active when > VIDEO_FRACTION
-  uniform float uBurst;         // 0..1 burst sub-progress
+  uniform float uBurn;          // 0..1 burn-through progress
   uniform float uTime;
   uniform vec2  uCenter;        // burst origin in uv (0..1)
   uniform vec2  uResolution;    // canvas px
@@ -99,7 +100,6 @@ const FRAG = /* glsl */ `
     // Aspect-correct radial coords for a round burst on any viewport.
     vec2 aspect = vec2(uResolution.x / uResolution.y, 1.0);
     vec2 p  = (uv - uCenter) * aspect;
-    vec2 pc = (uCenter) * aspect;
 
     // ---- Video-phase parallax: subtle zoom around fingertip center ----
     float videoP = clamp(uProgress / uVideoFraction, 0.0, 1.0);
@@ -109,52 +109,49 @@ const FRAG = /* glsl */ `
     // Cover-fit to preserve aspect (no stretch)
     vec2 sampleUv = coverUV(videoUv, uResolution, uVideoRes);
 
-    // ---- Burst distance field with organic fbm distortion ----
-    float t = uTime;
-    // Radius grows past 1 to fill screen. easeOutCubic feel.
-    float bb = clamp(uBurst, 0.0, 1.0);
-    float bbEase = 1.0 - pow(1.0 - bb, 2.5);
-    float radius = bbEase * 1.6;
+    vec3 col = texture2D(uVideoTex, sampleUv).rgb;
 
-    // Distortion: two layers of fbm at different scales, animated
-    float n1 = fbm(p * 3.5 + vec2(t * 0.15, -t * 0.10));
-    float n2 = fbm(p * 8.0 - vec2(t * 0.25, t * 0.20));
-    float distort = (n1 - 0.5) * 0.28 + (n2 - 0.5) * 0.09;
+    // ---- Burn-through: paper burns from center outward, revealing black ----
+    float b = clamp(uBurn, 0.0, 1.0);
+    if (b > 0.0) {
+      float t = uTime;
+      // fbm distortion for irregular edge
+      float n1 = fbm(p * 3.2 + vec2(t * 0.18, -t * 0.12));
+      float n2 = fbm(p * 7.5 - vec2(t * 0.22, t * 0.16));
+      float distort = (n1 - 0.5) * 0.30 + (n2 - 0.5) * 0.10;
 
-    float d = length(p) - radius + distort * (0.15 + bb * 0.35);
+      // Outer radius (burn front) — easeOutCubic, expands past screen.
+      float bOuter = 1.0 - pow(1.0 - b, 3.0);
+      float rOuter = bOuter * 1.9;
+      // Inner radius (already-burned-through hole) — lags behind, delayed start.
+      float bInner = smoothstep(0.10, 0.95, b);
+      float rInner = bInner * 1.9;
 
-    // ---- Chromatic aberration on video sample, ramped by |d| near edge ----
-    float edgeProx = exp(-abs(d) * 6.0);            // 1 at edge, ~0 far away
-    float chroma = 0.006 + edgeProx * 0.020 * bb;
-    vec2 caDir = normalize(p + 1e-4);
-    vec3 col;
-    col.r = texture2D(uVideoTex, coverUV(videoUv + caDir * chroma, uResolution, uVideoRes)).r;
-    col.g = texture2D(uVideoTex, sampleUv).g;
-    col.b = texture2D(uVideoTex, coverUV(videoUv - caDir * chroma, uResolution, uVideoRes)).b;
+      float len = length(p);
+      // Signed distances from front (positive = outside burn, negative = burning/burned)
+      float dOuter = len - rOuter + distort * 0.22;
+      float dInner = len - rInner + distort * 0.18;
 
-    // ---- Bright liquid rim ----
-    float rimW = 0.05 + 0.12 * (1.0 - bb);
-    float rim = exp(-pow(d / rimW, 2.0)) * bb;
-    vec3 rimCol = mix(vec3(1.0, 0.98, 0.92), vec3(0.80, 0.72, 1.10), 0.45);
-    col += rimCol * rim * 1.6;
+      // Burned-through mask (fully transparent → black)
+      float burned = smoothstep(0.02, -0.04, dInner);
+      // Ring mask (between inner and outer): still-burning edge
+      float ringOuter = smoothstep(0.04, -0.02, dOuter); // 1 inside outer
+      float ring = clamp(ringOuter - burned, 0.0, 1.0);
 
-    // Small hot core just as burst kicks off (fingertip flash)
-    float coreR = 0.02 + 0.08 * bb;
-    float core = smoothstep(coreR, 0.0, length(p)) * smoothstep(0.0, 0.15, bb) * (1.0 - smoothstep(0.4, 0.8, bb));
-    col += vec3(1.0, 0.95, 0.85) * core * 1.2;
+      // Soft glow halo around the burn front (both sides of outer edge)
+      float halo = exp(-abs(dOuter) * 7.0);
+      vec3 glowCol = vec3(0.77, 0.66, 1.00); // cool lavender
+      // Hot core near the ring itself (slightly warmer highlight, subtle)
+      vec3 ringCol = mix(glowCol, vec3(1.0, 0.96, 1.0), 0.35);
 
-    // ---- Interior fade: inside the disc, mix toward white as burst finishes ----
-    float inside = smoothstep(0.02, -0.15, d);
-    float whiten = inside * smoothstep(0.55, 1.0, bb);
-    col = mix(col, vec3(1.0), whiten);
-
-    // Sparkle noise inside disc during late burst
-    float sp = step(0.985, hash(floor(uv * uResolution / 3.0) + floor(t * 20.0)));
-    col += vec3(sp) * inside * smoothstep(0.4, 0.9, bb) * 0.9;
-
-    // ---- Final overall fade to white as burst completes ----
-    float finalWhite = smoothstep(0.85, 1.0, bb);
-    col = mix(col, vec3(1.0), finalWhite);
+      // Composite:
+      //  - burned area → black
+      //  - ring area → darken video + add ring highlight + glow
+      //  - outside → video + faint outer halo as front approaches
+      col = mix(col, vec3(0.0), burned);
+      col = mix(col, col * 0.15 + ringCol * 0.9, ring);
+      col += glowCol * halo * (0.35 + ring * 0.6) * (1.0 - burned);
+    }
 
     gl_FragColor = vec4(col, 1.0);
   }
@@ -200,7 +197,7 @@ export function IntroVideo({
     const uniforms = {
       uVideoTex: { value: videoTex },
       uProgress: { value: 0 },
-      uBurst: { value: 0 },
+      uBurn: { value: 0 },
       uTime: { value: 0 },
       uCenter: { value: new THREE.Vector2(0.5, 0.5) },
       uResolution: { value: new THREE.Vector2(1, 1) },
@@ -238,6 +235,8 @@ export function IntroVideo({
     let firstFrameReady = false;
     let rafId = 0;
     let running = true;
+    let burnStartedAt = 0;
+    let burnActive = false;
     const t0 = performance.now();
 
     const clamp01 = (value: number) => Math.min(1, Math.max(0, value));
@@ -312,6 +311,7 @@ export function IntroVideo({
 
     const onWheel = (e: WheelEvent) => {
       if (firedRef.current) return;
+      if (burnActive) { e.preventDefault(); return; }
       e.preventDefault();
       // Normalize delta across PIXEL/LINE/PAGE modes.
       let dy = e.deltaY;
@@ -371,8 +371,18 @@ export function IntroVideo({
         }
       }
       uniforms.uProgress.value = progress;
-      uniforms.uBurst.value = burstProgress;
       uniforms.uTime.value = time;
+
+      // Start burn once scroll reaches the end; drive its own 1.6s timeline.
+      if (!burnActive && progress >= 1) {
+        burnActive = true;
+        burnStartedAt = now;
+        pauseVideo();
+      }
+      if (burnActive) {
+        const bt = Math.min(1, (now - burnStartedAt) / BURN_DURATION_MS);
+        uniforms.uBurn.value = bt;
+      }
       if (firstFrameReady) {
         renderer.render(scene, camera);
       }
@@ -399,7 +409,7 @@ export function IntroVideo({
         lastNotifiedBurst = burstProgress;
       }
 
-      if (progress >= 1) fire();
+      if (burnActive && uniforms.uBurn.value >= 1) fire();
     };
     rafId = requestAnimationFrame(loop);
 
