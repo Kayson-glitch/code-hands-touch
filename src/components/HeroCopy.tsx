@@ -70,8 +70,8 @@ export function HeroCopy() {
       </p>
 
       <button
-        className="pointer-events-auto mt-8 rounded-[10px] bg-white px-[24px] font-medium text-black transition-transform hover:scale-[1.03]"
-        style={{ height: 40, fontSize: 24, lineHeight: "32px" }}
+        className="pointer-events-auto mt-8 rounded-full bg-white px-6 font-medium text-black transition-transform hover:scale-[1.03]"
+        style={{ height: 40, fontSize: 14, lineHeight: "22px" }}
       >
         Book a Demo
       </button>
