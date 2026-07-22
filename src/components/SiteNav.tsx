@@ -119,7 +119,6 @@ function Chevron() {
       height="10"
       viewBox="0 0 10 10"
       fill="none"
-      className="opacity-70"
     >
       <path
         d="M2 3.5L5 6.5L8 3.5"
