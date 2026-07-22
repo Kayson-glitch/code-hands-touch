@@ -541,20 +541,28 @@ export function IntroVideo({
           : Math.max(0, lastSeekTime);
         const gap = target - current;
         const absGap = Math.abs(gap);
-        const canSeek = now - lastSeekAt > SEEK_MIN_INTERVAL_MS && absGap > SEEK_EPSILON;
+        const canSeekTick = now - lastSeekAt > SEEK_MIN_INTERVAL_MS;
         const lockFinalFrame = videoProgress >= 0.998 || burstProgress > 0;
 
         if (lockFinalFrame) {
+          // Burn phase: keep video on the last frame; burn is shader-driven.
           pauseVideo();
-          if (absGap > VIDEO_CHASE_EPSILON && canSeek) commitSeek(target, now, true);
+          const endTarget = duration;
+          if (Math.abs(endTarget - current) > VIDEO_CHASE_EPSILON && canSeekTick) {
+            commitSeek(endTarget, now, true);
+          }
         } else if (gap > VIDEO_CHASE_EPSILON) {
-          if (gap > VIDEO_HARD_SEEK_EPSILON && canSeek) {
+          // Forward: let the decoder play; hard-seek only on huge gaps.
+          if (gap > VIDEO_HARD_SEEK_EPSILON && canSeekTick && absGap > SEEK_EPSILON) {
             commitSeek(Math.max(0, target - VIDEO_CHASE_EPSILON), now, false);
           }
-          playVideoTowardTarget(MIN_CHASE_PLAYBACK_RATE + gap * 4.2);
+          playVideoTowardTarget(1 + gap * 6);
+        } else if (gap < -VIDEO_BACKWARD_SEEK_EPSILON) {
+          // Backward: continuous per-tick fastSeek → smooth reverse scrub.
+          pauseVideo();
+          if (canSeekTick) commitSeek(target, now, absGap <= VIDEO_HARD_SEEK_EPSILON);
         } else {
           pauseVideo();
-          if (gap < -VIDEO_BACKWARD_SEEK_EPSILON && canSeek) commitSeek(target, now, true);
         }
       }
       uniforms.uProgress.value = progress;
