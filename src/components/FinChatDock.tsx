@@ -2,9 +2,9 @@ import { useEffect, useRef, useState } from "react";
 import { Mic, Paperclip, ArrowUp } from "lucide-react";
 
 const SUGGESTIONS = [
-  "Fin 能为我做什么？",
-  "Fin 可以与我的帮助台集成吗？",
-  "Fin 能带来什么结果？",
+  "What can Fin do for me?",
+  "Can Fin integrate with my help desk?",
+  "What results can Fin deliver?",
 ];
 
 type Msg = { role: "user" | "assistant"; text: string };
@@ -107,7 +107,7 @@ export function FinChatDock() {
         ref={wrapperRef}
         className="w-full"
         style={{
-          maxWidth: expanded ? 720 : 440,
+          maxWidth: expanded ? 680 : 440,
           transition: "max-width 420ms cubic-bezier(0.22, 1, 0.36, 1)",
         }}
       >
@@ -150,10 +150,10 @@ export function FinChatDock() {
             }}
             onKeyDown={onKeyDown}
             rows={1}
-            placeholder="随便问什么…"
-            aria-label="向 Fin 提问"
+            placeholder="Ask anything…"
+            aria-label="Ask Fin"
             className="flex-1 resize-none border-0 bg-transparent px-3 py-2 text-neutral-900 placeholder:text-neutral-400 focus:outline-none"
-            style={{ fontSize: 15, lineHeight: "22px", maxHeight: 96 }}
+            style={{ fontSize: 14, lineHeight: "22px", maxHeight: 96 }}
           />
           ) : (
             <div
