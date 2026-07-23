@@ -17,7 +17,7 @@ export function GlitchGrainOverlay({
         position: "fixed",
         inset: 0,
         pointerEvents: "none",
-        zIndex: 60,
+        zIndex: 200,
         opacity: active ? 1 : 0,
         transition: "opacity 300ms ease-out",
         backgroundImage: `repeating-linear-gradient(to bottom, rgba(255,255,255,${scanAlpha}) 0 1px, transparent 1px 3px)`,

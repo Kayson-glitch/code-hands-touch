@@ -71,10 +71,16 @@ function Index() {
             transition: "opacity 350ms ease-out",
           }}
         >
-          <AsciiHandsFooter videoSrc={videoSrc} debug={debug} handoffVideo={handoffVideo} />
+          {/* Fixed first screen */}
+          <div style={{ position: "fixed", inset: 0, zIndex: 1 }}>
+            <AsciiHandsFooter videoSrc={videoSrc} debug={debug} handoffVideo={handoffVideo} />
+            <HeroCopy />
+            <FinChatDock />
+          </div>
           <SiteNav />
-          <HeroCopy />
-          <FinChatDock />
+          {/* Spacer so the page can scroll to reveal the second screen */}
+          <div aria-hidden style={{ height: "100vh" }} />
+          {/* Second screen: slides up over the fixed hero */}
           <SloganSection />
         </div>
       )}
