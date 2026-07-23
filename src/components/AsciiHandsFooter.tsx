@@ -1359,7 +1359,7 @@ export function AsciiHandsFooter({
     <section
       className="relative w-full overflow-hidden"
       style={{
-        backgroundColor: bgDark ? "#0a0a0a" : "#EFE7DA",
+        backgroundColor: bgDark ? "#000" : "#EFE7DA",
         height: "100vh",
         minHeight: 600,
       }}
