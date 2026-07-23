@@ -68,7 +68,7 @@ const ULTRA: HeroLayout = {
   ...WIDE,
   titleFontSize: 64,
   titleLineHeight: "72px",
-  handsTop: "calc(42vh - 8px)",
+  handsTop: "calc(42vh - 28px)",
   handsHeight: "58vh",
   handsMaxWidth: 2000,
   cellSize: 14,
