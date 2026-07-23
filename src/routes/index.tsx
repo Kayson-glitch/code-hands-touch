@@ -102,7 +102,7 @@ function Index() {
           >
             <div
               aria-hidden
-              style={{ position: "absolute", inset: 0, zIndex: 0, pointerEvents: "none" }}
+              style={{ position: "absolute", inset: 0, zIndex: 2, pointerEvents: "none" }}
             >
               <Aurora
                 colorStops={["#185DFF", "#8B22FF", "#E81A8A"]}
