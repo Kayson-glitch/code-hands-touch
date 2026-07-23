@@ -434,7 +434,12 @@ export function AsciiHandsFooter({
   useEffect(() => { stageRef.current = stage; }, [stage]);
   const startIntroRef = useRef<(() => void) | null>(null);
   useEffect(() => {
-    if (stage === "hands") startIntroRef.current?.();
+    if (stage === "hands") {
+      // Stage B kicks in 640ms after the background flips to dark, so the
+      // top nav + bottom dock (Stage A) can finish their fade first.
+      const t = window.setTimeout(() => startIntroRef.current?.(), 640);
+      return () => window.clearTimeout(t);
+    }
   }, [stage]);
   const cellsRef = useRef<Cell[]>([]);
   const gridRef = useRef<Grid | null>(null);
@@ -1332,9 +1337,10 @@ export function AsciiHandsFooter({
       // Keep nav hidden through the black handoff AND the hero fade-in so it
       // never appears alone on the transition frame. Hero fade starts ~40ms
       // after this and lasts 900ms; reveal nav after it settles.
+      // Stage A: reveal nav shortly after the background settles.
       window.setTimeout(() => {
         window.dispatchEvent(new CustomEvent("app-nav-visibility", { detail: "visible" }));
-      }, 900);
+      }, 80);
     }
     // Also paint html/body black immediately, so the single frame where
     // <IntroVideo> unmounts can't reveal the theme's white body background.
