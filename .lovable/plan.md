@@ -1,44 +1,44 @@
-# 更新按钮样式（仅调整这两个按钮，其它保持不变）
+# 第二屏交互优化
 
-## 1. 导航栏 "Book a Demo" 按钮（`src/components/SiteNav.tsx`）
-- 圆角：`rounded-full` → `rounded-[8px]`
-- 字重：`font-medium` → `font-normal`（regular）
-- 其余尺寸、颜色、反相逻辑不变
+## 1. 故障风扫描线全局化（`src/components/GlitchGrainOverlay.tsx` + `src/routes/index.tsx`）
+- 将 overlay 的 `zIndex` 从 60 提升到 200，确保永远浮在导航栏、slogan、以及新叠上来的第二屏之上。
+- 保持只在 `visible=true`（视频加载完成后）时显示；扫描线密度、样式不变。
+- 因为 overlay 是 `position: fixed`，扩到 z:200 后所有黑底区域（hero、扩散黑屏、slogan）都会自动叠加扫描线。
 
-## 2. 标题区 "Book a Demo" 按钮（`src/components/HeroCopy.tsx`）
-- 圆角：`rounded-full` → `rounded-[10px]`
-- 应用 Magic UI RainbowButton 效果（仅此按钮）：
-  - 底部一圈流动彩虹光晕（模糊后向下溢出，形成 glow）
-  - 按钮本体保留白底黑字，hover 微放大保留
-  - 使用给定的 5 个 rainbow 颜色变量，颜色循环动画约 2s
+## 2. 第二屏「覆盖」第一屏的滚动效果（`src/routes/index.tsx` + `src/components/SloganSection.tsx`）
 
-## 技术实现
-### `src/styles.css`
-在 `@theme` 里加入 rainbow 色板变量与关键帧：
-```css
---color-rainbow-1: #ff1245;
---color-rainbow-2: #d018ff;
---color-rainbow-3: #185dff;
---color-rainbow-4: #4b3aff;
---color-rainbow-5: #e81a8a;
+当前行为：第二屏在文档流下方，滚动时第一屏被向上顶出视口。
 
-@keyframes rainbow {
-  0%   { background-position: 0% 50%; }
-  100% { background-position: 200% 50%; }
-}
+目标行为：第一屏固定不动，第二屏从下方向上滑入并覆盖第一屏。
+
+### 实现
+在 `src/routes/index.tsx` 里将 hero 组重构为固定层 + 占位滚动区：
+
+```tsx
+{/* 固定的第一屏层 */}
+<div style={{ position: "fixed", inset: 0, zIndex: 1 }}>
+  <AsciiHandsFooter ... />
+  <HeroCopy />
+  <FinChatDock />
+</div>
+
+{/* 占位：撑出 100vh 让页面能滚动到第二屏 */}
+<div style={{ height: "100vh" }} aria-hidden />
+
+{/* 第二屏：正常文档流，但 z-index 高于 hero，从下方覆盖上来 */}
+<SloganSection />
 ```
-（与已有 `synergy-gradient-flow` 并存，不冲突。）
 
-### `src/components/HeroCopy.tsx`
-将现有 `<button>` 改造为 rainbow 风格：
-- 外层容器 `position: relative`，`overflow: visible`
-- 使用伪层（`::before` 通过内联 span 或额外 div）在按钮底部放置模糊的彩虹条：
-  - `bottom: -20%`, `height: 20%`, `width: 100%`
-  - `filter: blur(1rem)`
-  - `background: linear-gradient(90deg, var(--color-rainbow-1), var(--color-rainbow-2), var(--color-rainbow-3), var(--color-rainbow-4), var(--color-rainbow-5), var(--color-rainbow-1))`
-  - `background-size: 200%`, `animation: rainbow 2s linear infinite`
-- 按钮本体也叠加同款流动渐变作为边框光（可选：直接给按钮加同款 `background-size/animation` 于底纹层）
-- 保持 `rounded-[10px]`, `bg-white text-black`, `hover:scale-[1.03]`
+在 `SloganSection` 上：
+- 加 `position: relative; zIndex: 10;`（保持在 hero 之上、overlay 之下）
+- 其余样式（黑底、100vh、字体动画）不变
+
+`SiteNav` 已经是 `fixed` + zIndex 80，保持在 hero 层之上、扫描线之下 —— 无需改动。
+
+## 兼容性
+- `IntroVideo` 使用 `wheel` 事件驱动，与页面 `scroll` 位置无关，添加滚动占位不会影响视频滚动播放。
+- 新增的 100vh 占位只会在视频完成、进入 hero 之后被用户感知；用户向下滚就自然进入第二屏。
+- SloganSection 内部原本用 `getBoundingClientRect` + `IntersectionObserver` 计算词语显现进度，改成 `position: relative` 后仍然生效，无需改逻辑。
 
 ## 不改动
-- 其它任何按钮、组件、动画、布局
+- 视频、扩散动画、字符手、导航栏视觉、hero 文案样式、slogan 文本与逐词动画曲线，均保持原样。
