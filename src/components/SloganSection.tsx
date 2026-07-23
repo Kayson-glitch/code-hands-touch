@@ -16,7 +16,10 @@ export function SloganSection() {
   const sectionRef = useRef<HTMLElement | null>(null);
   const [progress, setProgress] = useState(0);
   const words = useMemo(() => LINES.flat(), []);
-  const total = words.length;
+  const totalChars = useMemo(
+    () => words.reduce((sum, w) => sum + w.length, 0),
+    [words]
+  );
 
   useEffect(() => {
     const reduced =
@@ -73,15 +76,15 @@ export function SloganSection() {
     };
   }, []);
 
-  // Distribute progress across words with a small overlap window.
+  // Distribute progress across characters with a small overlap window.
   const reveal = (idx: number) => {
-    const span = 1 / (total + 2);
-    const overlap = span * 2.2;
+    const span = 1 / (totalChars + 6);
+    const overlap = span * 8;
     const start = idx * span;
     return smoothstep(start, start + overlap, progress);
   };
 
-  let wi = 0;
+  let ci = 0;
 
   return (
     <section
@@ -120,23 +123,36 @@ export function SloganSection() {
         {LINES.map((line, li) => (
           <div key={li} style={{ display: "block" }}>
             {line.map((word, i) => {
-              const a = reveal(wi++);
-              const opacity = 0.18 + a * 0.82;
-              const blur = (1 - a) * 2;
               return (
                 <span
                   key={`${li}-${i}`}
                   style={{
                     display: "inline-block",
-                    opacity,
-                    filter: blur > 0.02 ? `blur(${blur.toFixed(2)}px)` : "none",
-                    transition:
-                      "opacity 220ms ease-out, filter 220ms ease-out",
-                    willChange: "opacity, filter",
+                    whiteSpace: "nowrap",
                     marginRight: i === line.length - 1 ? 0 : "0.28em",
                   }}
                 >
-                  {word}
+                  {word.split("").map((ch, ki) => {
+                    const a = reveal(ci++);
+                    const opacity = 0.18 + a * 0.82;
+                    const blur = (1 - a) * 2;
+                    return (
+                      <span
+                        key={ki}
+                        style={{
+                          display: "inline-block",
+                          opacity,
+                          filter:
+                            blur > 0.02 ? `blur(${blur.toFixed(2)}px)` : "none",
+                          transition:
+                            "opacity 220ms ease-out, filter 220ms ease-out",
+                          willChange: "opacity, filter",
+                        }}
+                      >
+                        {ch}
+                      </span>
+                    );
+                  })}
                 </span>
               );
             })}
