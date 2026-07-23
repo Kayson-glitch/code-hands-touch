@@ -91,7 +91,7 @@ export function SiteNav() {
           Log In
         </button>
         <button
-          className={`${ctaClass} rounded-full px-4 font-medium transition-transform hover:scale-[1.02]`}
+          className={`${ctaClass} rounded-[8px] px-4 font-normal transition-transform hover:scale-[1.02]`}
           style={{ height: 32, fontSize: 14, lineHeight: "22px" }}
         >
           Book a Demo
