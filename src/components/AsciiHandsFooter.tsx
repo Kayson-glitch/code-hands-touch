@@ -1402,7 +1402,7 @@ export function AsciiHandsFooter({
         <div
           className="absolute inset-0"
           style={{
-            zIndex: 60,
+            zIndex: 5,
             isolation: "isolate",
             pointerEvents: stage === "orb" ? "auto" : "none",
           }}
@@ -1414,6 +1414,12 @@ export function AsciiHandsFooter({
             debug={debug}
             handoffVideo={handoffVideo}
           />
+        </div>
+      )}
+
+      {(burstProgress > 0 || handsVisible) && (
+        <div className="absolute inset-0" style={{ zIndex: 7, pointerEvents: "none" }}>
+          <GlitchGrainOverlay visible intensity="low" />
         </div>
       )}
 
