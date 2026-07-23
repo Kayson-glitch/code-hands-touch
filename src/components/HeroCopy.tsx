@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
+import { ArrowRight } from "lucide-react";
 import { useHeroLayout } from "@/hooks/useHeroLayout";
+
 
 export function HeroCopy() {
   const [visible, setVisible] = useState(false);
