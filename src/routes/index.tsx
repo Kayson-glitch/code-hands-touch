@@ -5,7 +5,7 @@ import { SiteNav } from "@/components/SiteNav";
 import { HeroCopy } from "@/components/HeroCopy";
 import { FinChatDock } from "@/components/FinChatDock";
 import { IntroPreloader } from "@/components/IntroPreloader";
-import { GlitchGrainOverlay } from "@/components/GlitchGrainOverlay";
+
 import { SloganSection } from "@/components/SloganSection";
 import videoAsset from "@/assets/intro-hands.mp4.asset.json";
 
