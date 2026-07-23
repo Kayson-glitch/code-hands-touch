@@ -152,8 +152,11 @@ html, body {
   }
 
   body {
-    background-color: var(--color-background);
     color: var(--color-foreground);
+    background-color: #000;
+    background-image: radial-gradient(circle, rgba(255,255,255,0.09) 0.6px, transparent 1px);
+    background-size: 4px 4px;
+    background-attachment: fixed;
   }
 }
 

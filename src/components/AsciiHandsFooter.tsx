@@ -2,7 +2,6 @@ import { useEffect, useRef, useState } from "react";
 import handsPairAsset from "@/assets/hands-pair.png.asset.json";
 import { IntroVideo, type IntroProgressInfo } from "./IntroVideo";
 import { useHeroLayout, type HeroLayout } from "@/hooks/useHeroLayout";
-import { GlitchGrainOverlay } from "@/components/GlitchGrainOverlay";
 
 // Ordered density ramp, dark → bright. Mirrors the exact 70-glyph set used by
 // good-fella.com's ASCII footer (recovered by hooking their canvas atlas).
@@ -1414,12 +1413,6 @@ export function AsciiHandsFooter({
             debug={debug}
             handoffVideo={handoffVideo}
           />
-        </div>
-      )}
-
-      {(burstProgress > 0 || handsVisible) && (
-        <div className="absolute inset-0" style={{ zIndex: 7, pointerEvents: "none" }}>
-          <GlitchGrainOverlay visible intensity="low" />
         </div>
       )}
 
