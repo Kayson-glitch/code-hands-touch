@@ -1,37 +1,54 @@
 ## 目标
 
-给扩散动画的边缘光圈（core rim / hot halo 区）叠加一层与页面 GlitchGrainOverlay 视觉一致的故障风效果，让扩散阶段的边缘与后续界面的删格 / 噪点风格统一。其他一切不变（扩散形状、时序、颜色、时长、参数、handoff 逻辑均不动）。
+在第一屏（fixed hero 容器）背景最底层加入 React Bits 的 `Aurora` WebGL 极光效果，作为纯装饰底色。仅第一屏可见，第二屏（SloganSection）及后续内容不受影响；开场视频、字符手、故障风扫描线、标题、导航、对话框全部保留在其之上。
 
-## 只改一个文件
+## 依赖
 
-**`src/components/IntroVideo.tsx`** 的片段着色器（约 315–336 行 burn edge 合成段），只在 `outside * env` 边缘带内叠加故障扰动，不影响：
-- 已烧穿的黑色 hole (`burned` 区域)
-- 扩散外部未触及的视频画面
-- 现有 L0/L1/L2/L3 光晕层的强度与颜色
+- `bun add ogl`
 
-## 具体改动（着色器内，纯 GLSL）
+## 新增文件
 
-在现有 4 层光晕合成之后、`col = col - max(...)` 之前，新增一段"edge glitch"，作用范围严格约束在边缘一条窄带 `edgeBand = smoothstep(0.09, 0.0, abs(d)) * outside * env`：
+- `src/components/Aurora/Aurora.jsx` — 使用你提供的完整源码（原样）。
+- `src/components/Aurora/Aurora.css` — `.aurora-container { width:100%; height:100% }`。
 
-1. **扫描线（scanline）**：`sin(gl_FragCoord.y * ~1.6 + t * ~4.0)` 在边缘带上做 ±8% 亮度调制，与 `GlitchGrainOverlay` 的横向扫描线呼应
-2. **RGB 错位（chroma split）**：沿边缘法线方向对已合成的 `col` 做 ~0.6–1.2px 的 R/B 通道位移，只在 `edgeBand` 内混入
-3. **块状抖动（block jitter）**：用 `floor(gl_FragCoord.xy / vec2(6.0, 2.0))` 做低频哈希，每几帧触发一次横向 1–2px 位移，概率 ~15%，只叠在边缘带
-4. **高频噪点（grain）**：现有 `L3` 已经有 grain，但只作用在外部雾气；这里在边缘核心带再加一层 ±4% 的 hash 噪点
+放到独立目录避免和现有 `.tsx` 组件混淆；`allowJs` 若未开则用 `.tsx` 版本（把 props 加最小 `any` 类型），实现同源。
 
-所有 4 个子效果通过一个总强度 `edgeBand` 门控，`b`（burn 进度）在 <0.02 或 >0.94 时自然衰减，与现有 `env` 一致。
+## 接入位置
+
+`src/routes/index.tsx` 内 fixed hero 容器（`position:fixed; inset:0; zIndex:1`）中，在 `AsciiHandsFooter` 之前插入 Aurora 包裹层：
+
+```tsx
+<div style={{ position:"absolute", inset:0, zIndex:0, pointerEvents:"none" }}>
+  <Aurora
+    colorStops={["#185DFF", "#8B22FF", "#E81A8A"]}
+    blend={0.5}
+    amplitude={1.0}
+    speed={0.5}
+  />
+</div>
+<AsciiHandsFooter ... />
+<HeroCopy />
+```
+
+颜色沿用品牌渐变（蓝→紫→粉红），与标题 `Synergy.AI` 渐变呼应。
+
+## 层级校验（第一屏内）
+
+```text
+z 0  Aurora (新)
+z 1  video / burst / ASCII hands / GlitchGrainOverlay (现有 AsciiHandsFooter 内部结构不变)
+z 30 HeroCopy
+z 80 SiteNav
+```
+
+Aurora 只挂在 fixed hero 容器内 → 随第一屏做 parallax、随第二屏上滑被覆盖，天然只在第一屏可见。
 
 ## 不做的事
 
-- 不新增 uniform、不加 Debug Panel 参数（保持"其他不变"）
-- 不修改 JS 侧任何逻辑（时序、handoff、scroll driver 全部不动）
-- 不改 `GlitchGrainOverlay` 组件本身
-- 不改 hole 内部（保持纯黑）
-- 不改光晕 4 层的颜色与叠加公式
+- 不修改 `AsciiHandsFooter`、`IntroVideo`、`GlitchGrainOverlay`、`SloganSection`、导航、对话框、标题的任何代码或时序。
+- 不改背景黑色基底（Aurora 在其之上、视频/手之下，透明混合）。
+- 不给 Aurora 加入场动画、不接扩散事件。
 
 ## 验证
 
-改完后用 Playwright 触发扩散，截图边缘带 3 帧（b≈0.3 / 0.6 / 0.9），确认：
-- 边缘出现扫描线 + RGB 错位 + 块状抖动
-- 黑色 hole 内部仍纯黑
-- 扩散外部视频区域无变化
-- 与后续第一屏 `GlitchGrainOverlay` 视觉连贯
+Playwright 截图三个状态：开场视频阶段（应看不到 Aurora，被视频盖住）、扩散完成第一屏（Aurora 在字符手/标题背后隐约流动）、滚动进入第二屏（Aurora 被 SloganSection 覆盖，且第二屏本身无 Aurora）。
