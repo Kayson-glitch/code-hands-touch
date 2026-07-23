@@ -7,7 +7,7 @@ import { FinChatDock } from "@/components/FinChatDock";
 import { IntroPreloader } from "@/components/IntroPreloader";
 
 import { SloganSection } from "@/components/SloganSection";
-import Aurora from "@/components/Aurora/Aurora";
+import { AuroraIntro } from "@/components/AuroraIntro";
 import videoAsset from "@/assets/intro-hands.mp4.asset.json";
 
 export const Route = createFileRoute("/")({
