@@ -58,7 +58,7 @@ const WIDE: HeroLayout = {
   titlePaddingTop: "20vh",
   titleFontSize: 56,
   titleLineHeight: "64px",
-  handsTop: "calc(44vh - 8px)",
+  handsTop: "calc(44vh - 28px)",
   handsHeight: "55vh",
   handsMaxWidth: 1720,
   cellSize: 12,
