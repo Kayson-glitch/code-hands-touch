@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
-import logoLight from "@/assets/synergy-logo-light.png.asset.json";
-import logoDark from "@/assets/synergy-logo-dark.png.asset.json";
+import logo from "@/assets/synergy-logo-v2.png.asset.json";
 
 export function SiteNav() {
   const [theme, setTheme] = useState<"light" | "dark">("light");
@@ -68,15 +67,16 @@ export function SiteNav() {
       <a
         href="/"
         className={`pointer-events-auto flex items-center gap-2 ${fg}`}
-        style={{ height: 28 }}
+        style={{ height: 24 }}
       >
         <img
-          src={isDark ? logoDark.url : logoLight.url}
+          src={logo.url}
           alt="Synergy.AI"
           style={{
-            height: 28,
+            height: 24,
             width: "auto",
             display: "block",
+            filter: isDark ? "none" : "invert(1)",
           }}
         />
       </a>
