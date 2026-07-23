@@ -868,12 +868,13 @@ export function IntroVideo({
         lastNotifiedBurst = burstProgress;
       }
 
-      // Hold `fire()` for one extra rendered frame after burst completes so
-      // the parent scene switch happens on a fully-drawn final state (no
-      // flash from swapping mid-composite).
-      // Fire as soon as the burn has covered the viewport (before the tail
-      // fade-out), so the hero can start appearing without a black gap.
-      if (burnActive && burstProgress >= 0.88) {
+      // Fire only after the burst has fully resolved to solid black AND we've
+      // painted that final frame at least once. Swapping earlier leaves a
+      // half-burnt frame visible on screen while the video unmounts, which
+      // reads as a flash. Since the final composite is #000, the handoff to
+      // the hero (which lives on a #000 section) is seamless — no cover
+      // overlay needed.
+      if (burnActive && burstProgress >= 1) {
         if (finalFrameRendered) fire();
         else if (needsRender) finalFrameRendered = true;
       }
