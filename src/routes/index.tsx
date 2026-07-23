@@ -34,6 +34,24 @@ function Index() {
   const [handoffVideo, setHandoffVideo] = useState<HTMLVideoElement | null>(null);
   const [shown, setShown] = useState(false);
   const [debug, setDebug] = useState(false);
+  const [scrollY, setScrollY] = useState(0);
+
+  useEffect(() => {
+    let raf = 0;
+    const update = () => {
+      raf = 0;
+      setScrollY(window.scrollY || window.pageYOffset || 0);
+    };
+    const onScroll = () => {
+      if (raf) return;
+      raf = requestAnimationFrame(update);
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      if (raf) cancelAnimationFrame(raf);
+    };
+  }, []);
 
   useEffect(() => {
     const p = new URLSearchParams(window.location.search);
@@ -71,17 +89,26 @@ function Index() {
             transition: "opacity 350ms ease-out",
           }}
         >
-          {/* Fixed first screen */}
-          <div style={{ position: "fixed", inset: 0, zIndex: 1 }}>
+          {/* Fixed first screen with parallax */}
+          <div
+            style={{
+              position: "fixed",
+              inset: 0,
+              zIndex: 1,
+              transform: `translate3d(0, ${-scrollY * 0.35}px, 0)`,
+              willChange: "transform",
+            }}
+          >
             <AsciiHandsFooter videoSrc={videoSrc} debug={debug} handoffVideo={handoffVideo} />
             <HeroCopy />
-            <FinChatDock />
           </div>
           <SiteNav />
           {/* Spacer so the page can scroll to reveal the second screen */}
           <div aria-hidden style={{ height: "100vh" }} />
           {/* Second screen: slides up over the fixed hero */}
           <SloganSection />
+          {/* Always pinned to bottom, unaffected by parallax */}
+          <FinChatDock />
         </div>
       )}
       <GlitchGrainOverlay visible={videoSrc !== null && shown} intensity="low" />
