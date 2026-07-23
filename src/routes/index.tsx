@@ -6,7 +6,6 @@ import { HeroCopy } from "@/components/HeroCopy";
 import { FinChatDock } from "@/components/FinChatDock";
 import { IntroPreloader } from "@/components/IntroPreloader";
 import { GlitchGrainOverlay } from "@/components/GlitchGrainOverlay";
-import { SloganSection } from "@/components/SloganSection";
 import videoAsset from "@/assets/intro-hands.mp4.asset.json";
 
 export const Route = createFileRoute("/")({
@@ -75,7 +74,6 @@ function Index() {
           <SiteNav />
           <HeroCopy />
           <FinChatDock />
-          <SloganSection />
         </div>
       )}
       <GlitchGrainOverlay visible={videoSrc !== null && shown} intensity="low" />
