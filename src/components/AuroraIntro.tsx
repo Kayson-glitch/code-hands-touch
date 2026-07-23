@@ -8,7 +8,6 @@ import Aurora from "@/components/Aurora/Aurora";
  */
 export function AuroraIntro() {
   const [entered, setEntered] = useState(false);
-  const [amp, setAmp] = useState(0);
 
   useEffect(() => {
     const onBg = (e: Event) => {
@@ -16,20 +15,7 @@ export function AuroraIntro() {
       if (detail?.mode === "dark") trigger();
     };
     const trigger = () => {
-      // next frame so the initial (hidden) styles are committed first
       requestAnimationFrame(() => setEntered(true));
-      // ramp shader amplitude 0 → 1 over ~1600ms with ease-out
-      const start = performance.now();
-      const dur = 1600;
-      let raf = 0;
-      const tick = (t: number) => {
-        const k = Math.min(1, (t - start) / dur);
-        const eased = 1 - Math.pow(1 - k, 3);
-        setAmp(eased);
-        if (k < 1) raf = requestAnimationFrame(tick);
-      };
-      raf = requestAnimationFrame(tick);
-      return () => cancelAnimationFrame(raf);
     };
     window.addEventListener("app-bg-change", onBg as EventListener);
     return () => window.removeEventListener("app-bg-change", onBg as EventListener);
@@ -57,7 +43,7 @@ export function AuroraIntro() {
       <Aurora
         colorStops={["#185DFF", "#8B22FF", "#E81A8A"]}
         blend={0.5}
-        amplitude={amp}
+        amplitude={1.0}
         speed={0.5}
       />
     </div>
