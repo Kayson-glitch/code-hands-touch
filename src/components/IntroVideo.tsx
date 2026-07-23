@@ -35,20 +35,10 @@ const MAX_PIXELS_PER_TICK = 180;
 // Tighter than the reference project's ~75ms so scroll feels more direct
 // without giving up perceptible smoothing. At 60fps this catches ~35% per
 // frame — visibly snappier while still absorbing wheel jitter.
-// All-intra encode: every frame is a keyframe, so seek is cheap and precise.
-// We can shorten the smoothing window for a more direct feel.
-const PROGRESS_SMOOTH_TIME = 0.035;
+// Direct-seek driver: video stays paused and we set currentTime every frame.
+// Very short smoothing just absorbs wheel-event jitter, near-direct feel.
+const PROGRESS_SMOOTH_TIME = 0.018;
 const MAX_SMOOTH_DT = 1 / 30;
-// Gap thresholds (seconds) for playbackRate vs. seek decision.
-const GAP_DEAD_ZONE = 0.008;
-// Aggressive backward seeking: any perceptible reverse gap triggers a seek
-// so the video visibly scrubs backward with the user instead of freezing.
-const GAP_BACKWARD_SEEK = 0.02;
-const GAP_HARD_SEEK = 1.2;
-// All-intra seek is cheap; drop throttle to one frame so reverse tracks the wheel.
-const BACKWARD_SEEK_MIN_INTERVAL_MS = 16;
-const MIN_CHASE_RATE = 0.25;
-const MAX_CHASE_RATE = 4.0;
 // Only notify parent when progress moved meaningfully.
 const PROGRESS_NOTIFY_EPSILON = 0.003;
 // Skip GL render if nothing visibly changed and no new video frame arrived.
