@@ -67,13 +67,13 @@ export function SiteNav() {
       <a
         href="/"
         className={`pointer-events-auto flex items-center gap-2 ${fg}`}
-        style={{ height: 24 }}
+        style={{ height: 28 }}
       >
         <img
           src={logo.url}
           alt="Synergy.AI"
           style={{
-            height: 24,
+            height: 28,
             width: "auto",
             display: "block",
             filter: isDark ? "none" : "invert(1)",
