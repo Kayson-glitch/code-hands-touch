@@ -347,8 +347,8 @@ const FRAG = /* glsl */ `
 
         // (2) Chroma split along the edge normal (~0.9px).
         vec2 chOff = pxNrm * 0.9;
-        float rC = texture2D(uMap, uv + chOff).r;
-        float bC = texture2D(uMap, uv - chOff).b;
+        float rC = texture2D(uVideoTex, uv + chOff).r;
+        float bC = texture2D(uVideoTex, uv - chOff).b;
         vec3 chroma = vec3(rC, col.g, bC);
 
         // (3) Block jitter — sparse horizontal shear on 6x2 blocks.
@@ -356,7 +356,7 @@ const FRAG = /* glsl */ `
         float blkH = fract(sin(dot(block, vec2(12.9898, 78.233)) + floor(t * 22.0)) * 43758.5453);
         float jitterOn = step(0.85, blkH);
         float shearPx = (blkH - 0.5) * 3.0 * jitterOn;
-        vec3 shear = texture2D(uMap, uv + vec2(shearPx / uResolution.x, 0.0)).rgb;
+        vec3 shear = texture2D(uVideoTex, uv + vec2(shearPx / uResolution.x, 0.0)).rgb;
 
         // (4) High-freq grain on the core band.
         float eg = fract(sin(dot(gl_FragCoord.xy + t * 37.0, vec2(12.9898, 78.233))) * 43758.5453);
