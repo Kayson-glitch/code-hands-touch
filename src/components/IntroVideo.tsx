@@ -926,6 +926,19 @@ export function IntroVideo({
         ref={canvasRef}
         style={{ position: "absolute", inset: 0, width: "100%", height: "100%", display: "block" }}
       />
+      <div
+        aria-hidden
+        style={{
+          position: "absolute",
+          inset: 0,
+          pointerEvents: "none",
+          zIndex: 2,
+          mixBlendMode: "overlay",
+          opacity: 0.35,
+          backgroundImage:
+            "repeating-linear-gradient(to bottom, rgba(255,255,255,0.08) 0px, rgba(255,255,255,0.08) 1px, rgba(0,0,0,0) 1px, rgba(0,0,0,0) 3px)",
+        }}
+      />
       <ScrollHint />
       {debugEnabled && (
         <BurnDebugPanel
