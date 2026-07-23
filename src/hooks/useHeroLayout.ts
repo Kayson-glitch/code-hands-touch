@@ -55,7 +55,7 @@ const MOBILE: HeroLayout = {
 
 const WIDE: HeroLayout = {
   ...DESKTOP,
-  titlePaddingTop: "20vh",
+  titlePaddingTop: "calc(20vh + 20px)",
   titleFontSize: 56,
   titleLineHeight: "64px",
   handsTop: "calc(44vh - 28px)",
