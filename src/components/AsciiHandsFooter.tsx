@@ -3,6 +3,7 @@ import handsPairAsset from "@/assets/hands-pair.png.asset.json";
 import { IntroVideo, type IntroProgressInfo } from "./IntroVideo";
 import { useHeroLayout, type HeroLayout } from "@/hooks/useHeroLayout";
 import { GlitchGrainOverlay } from "@/components/GlitchGrainOverlay";
+import { AuroraIntro } from "@/components/AuroraIntro";
 
 // Ordered density ramp, dark → bright. Mirrors the exact 70-glyph set used by
 // good-fella.com's ASCII footer (recovered by hooking their canvas atlas).
@@ -1386,6 +1387,8 @@ export function AsciiHandsFooter({
       <h1 className="sr-only" suppressHydrationWarning>
         Good Fella Studio — ASCII Creation of Adam
       </h1>
+
+      {bgDark && <AuroraIntro />}
 
       <canvas
         ref={canvasRef}

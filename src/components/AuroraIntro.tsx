@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Aurora from "@/components/Aurora/Aurora";
 
 /**
@@ -7,6 +7,7 @@ import Aurora from "@/components/Aurora/Aurora";
  * then eases opacity, vertical drift and shader amplitude from 0 → target.
  */
 export function AuroraIntro() {
+  const wrapperRef = useRef<HTMLDivElement | null>(null);
   const [entered, setEntered] = useState(false);
 
   useEffect(() => {
@@ -21,10 +22,21 @@ export function AuroraIntro() {
       });
     };
     const onBg = (e: Event) => {
-      const detail = (e as CustomEvent<{ mode?: string }>).detail;
-      if (detail?.mode === "dark") reveal();
+      const detail = (e as CustomEvent<string | { mode?: string }>).detail;
+      const mode = typeof detail === "string" ? detail : detail?.mode;
+      if (mode === "dark") reveal();
     };
     window.addEventListener("app-bg-change", onBg as EventListener);
+
+    raf1 = requestAnimationFrame(() => {
+      const sectionBg = wrapperRef.current?.closest("section")
+        ? getComputedStyle(wrapperRef.current.closest("section") as HTMLElement).backgroundColor
+        : "";
+      if (sectionBg === "rgb(0, 0, 0)" || sectionBg === "#000") {
+        raf2 = requestAnimationFrame(() => setEntered(true));
+      }
+    });
+
     return () => {
       window.removeEventListener("app-bg-change", onBg as EventListener);
       cancelAnimationFrame(raf1);
@@ -34,6 +46,8 @@ export function AuroraIntro() {
 
   return (
     <div
+      ref={wrapperRef}
+      data-aurora-intro="true"
       aria-hidden
       style={{
         position: "absolute",
