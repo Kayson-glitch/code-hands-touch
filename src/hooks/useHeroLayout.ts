@@ -44,7 +44,7 @@ const TABLET: HeroLayout = {
 
 const MOBILE: HeroLayout = {
   ...DESKTOP,
-  titlePaddingTop: "10vh",
+  titlePaddingTop: "calc(10vh + 20px)",
   titleFontSize: 32,
   titleLineHeight: "40px",
   subtitleFontSize: 14,
