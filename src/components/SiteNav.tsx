@@ -5,6 +5,7 @@ import logoDark from "@/assets/synergy-logo-dark.png.asset.json";
 export function SiteNav() {
   const [theme, setTheme] = useState<"light" | "dark">("light");
   const [hidden, setHidden] = useState(true);
+  const [scrolled, setScrolled] = useState(false);
 
   useEffect(() => {
     // Nav starts hidden through the intro video + burst. Only show it
@@ -33,12 +34,22 @@ export function SiteNav() {
     return () => window.removeEventListener("app-nav-visibility", onVis);
   }, []);
 
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 8);
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
   const isDark = theme === "dark";
   const fg = isDark ? "text-white" : "text-black";
   const navItem = `${fg} opacity-50 hover:opacity-100 transition-opacity duration-200`;
   const ctaClass = isDark
     ? "bg-white text-black"
     : "bg-black text-white";
+  const glassBg = isDark
+    ? "rgba(10,10,10,0.55)"
+    : "rgba(255,255,255,0.55)";
 
   return (
     <nav
@@ -47,7 +58,10 @@ export function SiteNav() {
         height: 68,
         zIndex: 80,
         opacity: hidden ? 0 : 1,
-        transition: "opacity 260ms ease-out",
+        background: scrolled ? glassBg : "transparent",
+        backdropFilter: scrolled ? "blur(18px) saturate(140%)" : "none",
+        transition:
+          "opacity 260ms ease-out, background 260ms ease-out, backdrop-filter 260ms ease-out",
       }}
     >
       {/* Logo */}
