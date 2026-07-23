@@ -29,7 +29,7 @@ const SHORT: HeroLayout = {
   titlePaddingTop: "14vh",
   titleFontSize: 44,
   titleLineHeight: "52px",
-  handsTop: "42vh",
+  handsTop: "calc(42vh - 20px)",
   handsHeight: "54vh",
 };
 
