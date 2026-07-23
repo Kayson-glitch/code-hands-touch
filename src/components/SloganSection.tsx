@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { GlitchGrainOverlay } from "./GlitchGrainOverlay";
 
 const LINES: string[][] = [
   ["We", "craft", "intelligent", "support", "experiences"],
@@ -99,6 +100,7 @@ export function SloganSection() {
         zIndex: 10,
       }}
     >
+      <GlitchGrainOverlay intensity="low" />
       <div
         style={{
           position: "sticky",
@@ -108,6 +110,7 @@ export function SloganSection() {
           alignItems: "center",
           justifyContent: "center",
           padding: "0 6vw",
+          zIndex: 1,
         }}
       >
       <div
