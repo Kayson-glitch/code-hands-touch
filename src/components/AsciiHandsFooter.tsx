@@ -1349,7 +1349,9 @@ export function AsciiHandsFooter({
     // cover the hands canvas; the handoffBlack layer keeps the background
     // solid for a few frames to avoid any composite gap.
     setOrbMounted(false);
-    window.setTimeout(() => setHandoffBlack(false), 40);
+    // Drop the black handoff on the very next frame so the hero begins
+    // showing immediately after diffusion finishes.
+    requestAnimationFrame(() => setHandoffBlack(false));
   };
   const [bgDark, setBgDark] = useState(false);
   useEffect(() => {

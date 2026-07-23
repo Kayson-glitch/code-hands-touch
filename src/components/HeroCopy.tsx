@@ -11,8 +11,9 @@ export function HeroCopy() {
     const onBg = (e: Event) => {
       const detail = (e as CustomEvent<"light" | "dark">).detail;
       if (detail === "dark") {
-        // Let the hands intro animation start, then fade in together.
-        window.setTimeout(() => setVisible(true), 40);
+        // Start the hero fade immediately so there's no black gap after
+        // the diffusion completes.
+        setVisible(true);
       } else {
         setVisible(false);
       }

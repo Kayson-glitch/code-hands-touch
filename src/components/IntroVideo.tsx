@@ -871,7 +871,9 @@ export function IntroVideo({
       // Hold `fire()` for one extra rendered frame after burst completes so
       // the parent scene switch happens on a fully-drawn final state (no
       // flash from swapping mid-composite).
-      if (burnActive && burstProgress >= 1) {
+      // Fire as soon as the burn has covered the viewport (before the tail
+      // fade-out), so the hero can start appearing without a black gap.
+      if (burnActive && burstProgress >= 0.88) {
         if (finalFrameRendered) fire();
         else if (needsRender) finalFrameRendered = true;
       }
