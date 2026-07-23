@@ -18,7 +18,7 @@ const DESKTOP: HeroLayout = {
   titleLineHeight: "56px",
   subtitleFontSize: 16,
   subtitleLineHeight: "24px",
-  handsTop: "calc(46vh - 8px)",
+  handsTop: "calc(46vh - 28px)",
   handsHeight: "51vh",
   handsMaxWidth: 1440,
   cellSize: 10,
@@ -29,7 +29,7 @@ const SHORT: HeroLayout = {
   titlePaddingTop: "14vh",
   titleFontSize: 44,
   titleLineHeight: "52px",
-  handsTop: "42vh",
+  handsTop: "calc(42vh - 20px)",
   handsHeight: "54vh",
 };
 
@@ -38,7 +38,7 @@ const TABLET: HeroLayout = {
   titlePaddingTop: "16vh",
   titleFontSize: 40,
   titleLineHeight: "48px",
-  handsTop: "44vh",
+  handsTop: "calc(44vh - 20px)",
   handsHeight: "52vh",
 };
 
@@ -49,7 +49,7 @@ const MOBILE: HeroLayout = {
   titleLineHeight: "40px",
   subtitleFontSize: 14,
   subtitleLineHeight: "22px",
-  handsTop: "40vh",
+  handsTop: "calc(40vh - 20px)",
   handsHeight: "56vh",
 };
 
@@ -58,7 +58,7 @@ const WIDE: HeroLayout = {
   titlePaddingTop: "20vh",
   titleFontSize: 56,
   titleLineHeight: "64px",
-  handsTop: "calc(44vh - 8px)",
+  handsTop: "calc(44vh - 28px)",
   handsHeight: "55vh",
   handsMaxWidth: 1720,
   cellSize: 12,
@@ -68,7 +68,7 @@ const ULTRA: HeroLayout = {
   ...WIDE,
   titleFontSize: 64,
   titleLineHeight: "72px",
-  handsTop: "calc(42vh - 8px)",
+  handsTop: "calc(42vh - 28px)",
   handsHeight: "58vh",
   handsMaxWidth: 2000,
   cellSize: 14,
