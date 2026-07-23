@@ -93,6 +93,8 @@ export function SloganSection() {
         alignItems: "center",
         justifyContent: "center",
         padding: "12vh 6vw",
+        position: "relative",
+        zIndex: 10,
       }}
     >
       <div
