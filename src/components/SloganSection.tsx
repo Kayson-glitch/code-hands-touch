@@ -91,7 +91,7 @@ export function SloganSection() {
       ref={sectionRef}
       className="relative w-full"
       style={{
-        background: "#000",
+        background: "transparent",
         height: "260vh",
         position: "relative",
         zIndex: 10,
