@@ -100,6 +100,7 @@ function Index() {
             }}
           >
             <AsciiHandsFooter videoSrc={videoSrc} debug={debug} handoffVideo={handoffVideo} />
+            <GlitchGrainOverlay visible={videoSrc !== null && shown} intensity="low" />
             <HeroCopy />
           </div>
           <SiteNav />
@@ -111,7 +112,6 @@ function Index() {
           <FinChatDock />
         </div>
       )}
-      <GlitchGrainOverlay visible={videoSrc !== null && shown} intensity="low" />
     </div>
   );
 }
