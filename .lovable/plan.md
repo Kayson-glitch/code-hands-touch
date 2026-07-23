@@ -1,20 +1,32 @@
-## 现状核对
+## Goal
 
-- 之前把 `GlitchGrainOverlay` 从全局根节点搬进了 `AsciiHandsFooter`（仅第一屏 fixed hero 容器内），所以第二屏 `SloganSection` 就没有扫描线了。
-- 当前 `src/components/SloganSection.tsx` 的 `<section>` 只有纯 `#000` 背景，没有任何扫描线层。
-- 这是之前按你要求"扫描线只在第一屏背景层"调整后的副作用，并非新的擅自修改。
+在第一屏（fixed hero）背景层加入 React Bits Pro 的 **Squircle Shift** 形态动画，作为背景装饰，位于黑色底 + 扫描线之上、ASCII 手 / 文案之下，先看效果再微调。
 
-## 方案
+## 前置条件（需要你确认）
 
-在 `src/components/SloganSection.tsx` 内部，紧贴 `<section>` 背景加一层与第一屏一致的扫描线：
+React Bits Pro 组件是私有 registry，`npx shadcn add` 必须带上 `REACTBITS_LICENSE_KEY` 才能拉取。请确认一件事：
 
-- 在 sticky 内容层之前插入一个 `GlitchGrainOverlay`（`intensity="low"`, `visible`），或直接用等效的 `repeating-linear-gradient` div。
-- 定位：`position: absolute; inset: 0; pointer-events: none; z-index: 0`（内容层保持默认 / 更高层级，文字不受影响）。
-- 保持与第一屏相同的参数：`rgba(255,255,255,0.055)`，`0 1px / 1px 3px` 的重复线性渐变，无 `mix-blend-mode`，纯叠加在 `#000` 上，视觉与 hero 一致。
-- 不改动 `IntroVideo` 内的扫描线（那一层是开场视频专用的 overlay 混合模式，保持独立）。
+- 是否已经有 `REACTBITS_LICENSE_KEY`（Pro license key）？
+  - **有** → 我用 `add_secret` 把它保存为构建期可用的密钥，然后继续下面步骤。
+  - **没有** → 需要你先去 pro.reactbits.dev 拿到 key 再继续，否则安装会 401。
+
+## 实施步骤（拿到 key 之后）
+
+1. **配置 registry**：在 `components.json` 的 `registries` 中加入 `@reactbits-starter`，指向 Pro registry URL，带上 `Authorization: Bearer ${REACTBITS_LICENSE_KEY}` header（按官方 installation 文档格式）。
+2. **安装组件**：运行 `npx shadcn@latest add @reactbits-starter/squircle-shift-tw`，把组件文件写入 `src/components/ui/`（或 registry 指定路径）。
+3. **接入第一屏背景**：在 `src/routes/index.tsx` 的 fixed hero 容器里，`AsciiHandsFooter` **之前**（更低层级）插入一个 wrapper：
+   - `position: absolute; inset: 0; pointer-events: none; z-index: 3`（介于扫描线 z=2 与手 / 文案之间；如实际层级不合适再调）。
+   - 内部渲染 `<SquircleShift />`，尺寸铺满，颜色使用现有紫色主题（`#C5A9FF` 或半透明白）以避免和手部冲突。
+4. **仅作用于第一屏**：wrapper 放在 fixed hero 容器内即可，跟随 parallax，不会渗透到第二屏 / 对话框 / 导航栏。
+5. **不改动**：`SloganSection`、`FinChatDock`、`SiteNav`、`IntroVideo` 扫描线层、按钮 / 标题动画等一律不动。
 
 ## 验证
 
-- 滚动到第二屏：文字背景可见与第一屏一致的横向扫描线。
-- 第一屏 / 开场视频 / 扩散阶段不受影响。
-- 文字点击、hover 无异常（overlay `pointer-events: none`）。
+- 首屏加载完成后可见 squircle 形态动画作为背景装饰。
+- 开场视频、扩散阶段、第二屏、导航栏、按钮 hover、底部对话框均无变化。
+- 手部点击 / hover、按钮点击、导航点击不被拦截（`pointer-events: none`）。
+
+## 需要你回复
+
+1. 是否有 `REACTBITS_LICENSE_KEY`？
+2. 颜色偏好：延续现有紫色 `#C5A9FF`，还是想换一种（白色半透明 / 彩色）？
