@@ -333,6 +333,42 @@ const FRAG = /* glsl */ `
       float grain = fract(sin(dot(uv * uResolution + t, vec2(12.9898, 78.233))) * 43758.5453);
       float L3 = exp(-dOut2 / (0.22 * uHaloFalloff)) * outside * env * (0.55 + 0.45 * grain);
       col += vec3(0.62, 0.54, 0.95) * L3 * uMistA;
+
+      // ---- Edge glitch band: unify with page GlitchGrainOverlay ----
+      // Narrow band hugging the burn front, only outside the burned hole.
+      float edgeBand = smoothstep(0.09, 0.0, abs(d)) * outside * env;
+      if (edgeBand > 0.001) {
+        // Approx front-normal in screen space (from fbm-warped position).
+        vec2 nrm = normalize(pw + vec2(1e-4));
+        vec2 pxNrm = nrm / uResolution;
+
+        // (1) Scanlines — echo GlitchGrainOverlay horizontal lines.
+        float scan = sin(gl_FragCoord.y * 1.6 + t * 4.0) * 0.08;
+
+        // (2) Chroma split along the edge normal (~0.9px).
+        vec2 chOff = pxNrm * 0.9;
+        float rC = texture2D(uMap, uv + chOff).r;
+        float bC = texture2D(uMap, uv - chOff).b;
+        vec3 chroma = vec3(rC, col.g, bC);
+
+        // (3) Block jitter — sparse horizontal shear on 6x2 blocks.
+        vec2 block = floor(gl_FragCoord.xy / vec2(6.0, 2.0));
+        float blkH = fract(sin(dot(block, vec2(12.9898, 78.233)) + floor(t * 22.0)) * 43758.5453);
+        float jitterOn = step(0.85, blkH);
+        float shearPx = (blkH - 0.5) * 3.0 * jitterOn;
+        vec3 shear = texture2D(uMap, uv + vec2(shearPx / uResolution.x, 0.0)).rgb;
+
+        // (4) High-freq grain on the core band.
+        float eg = fract(sin(dot(gl_FragCoord.xy + t * 37.0, vec2(12.9898, 78.233))) * 43758.5453);
+        float grainN = (eg - 0.5) * 0.08;
+
+        // Compose: chroma split & shear blended into col; add scanline + grain.
+        vec3 mixed = mix(col, chroma, 0.55);
+        mixed = mix(mixed, shear, 0.35 * jitterOn);
+        mixed += vec3(scan + grainN);
+
+        col = mix(col, mixed, edgeBand);
+      }
     }
 
     // Highlight roll-off again after additive glow to guarantee no white flash.

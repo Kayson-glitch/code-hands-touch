@@ -1,55 +1,37 @@
 ## 目标
 
-扩散动画结束进入第一屏后，元素分两阶段入场：
-1. **阶段 A（先）** — 顶部导航栏 `SiteNav` + 底部对话框 `FinChatDock` 淡入
-2. **阶段 B（后）** — 中间标题区 `HeroCopy` + 字符手 `AsciiHandsFooter`（hands stage）同时开始入场动画
+给扩散动画的边缘光圈（core rim / hot halo 区）叠加一层与页面 GlitchGrainOverlay 视觉一致的故障风效果，让扩散阶段的边缘与后续界面的删格 / 噪点风格统一。其他一切不变（扩散形状、时序、颜色、时长、参数、handoff 逻辑均不动）。
 
-## 现状
+## 只改一个文件
 
-四个组件目前都监听 `app-bg-change: "dark"` 事件（burst 完成时派发），几乎同时开始各自动画：
-- `SiteNav`：收到 `app-nav-visibility: "visible"` 或 4s 兜底后 260ms 淡入
-- `FinChatDock`：`app-bg-change=dark` 后 850ms 淡入
-- `HeroCopy`：`app-bg-change=dark` 立即 900ms blur/fade
-- `AsciiHandsFooter`：切到 `stage="hands"` 时手臂开始 2400ms 生长
+**`src/components/IntroVideo.tsx`** 的片段着色器（约 315–336 行 burn edge 合成段），只在 `outside * env` 边缘带内叠加故障扰动，不影响：
+- 已烧穿的黑色 hole (`burned` 区域)
+- 扩散外部未触及的视频画面
+- 现有 L0/L1/L2/L3 光晕层的强度与颜色
 
-## 方案
+## 具体改动（着色器内，纯 GLSL）
 
-统一由 burst 完成事件驱动，用固定时序错开两阶段，不改动画本身参数，只调整触发时机。
+在现有 4 层光晕合成之后、`col = col - max(...)` 之前，新增一段"edge glitch"，作用范围严格约束在边缘一条窄带 `edgeBand = smoothstep(0.09, 0.0, abs(d)) * outside * env`：
 
-**时序（以 `app-bg-change=dark` 触发为 t=0）：**
+1. **扫描线（scanline）**：`sin(gl_FragCoord.y * ~1.6 + t * ~4.0)` 在边缘带上做 ±8% 亮度调制，与 `GlitchGrainOverlay` 的横向扫描线呼应
+2. **RGB 错位（chroma split）**：沿边缘法线方向对已合成的 `col` 做 ~0.6–1.2px 的 R/B 通道位移，只在 `edgeBand` 内混入
+3. **块状抖动（block jitter）**：用 `floor(gl_FragCoord.xy / vec2(6.0, 2.0))` 做低频哈希，每几帧触发一次横向 1–2px 位移，概率 ~15%，只叠在边缘带
+4. **高频噪点（grain）**：现有 `L3` 已经有 grain，但只作用在外部雾气；这里在边缘核心带再加一层 ±4% 的 hash 噪点
 
-```text
-t = 0ms     背景变黑 / 进入 hero
-t = 80ms    SiteNav 淡入开始 (260ms)
-t = 80ms    FinChatDock 淡入开始 (现有过渡)
-t = 640ms   HeroCopy blur/fade 开始 (900ms)
-t = 640ms   AsciiHandsFooter 手臂生长开始
-```
+所有 4 个子效果通过一个总强度 `edgeBand` 门控，`b`（burn 进度）在 <0.02 或 >0.94 时自然衰减，与现有 `env` 一致。
 
-阶段间隔 ~560ms，保证 A 组件基本淡入完成后 B 组件才开始，避免视觉打架。
+## 不做的事
 
-## 技术改动
+- 不新增 uniform、不加 Debug Panel 参数（保持"其他不变"）
+- 不修改 JS 侧任何逻辑（时序、handoff、scroll driver 全部不动）
+- 不改 `GlitchGrainOverlay` 组件本身
+- 不改 hole 内部（保持纯黑）
+- 不改光晕 4 层的颜色与叠加公式
 
-仅四个文件，均只改触发时序：
+## 验证
 
-1. **`src/components/SiteNav.tsx`**
-   - `app-nav-visibility: "visible"` 事件收到后延迟 80ms 再 `setHidden(false)`
-   - 兜底 timeout 保持 4000ms
-
-2. **`src/components/FinChatDock.tsx`**
-   - 把现有 `setTimeout(setVisible(true), 850)` 改为 80ms（与 nav 同步）
-
-3. **`src/components/HeroCopy.tsx`**
-   - `app-bg-change=dark` 后延迟 640ms 再 `setVisible(true)`
-
-4. **`src/components/AsciiHandsFooter.tsx`**
-   - 手臂 intro 动画启动点（进入 `stage="hands"` 时的 `introStartTs`）延迟 640ms 开始，或将手臂初始 opacity/progress 门控 640ms 后再开始推进
-   - 只改 hands stage 的起始时间，不改 2400ms 生长曲线本身
-
-## 不改动
-
-- burst / 视频 / 扩散流程完全不变
-- 各组件动画曲线、时长、参数保持现状
-- 不改事件名或事件源
-
-需要我按这个时序实施吗？如果 560ms 间隔偏长/偏短可以直接说数值，我在实施时套用。
+改完后用 Playwright 触发扩散，截图边缘带 3 帧（b≈0.3 / 0.6 / 0.9），确认：
+- 边缘出现扫描线 + RGB 错位 + 块状抖动
+- 黑色 hole 内部仍纯黑
+- 扩散外部视频区域无变化
+- 与后续第一屏 `GlitchGrainOverlay` 视觉连贯
