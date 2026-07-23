@@ -503,6 +503,9 @@ export function IntroVideo({
     let burnClock = 0;
     // One-shot: pause video and freeze texture uploads the instant burst starts.
     let burnVideoFrozen = false;
+    // Timestamp of last backward-seek request, throttled to avoid queueing
+    // faster than the decoder can service.
+    let lastBackwardSeekTs = -Infinity;
     // Hold `fire()` for one extra rendered frame after burstProgress hits 1
     // so the parent scene switch happens on a fully-drawn final state.
     let finalFrameRendered = false;
