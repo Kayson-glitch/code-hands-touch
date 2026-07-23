@@ -65,7 +65,7 @@ export function FinChatDock() {
     window.setTimeout(() => {
       setMessages((m) => [
         ...m,
-        { role: "assistant", text: "（演示回复）我已收到你的问题。" },
+        { role: "assistant", text: "(Demo reply) I received your question." },
       ]);
     }, 800);
   };
