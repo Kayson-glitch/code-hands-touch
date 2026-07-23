@@ -110,7 +110,7 @@ export function SloganSection() {
         style={{
           maxWidth: 1100,
           textAlign: "center",
-          fontSize: "clamp(28px, 4.2vw, 60px)",
+          fontSize: "clamp(28px, 4.2vw, 54px)",
           lineHeight: 1.25,
           letterSpacing: "-0.01em",
           fontWeight: 500,
