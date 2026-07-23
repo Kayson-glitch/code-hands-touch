@@ -1,28 +1,25 @@
 ## Goal
-Match the reference site's second-screen behavior: when the slogan pins to the viewport center, the word-by-word color/blur reveal is still in progress and continues as the user keeps scrolling. Currently the reveal finishes while the section is still sliding in, so by the time it's centered everything is already white.
+Apply the dot-grid background globally (all screens/sections) on a unified pure black background, matching the reference site (redomedia.co) style.
 
-## Change (only `src/components/SloganSection.tsx`)
+## Changes
 
-1. **Make the section a tall scroll track with a sticky stage**
-   - Outer `<section>`: `height: 260vh` (tunable), `position: relative`, keep `zIndex: 10` and `background: #000`.
-   - Inner wrapper: `position: sticky; top: 0; height: 100vh`, centers the slogan (flex center). This pins the text once it reaches the top of the viewport.
+1. **`src/styles.css`**
+   - Add a global body background: pure black (`#000`) with the radial-gradient dot pattern (`rgba(255,255,255,0.09)` 0.6px dots on 4px tile), fixed attachment so it stays put during scroll.
+   - This ensures the dot grid is present across the entire page (hero, slogan section, and any future sections) without needing per-component overlays.
 
-2. **Rewrite the progress mapping to be scroll-length driven**
-   - Compute progress from the section's own scroll track, not from viewport entry:
-     - `const rect = section.getBoundingClientRect();`
-     - `const scrolled = -rect.top;` (0 when the tall section's top hits the viewport top)
-     - `const travel = section.offsetHeight - window.innerHeight;`
-     - `progress = clamp(scrolled / travel, 0, 1)`
-   - This means: the slogan pins as soon as `scrolled >= 0`, and the words keep revealing across the remaining ~160vh of scroll — matching the reference where text is still lighting up while pinned.
+2. **`src/components/AsciiHandsFooter.tsx`**
+   - Remove the locally mounted `GlitchGrainOverlay` (no longer needed — grid comes from global background).
+   - Keep the black fill of the footer transparent so the global grid shows through.
 
-3. **Slow down the per-word reveal window**
-   - Keep the current `smoothstep` reveal but widen the overlap so the last word finishes near `progress ≈ 1` rather than early. Use `span = 1 / (total + 2)` and `overlap = span * 2.2` so words continue transitioning through most of the pinned scroll.
+3. **`src/routes/index.tsx`** (already grid-free at root; no overlay to remove there)
+   - Ensure the fixed hero container does not paint an opaque black over the body (use transparent background so global dots show through).
 
-4. **Leave everything else untouched**
-   - No changes to `src/routes/index.tsx`, parallax, nav, dock, hero, glitch overlay, colors, typography, or word list.
-   - Reduced-motion branch unchanged (immediate `progress = 1`).
+4. **`src/components/SloganSection.tsx`** / other sections
+   - Verify backgrounds are transparent (or explicitly transparent) so the global dot grid shows during scroll. Adjust only if an opaque black is currently painted.
 
-## Technical notes
-- The fixed hero layer in `index.tsx` already uses `translate3d(0, -scrollY * 0.35, 0)`, so it continues its parallax underneath the taller sticky section — no coordination change needed.
-- `FinChatDock` stays outside the parallax layer and remains pinned.
-- Section height (`260vh`) is the single knob controlling how long the reveal lasts while pinned; can be tuned after visual check.
+5. **`src/components/GlitchGrainOverlay.tsx`**
+   - Keep the component file but stop mounting it (or delete usages). Optionally remove if no longer referenced anywhere.
+
+## Notes
+- Dot spec unchanged: 4×4px tile, 0.6px white dot at 9% alpha.
+- Intro video phase: video sits above the body, so the grid is naturally hidden during playback and only appears once the burn-through reveals the black background — matching the current behavior for the diffusion black.
