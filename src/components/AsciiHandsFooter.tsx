@@ -1388,7 +1388,7 @@ export function AsciiHandsFooter({
         Good Fella Studio — ASCII Creation of Adam
       </h1>
 
-      <AuroraIntro />
+      {bgDark && <AuroraIntro />}
 
       <canvas
         ref={canvasRef}
