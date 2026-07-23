@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
+import { ArrowRight } from "lucide-react";
 import { useHeroLayout } from "@/hooks/useHeroLayout";
+
 
 export function HeroCopy() {
   const [visible, setVisible] = useState(false);
@@ -103,8 +105,17 @@ export function HeroCopy() {
             animation: "rainbow-btn-flow 2s linear infinite",
           }}
         />
-        <span className="relative z-10">Book a Demo</span>
+        <span className="relative z-10 inline-flex items-center gap-1.5">
+          Book a Demo
+          <ArrowRight
+            size={14}
+            strokeWidth={2}
+            className="relative -top-px opacity-0 transition-all duration-300 ease-out group-hover:translate-x-0 group-hover:opacity-100"
+            style={{ transform: "translateX(-6px)" }}
+          />
+        </span>
       </button>
+
     </div>
   );
 }
