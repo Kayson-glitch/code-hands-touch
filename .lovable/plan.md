@@ -1,40 +1,42 @@
-# 修复扩散阶段闪屏
+## 第二屏 Slogan Section
 
-## 现象定位
+在首屏（`AsciiHandsFooter` + `HeroCopy` + `FinChatDock`）之后新增独立的 `SloganSection`，仅新增内容，不动现有任何组件、动画与交互。
 
-`src/components/IntroVideo.tsx` 里扩散（burn-through）阶段目前是"自动定时 + 可被滚轮打断"的混合模式，几处状态在同一帧内互相拉扯，导致画面闪一下：
+### 视觉参考
+- 参考站 `redomedia.co`：整屏黑底，居中一段大号 serif 文案；随滚动逐词由暗（灰）变亮（近白），已滚过的词保持高亮，未到的词保持低亮。
+- 上传图对应中间状态：`while we shape how the world sees it.` 中 `world sees it.` 仍是暗灰、其余已点亮。
 
-1. **`burnStartTs` 会被重置**：`videoProgress` 是从平滑后的 `progress` 派生的，只要用户向上滚一点点，`progress` 略低于 `VIDEO_FRACTION`，就会进 `else if (burnActive)` 分支，把 `burnActive = false; burnStartTs = -1`。下一帧再越过阈值，burst 又从 0 开始 → 黑洞和光环瞬间消失又重新出现 = 闪屏。
-2. **`compositeProgress` 会跳变**：它由 `min(progress, VIDEO_FRACTION) + burstProgress * (1-VIDEO_FRACTION)` 合成，当 `burstProgress` 从 0.6 秒突然掉回 0 时，`uProgress` 阶梯式回退，导致 shader 里所有依赖 `uProgress` 的项（色差包络、噪点）一起跳。
-3. **`uTime = compositeProgress * 18` 也跟着跳**：shader 里所有 `sin(uTime * ...)` 相位瞬间断裂，出现一帧亮闪。
-4. **`fire()` 触发瞬间的接管**：`burstProgress >= 1` 时立即回调 `onEnded`，父组件切换到 ASCII 场景，如果此时 canvas 还没画最后一帧的稳定状态，也会看到黑/白闪。
+### 内容
+文案（英文，贴合 Synergy.AI 语境）：
+> We craft intelligent support experiences that keep pace with your ambition.  
+> So your team can focus on what matters, while we shape how the world hears you.
 
-## 修复方案
+（如需换文案我可以在实现前一次替换；不影响结构）
 
-只调整时间/状态推进逻辑，不动 shader 和视觉参数：
+### 结构
+- 新文件 `src/components/SloganSection.tsx`
+  - 一个 `section`，`min-h-screen`，纯黑背景 `#000`，居中布局。
+  - 文本用 `font-display`（Clash Display）**不**改成 serif —— 参考站是 serif，但为了与首屏保持字体统一我默认沿用 Clash Display。如果你想要 serif（Instrument Serif / Cormorant），我在实现前替换。
+  - 字号响应式：`clamp(28px, 4.2vw, 60px)`，`line-height: 1.25`，`letter-spacing: -0.01em`，`max-width: 1100px`，`text-align: center`。
+- 在 `src/routes/index.tsx` 的 `videoSrc !== null` 分支内、`FinChatDock` 之前追加 `<SloganSection />`。首屏容器不再是 `fixed`/`absolute` 定位的整屏（AsciiHandsFooter 等本身为绝对定位覆盖首屏），slogan 作为下一个 `min-h-screen` 块自然承接滚动。
 
-1. **让扩散不可逆、单向推进**
-   - 一旦 `videoProgress` 第一次达到 1，`burnActive` 设为 `true` 后 **不再被回退分支重置**；删掉 `else if (burnActive) { burnActive = false; burnStartTs = -1 }`。
-   - `targetProgress` 在扩散启动后钳制在 `VIDEO_FRACTION`，用户继续向上滚只影响一个内部 hint，不再拉扯 `burnStartTs`。
+### 交互（滚动逐词点亮）
+- 将文案按空格 split 成 word tokens，每个 token 用 `<span>` 包裹。
+- 用 `IntersectionObserver`（`threshold: 0` + `rootMargin`）+ `scroll` 监听 section 在视口中的进度 `p ∈ [0,1]`：
+  - `p = clamp((viewportCenter - sectionTop) / (sectionHeight - viewportHeight*0.6), 0, 1)`
+- 每个词分配区间 `i/N ~ (i+1)/N`，用 `smoothstep` 计算该词亮度 `a`：
+  - 未到：`opacity: 0.22`（暗灰）
+  - 过渡：`0.22 → 1`，同时轻微 `filter: blur(2px) → blur(0)` + `letter-spacing` 收紧 1px
+  - 已过：保持 `opacity: 1`
+- 用 `requestAnimationFrame` 节流，仅在 section 进入视口时激活监听，离开即断开，避免影响首屏性能。
+- 尊重 `prefers-reduced-motion`：全部词直接 `opacity: 1`，无过渡。
 
-2. **`uTime` 与 `uProgress` 单调化**
-   - `uTime` 改用一个只增不减的独立累加器（`burnStartTs` 存在时按 `dt` 累加），避免回退造成的相位断裂。
-   - `compositeProgress` 在扩散阶段固定用 `VIDEO_FRACTION + burstProgress * (1-VIDEO_FRACTION)`，前半段 `progress` 的抖动不再影响它。
+### 不改动
+- `AsciiHandsFooter` / `IntroVideo` / `IntroPreloader` / `SiteNav`（含深浅反相与显隐时序）/ `HeroCopy` / `FinChatDock` / `GlitchGrainOverlay` / `ScrollHint` / `useHeroLayout` / `styles.css` 现有规则均不变动。
+- 不调整首屏 z-index、滚动映射、burn 动画。
 
-3. **`fire()` 前留一帧稳定态**
-   - `burstProgress >= 1` 时不立刻 `fire`，先把 `uBurn = 1` 再至少渲染一帧（`lastRenderedProgress` 更新后）再回调 `onEnded`，避免父组件切换瞬间的空帧闪烁。
+### 需要你确认
+1. **字体**：沿用 Clash Display 保持品牌统一，还是切换成 serif（更贴近参考站）？
+2. **文案**：用上面这段英文默认版，还是你直接给一段中文/英文替换？
 
-4. **收尾时暂停视频、锁定纹理**
-   - 扩散启动即 `pauseVideo()` 一次并把 `mediaFrameDirty` 清零，之后不再上传视频纹理，防止 `videoTex.needsUpdate` 在扩散末段偶发触发一次画面刷新造成闪烁。
-
-## 影响范围
-
-- 仅修改 `src/components/IntroVideo.tsx` 的 loop 内状态推进（约 20 行）。
-- 不改 shader、参数面板、滚轮映射（上一步刚调的手感参数保持不变）。
-- 不改父组件、不改 ASCII/HeroCopy/导航栏。
-
-## 验收
-
-- 视频滚到末尾后扩散一次到底、无闪；
-- 扩散过程中反向滚轮：视频不倒放、扩散不回退、无闪；
-- 扩散完成切到 ASCII 场景时没有一帧黑/白闪。
+如无异议，我按上述默认（Clash Display + 上面英文文案）实现。
