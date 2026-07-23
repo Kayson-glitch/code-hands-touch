@@ -791,9 +791,16 @@ export function IntroVideo({
           // Forward chase — proportional rate, no seek.
           setChasePlayback(1 + gap * 4.5);
         } else if (gap < -GAP_BACKWARD_SEEK) {
-          // Large backward gap → single seek to catch up.
+          // Reverse scroll → scrub video backward with the target. Throttle
+          // requests so we don't queue faster than the decoder can flush,
+          // but keep issuing them so playback visibly tracks the scroll.
           pauseVideo();
-          requestSeek(targetTime);
+          if (now - lastBackwardSeekTs >= BACKWARD_SEEK_MIN_INTERVAL_MS) {
+            lastBackwardSeekTs = now;
+            requestSeek(targetTime);
+          } else {
+            pendingSeekTarget = Math.max(0, targetTime);
+          }
         } else if (gap < -GAP_DEAD_ZONE) {
           // Small backward gap → pause and let target roll into us.
           pauseVideo();
