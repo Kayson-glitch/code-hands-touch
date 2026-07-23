@@ -39,10 +39,12 @@ export function SloganSection() {
       if (!el) return;
       const rect = el.getBoundingClientRect();
       const vh = window.innerHeight;
-      // Drive progress across the section's full scroll track so the reveal
-      // keeps going while the slogan is pinned in the viewport center.
-      const travel = Math.max(1, el.offsetHeight - vh);
-      const scrolled = -rect.top;
+      // Start the reveal one viewport earlier so the animation is already in
+      // motion while the user is still scrolling through the first screen.
+      // Endpoint stays aligned with the end of the sticky track.
+      const LEAD_IN = vh;
+      const travel = Math.max(1, LEAD_IN + (el.offsetHeight - vh));
+      const scrolled = LEAD_IN - rect.top;
       const p = scrolled / travel;
       setProgress(Math.max(0, Math.min(1, p)));
     };
@@ -64,7 +66,7 @@ export function SloganSection() {
           window.removeEventListener("resize", schedule);
         }
       },
-      { threshold: 0, rootMargin: "0px" }
+      { threshold: 0, rootMargin: "100% 0px 0px 0px" }
     );
     if (sectionRef.current) io.observe(sectionRef.current);
 
