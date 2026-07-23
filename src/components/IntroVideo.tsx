@@ -745,40 +745,25 @@ export function IntroVideo({
       if (videoProgress >= 1) {
         if (burnStartTs < 0) burnStartTs = now;
       }
-      // ---- Video chase: playbackRate is primary, seek is emergency lane ----
+      // ---- Direct-seek driver ----
+      // Video stays paused; every rAF we set currentTime to the scroll-derived
+      // target. all-intra encode makes seek ~1 frame cost, so forward/backward
+      // are symmetric and there is zero chase / drift.
       if (!burstEngaged && video.duration && !Number.isNaN(video.duration) && firstFrameReady) {
+        ensurePaused();
         const duration = video.duration;
-        const targetTime = Math.min(
-          duration,
-          Math.max(0, Math.min(1, progress / VIDEO_FRACTION) * duration),
-        );
-        const gap = targetTime - mediaTime;
-        const absGap = Math.abs(gap);
-
-        if (absGap > GAP_HARD_SEEK) {
-          // Huge jump → single seek, do not thrash.
-          pauseVideo();
-          requestSeek(Math.max(0, targetTime - 0.05));
-        } else if (gap > GAP_DEAD_ZONE) {
-          // Forward chase — proportional rate, no seek.
-          setChasePlayback(1 + gap * 4.5);
-        } else if (gap < -GAP_BACKWARD_SEEK) {
-          // Reverse scroll → scrub video backward with the target. Throttle
-          // requests so we don't queue faster than the decoder can flush,
-          // but keep issuing them so playback visibly tracks the scroll.
-          pauseVideo();
-          if (now - lastBackwardSeekTs >= BACKWARD_SEEK_MIN_INTERVAL_MS) {
-            lastBackwardSeekTs = now;
-            requestSeek(targetTime);
-          } else {
-            pendingSeekTarget = Math.max(0, targetTime);
-          }
-        } else if (gap < -GAP_DEAD_ZONE) {
-          // Small backward gap → pause and let target roll into us.
-          pauseVideo();
-        } else {
-          // Inside dead zone → hold still, no writes to currentTime/playbackRate.
-          pauseVideo();
+        const targetTime = clamp01(progress / VIDEO_FRACTION) * duration;
+        // Only write when we've crossed at least ~half a frame worth of time,
+        // to avoid duplicate seeks within the same displayed frame.
+        const HALF_FRAME = 0.5 / 48;
+        if (!video.seeking && Math.abs(targetTime - mediaTime) > HALF_FRAME) {
+          try {
+            const fs = (video as unknown as { fastSeek?: (t: number) => void }).fastSeek;
+            if (typeof fs === "function") fs.call(video, targetTime);
+            else video.currentTime = targetTime;
+            mediaTime = targetTime;
+            mediaFrameDirty = true;
+          } catch { /* ignore */ }
         }
       }
       uniforms.uProgress.value = compositeProgress;
@@ -813,7 +798,7 @@ export function IntroVideo({
         burnActive = true;
       }
       if (burstEngaged && !burnVideoFrozen) {
-        pauseVideo();
+        ensurePaused();
         mediaFrameDirty = false;
         videoTex.needsUpdate = false;
         burnVideoFrozen = true;
@@ -886,7 +871,7 @@ export function IntroVideo({
       video.removeEventListener("seeked", onSeeked);
       video.removeEventListener("error", onError);
       window.clearTimeout(errorTimer);
-      pauseVideo();
+      ensurePaused();
       videoTex.dispose();
       material.dispose();
       mesh.geometry.dispose();
