@@ -11,9 +11,9 @@ export function HeroCopy() {
     const onBg = (e: Event) => {
       const detail = (e as CustomEvent<"light" | "dark">).detail;
       if (detail === "dark") {
-        // Start the hero fade immediately so there's no black gap after
-        // the diffusion completes.
-        setVisible(true);
+        // Stage B: hero title reveals ~640ms after the background flips,
+        // so nav + chat dock (Stage A) can finish their fade first.
+        window.setTimeout(() => setVisible(true), 640);
       } else {
         setVisible(false);
       }
