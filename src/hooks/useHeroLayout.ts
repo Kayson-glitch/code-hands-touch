@@ -13,7 +13,7 @@ export type HeroLayout = {
 };
 
 const DESKTOP: HeroLayout = {
-  titlePaddingTop: "18vh",
+  titlePaddingTop: "calc(18vh + 20px)",
   titleFontSize: 48,
   titleLineHeight: "56px",
   subtitleFontSize: 16,
@@ -26,7 +26,7 @@ const DESKTOP: HeroLayout = {
 
 const SHORT: HeroLayout = {
   ...DESKTOP,
-  titlePaddingTop: "14vh",
+  titlePaddingTop: "calc(14vh + 20px)",
   titleFontSize: 44,
   titleLineHeight: "52px",
   handsTop: "calc(42vh - 20px)",
@@ -35,7 +35,7 @@ const SHORT: HeroLayout = {
 
 const TABLET: HeroLayout = {
   ...DESKTOP,
-  titlePaddingTop: "16vh",
+  titlePaddingTop: "calc(16vh + 20px)",
   titleFontSize: 40,
   titleLineHeight: "48px",
   handsTop: "calc(44vh - 20px)",
@@ -44,7 +44,7 @@ const TABLET: HeroLayout = {
 
 const MOBILE: HeroLayout = {
   ...DESKTOP,
-  titlePaddingTop: "10vh",
+  titlePaddingTop: "calc(10vh + 20px)",
   titleFontSize: 32,
   titleLineHeight: "40px",
   subtitleFontSize: 14,
@@ -55,7 +55,7 @@ const MOBILE: HeroLayout = {
 
 const WIDE: HeroLayout = {
   ...DESKTOP,
-  titlePaddingTop: "20vh",
+  titlePaddingTop: "calc(20vh + 20px)",
   titleFontSize: 56,
   titleLineHeight: "64px",
   handsTop: "calc(44vh - 28px)",
