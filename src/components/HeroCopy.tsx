@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ArrowRight } from "lucide-react";
 import { useHeroLayout } from "@/hooks/useHeroLayout";
 
@@ -6,6 +6,32 @@ import { useHeroLayout } from "@/hooks/useHeroLayout";
 export function HeroCopy() {
   const [visible, setVisible] = useState(false);
   const layout = useHeroLayout();
+  const gradientRef = useRef<HTMLSpanElement | null>(null);
+
+  // Drive the Synergy.AI gradient in lockstep with the Aurora shader.
+  // Aurora uses speed=0.5; its noise field advances as uTime * speed * 0.1.
+  // We map that same phase onto background-position + a subtle hue sweep so
+  // the text appears to "breathe" with the aurora ribbons above it.
+  useEffect(() => {
+    let raf = 0;
+    const AURORA_SPEED = 0.5;
+    const tick = () => {
+      const el = gradientRef.current;
+      if (el) {
+        const t = performance.now() / 1000;
+        const phase = t * AURORA_SPEED; // shared with Aurora uTime*speed
+        // Slow horizontal sweep, matched to aurora ribbon drift
+        const x = 50 + Math.sin(phase * 0.35) * 50; // 0..100
+        const y = 50 + Math.cos(phase * 0.22) * 40; // 10..90
+        const angle = 115 + Math.sin(phase * 0.18) * 8; // gentle tilt wobble
+        el.style.backgroundPosition = `${x}% ${y}%`;
+        el.style.backgroundImage = `linear-gradient(${angle}deg, #185DFF 0%, #4B3AFF 22%, #8B22FF 44%, #D018FF 62%, #E81A8A 82%, #185DFF 100%)`;
+      }
+      raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, []);
 
   useEffect(() => {
     const onBg = (e: Event) => {
@@ -50,15 +76,15 @@ export function HeroCopy() {
         <br />
         powered by{" "}
         <span
+          ref={gradientRef}
           style={{
             background:
-              "linear-gradient(115deg, #185DFF 0%, #4B3AFF 18%, #8B22FF 34%, #D018FF 50%, #E81A8A 66%, #FF1245 82%, #D018FF 100%)",
-            backgroundSize: "220% 220%",
+              "linear-gradient(115deg, #185DFF 0%, #4B3AFF 22%, #8B22FF 44%, #D018FF 62%, #E81A8A 82%, #185DFF 100%)",
+            backgroundSize: "260% 260%",
             WebkitBackgroundClip: "text",
             backgroundClip: "text",
             WebkitTextFillColor: "transparent",
             color: "transparent",
-            animation: "synergy-gradient-flow 11s ease-in-out infinite",
           }}
         >
           Synergy.AI.
