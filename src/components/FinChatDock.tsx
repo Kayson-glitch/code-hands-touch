@@ -204,9 +204,6 @@ export function FinChatDock() {
           </button>
         </div>
 
-        <p className="mt-3 text-center text-xs text-white/40">
-          By chatting with us, you agree to our Privacy Policy
-        </p>
       </div>
 
       <style>{`
