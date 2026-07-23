@@ -35,20 +35,10 @@ const MAX_PIXELS_PER_TICK = 180;
 // Tighter than the reference project's ~75ms so scroll feels more direct
 // without giving up perceptible smoothing. At 60fps this catches ~35% per
 // frame — visibly snappier while still absorbing wheel jitter.
-// All-intra encode: every frame is a keyframe, so seek is cheap and precise.
-// We can shorten the smoothing window for a more direct feel.
-const PROGRESS_SMOOTH_TIME = 0.035;
+// Direct-seek driver: video stays paused and we set currentTime every frame.
+// Very short smoothing just absorbs wheel-event jitter, near-direct feel.
+const PROGRESS_SMOOTH_TIME = 0.018;
 const MAX_SMOOTH_DT = 1 / 30;
-// Gap thresholds (seconds) for playbackRate vs. seek decision.
-const GAP_DEAD_ZONE = 0.008;
-// Aggressive backward seeking: any perceptible reverse gap triggers a seek
-// so the video visibly scrubs backward with the user instead of freezing.
-const GAP_BACKWARD_SEEK = 0.02;
-const GAP_HARD_SEEK = 1.2;
-// All-intra seek is cheap; drop throttle to one frame so reverse tracks the wheel.
-const BACKWARD_SEEK_MIN_INTERVAL_MS = 16;
-const MIN_CHASE_RATE = 0.25;
-const MAX_CHASE_RATE = 4.0;
 // Only notify parent when progress moved meaningfully.
 const PROGRESS_NOTIFY_EPSILON = 0.003;
 // Skip GL render if nothing visibly changed and no new video frame arrived.
@@ -479,9 +469,6 @@ export function IntroVideo({
     let lastNotifiedProgress = -1;
     let lastNotifiedBurst = -1;
     let lastRenderedProgress = -1;
-    let playPending = false;
-    let wantsForwardPlayback = false;
-    let pendingSeekTarget: number | null = null;
     // Authoritative "current media time" — updated by rVFC when available,
     // otherwise falls back to video.currentTime reads.
     let mediaTime = 0;
@@ -504,9 +491,6 @@ export function IntroVideo({
     let burnClock = 0;
     // One-shot: pause video and freeze texture uploads the instant burst starts.
     let burnVideoFrozen = false;
-    // Timestamp of last backward-seek request, throttled to avoid queueing
-    // faster than the decoder can service.
-    let lastBackwardSeekTs = -Infinity;
     // Hold `fire()` for one extra rendered frame after burstProgress hits 1
     // so the parent scene switch happens on a fully-drawn final state.
     let finalFrameRendered = false;
@@ -559,46 +543,10 @@ export function IntroVideo({
       return [clamp01(next), nextVelocity];
     };
 
-    const pauseVideo = () => {
-      wantsForwardPlayback = false;
+    const ensurePaused = () => {
       try {
         if (!video.paused) video.pause();
         if (video.playbackRate !== 1) video.playbackRate = 1;
-      } catch { /* ignore */ }
-    };
-
-    const setChasePlayback = (rate: number) => {
-      wantsForwardPlayback = true;
-      const playbackRate = Math.min(MAX_CHASE_RATE, Math.max(MIN_CHASE_RATE, rate));
-      try {
-        if (Math.abs(video.playbackRate - playbackRate) > 0.04) {
-          video.playbackRate = playbackRate;
-        }
-      } catch { /* ignore */ }
-      if (!video.paused || playPending) return;
-      playPending = true;
-      video.play()
-        .then(() => {
-          if (!wantsForwardPlayback) pauseVideo();
-        })
-        .catch(() => { /* ignore */ })
-        .finally(() => { playPending = false; });
-    };
-
-    // Seek is the emergency lane. We only ever hold at most ONE outstanding
-    // seek target and coalesce anything that arrives while `video.seeking`.
-    const requestSeek = (target: number) => {
-      const clamped = Math.max(0, target);
-      if (video.seeking) {
-        pendingSeekTarget = clamped;
-        return;
-      }
-      pendingSeekTarget = null;
-      try {
-        const fs = (video as unknown as { fastSeek?: (t: number) => void }).fastSeek;
-        if (typeof fs === "function") fs.call(video, clamped);
-        else video.currentTime = clamped;
-        mediaTime = clamped;
       } catch { /* ignore */ }
     };
 
@@ -630,12 +578,6 @@ export function IntroVideo({
     const onSeeked = () => {
       mediaFrameDirty = true;
       if (Number.isFinite(video.currentTime)) mediaTime = video.currentTime;
-      // If new wheel input landed while we were seeking, immediately reissue.
-      if (pendingSeekTarget !== null) {
-        const t = pendingSeekTarget;
-        pendingSeekTarget = null;
-        if (Math.abs(t - mediaTime) > 0.02) requestSeek(t);
-      }
     };
     video.addEventListener("seeked", onSeeked);
 
@@ -774,40 +716,25 @@ export function IntroVideo({
       if (videoProgress >= 1) {
         if (burnStartTs < 0) burnStartTs = now;
       }
-      // ---- Video chase: playbackRate is primary, seek is emergency lane ----
+      // ---- Direct-seek driver ----
+      // Video stays paused; every rAF we set currentTime to the scroll-derived
+      // target. all-intra encode makes seek ~1 frame cost, so forward/backward
+      // are symmetric and there is zero chase / drift.
       if (!burstEngaged && video.duration && !Number.isNaN(video.duration) && firstFrameReady) {
+        ensurePaused();
         const duration = video.duration;
-        const targetTime = Math.min(
-          duration,
-          Math.max(0, Math.min(1, progress / VIDEO_FRACTION) * duration),
-        );
-        const gap = targetTime - mediaTime;
-        const absGap = Math.abs(gap);
-
-        if (absGap > GAP_HARD_SEEK) {
-          // Huge jump → single seek, do not thrash.
-          pauseVideo();
-          requestSeek(Math.max(0, targetTime - 0.05));
-        } else if (gap > GAP_DEAD_ZONE) {
-          // Forward chase — proportional rate, no seek.
-          setChasePlayback(1 + gap * 4.5);
-        } else if (gap < -GAP_BACKWARD_SEEK) {
-          // Reverse scroll → scrub video backward with the target. Throttle
-          // requests so we don't queue faster than the decoder can flush,
-          // but keep issuing them so playback visibly tracks the scroll.
-          pauseVideo();
-          if (now - lastBackwardSeekTs >= BACKWARD_SEEK_MIN_INTERVAL_MS) {
-            lastBackwardSeekTs = now;
-            requestSeek(targetTime);
-          } else {
-            pendingSeekTarget = Math.max(0, targetTime);
-          }
-        } else if (gap < -GAP_DEAD_ZONE) {
-          // Small backward gap → pause and let target roll into us.
-          pauseVideo();
-        } else {
-          // Inside dead zone → hold still, no writes to currentTime/playbackRate.
-          pauseVideo();
+        const targetTime = clamp01(progress / VIDEO_FRACTION) * duration;
+        // Only write when we've crossed at least ~half a frame worth of time,
+        // to avoid duplicate seeks within the same displayed frame.
+        const HALF_FRAME = 0.5 / 48;
+        if (!video.seeking && Math.abs(targetTime - mediaTime) > HALF_FRAME) {
+          try {
+            const fs = (video as unknown as { fastSeek?: (t: number) => void }).fastSeek;
+            if (typeof fs === "function") fs.call(video, targetTime);
+            else video.currentTime = targetTime;
+            mediaTime = targetTime;
+            mediaFrameDirty = true;
+          } catch { /* ignore */ }
         }
       }
       uniforms.uProgress.value = compositeProgress;
@@ -842,7 +769,7 @@ export function IntroVideo({
         burnActive = true;
       }
       if (burstEngaged && !burnVideoFrozen) {
-        pauseVideo();
+        ensurePaused();
         mediaFrameDirty = false;
         videoTex.needsUpdate = false;
         burnVideoFrozen = true;
@@ -915,7 +842,7 @@ export function IntroVideo({
       video.removeEventListener("seeked", onSeeked);
       video.removeEventListener("error", onError);
       window.clearTimeout(errorTimer);
-      pauseVideo();
+      ensurePaused();
       videoTex.dispose();
       material.dispose();
       mesh.geometry.dispose();

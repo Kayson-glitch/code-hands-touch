@@ -1,38 +1,46 @@
 ## 目标
-让"轻微滚动"就能推进"轻微视频进度"，消除吸附到关键帧的顿挫，回滚立即跟手。
+彻底消除追赶感与漂移。视频始终 `paused`，每个 rAF 直接把 `currentTime` 设置为当前滚动进度对应的时间。all-intra 后 seek ≈ 1 帧成本，正反完全对称，滚动停即定格。
 
-## 根因
-当前 `intro-hands.mp4` 是普通 H.264（有 GOP），浏览器 seek 只能落在关键帧上，微滚动被吸附。1916×1080 / 24fps / 97 帧 / 4.04s / 2.98MB。
+## 改动范围
+只改 `src/components/IntroVideo.tsx`，视频文件不动。
 
-## 步骤
+### 1. 删除追帧逻辑
+移除 / 简化：
+- `pauseVideo` / `setChasePlayback` / `wantsForwardPlayback` / `playPending`
+- `MIN_CHASE_RATE` / `MAX_CHASE_RATE` / `GAP_HARD_SEEK` / `GAP_BACKWARD_SEEK` / `GAP_DEAD_ZONE` / `BACKWARD_SEEK_MIN_INTERVAL_MS` / `lastBackwardSeekTs`
+- 循环里 778–812 那段五分支 gap 判断
+- `video.play()` 的启动路径（仅保留一次静默 play→pause 用来触发首帧解码，之后永不再 play）
 
-### 1. 重新编码 all-intra（每帧都是关键帧）
-在 sandbox 内用 ffmpeg 生成，输出到 `/mnt/documents/intro-hands-allintra.mp4`：
-
+### 2. 每帧直接 seek
+在循环里替换成：
+```ts
+if (!burstEngaged && video.duration && firstFrameReady) {
+  const targetTime = clamp01(progress / VIDEO_FRACTION) * video.duration;
+  // 只在跨越 ≥ 半帧时才写入，避免同帧内重复 seek
+  if (Math.abs(targetTime - mediaTime) > 1 / video.duration / 48) {
+    const fs = (video as any).fastSeek;
+    if (typeof fs === "function") fs.call(video, targetTime);
+    else video.currentTime = targetTime;
+    mediaTime = targetTime;
+    mediaFrameDirty = true;
+  }
+}
 ```
-ffmpeg -i in.mp4 -an -c:v libx264 -preset slow -crf 18 \
-  -g 1 -keyint_min 1 -sc_threshold 0 \
-  -x264-params "keyint=1:min-keyint=1:no-scenecut" \
-  -pix_fmt yuv420p -movflags +faststart out.mp4
-```
+（阈值取 ~half-frame，24fps 视频 ≈ 21ms；防止一帧内多次赋值）
 
-预计体积 8–12MB（3–4×）。逐帧精确 seek，无关键帧吸附。
+### 3. 收缩平滑
+`PROGRESS_SMOOTH_TIME` 从 0.035 降到 **0.018**（几乎直连滚轮，只吸收 wheel 事件本身的抖动）。删除 `GAP_DEAD_ZONE` / `GAP_BACKWARD_SEEK` / `BACKWARD_SEEK_MIN_INTERVAL_MS` 常量。
 
-### 2. 替换 asset
-覆盖 `src/assets/intro-hands.mp4.asset.json` 指向新文件；旧 asset 通过 CDN immutable 缓存不影响老会话。
+### 4. 保留
+- 首帧解码 warmup（play→pause once）
+- rVFC 回调只用于 `mediaFrameDirty` 触发重绘，不再作为时间源
+- burst 阶段完全不变（burst 只依赖 `burnClock`，本来就不 seek）
 
-### 3. 微调 `src/components/IntroVideo.tsx` 参数
-- `PROGRESS_SMOOTH_TIME`: 0.055 → **0.035**
-- `GAP_DEAD_ZONE`: 0.02 → **0.008**
-- `GAP_BACKWARD_SEEK`: 0.05 → **0.02**
-- `BACKWARD_SEEK_MIN_INTERVAL_MS`: 45 → **16**
-- `playbackRate` 上限保持 4.0
+## 验证
+1. Playwright 打开首屏：慢速滚动 5px → 视频 `currentTime` 应立即变化；停止滚动 → 视频立刻定格无漂移；反向滚动 → currentTime 立即减小
+2. 手感对比：正反手感一致、无追赶、无回弹惯性
+3. 若个别设备（Safari 老版）连续 seek 掉帧，回退方案：把 seek 阈值放宽到 1 整帧 (~42ms)
 
-理由：all-intra 后 seek 成本极低，可以去掉节流让反向立即响应，同时缩小死区让 10px 级滚动就能推进进度。
-
-### 4. 验证
-Playwright 打开首屏，滚动 10 / 50 / 200 px 三档，读取 `video.currentTime` 与 `scrollY` 对应关系是否线性；网络面板确认新视频体积。若微滚动仍感觉粗，再上备选 A2（`minterpolate` 补帧到 48fps，最小可感进度从 42ms 降到 21ms，体积再翻倍）。
-
-## 需要确认
-- 体积 3MB → ~10MB 是否接受
-- 是否同时准备 A2（48fps）备选
+## 不改动
+- 视频 asset（保持 all-intra 6MB）
+- burn 转场、shader、preloader、滚动映射比例（2200px / VIDEO_FRACTION 0.6）
