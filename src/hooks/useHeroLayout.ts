@@ -35,7 +35,7 @@ const SHORT: HeroLayout = {
 
 const TABLET: HeroLayout = {
   ...DESKTOP,
-  titlePaddingTop: "16vh",
+  titlePaddingTop: "calc(16vh + 20px)",
   titleFontSize: 40,
   titleLineHeight: "48px",
   handsTop: "calc(44vh - 20px)",
