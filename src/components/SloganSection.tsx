@@ -1,0 +1,140 @@
+import { useEffect, useMemo, useRef, useState } from "react";
+
+const LINES: string[][] = [
+  ["We", "craft", "intelligent", "support", "experiences"],
+  ["that", "keep", "pace", "with", "your", "ambition."],
+  ["So", "your", "team", "can", "focus", "on", "what", "matters,"],
+  ["while", "we", "shape", "how", "the", "world", "hears", "you."],
+];
+
+const smoothstep = (a: number, b: number, x: number) => {
+  const t = Math.max(0, Math.min(1, (x - a) / (b - a)));
+  return t * t * (3 - 2 * t);
+};
+
+export function SloganSection() {
+  const sectionRef = useRef<HTMLElement | null>(null);
+  const [progress, setProgress] = useState(0);
+  const words = useMemo(() => LINES.flat(), []);
+  const total = words.length;
+
+  useEffect(() => {
+    const reduced =
+      typeof window !== "undefined" &&
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (reduced) {
+      setProgress(1);
+      return;
+    }
+
+    let raf = 0;
+    let active = false;
+
+    const compute = () => {
+      raf = 0;
+      const el = sectionRef.current;
+      if (!el) return;
+      const rect = el.getBoundingClientRect();
+      const vh = window.innerHeight;
+      // Start when section top hits 75% of viewport, finish when it hits 15%.
+      const start = vh * 0.75;
+      const end = vh * 0.15;
+      const p = (start - rect.top) / (start - end);
+      setProgress(Math.max(0, Math.min(1, p)));
+    };
+
+    const schedule = () => {
+      if (raf) return;
+      raf = requestAnimationFrame(compute);
+    };
+
+    const io = new IntersectionObserver(
+      ([entry]) => {
+        active = entry.isIntersecting;
+        if (active) {
+          window.addEventListener("scroll", schedule, { passive: true });
+          window.addEventListener("resize", schedule);
+          schedule();
+        } else {
+          window.removeEventListener("scroll", schedule);
+          window.removeEventListener("resize", schedule);
+        }
+      },
+      { threshold: 0, rootMargin: "0px" }
+    );
+    if (sectionRef.current) io.observe(sectionRef.current);
+
+    return () => {
+      io.disconnect();
+      window.removeEventListener("scroll", schedule);
+      window.removeEventListener("resize", schedule);
+      if (raf) cancelAnimationFrame(raf);
+    };
+  }, []);
+
+  // Distribute progress across words with a small overlap window.
+  const reveal = (idx: number) => {
+    const span = 1 / total;
+    const overlap = span * 1.6;
+    const start = idx * span;
+    return smoothstep(start, start + overlap, progress);
+  };
+
+  let wi = 0;
+
+  return (
+    <section
+      ref={sectionRef}
+      className="relative w-full"
+      style={{
+        background: "#000",
+        minHeight: "100vh",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        padding: "12vh 6vw",
+      }}
+    >
+      <div
+        className="font-display"
+        style={{
+          maxWidth: 1100,
+          textAlign: "center",
+          fontSize: "clamp(28px, 4.2vw, 60px)",
+          lineHeight: 1.25,
+          letterSpacing: "-0.01em",
+          fontWeight: 500,
+          color: "#ffffff",
+        }}
+      >
+        {LINES.map((line, li) => (
+          <div key={li} style={{ display: "block" }}>
+            {line.map((word, i) => {
+              const a = reveal(wi++);
+              const opacity = 0.18 + a * 0.82;
+              const blur = (1 - a) * 2;
+              return (
+                <span
+                  key={`${li}-${i}`}
+                  style={{
+                    display: "inline-block",
+                    opacity,
+                    filter: blur > 0.02 ? `blur(${blur.toFixed(2)}px)` : "none",
+                    transition:
+                      "opacity 220ms ease-out, filter 220ms ease-out",
+                    willChange: "opacity, filter",
+                    marginRight: i === line.length - 1 ? 0 : "0.28em",
+                  }}
+                >
+                  {word}
+                </span>
+              );
+            })}
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+export default SloganSection;
