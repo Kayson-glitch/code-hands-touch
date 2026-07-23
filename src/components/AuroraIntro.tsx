@@ -10,15 +10,11 @@ export function AuroraIntro() {
   const [entered, setEntered] = useState(false);
 
   useEffect(() => {
-    const onBg = (e: Event) => {
-      const detail = (e as CustomEvent<{ mode?: string }>).detail;
-      if (detail?.mode === "dark") trigger();
-    };
-    const trigger = () => {
-      requestAnimationFrame(() => setEntered(true));
-    };
-    window.addEventListener("app-bg-change", onBg as EventListener);
-    return () => window.removeEventListener("app-bg-change", onBg as EventListener);
+    // Kick off the ease-in on mount (double rAF so initial hidden styles commit first)
+    const r1 = requestAnimationFrame(() =>
+      requestAnimationFrame(() => setEntered(true))
+    );
+    return () => cancelAnimationFrame(r1);
   }, []);
 
   return (
