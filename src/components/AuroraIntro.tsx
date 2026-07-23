@@ -38,11 +38,8 @@ export function AuroraIntro() {
         zIndex: 2,
         pointerEvents: "none",
         opacity: entered ? 1 : 0,
-        transform: entered ? "translate3d(0,0,0) scale(1)" : "translate3d(0,-24px,0) scale(1.04)",
-        filter: entered ? "blur(0px)" : "blur(14px)",
-        transition:
-          "opacity 1600ms cubic-bezier(0.22, 1, 0.36, 1), transform 1800ms cubic-bezier(0.22, 1, 0.36, 1), filter 1400ms cubic-bezier(0.22, 1, 0.36, 1)",
-        willChange: "opacity, transform, filter",
+        transition: "opacity 1600ms cubic-bezier(0.22, 1, 0.36, 1)",
+        willChange: "opacity",
       }}
     >
       <Aurora
