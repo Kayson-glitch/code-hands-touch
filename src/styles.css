@@ -164,3 +164,8 @@ html, body {
   75%  { background-position: 60% 50%;  background-size: 260% 240%; }
   100% { background-position: 0% 50%;   background-size: 220% 220%; }
 }
+
+@keyframes rainbow-btn-flow {
+  0%   { background-position: 0% 50%; }
+  100% { background-position: 200% 50%; }
+}
