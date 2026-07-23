@@ -77,7 +77,7 @@ export function HeroCopy() {
           lineHeight: "22px",
           padding: "0 24px",
           borderRadius: 10,
-          border: "2px solid transparent",
+          border: "1px solid transparent",
           backgroundImage:
             "linear-gradient(#ffffff,#ffffff)," +
             "linear-gradient(#ffffff 50%, rgba(255,255,255,0.65) 80%, rgba(255,255,255,0)),"+
