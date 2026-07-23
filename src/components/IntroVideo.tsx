@@ -578,12 +578,6 @@ export function IntroVideo({
     const onSeeked = () => {
       mediaFrameDirty = true;
       if (Number.isFinite(video.currentTime)) mediaTime = video.currentTime;
-      // If new wheel input landed while we were seeking, immediately reissue.
-      if (pendingSeekTarget !== null) {
-        const t = pendingSeekTarget;
-        pendingSeekTarget = null;
-        if (Math.abs(t - mediaTime) > 0.02) requestSeek(t);
-      }
     };
     video.addEventListener("seeked", onSeeked);
 
