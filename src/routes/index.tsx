@@ -7,7 +7,6 @@ import { FinChatDock } from "@/components/FinChatDock";
 import { IntroPreloader } from "@/components/IntroPreloader";
 
 import { SloganSection } from "@/components/SloganSection";
-import { AuroraIntro } from "@/components/AuroraIntro";
 import videoAsset from "@/assets/intro-hands.mp4.asset.json";
 
 export const Route = createFileRoute("/")({
@@ -100,7 +99,6 @@ function Index() {
               willChange: "transform",
             }}
           >
-            <AuroraIntro />
             <AsciiHandsFooter videoSrc={videoSrc} debug={debug} handoffVideo={handoffVideo} />
             <HeroCopy />
           </div>
