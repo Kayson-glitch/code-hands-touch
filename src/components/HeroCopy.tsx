@@ -72,7 +72,7 @@ export function HeroCopy() {
       </p>
 
       <button
-        className="pointer-events-auto group relative mt-8 inline-flex items-center justify-center overflow-visible font-medium text-black transition-transform hover:scale-[1.03]"
+        className="pointer-events-auto group relative mt-8 inline-flex items-center justify-center overflow-visible font-medium text-black"
         style={{
           height: 40,
           fontSize: 14,
