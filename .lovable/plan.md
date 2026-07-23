@@ -1,31 +1,28 @@
-# 视差 + 底部对话框永远置底
+## Goal
+Match the reference site's second-screen behavior: when the slogan pins to the viewport center, the word-by-word color/blur reveal is still in progress and continues as the user keeps scrolling. Currently the reveal finishes while the section is still sliding in, so by the time it's centered everything is already white.
 
-## 1. 视差效果（`src/routes/index.tsx`）
-第一屏当前 `position: fixed`，滚动时完全不动 —— 造成第二屏「盖上来」但第一屏零位移。改为让第一屏以约 0.35 倍速度向上平移，形成视差：
+## Change (only `src/components/SloganSection.tsx`)
 
-- 在 `Index` 内新增 `scrollY` state，用 rAF 节流的 `scroll` 监听更新。
-- 给固定的第一屏包裹层加 `transform: translate3d(0, -scrollY * 0.35 px, 0)` 与 `willChange: "transform"`。
-- 到达第二屏时（滚动距离 ≥ 1vh），第一屏向上偏移 ~35vh，被第二屏完全覆盖后不可见 —— 无副作用。
+1. **Make the section a tall scroll track with a sticky stage**
+   - Outer `<section>`: `height: 260vh` (tunable), `position: relative`, keep `zIndex: 10` and `background: #000`.
+   - Inner wrapper: `position: sticky; top: 0; height: 100vh`, centers the slogan (flex center). This pins the text once it reaches the top of the viewport.
 
-## 2. 底部对话框永远置底（`src/routes/index.tsx`）
-`FinChatDock` 目前放在被视差平移的容器里，会跟着往上滑。把它从固定层里移出，作为兄弟节点独立渲染：
+2. **Rewrite the progress mapping to be scroll-length driven**
+   - Compute progress from the section's own scroll track, not from viewport entry:
+     - `const rect = section.getBoundingClientRect();`
+     - `const scrolled = -rect.top;` (0 when the tall section's top hits the viewport top)
+     - `const travel = section.offsetHeight - window.innerHeight;`
+     - `progress = clamp(scrolled / travel, 0, 1)`
+   - This means: the slogan pins as soon as `scrolled >= 0`, and the words keep revealing across the remaining ~160vh of scroll — matching the reference where text is still lighting up while pinned.
 
-```tsx
-{/* 视差第一屏 */}
-<div style={{ position: "fixed", inset: 0, zIndex: 1, transform: `translate3d(0, ${-scrollY * 0.35}px, 0)` }}>
-  <AsciiHandsFooter ... />
-  <HeroCopy />
-</div>
+3. **Slow down the per-word reveal window**
+   - Keep the current `smoothstep` reveal but widen the overlap so the last word finishes near `progress ≈ 1` rather than early. Use `span = 1 / (total + 2)` and `overlap = span * 2.2` so words continue transitioning through most of the pinned scroll.
 
-<SiteNav />
-<div aria-hidden style={{ height: "100vh" }} />
-<SloganSection />
+4. **Leave everything else untouched**
+   - No changes to `src/routes/index.tsx`, parallax, nav, dock, hero, glitch overlay, colors, typography, or word list.
+   - Reduced-motion branch unchanged (immediate `progress = 1`).
 
-{/* 永远置底 —— 不受视差影响，浮在所有内容之上 */}
-<FinChatDock />
-```
-
-`FinChatDock` 内部已经是 `fixed bottom-6 z-30`，无需改动它本身。
-
-## 不改动
-扫描线、Slogan 组件、hero 内其它元素、导航栏、动画等。
+## Technical notes
+- The fixed hero layer in `index.tsx` already uses `translate3d(0, -scrollY * 0.35, 0)`, so it continues its parallax underneath the taller sticky section — no coordination change needed.
+- `FinChatDock` stays outside the parallax layer and remains pinned.
+- Section height (`260vh`) is the single knob controlling how long the reveal lasts while pinned; can be tuned after visual check.

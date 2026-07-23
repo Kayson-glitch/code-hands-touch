@@ -36,10 +36,11 @@ export function SloganSection() {
       if (!el) return;
       const rect = el.getBoundingClientRect();
       const vh = window.innerHeight;
-      // Start when section top hits 75% of viewport, finish when it hits 15%.
-      const start = vh * 0.75;
-      const end = vh * 0.15;
-      const p = (start - rect.top) / (start - end);
+      // Drive progress across the section's full scroll track so the reveal
+      // keeps going while the slogan is pinned in the viewport center.
+      const travel = Math.max(1, el.offsetHeight - vh);
+      const scrolled = -rect.top;
+      const p = scrolled / travel;
       setProgress(Math.max(0, Math.min(1, p)));
     };
 
@@ -74,8 +75,8 @@ export function SloganSection() {
 
   // Distribute progress across words with a small overlap window.
   const reveal = (idx: number) => {
-    const span = 1 / total;
-    const overlap = span * 1.6;
+    const span = 1 / (total + 2);
+    const overlap = span * 2.2;
     const start = idx * span;
     return smoothstep(start, start + overlap, progress);
   };
@@ -88,15 +89,22 @@ export function SloganSection() {
       className="relative w-full"
       style={{
         background: "#000",
-        minHeight: "100vh",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        padding: "12vh 6vw",
+        height: "260vh",
         position: "relative",
         zIndex: 10,
       }}
     >
+      <div
+        style={{
+          position: "sticky",
+          top: 0,
+          height: "100vh",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          padding: "0 6vw",
+        }}
+      >
       <div
         className="font-display"
         style={{
@@ -134,6 +142,7 @@ export function SloganSection() {
             })}
           </div>
         ))}
+      </div>
       </div>
     </section>
   );
