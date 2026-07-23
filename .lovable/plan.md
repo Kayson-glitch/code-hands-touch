@@ -1,20 +1,38 @@
-## 现状核对
+## 目标
+让"轻微滚动"就能推进"轻微视频进度"，消除吸附到关键帧的顿挫，回滚立即跟手。
 
-- 之前把 `GlitchGrainOverlay` 从全局根节点搬进了 `AsciiHandsFooter`（仅第一屏 fixed hero 容器内），所以第二屏 `SloganSection` 就没有扫描线了。
-- 当前 `src/components/SloganSection.tsx` 的 `<section>` 只有纯 `#000` 背景，没有任何扫描线层。
-- 这是之前按你要求"扫描线只在第一屏背景层"调整后的副作用，并非新的擅自修改。
+## 根因
+当前 `intro-hands.mp4` 是普通 H.264（有 GOP），浏览器 seek 只能落在关键帧上，微滚动被吸附。1916×1080 / 24fps / 97 帧 / 4.04s / 2.98MB。
 
-## 方案
+## 步骤
 
-在 `src/components/SloganSection.tsx` 内部，紧贴 `<section>` 背景加一层与第一屏一致的扫描线：
+### 1. 重新编码 all-intra（每帧都是关键帧）
+在 sandbox 内用 ffmpeg 生成，输出到 `/mnt/documents/intro-hands-allintra.mp4`：
 
-- 在 sticky 内容层之前插入一个 `GlitchGrainOverlay`（`intensity="low"`, `visible`），或直接用等效的 `repeating-linear-gradient` div。
-- 定位：`position: absolute; inset: 0; pointer-events: none; z-index: 0`（内容层保持默认 / 更高层级，文字不受影响）。
-- 保持与第一屏相同的参数：`rgba(255,255,255,0.055)`，`0 1px / 1px 3px` 的重复线性渐变，无 `mix-blend-mode`，纯叠加在 `#000` 上，视觉与 hero 一致。
-- 不改动 `IntroVideo` 内的扫描线（那一层是开场视频专用的 overlay 混合模式，保持独立）。
+```
+ffmpeg -i in.mp4 -an -c:v libx264 -preset slow -crf 18 \
+  -g 1 -keyint_min 1 -sc_threshold 0 \
+  -x264-params "keyint=1:min-keyint=1:no-scenecut" \
+  -pix_fmt yuv420p -movflags +faststart out.mp4
+```
 
-## 验证
+预计体积 8–12MB（3–4×）。逐帧精确 seek，无关键帧吸附。
 
-- 滚动到第二屏：文字背景可见与第一屏一致的横向扫描线。
-- 第一屏 / 开场视频 / 扩散阶段不受影响。
-- 文字点击、hover 无异常（overlay `pointer-events: none`）。
+### 2. 替换 asset
+覆盖 `src/assets/intro-hands.mp4.asset.json` 指向新文件；旧 asset 通过 CDN immutable 缓存不影响老会话。
+
+### 3. 微调 `src/components/IntroVideo.tsx` 参数
+- `PROGRESS_SMOOTH_TIME`: 0.055 → **0.035**
+- `GAP_DEAD_ZONE`: 0.02 → **0.008**
+- `GAP_BACKWARD_SEEK`: 0.05 → **0.02**
+- `BACKWARD_SEEK_MIN_INTERVAL_MS`: 45 → **16**
+- `playbackRate` 上限保持 4.0
+
+理由：all-intra 后 seek 成本极低，可以去掉节流让反向立即响应，同时缩小死区让 10px 级滚动就能推进进度。
+
+### 4. 验证
+Playwright 打开首屏，滚动 10 / 50 / 200 px 三档，读取 `video.currentTime` 与 `scrollY` 对应关系是否线性；网络面板确认新视频体积。若微滚动仍感觉粗，再上备选 A2（`minterpolate` 补帧到 48fps，最小可感进度从 42ms 降到 21ms，体积再翻倍）。
+
+## 需要确认
+- 体积 3MB → ~10MB 是否接受
+- 是否同时准备 A2（48fps）备选
