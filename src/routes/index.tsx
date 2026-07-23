@@ -7,6 +7,7 @@ import { FinChatDock } from "@/components/FinChatDock";
 import { IntroPreloader } from "@/components/IntroPreloader";
 
 import { SloganSection } from "@/components/SloganSection";
+import Aurora from "@/components/Aurora/Aurora";
 import videoAsset from "@/assets/intro-hands.mp4.asset.json";
 
 export const Route = createFileRoute("/")({
@@ -99,6 +100,17 @@ function Index() {
               willChange: "transform",
             }}
           >
+            <div
+              aria-hidden
+              style={{ position: "absolute", inset: 0, zIndex: 0, pointerEvents: "none" }}
+            >
+              <Aurora
+                colorStops={["#185DFF", "#8B22FF", "#E81A8A"]}
+                blend={0.5}
+                amplitude={1.0}
+                speed={0.5}
+              />
+            </div>
             <AsciiHandsFooter videoSrc={videoSrc} debug={debug} handoffVideo={handoffVideo} />
             <HeroCopy />
           </div>
