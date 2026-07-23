@@ -47,6 +47,7 @@ export function AuroraIntro() {
   return (
     <div
       ref={wrapperRef}
+      data-aurora-intro="true"
       aria-hidden
       style={{
         position: "absolute",
