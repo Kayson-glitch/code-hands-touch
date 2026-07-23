@@ -1355,26 +1355,11 @@ export function AsciiHandsFooter({
     <section
       className="relative w-full overflow-hidden"
       style={{
-        backgroundColor: bgDark ? "#000" : "#EFE7DA",
+        backgroundColor: bgDark ? "transparent" : "#EFE7DA",
         height: "100vh",
         minHeight: 600,
       }}
     >
-      {/* Fallback black underlay: once the burn ends, keep an always-black
-          full-viewport layer behind everything so no white body background
-          can leak through during single-frame compositing gaps. */}
-      {bgDark && (
-        <div
-          aria-hidden
-          style={{
-            position: "fixed",
-            inset: 0,
-            background: "#000",
-            zIndex: -1,
-            pointerEvents: "none",
-          }}
-        />
-      )}
       <h1 className="sr-only" suppressHydrationWarning>
         Good Fella Studio — ASCII Creation of Adam
       </h1>
