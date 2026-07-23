@@ -13,7 +13,7 @@ export type HeroLayout = {
 };
 
 const DESKTOP: HeroLayout = {
-  titlePaddingTop: "18vh",
+  titlePaddingTop: "calc(18vh + 20px)",
   titleFontSize: 48,
   titleLineHeight: "56px",
   subtitleFontSize: 16,
