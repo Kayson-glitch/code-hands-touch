@@ -70,10 +70,25 @@ export function HeroCopy() {
       </p>
 
       <button
-        className="pointer-events-auto mt-8 rounded-full bg-white px-6 font-medium text-black transition-transform hover:scale-[1.03]"
+        className="pointer-events-auto group relative mt-8 inline-flex items-center justify-center overflow-visible rounded-[10px] bg-white px-6 font-medium text-black transition-transform hover:scale-[1.03]"
         style={{ height: 40, fontSize: 14, lineHeight: "22px" }}
       >
-        Book a Demo
+        {/* Rainbow glow underneath */}
+        <span
+          aria-hidden
+          className="pointer-events-none absolute left-0 z-0"
+          style={{
+            bottom: "-20%",
+            height: "20%",
+            width: "100%",
+            filter: "blur(1rem)",
+            background:
+              "linear-gradient(90deg, #ff1245, #d018ff, #185dff, #4b3aff, #e81a8a, #ff1245)",
+            backgroundSize: "200% 100%",
+            animation: "rainbow-btn-flow 2s linear infinite",
+          }}
+        />
+        <span className="relative z-10">Book a Demo</span>
       </button>
     </div>
   );
