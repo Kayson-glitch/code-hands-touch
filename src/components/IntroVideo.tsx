@@ -24,7 +24,7 @@ const VIDEO_FRACTION = 0.6;
 // 2200 / VIDEO_FRACTION ≈ 3667 for the full 0..1 progress range.
 const PIXELS_FOR_FULL_PROGRESS = 2200 / VIDEO_FRACTION;
 // Duration (ms) of the auto-driven burn-through once the video segment ends.
-const BURN_AUTO_MS = 1800;
+const BURN_AUTO_MS = 2000;
 // Cap a single wheel tick so a hard mouse-wheel notch doesn't jump the progress.
 // Matches the reference project's ±180px clamp for calmer notch response.
 const MAX_PIXELS_PER_TICK = 180;
