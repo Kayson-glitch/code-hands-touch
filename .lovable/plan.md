@@ -1,46 +1,55 @@
 ## 目标
-彻底消除追赶感与漂移。视频始终 `paused`，每个 rAF 直接把 `currentTime` 设置为当前滚动进度对应的时间。all-intra 后 seek ≈ 1 帧成本，正反完全对称，滚动停即定格。
 
-## 改动范围
-只改 `src/components/IntroVideo.tsx`，视频文件不动。
+扩散动画结束进入第一屏后，元素分两阶段入场：
+1. **阶段 A（先）** — 顶部导航栏 `SiteNav` + 底部对话框 `FinChatDock` 淡入
+2. **阶段 B（后）** — 中间标题区 `HeroCopy` + 字符手 `AsciiHandsFooter`（hands stage）同时开始入场动画
 
-### 1. 删除追帧逻辑
-移除 / 简化：
-- `pauseVideo` / `setChasePlayback` / `wantsForwardPlayback` / `playPending`
-- `MIN_CHASE_RATE` / `MAX_CHASE_RATE` / `GAP_HARD_SEEK` / `GAP_BACKWARD_SEEK` / `GAP_DEAD_ZONE` / `BACKWARD_SEEK_MIN_INTERVAL_MS` / `lastBackwardSeekTs`
-- 循环里 778–812 那段五分支 gap 判断
-- `video.play()` 的启动路径（仅保留一次静默 play→pause 用来触发首帧解码，之后永不再 play）
+## 现状
 
-### 2. 每帧直接 seek
-在循环里替换成：
-```ts
-if (!burstEngaged && video.duration && firstFrameReady) {
-  const targetTime = clamp01(progress / VIDEO_FRACTION) * video.duration;
-  // 只在跨越 ≥ 半帧时才写入，避免同帧内重复 seek
-  if (Math.abs(targetTime - mediaTime) > 1 / video.duration / 48) {
-    const fs = (video as any).fastSeek;
-    if (typeof fs === "function") fs.call(video, targetTime);
-    else video.currentTime = targetTime;
-    mediaTime = targetTime;
-    mediaFrameDirty = true;
-  }
-}
+四个组件目前都监听 `app-bg-change: "dark"` 事件（burst 完成时派发），几乎同时开始各自动画：
+- `SiteNav`：收到 `app-nav-visibility: "visible"` 或 4s 兜底后 260ms 淡入
+- `FinChatDock`：`app-bg-change=dark` 后 850ms 淡入
+- `HeroCopy`：`app-bg-change=dark` 立即 900ms blur/fade
+- `AsciiHandsFooter`：切到 `stage="hands"` 时手臂开始 2400ms 生长
+
+## 方案
+
+统一由 burst 完成事件驱动，用固定时序错开两阶段，不改动画本身参数，只调整触发时机。
+
+**时序（以 `app-bg-change=dark` 触发为 t=0）：**
+
+```text
+t = 0ms     背景变黑 / 进入 hero
+t = 80ms    SiteNav 淡入开始 (260ms)
+t = 80ms    FinChatDock 淡入开始 (现有过渡)
+t = 640ms   HeroCopy blur/fade 开始 (900ms)
+t = 640ms   AsciiHandsFooter 手臂生长开始
 ```
-（阈值取 ~half-frame，24fps 视频 ≈ 21ms；防止一帧内多次赋值）
 
-### 3. 收缩平滑
-`PROGRESS_SMOOTH_TIME` 从 0.035 降到 **0.018**（几乎直连滚轮，只吸收 wheel 事件本身的抖动）。删除 `GAP_DEAD_ZONE` / `GAP_BACKWARD_SEEK` / `BACKWARD_SEEK_MIN_INTERVAL_MS` 常量。
+阶段间隔 ~560ms，保证 A 组件基本淡入完成后 B 组件才开始，避免视觉打架。
 
-### 4. 保留
-- 首帧解码 warmup（play→pause once）
-- rVFC 回调只用于 `mediaFrameDirty` 触发重绘，不再作为时间源
-- burst 阶段完全不变（burst 只依赖 `burnClock`，本来就不 seek）
+## 技术改动
 
-## 验证
-1. Playwright 打开首屏：慢速滚动 5px → 视频 `currentTime` 应立即变化；停止滚动 → 视频立刻定格无漂移；反向滚动 → currentTime 立即减小
-2. 手感对比：正反手感一致、无追赶、无回弹惯性
-3. 若个别设备（Safari 老版）连续 seek 掉帧，回退方案：把 seek 阈值放宽到 1 整帧 (~42ms)
+仅四个文件，均只改触发时序：
+
+1. **`src/components/SiteNav.tsx`**
+   - `app-nav-visibility: "visible"` 事件收到后延迟 80ms 再 `setHidden(false)`
+   - 兜底 timeout 保持 4000ms
+
+2. **`src/components/FinChatDock.tsx`**
+   - 把现有 `setTimeout(setVisible(true), 850)` 改为 80ms（与 nav 同步）
+
+3. **`src/components/HeroCopy.tsx`**
+   - `app-bg-change=dark` 后延迟 640ms 再 `setVisible(true)`
+
+4. **`src/components/AsciiHandsFooter.tsx`**
+   - 手臂 intro 动画启动点（进入 `stage="hands"` 时的 `introStartTs`）延迟 640ms 开始，或将手臂初始 opacity/progress 门控 640ms 后再开始推进
+   - 只改 hands stage 的起始时间，不改 2400ms 生长曲线本身
 
 ## 不改动
-- 视频 asset（保持 all-intra 6MB）
-- burn 转场、shader、preloader、滚动映射比例（2200px / VIDEO_FRACTION 0.6）
+
+- burst / 视频 / 扩散流程完全不变
+- 各组件动画曲线、时长、参数保持现状
+- 不改事件名或事件源
+
+需要我按这个时序实施吗？如果 560ms 间隔偏长/偏短可以直接说数值，我在实施时套用。
