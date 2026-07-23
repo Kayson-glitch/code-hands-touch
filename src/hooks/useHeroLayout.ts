@@ -49,7 +49,7 @@ const MOBILE: HeroLayout = {
   titleLineHeight: "40px",
   subtitleFontSize: 14,
   subtitleLineHeight: "22px",
-  handsTop: "40vh",
+  handsTop: "calc(40vh - 20px)",
   handsHeight: "56vh",
 };
 
