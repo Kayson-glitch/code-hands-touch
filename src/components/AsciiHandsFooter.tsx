@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import handsPairAsset from "@/assets/hands-pair.png.asset.json";
 import { IntroVideo, type IntroProgressInfo } from "./IntroVideo";
 import { useHeroLayout, type HeroLayout } from "@/hooks/useHeroLayout";
+import { GlitchGrainOverlay } from "@/components/GlitchGrainOverlay";
 
 // Ordered density ramp, dark → bright. Mirrors the exact 70-glyph set used by
 // good-fella.com's ASCII footer (recovered by hooking their canvas atlas).
@@ -1309,8 +1310,10 @@ export function AsciiHandsFooter({
   const handsVisible = stage === "hands";
   const [orbMounted, setOrbMounted] = useState(true);
   const [handoffBlack, setHandoffBlack] = useState(false);
+  const [burstProgress, setBurstProgress] = useState(0);
   const navHiddenRef = useRef(false);
   const handleIntroProgress = (info: IntroProgressInfo) => {
+    setBurstProgress(info.burstProgress);
     // As soon as the burst starts, hide the nav so it doesn't sit
     // on the black transition frame.
     if (!navHiddenRef.current && info.burstProgress > 0) {
@@ -1399,7 +1402,7 @@ export function AsciiHandsFooter({
         <div
           className="absolute inset-0"
           style={{
-            zIndex: 60,
+            zIndex: 5,
             isolation: "isolate",
             pointerEvents: stage === "orb" ? "auto" : "none",
           }}
@@ -1411,6 +1414,12 @@ export function AsciiHandsFooter({
             debug={debug}
             handoffVideo={handoffVideo}
           />
+        </div>
+      )}
+
+      {(burstProgress > 0 || handsVisible) && (
+        <div className="absolute inset-0" style={{ zIndex: 7, pointerEvents: "none" }}>
+          <GlitchGrainOverlay visible intensity="low" />
         </div>
       )}
 
