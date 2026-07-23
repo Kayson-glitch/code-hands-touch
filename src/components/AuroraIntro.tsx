@@ -10,11 +10,20 @@ export function AuroraIntro() {
   const [entered, setEntered] = useState(false);
 
   useEffect(() => {
-    // Kick off the ease-in on mount (double rAF so initial hidden styles commit first)
-    const r1 = requestAnimationFrame(() =>
-      requestAnimationFrame(() => setEntered(true))
-    );
-    return () => cancelAnimationFrame(r1);
+    // Enter together with the nav + chat dock, which react to `app-bg-change: dark`.
+    const reveal = () => requestAnimationFrame(() => setEntered(true));
+    const onBg = (e: Event) => {
+      const detail = (e as CustomEvent<{ mode?: string }>).detail;
+      if (detail?.mode === "dark") reveal();
+    };
+    window.addEventListener("app-bg-change", onBg as EventListener);
+    // Fallback: if the event already fired before mount, the document background
+    // will already be black — reveal immediately in that case.
+    if (typeof document !== "undefined") {
+      const bg = getComputedStyle(document.documentElement).backgroundColor;
+      if (bg && /rgba?\(\s*0\s*,\s*0\s*,\s*0/.test(bg)) reveal();
+    }
+    return () => window.removeEventListener("app-bg-change", onBg as EventListener);
   }, []);
 
   return (
