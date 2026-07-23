@@ -469,9 +469,6 @@ export function IntroVideo({
     let lastNotifiedProgress = -1;
     let lastNotifiedBurst = -1;
     let lastRenderedProgress = -1;
-    let playPending = false;
-    let wantsForwardPlayback = false;
-    let pendingSeekTarget: number | null = null;
     // Authoritative "current media time" — updated by rVFC when available,
     // otherwise falls back to video.currentTime reads.
     let mediaTime = 0;
@@ -494,9 +491,6 @@ export function IntroVideo({
     let burnClock = 0;
     // One-shot: pause video and freeze texture uploads the instant burst starts.
     let burnVideoFrozen = false;
-    // Timestamp of last backward-seek request, throttled to avoid queueing
-    // faster than the decoder can service.
-    let lastBackwardSeekTs = -Infinity;
     // Hold `fire()` for one extra rendered frame after burstProgress hits 1
     // so the parent scene switch happens on a fully-drawn final state.
     let finalFrameRendered = false;
@@ -553,23 +547,6 @@ export function IntroVideo({
       try {
         if (!video.paused) video.pause();
         if (video.playbackRate !== 1) video.playbackRate = 1;
-      } catch { /* ignore */ }
-    };
-
-    // Seek is the emergency lane. We only ever hold at most ONE outstanding
-    // seek target and coalesce anything that arrives while `video.seeking`.
-    const requestSeek = (target: number) => {
-      const clamped = Math.max(0, target);
-      if (video.seeking) {
-        pendingSeekTarget = clamped;
-        return;
-      }
-      pendingSeekTarget = null;
-      try {
-        const fs = (video as unknown as { fastSeek?: (t: number) => void }).fastSeek;
-        if (typeof fs === "function") fs.call(video, clamped);
-        else video.currentTime = clamped;
-        mediaTime = clamped;
       } catch { /* ignore */ }
     };
 
