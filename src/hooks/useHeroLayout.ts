@@ -38,7 +38,7 @@ const TABLET: HeroLayout = {
   titlePaddingTop: "16vh",
   titleFontSize: 40,
   titleLineHeight: "48px",
-  handsTop: "44vh",
+  handsTop: "calc(44vh - 20px)",
   handsHeight: "52vh",
 };
 
