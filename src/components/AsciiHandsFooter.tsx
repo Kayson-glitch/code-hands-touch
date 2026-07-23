@@ -1416,12 +1416,6 @@ export function AsciiHandsFooter({
         </div>
       )}
 
-      {(burstProgress > 0 || handsVisible) && (
-        <div className="absolute inset-0" style={{ zIndex: 7, pointerEvents: "none" }}>
-          <GlitchGrainOverlay visible intensity="low" />
-        </div>
-      )}
-
       <div
         aria-hidden
         style={{
