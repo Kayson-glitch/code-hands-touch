@@ -18,7 +18,7 @@ const DESKTOP: HeroLayout = {
   titleLineHeight: "56px",
   subtitleFontSize: 16,
   subtitleLineHeight: "24px",
-  handsTop: "calc(46vh - 8px)",
+  handsTop: "calc(46vh - 28px)",
   handsHeight: "51vh",
   handsMaxWidth: 1440,
   cellSize: 10,
