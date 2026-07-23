@@ -549,30 +549,11 @@ export function IntroVideo({
       return [clamp01(next), nextVelocity];
     };
 
-    const pauseVideo = () => {
-      wantsForwardPlayback = false;
+    const ensurePaused = () => {
       try {
         if (!video.paused) video.pause();
         if (video.playbackRate !== 1) video.playbackRate = 1;
       } catch { /* ignore */ }
-    };
-
-    const setChasePlayback = (rate: number) => {
-      wantsForwardPlayback = true;
-      const playbackRate = Math.min(MAX_CHASE_RATE, Math.max(MIN_CHASE_RATE, rate));
-      try {
-        if (Math.abs(video.playbackRate - playbackRate) > 0.04) {
-          video.playbackRate = playbackRate;
-        }
-      } catch { /* ignore */ }
-      if (!video.paused || playPending) return;
-      playPending = true;
-      video.play()
-        .then(() => {
-          if (!wantsForwardPlayback) pauseVideo();
-        })
-        .catch(() => { /* ignore */ })
-        .finally(() => { playPending = false; });
     };
 
     // Seek is the emergency lane. We only ever hold at most ONE outstanding
