@@ -1309,7 +1309,6 @@ export function AsciiHandsFooter({
 
   const handsVisible = stage === "hands";
   const [orbMounted, setOrbMounted] = useState(true);
-  const [handoffBlack, setHandoffBlack] = useState(false);
   const [burstProgress, setBurstProgress] = useState(0);
   const navHiddenRef = useRef(false);
   const handleIntroProgress = (info: IntroProgressInfo) => {
@@ -1326,7 +1325,6 @@ export function AsciiHandsFooter({
   const handleIntroEnded = () => {
     if (stageRef.current !== "orb") return;
     setBgDark(true);
-    setHandoffBlack(true);
     // Hide the nav during the brief all-black handoff so it doesn't sit
     // alone on the black screen. Re-show it in sync with the hero fade-in.
     if (typeof window !== "undefined") {
@@ -1345,13 +1343,15 @@ export function AsciiHandsFooter({
       document.body.style.backgroundColor = "#0a0a0a";
     }
     setStage("hands");
-    // Unmount the intro video immediately so its final black frame doesn't
-    // cover the hands canvas; the handoffBlack layer keeps the background
-    // solid for a few frames to avoid any composite gap.
-    setOrbMounted(false);
-    // Drop the black handoff on the very next frame so the hero begins
-    // showing immediately after diffusion finishes.
-    requestAnimationFrame(() => setHandoffBlack(false));
+    // Delay unmounting the intro video by two frames. The video's last
+    // rendered composite is already solid black, so keeping it mounted a
+    // beat longer gives the hero container time to mount underneath it
+    // without any single-frame gap between "video unmounts" and "hero
+    // paints". No full-screen black overlay is needed — the section bg is
+    // already #000.
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => setOrbMounted(false));
+    });
   };
   const [bgDark, setBgDark] = useState(false);
   useEffect(() => {
@@ -1424,20 +1424,6 @@ export function AsciiHandsFooter({
           <GlitchGrainOverlay visible intensity="low" />
         </div>
       )}
-
-      <div
-        aria-hidden
-        style={{
-          position: "fixed",
-          inset: 0,
-          zIndex: 120,
-          background: "#000",
-          opacity: handoffBlack ? 1 : 0,
-          pointerEvents: "none",
-          transition: handoffBlack ? "none" : "opacity 360ms ease-out",
-        }}
-      />
-
     </section>
   );
 }
