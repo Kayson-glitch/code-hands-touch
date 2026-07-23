@@ -1330,17 +1330,10 @@ export function AsciiHandsFooter({
   const handleIntroEnded = () => {
     if (stageRef.current !== "orb") return;
     setBgDark(true);
-    // Hide the nav during the brief all-black handoff so it doesn't sit
-    // alone on the black screen. Re-show it in sync with the hero fade-in.
+    // Reveal nav immediately as the diffusion completes so the black handoff
+    // is filled by the UI rather than sitting empty.
     if (typeof window !== "undefined") {
-      window.dispatchEvent(new CustomEvent("app-nav-visibility", { detail: "hidden" }));
-      // Keep nav hidden through the black handoff AND the hero fade-in so it
-      // never appears alone on the transition frame. Hero fade starts ~40ms
-      // after this and lasts 900ms; reveal nav after it settles.
-      // Stage A: reveal nav shortly after the background settles.
-      window.setTimeout(() => {
-        window.dispatchEvent(new CustomEvent("app-nav-visibility", { detail: "visible" }));
-      }, 80);
+      window.dispatchEvent(new CustomEvent("app-nav-visibility", { detail: "visible" }));
     }
     // Also paint html/body black immediately, so the single frame where
     // <IntroVideo> unmounts can't reveal the theme's white body background.
