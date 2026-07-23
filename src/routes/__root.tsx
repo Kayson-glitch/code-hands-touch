@@ -11,7 +11,6 @@ import { useEffect, type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
-import dotGrainAsset from "@/assets/dot-grain.png.asset.json";
 
 function NotFoundComponent() {
   return (
@@ -142,19 +141,6 @@ function RootComponent() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <div
-        aria-hidden
-        style={{
-          position: "fixed",
-          inset: 0,
-          pointerEvents: "none",
-          zIndex: 0,
-          backgroundImage: `url(${dotGrainAsset.url})`,
-          backgroundRepeat: "repeat",
-          backgroundSize: "auto",
-          opacity: 0.045,
-        }}
-      />
       {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
       <Outlet />
     </QueryClientProvider>

@@ -1,31 +1,28 @@
-## Findings from the reference site (redomedia.co)
-The "dot grid" is actually a 256×256 grayscale noise PNG tiled at natural size, layered twice with effective opacity ≈ 0.04–0.045 (child layer opacity 0.5 × ancestor opacity 0.08–0.09). It is not a CSS radial-gradient — that's why my current approach doesn't match.
+## Goal
+Match the reference site's second-screen behavior: when the slogan pins to the viewport center, the word-by-word color/blur reveal is still in progress and continues as the user keeps scrolling. Currently the reveal finishes while the section is still sliding in, so by the time it's centered everything is already white.
 
-- Asset URL: `https://framerusercontent.com/images/rR6HYXBrMmX4cRpXfXUOvpvpB0.png`
-- Tile size: 256×256, `background-size: auto`, `background-repeat: repeat`
-- Effective opacity over pure black: ~0.045
+## Change (only `src/components/SloganSection.tsx`)
 
-## Changes
+1. **Make the section a tall scroll track with a sticky stage**
+   - Outer `<section>`: `height: 260vh` (tunable), `position: relative`, keep `zIndex: 10` and `background: #000`.
+   - Inner wrapper: `position: sticky; top: 0; height: 100vh`, centers the slogan (flex center). This pins the text once it reaches the top of the viewport.
 
-1. **Add the reference tile as a project asset**
-   - `curl` the PNG into `/tmp`, then run `lovable-assets create` to produce `src/assets/dot-grain.png.asset.json` (CDN pointer, no binary copied in).
+2. **Rewrite the progress mapping to be scroll-length driven**
+   - Compute progress from the section's own scroll track, not from viewport entry:
+     - `const rect = section.getBoundingClientRect();`
+     - `const scrolled = -rect.top;` (0 when the tall section's top hits the viewport top)
+     - `const travel = section.offsetHeight - window.innerHeight;`
+     - `progress = clamp(scrolled / travel, 0, 1)`
+   - This means: the slogan pins as soon as `scrolled >= 0`, and the words keep revealing across the remaining ~160vh of scroll — matching the reference where text is still lighting up while pinned.
 
-2. **`src/styles.css` — replace the radial-gradient dot approach with the real tile**
-   - Remove the `radial-gradient` + `background-size: 4px 4px` block on `body`.
-   - Keep `body { background-color: #000 }`.
-   - Add a fixed full-viewport overlay (either a `body::before` layer or a small React div in `__root.tsx`) that:
-     - `background-image: url(<asset>)`
-     - `background-repeat: repeat`
-     - `background-size: auto` (256px natural tile)
-     - `opacity: 0.045`
-     - `position: fixed; inset: 0; pointer-events: none; z-index: 0`
-   - Because CSS can't import a JSON asset URL, implement the overlay as a small React component mounted once in `src/routes/__root.tsx` that imports the asset JSON and renders the fixed div.
+3. **Slow down the per-word reveal window**
+   - Keep the current `smoothstep` reveal but widen the overlap so the last word finishes near `progress ≈ 1` rather than early. Use `span = 1 / (total + 2)` and `overlap = span * 2.2` so words continue transitioning through most of the pinned scroll.
 
-3. **Verify layering**
-   - Overlay sits behind app content (z-index 0) and above the black body.
-   - Hero fixed container, SloganSection, etc. are already transparent, so the grain shows through globally.
-   - Intro video still fully covers the overlay during playback (its container is opaque black at higher z-index) — matching the reference behavior of grain only appearing over open black areas.
+4. **Leave everything else untouched**
+   - No changes to `src/routes/index.tsx`, parallax, nav, dock, hero, glitch overlay, colors, typography, or word list.
+   - Reduced-motion branch unchanged (immediate `progress = 1`).
 
-## Notes
-- Effective 0.045 opacity is deliberately faint; anything higher would be more prominent than the reference.
-- No changes to hero, slogan, or nav components.
+## Technical notes
+- The fixed hero layer in `index.tsx` already uses `translate3d(0, -scrollY * 0.35, 0)`, so it continues its parallax underneath the taller sticky section — no coordination change needed.
+- `FinChatDock` stays outside the parallax layer and remains pinned.
+- Section height (`260vh`) is the single knob controlling how long the reveal lasts while pinned; can be tuned after visual check.

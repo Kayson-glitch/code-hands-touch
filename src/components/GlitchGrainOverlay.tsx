@@ -7,7 +7,7 @@ export function GlitchGrainOverlay({
   visible?: boolean;
   intensity?: Intensity;
 }) {
-  const dotAlpha = intensity === "medium" ? 0.14 : intensity === "off" ? 0 : 0.09;
+  const scanAlpha = intensity === "medium" ? 0.09 : intensity === "off" ? 0 : 0.055;
   const active = visible && intensity !== "off";
 
   return (
@@ -20,9 +20,7 @@ export function GlitchGrainOverlay({
         zIndex: 2,
         opacity: active ? 1 : 0,
         transition: "opacity 300ms ease-out",
-        backgroundImage: `radial-gradient(circle, rgba(255,255,255,${dotAlpha}) 0.6px, transparent 1px)`,
-        backgroundSize: "4px 4px",
-        backgroundPosition: "0 0",
+        backgroundImage: `repeating-linear-gradient(to bottom, rgba(255,255,255,${scanAlpha}) 0 1px, transparent 1px 3px)`,
       }}
     />
   );

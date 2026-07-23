@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import handsPairAsset from "@/assets/hands-pair.png.asset.json";
 import { IntroVideo, type IntroProgressInfo } from "./IntroVideo";
 import { useHeroLayout, type HeroLayout } from "@/hooks/useHeroLayout";
+import { GlitchGrainOverlay } from "@/components/GlitchGrainOverlay";
 
 // Ordered density ramp, dark → bright. Mirrors the exact 70-glyph set used by
 // good-fella.com's ASCII footer (recovered by hooking their canvas atlas).
@@ -1337,6 +1338,12 @@ export function AsciiHandsFooter({
         window.dispatchEvent(new CustomEvent("app-nav-visibility", { detail: "visible" }));
       }, 900);
     }
+    // Also paint html/body black immediately, so the single frame where
+    // <IntroVideo> unmounts can't reveal the theme's white body background.
+    if (typeof document !== "undefined") {
+      document.documentElement.style.backgroundColor = "#0a0a0a";
+      document.body.style.backgroundColor = "#0a0a0a";
+    }
     setStage("hands");
     // Unmount the intro video immediately so its final black frame doesn't
     // cover the hands canvas; the handoffBlack layer keeps the background
@@ -1355,11 +1362,26 @@ export function AsciiHandsFooter({
     <section
       className="relative w-full overflow-hidden"
       style={{
-        backgroundColor: bgDark ? "transparent" : "#EFE7DA",
+        backgroundColor: bgDark ? "#000" : "#EFE7DA",
         height: "100vh",
         minHeight: 600,
       }}
     >
+      {/* Fallback black underlay: once the burn ends, keep an always-black
+          full-viewport layer behind everything so no white body background
+          can leak through during single-frame compositing gaps. */}
+      {bgDark && (
+        <div
+          aria-hidden
+          style={{
+            position: "fixed",
+            inset: 0,
+            background: "#000",
+            zIndex: -1,
+            pointerEvents: "none",
+          }}
+        />
+      )}
       <h1 className="sr-only" suppressHydrationWarning>
         Good Fella Studio — ASCII Creation of Adam
       </h1>
@@ -1392,6 +1414,12 @@ export function AsciiHandsFooter({
             debug={debug}
             handoffVideo={handoffVideo}
           />
+        </div>
+      )}
+
+      {(burstProgress > 0 || handsVisible) && (
+        <div className="absolute inset-0" style={{ zIndex: 7, pointerEvents: "none" }}>
+          <GlitchGrainOverlay visible intensity="low" />
         </div>
       )}
 
