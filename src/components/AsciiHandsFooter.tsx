@@ -1337,12 +1337,6 @@ export function AsciiHandsFooter({
         window.dispatchEvent(new CustomEvent("app-nav-visibility", { detail: "visible" }));
       }, 900);
     }
-    // Also paint html/body black immediately, so the single frame where
-    // <IntroVideo> unmounts can't reveal the theme's white body background.
-    if (typeof document !== "undefined") {
-      document.documentElement.style.backgroundColor = "#0a0a0a";
-      document.body.style.backgroundColor = "#0a0a0a";
-    }
     setStage("hands");
     // Unmount the intro video immediately so its final black frame doesn't
     // cover the hands canvas; the handoffBlack layer keeps the background
