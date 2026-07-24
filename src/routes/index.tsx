@@ -7,6 +7,7 @@ import { FinChatDock } from "@/components/FinChatDock";
 import { IntroPreloader } from "@/components/IntroPreloader";
 
 import { SloganSection } from "@/components/SloganSection";
+import { MetricsSection } from "@/components/MetricsSection";
 import videoAsset from "@/assets/intro-hands.mp4.asset.json";
 
 export const Route = createFileRoute("/")({
@@ -107,6 +108,7 @@ function Index() {
           <div aria-hidden style={{ height: "100vh" }} />
           {/* Second screen: slides up over the fixed hero */}
           <SloganSection />
+          <MetricsSection />
           {/* Always pinned to bottom, unaffected by parallax */}
           <FinChatDock />
         </div>
