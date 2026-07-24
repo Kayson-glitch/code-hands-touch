@@ -1,54 +1,45 @@
-## 目标
+## 第三屏 - Metrics Section
 
-在第一屏（fixed hero 容器）背景最底层加入 React Bits 的 `Aurora` WebGL 极光效果，作为纯装饰底色。仅第一屏可见，第二屏（SloganSection）及后续内容不受影响；开场视频、字符手、故障风扫描线、标题、导航、对话框全部保留在其之上。
+### 结构与层级
+- 新建 `src/components/MetricsSection.tsx`
+- 在 `src/routes/index.tsx` 中紧跟 `SloganSection` 之后挂载
+- 背景：浅色 `#F4F1EA`（暖米色，与整体黑/紫极光形成呼吸对比，避免纯白刺眼）
+- 高度：`min-height: 100vh`，与前两屏节奏保持一致
+- 需要覆盖住 fixed 的第一屏 → `position: relative; z-index: 10`
+- 顶部保留 `GlitchGrainOverlay`（低强度，混合模式适配浅底），维持整体故障风统一
 
-## 依赖
+### 布局（横向三等分）
+- 外层：`max-width: 1280px`，居中，左右 `6vw` padding
+- 顶部：小标签 `INDICATORS / 指标` + 分段主标题（Clash Display）
+- 三列 grid（desktop `grid-cols-3`，tablet `grid-cols-1`）：
+  - 列之间用 `1px` 竖向渐变分隔线（透明→黑10%→透明）
+  - 每列结构：
+    - 序号 `01 / 02 / 03`（Geist Mono，小号，opacity 40%）
+    - 大数字（Clash Display，`clamp(72px, 9vw, 132px)`，字重 500）
+    - 小标题（Montserrat 600，16px）
+    - 注释文案（Montserrat 400，13px，opacity 60%，2-3 行）
 
-- `bun add ogl`
+### 数据（占位随机文案）
+1. `85%+` — Resolution Rate — Tickets resolved on first contact without human handoff
+2. `12K` — Conversations / Day — Handled across 30+ languages in real time
+3. `92%+` — CSAT Score — Measured across enterprise deployments in 2025
 
-## 新增文件
+### 动画方案（Count-up 数字滚动）
+- 使用 IntersectionObserver 触发（threshold 0.35）
+- 触发后：
+  - 数字：`requestAnimationFrame` 从 0 滚到目标值，1400ms，`easeOutExpo` 缓动；保留 `%` / `K` / `+` 后缀
+  - 标签/注释：模糊淡入 `blur(8px)→0`，`translateY(12px)→0`，600ms，按列 stagger 120ms
+  - 分隔线：`scaleY(0)→1`，`transform-origin: top`，700ms
+  - 顶部标题走一次 `BlurText`（复用已有组件）
+- 只触发一次，反滚不重置
 
-- `src/components/Aurora/Aurora.jsx` — 使用你提供的完整源码（原样）。
-- `src/components/Aurora/Aurora.css` — `.aurora-container { width:100%; height:100% }`。
+### 与整体风格保持一致
+- 字体：主数字/标题 Clash Display；正文 Montserrat；序号 Geist Mono
+- 颜色 tokens：新增 `--metrics-bg / --metrics-fg / --metrics-muted / --metrics-rule` 至 `src/styles.css`
+- 保留全屏 `GlitchGrainOverlay`（在此区域降低不透明度到浅底可见的程度）
+- 无第三方依赖，纯 React + CSS
 
-放到独立目录避免和现有 `.tsx` 组件混淆；`allowJs` 若未开则用 `.tsx` 版本（把 props 加最小 `any` 类型），实现同源。
-
-## 接入位置
-
-`src/routes/index.tsx` 内 fixed hero 容器（`position:fixed; inset:0; zIndex:1`）中，在 `AsciiHandsFooter` 之前插入 Aurora 包裹层：
-
-```tsx
-<div style={{ position:"absolute", inset:0, zIndex:0, pointerEvents:"none" }}>
-  <Aurora
-    colorStops={["#185DFF", "#8B22FF", "#E81A8A"]}
-    blend={0.5}
-    amplitude={1.0}
-    speed={0.5}
-  />
-</div>
-<AsciiHandsFooter ... />
-<HeroCopy />
-```
-
-颜色沿用品牌渐变（蓝→紫→粉红），与标题 `Synergy.AI` 渐变呼应。
-
-## 层级校验（第一屏内）
-
-```text
-z 0  Aurora (新)
-z 1  video / burst / ASCII hands / GlitchGrainOverlay (现有 AsciiHandsFooter 内部结构不变)
-z 30 HeroCopy
-z 80 SiteNav
-```
-
-Aurora 只挂在 fixed hero 容器内 → 随第一屏做 parallax、随第二屏上滑被覆盖，天然只在第一屏可见。
-
-## 不做的事
-
-- 不修改 `AsciiHandsFooter`、`IntroVideo`、`GlitchGrainOverlay`、`SloganSection`、导航、对话框、标题的任何代码或时序。
-- 不改背景黑色基底（Aurora 在其之上、视频/手之下，透明混合）。
-- 不给 Aurora 加入场动画、不接扩散事件。
-
-## 验证
-
-Playwright 截图三个状态：开场视频阶段（应看不到 Aurora，被视频盖住）、扩散完成第一屏（Aurora 在字符手/标题背后隐约流动）、滚动进入第二屏（Aurora 被 SloganSection 覆盖，且第二屏本身无 Aurora）。
+### 变更文件
+- 新增 `src/components/MetricsSection.tsx`
+- 修改 `src/routes/index.tsx`（在 `<SloganSection />` 后追加 `<MetricsSection />`）
+- 修改 `src/styles.css`（新增 4 个 CSS token）
