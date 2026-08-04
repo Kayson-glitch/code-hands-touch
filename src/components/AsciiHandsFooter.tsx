@@ -590,9 +590,14 @@ function sampleImage(
     // silhouette edge dissolves into sparser glyphs instead of stepping.
     const feather = Math.pow(r.a, 0.65);
     const g = Math.pow(stretched, gamma);
-    // Mostly linear, lightly S-shaped: a full smoothstep here pushed cells to
-    // the two ends of the ramp and hollowed out the mid tones.
-    let b = (g * 0.78 + smoothstep(g) * 0.22) * feather;
+    // Contrast enhancement (normalize → power → denormalize), the same trick
+    // ASCII shaders use: it exaggerates the separation between planes so
+    // fingers detach from the palm instead of faithfully reproducing greys.
+    const CONTRAST_EXP = 0.62;
+    const enhanced = Math.pow(Math.min(1, Math.max(0, g)), CONTRAST_EXP);
+    // Slight S on top keeps highlights from flattening at the top of the ramp.
+    let b = (enhanced * 0.7 + smoothstep(enhanced) * 0.3) * feather;
+
 
     // Cells touching a carved crease fade out so the seam reads soft, not cut.
     let nearCrease = false;
