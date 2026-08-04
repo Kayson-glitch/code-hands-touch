@@ -448,7 +448,10 @@ function sampleImage(
     // silhouette edge dissolves into sparser glyphs instead of stepping.
     const feather = Math.pow(r.a, 0.65);
     const g = Math.pow(stretched, gamma);
-    let b = smoothstep(g) * feather;
+    // Mostly linear, lightly S-shaped: a full smoothstep here pushed cells to
+    // the two ends of the ramp and hollowed out the mid tones.
+    let b = (g * 0.78 + smoothstep(g) * 0.22) * feather;
+
     // Cells touching a carved crease fade out so the seam reads soft, not cut.
     let nearCrease = false;
     for (let dj = -1; dj <= 1 && !nearCrease; dj++) {
