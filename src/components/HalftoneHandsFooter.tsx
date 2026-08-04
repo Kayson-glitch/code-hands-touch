@@ -388,6 +388,8 @@ export function HalftoneHandsFooter({
       window.removeEventListener("wheel", onWheel);
       window.removeEventListener("touchstart", onTouchStart);
       window.removeEventListener("touchmove", onTouchMove);
+      window.removeEventListener("pointerdown", onPointerDown);
+
 
       window.removeEventListener("mousemove", onMove);
       window.removeEventListener("mouseleave", onLeave);
