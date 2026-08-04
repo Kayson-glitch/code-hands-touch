@@ -758,13 +758,6 @@ export function AsciiHandsFooter({
   const introStartRef = useRef<number | null>(null);
   const introDoneRef = useRef(false);
   const introVisibleRef = useRef(false);
-  // Per-hand click lock state. `progress` tweens toward `target` each frame
-  // (0 = collapsed, 1 = fully expanded). `radiusUv` is snapshotted on click
-  // so the disc always reaches every cell of the hand from that click point.
-  const lockRef = useRef({
-    left:  { x: 0, y: 0, radiusUv: 0, progress: 0, target: 0 },
-    right: { x: 0, y: 0, radiusUv: 0, progress: 0, target: 0 },
-  });
 
   useEffect(() => {
     const canvas = canvasRef.current;
