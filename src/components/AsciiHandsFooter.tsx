@@ -1062,6 +1062,14 @@ export function AsciiHandsFooter({
         const flowIdxOffset = Math.round(flowWave * FLOW_IDX_AMP * flowAmp);
         const flowBrightness = 1 + flowWave * FLOW_BRIGHTNESS_AMP * flowAmp;
 
+        // Cursor dye density for this cell (0..~1.5). This is the local value
+        // of the fluid field the pointer injects into — the source site does
+        // exactly this with a GPU fluid texture (uFluidDensity).
+        const dyeAmt =
+          dyeField && grid
+            ? Math.min(1.4, dyeField.dye[cellJ * grid.cols + cellI] ?? 0)
+            : 0;
+
         // Ink-on-paper tone: brightness of the source still drives how much ink
         // a cell gets (dark source = background = no ink), but the response is
         // remapped with a lifted black point and a hard S-curve so faint planes
@@ -1075,24 +1083,49 @@ export function AsciiHandsFooter({
         // Ordered-ish dither from the stable cell seed breaks the remaining
         // banding, so neighbouring tones blend instead of stepping.
         const dither = (cellSeed - 0.5) * 0.07;
-        const tonal = Math.min(1, Math.max(0, shade * 0.9 + 0.05 + dither));
+        // Dye lifts the tonal value, which is what pushes the cell into a
+        // heavier glyph and a darker/denser ink (their fluidMultiplier).
+        const tonal = Math.min(
+          1,
+          Math.max(0, shade * 0.9 + 0.05 + dither + dyeAmt * DYE_TONE_BOOST),
+        );
         let r = (232 - tonal * 224) / flowBrightness;
         let g = (233 - tonal * 224) / flowBrightness;
         let bl = (236 - tonal * 226) / flowBrightness;
 
-
+        // Dye colouring: below the threshold the glyph stays graphite; above
+        // it we ramp along the palette (warm → amber → citrus → green) with a
+        // slow hue drift over time, then mix by density so trail edges fade
+        // seamlessly back into grey instead of ending on a hard rim.
+        if (dyeAmt > DYE_COLOR_MIN) {
+          const dRel = Math.min(
+            1,
+            (dyeAmt - DYE_COLOR_MIN) / (1 - DYE_COLOR_MIN),
+          );
+          const hueT = fract(dRel * 0.85 + timeSec * HUE_DRIFT);
+          const [pr, pg, pb] = dyePalette(hueT);
+          // Stronger dye = more saturated; also keeps the glyph readable by
+          // never fully replacing the ink value.
+          const mixK = Math.min(0.92, dRel * 1.15) * (0.45 + tonal * 0.55);
+          r += (pr - r) * mixK;
+          g += (pg - g) * mixK;
+          bl += (pb - bl) * mixK;
+        }
 
         const baseIdx =
-          ((c.idx + flowIdxOffset) % RAMP_LEN + RAMP_LEN) % RAMP_LEN;
+          ((c.idx +
+            flowIdxOffset +
+            Math.round(dyeAmt * DYE_IDX_BOOST)) %
+            RAMP_LEN +
+            RAMP_LEN) %
+          RAMP_LEN;
         let ch = glyphAt(baseIdx);
 
 
         let jitterX = 0;
         let jitterY = 0;
         let revealTilt = 0;
-        // Set true when this cell is covered by a mosaic-shatter tile — we
-        // then skip the ASCII glyph pass so the raw image reads cleanly.
-        let mosaicAlpha = 0;
+
         // Post-front settle alpha — cells that just crossed the front fade
         // the last bit of opacity in over INTRO_SETTLE_WIDTH of armT.
         let cellAlpha = 1;
