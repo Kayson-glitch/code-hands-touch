@@ -96,7 +96,7 @@ const DYE_DIFFUSE = 0.16;      // neighbour blur amount per frame
 const VEL_INJECT = 0.35;       // pointer displacement → velocity gain
 const VEL_DAMP = 0.96;         // per-frame velocity decay
 const DYE_TONE_BOOST = 0.30;   // how much dye darkens/thickens the ink
-const DYE_IDX_BOOST = 6;       // ramp steps a fully-dyed cell jumps
+const DYE_IDX_BOOST = 4;       // ramp steps a fully-dyed cell jumps
 const DYE_COLOR_MIN = 0.08;    // density below this stays graphite
 const HUE_DRIFT = 0.05;        // palette drift per second
 
