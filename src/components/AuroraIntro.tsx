@@ -11,7 +11,7 @@ export function AuroraIntro() {
   const [entered, setEntered] = useState(false);
 
   useEffect(() => {
-    // Enter together with the nav + chat dock, which react to `app-bg-change: dark`.
+    // Enter together with the nav + chat dock, which react to `app-bg-change: light`.
     // Double rAF guarantees the browser paints at opacity 0 before we flip to 1,
     // so the CSS transition actually runs instead of being coalesced away.
     let raf1 = 0;
