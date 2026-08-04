@@ -857,9 +857,10 @@ export function AsciiHandsFooter({
       const hoverActive = intensity > 0.01 && !prefersReduce;
       const tiltScale = TILT_MAX_DEG * (Math.PI / 180) * intensity * intensity;
 
-      // Highlight tint the revealed cells migrate toward. A soft near-white
-      // with a lavender purple bias to match the #C5A9FF base color scheme.
-      const HR = 250, HG = 245, HB = 255;
+      // Highlight tint the revealed cells migrate toward. On the light cream
+      // backdrop this is a deep ink violet so accents read as darker, not lighter.
+      const HR = 38, HG = 26, HB = 72;
+
 
       for (let k = 0; k < cells.length; k++) {
         const c = cells[k];
@@ -885,11 +886,12 @@ export function AsciiHandsFooter({
         const flowIdxOffset = Math.round(flowWave * FLOW_IDX_AMP * flowAmp);
         const flowBrightness = 1 + flowWave * FLOW_BRIGHTNESS_AMP * flowAmp;
 
-        // Base lavender purple color from the ramp:
-        //   shadow rgb(45, 35, 70) → highlight rgb(197, 169, 255)
-        let r = (45 + bb * 152) * flowBrightness;
-        let g = (35 + bb * 134) * flowBrightness;
-        let bl = (70 + bb * 185) * flowBrightness;
+        // Base ink color inverted for the light cream backdrop:
+        //   faint rgb(202,196,222) → deep violet rgb(42,26,78)
+        let r = (202 - bb * 160) / flowBrightness;
+        let g = (196 - bb * 170) / flowBrightness;
+        let bl = (222 - bb * 144) / flowBrightness;
+
         const baseIdx =
           ((c.idx + flowIdxOffset) % RAMP_LEN + RAMP_LEN) % RAMP_LEN;
         let ch = glyphAt(baseIdx);
@@ -1271,7 +1273,7 @@ export function AsciiHandsFooter({
           ctx.translate(cx, cy);
           ctx.rotate(finalAngle);
           if (c.isEdge) {
-            ctx.fillStyle = `rgba(15,12,25,${0.75 * cellAlpha * residueAlpha})`;
+            ctx.fillStyle = `rgba(244,241,234,${0.75 * cellAlpha * residueAlpha})`;
             const lx = -CELL_W / 2;
             const ly = FONT_PX - CELL_H / 2;
             ctx.fillText(ch, lx - 1, ly - 1);
@@ -1284,7 +1286,7 @@ export function AsciiHandsFooter({
           ctx.restore();
         } else {
           if (c.isEdge) {
-            ctx.fillStyle = `rgba(15,12,25,${0.75 * cellAlpha * residueAlpha})`;
+            ctx.fillStyle = `rgba(244,241,234,${0.75 * cellAlpha * residueAlpha})`;
             ctx.fillText(ch, drawX - 1, drawY - 1);
             ctx.fillText(ch, drawX + 1, drawY - 1);
             ctx.fillText(ch, drawX - 1, drawY + 1);
