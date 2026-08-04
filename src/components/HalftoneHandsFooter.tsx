@@ -433,86 +433,48 @@ export function HalftoneHandsFooter({
         : 1 + Math.sin((now / BREATH_PERIOD) * Math.PI * 2) * BREATH_AMP;
 
       const dots = dotsForFrame(Math.round(ph.current));
-      const cursor = cursorRef.current;
-      if (!prefersReduce) {
-        cursor.x += (cursor.tx - cursor.x) * 0.12;
-        cursor.y += (cursor.ty - cursor.y) * 0.12;
-      }
-      const cx = cursor.active ? cursor.x : -9999;
-      const cy = cursor.active ? cursor.y : -9999;
 
-      // Breathe mode: a slow global spatial pulse plus expanding ripples from the cursor.
-      const globalBreath = prefersReduce
-        ? 1
-        : 1 + Math.sin((now / 3200) * Math.PI * 2) * 0.02;
-      const activeRipples = prefersReduce
-        ? []
-        : ripplesRef.current.filter((r) => now - r.t < 1400);
-      ripplesRef.current = activeRipples;
+      // Step the ink-fluid field: dye advects along the velocity it was pushed
+      // with, diffuses slightly and fades back to nothing.
+      const fluid = fluidRef.current;
+      if (fluid && !prefersReduce) fluid.step(dt);
 
       for (let k = 0; k < dots.length; k++) {
         const dot = dots[k];
         // Centre dots drift more than edge dots → a shallow depth read.
         const weight = 0.35 + dot.cx * 0.65;
-        let x = dot.x + p.x * PARALLAX_X * weight;
-        let y = dot.y + p.y * PARALLAX_Y * weight;
+        const x = dot.x + p.x * PARALLAX_X * weight;
+        const y = dot.y + p.y * PARALLAX_Y * weight;
 
-        let density = dot.d * breath;
-        let radiusScale = 1;
+        const density = dot.d * breath;
 
-        const mode = hoverModeRef.current;
-        if (mode === "magnetic" && cursor.active) {
-          const dx = x - cx;
-          const dy = y - cy;
-          const dist = Math.hypot(dx, dy);
-          const radius = 160;
-          const falloff = dist < radius ? smoothstep(1 - dist / radius) : 0;
-          const maxPull = 8;
-          const pull = falloff * maxPull;
-          const angle = Math.atan2(dy, dx);
-          x -= Math.cos(angle) * pull;
-          y -= Math.sin(angle) * pull;
-          radiusScale = 1 + falloff * 0.15;
-        } else if (mode === "deepen" && cursor.active) {
-          const dx = x - cx;
-          const dy = y - cy;
-          const dist = Math.hypot(dx, dy);
-          const radius = 180;
-          const falloff = dist < radius ? smoothstep(1 - dist / radius) : 0;
-          density += falloff * 0.22;
-        } else if (mode === "breathe") {
-          const cw = canvas.clientWidth;
-          const ch = canvas.clientHeight;
-          const bx = x - cw * 0.5;
-          const by = y - ch * 0.5;
-          x = cw * 0.5 + bx * globalBreath;
-          y = ch * 0.5 + by * globalBreath;
-
-          let rippleScale = 0;
-          for (const ripple of activeRipples) {
-            const age = (now - ripple.t) / 1200;
-            const rippleRadius = age * 320;
-            const dist = Math.hypot(x - ripple.x, y - ripple.y);
-            const envelope =
-              Math.exp(-age * 2.5) * Math.max(0, 1 - Math.abs(dist - rippleRadius) / 120);
-            const wave = Math.sin(((dist - rippleRadius) / 44) * Math.PI);
-            rippleScale += wave * envelope * 0.12;
-          }
-          radiusScale = 1 + rippleScale;
-        }
+        // Dye coverage under this dot (0 when the pointer never passed here).
+        const dye = fluid ? Math.min(1, fluid.sample(x, y) * 1.25) : 0;
+        const radiusScale = 1 + dye * 0.06;
 
         const raw = Math.min(1, density);
         // Soft ceiling: large shadow regions no longer all clamp to 1.0, which
         // is what made them fuse into one flat slab.
         const d = raw < 0.8 ? raw : 0.8 + (raw - 0.8) * 0.7;
         // Area ∝ coverage — the physically correct halftone response.
-        let r = maxR * Math.sqrt(d) * radiusScale;
+        const r = maxR * Math.sqrt(d) * radiusScale;
         if (r < 0.16) continue;
 
         // Value carries volume alongside area: light grey on the paper-facing
-        // planes, near-charcoal (slightly cool) in the deepest shadows.
+        // planes, deeper grey in the shadows. Where the ink-fluid has been
+        // pushed, that grey blends toward the warm dye gradient.
         const [ir, ig, ib] = inkAt(d);
-        ctx.fillStyle = `rgb(${ir},${ig},${ib})`;
+        if (dye > 0.004) {
+          // Deeper dots take more colour, so volume survives the tint.
+          const mix = smoothstep(dye) * (0.45 + d * 0.55);
+          const [dr, dg, db] = dyeAt(Math.min(1, dye * 0.9 + d * 0.1));
+          ctx.fillStyle = `rgb(${Math.round(ir + (dr - ir) * mix)},${Math.round(
+            ig + (dg - ig) * mix,
+          )},${Math.round(ib + (db - ib) * mix)})`;
+        } else {
+          ctx.fillStyle = `rgb(${ir},${ig},${ib})`;
+        }
+
 
         if (d <= SQUARE_AT) {
           ctx.beginPath();
