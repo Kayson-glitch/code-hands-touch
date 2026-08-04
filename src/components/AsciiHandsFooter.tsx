@@ -1422,7 +1422,7 @@ export function AsciiHandsFooter({
 
       {(burstProgress > 0 || handsVisible) && (
         <div className="absolute inset-0" style={{ zIndex: 7, pointerEvents: "none" }}>
-          <GlitchGrainOverlay visible intensity="low" />
+          <GlitchGrainOverlay visible intensity="low" inverted />
         </div>
       )}
     </section>
