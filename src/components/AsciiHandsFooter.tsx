@@ -886,19 +886,25 @@ export function AsciiHandsFooter({
         const flowIdxOffset = Math.round(flowWave * FLOW_IDX_AMP * flowAmp);
         const flowBrightness = 1 + flowWave * FLOW_BRIGHTNESS_AMP * flowAmp;
 
-        // Neutral graphite ink on the light canvas. The compressed highlight
-        // shoulder and steeper midtone curve keep broad planes pale while
-        // pushing creases and dense glyphs toward carbon black for more volume.
-        const shade = Math.pow(bb, 0.52);
-        const tonal = shade * shade * (3 - 2 * shade);
-        let r = (224 - tonal * 214) / flowBrightness;
-        let g = (226 - tonal * 215) / flowBrightness;
-        let bl = (229 - tonal * 215) / flowBrightness;
+        // Ink-on-paper tone: brightness of the source still drives how much ink
+        // a cell gets (dark source = background = no ink), but the response is
+        // remapped with a lifted black point and a hard S-curve so faint planes
+        // stay near-paper while lit ridges slam to carbon — that gap is what
+        // reads as volume on a light canvas.
+        const t = Math.min(1, Math.max(0, (bb - 0.06) / 0.9));
+        const shade = Math.pow(t, 1.35);
+        const s1 = shade * shade * (3 - 2 * shade);
+        const tonal = s1 * s1 * (3 - 2 * s1); // double smoothstep = punchy midtones
+        let r = (243 - tonal * 235) / flowBrightness;
+        let g = (244 - tonal * 236) / flowBrightness;
+        let bl = (246 - tonal * 237) / flowBrightness;
 
 
         const baseIdx =
           ((c.idx + flowIdxOffset) % RAMP_LEN + RAMP_LEN) % RAMP_LEN;
         let ch = glyphAt(baseIdx);
+
+
         let jitterX = 0;
         let jitterY = 0;
         let revealTilt = 0;
