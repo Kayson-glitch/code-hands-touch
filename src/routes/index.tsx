@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useCallback, useEffect, useState } from "react";
-import { AsciiHandsFooter } from "@/components/AsciiHandsFooter";
+import { HalftoneHandsFooter } from "@/components/HalftoneHandsFooter";
 import { SiteNav } from "@/components/SiteNav";
 import { HeroCopy } from "@/components/HeroCopy";
 import { FinChatDock } from "@/components/FinChatDock";
@@ -100,7 +100,7 @@ function Index() {
               willChange: "transform",
             }}
           >
-            <AsciiHandsFooter videoSrc={videoSrc} debug={debug} handoffVideo={handoffVideo} />
+            <HalftoneHandsFooter videoSrc={videoSrc} debug={debug} handoffVideo={handoffVideo} />
             <HeroCopy />
           </div>
           <SiteNav />
