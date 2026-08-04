@@ -916,55 +916,8 @@ export function AsciiHandsFooter({
     window.addEventListener("touchmove", onTouch, { passive: true });
     window.addEventListener("touchend", onLeave);
 
-    // Click / tap to toggle a hand lock. Clicks on the left half target the
-    // human hand, right half targets the robot hand. Second click on the
-    // same hand collapses it back. Ignored while the intro is still
-    // playing so users don't fight the growth animation.
-    const onDown = (e: PointerEvent) => {
-      if (!introDoneRef.current) return;
-      const rect = canvas.getBoundingClientRect();
-      const x = e.clientX - rect.left;
-      const y = e.clientY - rect.top;
-      const w = canvas.clientWidth;
-      const h = canvas.clientHeight;
-      const visualRect = getHandsVisualRect(layout, w, h);
-      if (
-        x < visualRect.x ||
-        y < visualRect.y ||
-        x > visualRect.x + visualRect.w ||
-        y > visualRect.y + visualRect.h
-      ) return;
-      const side: "left" | "right" = x < w / 2 ? "left" : "right";
-      const st = lockRef.current[side];
-      if (st.target > 0.5) {
-        // Collapse — retract from current click origin.
-        st.target = 0;
-        return;
-      }
-      // Snapshot click origin and compute a radius (in UV space) that
-      // reaches the furthest cell on this hand so the disc always covers
-      // the whole silhouette regardless of where the user clicked.
-      const minWH = Math.min(w, h);
-      const aspectX = w / h;
-      const oxUv = (x / minWH) * aspectX;
-      const oyUv = y / minWH;
-      let rMax = 0;
-      const cells = cellsRef.current;
-      for (let i = 0; i < cells.length; i++) {
-        const c = cells[i];
-        const cellSideLeft = c.x < w / 2;
-        if ((side === "left") !== cellSideLeft) continue;
-        const cUvX = (c.x / minWH) * aspectX;
-        const cUvY = c.y / minWH;
-        const dd = Math.hypot(cUvX - oxUv, cUvY - oyUv);
-        if (dd > rMax) rMax = dd;
-      }
-      st.x = x;
-      st.y = y;
-      st.radiusUv = rMax + LOCK_RADIUS_MARGIN_UV;
-      st.target = 1;
-    };
-    canvas.addEventListener("pointerdown", onDown);
+
+
 
     let frame = 0;
     let lastT = performance.now();
