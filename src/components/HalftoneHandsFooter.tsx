@@ -115,32 +115,45 @@ function sampleDots(
   (octx as unknown as { filter: string }).filter = "none";
   const data = octx.getImageData(0, 0, cols, rows).data;
 
+  // Pass 1 — raw premultiplied luma per cell, plus the tonal range present so
+  // the coverage curve can be normalised (the source sits almost entirely in
+  // the shadows, so a raw mapping would collapse to a flat blob).
+  const raw = new Float32Array(cols * rows);
+  let lo = 1;
+  let hi = 0;
+  for (let k = 0; k < cols * rows; k++) {
+    const p = k * 4;
+    const a = data[p + 3] / 255;
+    const luma =
+      (a * (0.2126 * data[p] + 0.7152 * data[p + 1] + 0.0722 * data[p + 2])) / 255;
+    raw[k] = luma;
+    if (luma > hi) hi = luma;
+    if (luma > 0.004 && luma < lo) lo = luma;
+  }
+  const span = Math.max(0.08, hi - lo);
+
   const dots: Dot[] = [];
   for (let j = 0; j < rows; j++) {
     for (let i = 0; i < cols; i++) {
-      const p = (j * cols + i) * 4;
-      const a = data[p + 3] / 255;
-      if (a < 0.12) continue;
-      // Rec.709 luma, premultiplied so soft PNG edges don't read as shadow.
-      const luma =
-        (a * (0.2126 * data[p] + 0.7152 * data[p + 1] + 0.0722 * data[p + 2])) / 255;
-
-      // The source is a lit subject on black, so luma itself *is* the form:
-      // bright = lit plane, dark = falling into shadow / background.
-      let density = Math.min(1, Math.max(0, luma * 1.12));
-
-      // Edge dissolve — horizontal (outer frame) and vertical (wrists).
+      const k = j * cols + i;
       const u = (i + 0.5) / cols;
       const v = (j + 0.5) / rows;
-      const fx = Math.min(smoothstep(u / FADE_X), smoothstep((1 - u) / FADE_X));
-      const fy = Math.min(smoothstep(v / FADE_Y), smoothstep((1 - v) / FADE_Y));
-      const fade = Math.min(1, fx * 0.75 + 0.25) * Math.min(1, fy * 0.8 + 0.2);
-      density *= fade;
 
-      // Stable stochastic drop-out: near the edges the surviving dots scatter.
-      const r = hash2(i, j);
-      if (r > 0.12 + fade * 0.92) continue;
+      // Normalised, near-linear coverage: 0 = paper, 1 = dots nearly touching.
+      const t = Math.min(1, Math.max(0, (raw[k] - lo) / span));
+      let density = Math.pow(t, 0.9);
+
+      // Ordered dither on the threshold only — keeps continuous tone in the
+      // midtones instead of stepping into visible bands of equal dots.
+      const dither = (BAYER[(j & 3) * 4 + (i & 3)] - 0.5) * 0.07;
+      density = Math.min(1, Math.max(0, density + dither));
+
       if (density < MIN_DENSITY) continue;
+
+      // Scattered dissolve: faint cells survive only sometimes, so the mass
+      // frays into isolated single dots instead of fading out as a block.
+      const keep = smoothstep((density - MIN_DENSITY) / 0.32);
+      if (hash2(i, j) > 0.16 + keep * 0.84) continue;
 
       dots.push({
         x: rect.x + (i + 0.5) * pitch,
@@ -152,6 +165,7 @@ function sampleDots(
   }
   return dots;
 }
+
 
 export function HalftoneHandsFooter({
   videoSrc,
