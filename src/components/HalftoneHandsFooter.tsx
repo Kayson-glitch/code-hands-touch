@@ -321,7 +321,9 @@ export function HalftoneHandsFooter({
       const h = canvas.clientHeight;
       ctx.clearRect(0, 0, w, h);
 
+      tickPlay(now);
       const ph = playheadRef.current;
+
       if (prefersReduce) {
         ph.current = ph.target;
       } else {
