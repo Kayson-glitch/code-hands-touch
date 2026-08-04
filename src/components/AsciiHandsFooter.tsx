@@ -750,6 +750,10 @@ export function AsciiHandsFooter({
   });
   const imageRef = useRef<HTMLImageElement | null>(null);
   const mouseSpeedRef = useRef(0);
+  // Cursor dye field + last pointer cell (for velocity injection).
+  const dyeRef = useRef<DyeField | null>(null);
+  const dyePrevRef = useRef<{ i: number; j: number } | null>(null);
+
   const lastMoveRef = useRef<{ x: number; y: number; t: number } | null>(null);
   const introStartRef = useRef<number | null>(null);
   const introDoneRef = useRef(false);
