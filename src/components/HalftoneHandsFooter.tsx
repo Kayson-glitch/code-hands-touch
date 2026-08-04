@@ -25,16 +25,36 @@ const FRAME_H = 178;
 const FRAME_AR = FRAME_W / FRAME_H;
 
 // ---------------------------------------------------------------- tuning
-// Radius is a fraction of the half-pitch; 0.98 lets the darkest dots almost
-// touch, matching a real halftone screen at high coverage.
-const DOT_FILL = 0.98;
+// Radius is a fraction of the half-pitch. Kept below 1 so even the darkest
+// cells keep a sliver of paper between them and never weld into a solid mass.
+const DOT_FILL = 0.9;
 // Coverage below this is left as bare paper.
 const MIN_DENSITY = 0.05;
-// Above this coverage the dot squares off (superellipse), as on a print screen.
-const SQUARE_AT = 0.75;
-// Single mid-grey ink. Tone comes from dot AREA, not from colour.
-const INK_LIGHT = 0xa8;
-const INK_DARK = 0x8c;
+// Only the very deepest dots square off, so shadows stay legible as a screen.
+const SQUARE_AT = 0.88;
+// Ink ramp: paper-side light grey -> mid grey -> near-charcoal, with a faint
+// cool shift in the shadows and a warm-neutral bias in the highlights. Tone is
+// carried by dot AREA *and* value, which is what reads as volume.
+const INK_STOPS: Array<[number, number, number]> = [
+  [0xb6, 0xb4, 0xb1],
+  [0x94, 0x95, 0x98],
+  [0x2c, 0x30, 0x38],
+];
+
+/** Interpolate the three-stop ink ramp at coverage d (0..1). */
+function inkAt(d: number) {
+  const t = Math.min(1, Math.max(0, d));
+  const seg = t < 0.5 ? 0 : 1;
+  const f = seg === 0 ? t / 0.5 : (t - 0.5) / 0.5;
+  const a = INK_STOPS[seg];
+  const b = INK_STOPS[seg + 1];
+  return [
+    Math.round(a[0] + (b[0] - a[0]) * f),
+    Math.round(a[1] + (b[1] - a[1]) * f),
+    Math.round(a[2] + (b[2] - a[2]) * f),
+  ];
+}
+
 // Pointer parallax (CSS px at full deflection) + tonal breathing amplitude.
 const PARALLAX_X = 4;
 const PARALLAX_Y = 2.5;
@@ -348,29 +368,34 @@ export function HalftoneHandsFooter({
         const x = dot.x + p.x * PARALLAX_X * weight;
         const y = dot.y + p.y * PARALLAX_Y * weight;
 
-        const d = Math.min(1, dot.d * breath);
+        const raw = Math.min(1, dot.d * breath);
+        // Soft ceiling: large shadow regions no longer all clamp to 1.0, which
+        // is what made them fuse into one flat slab.
+        const d = raw < 0.8 ? raw : 0.8 + (raw - 0.8) * 0.7;
         // Area ∝ coverage — the physically correct halftone response.
         const r = maxR * Math.sqrt(d);
         if (r < 0.16) continue;
 
-        // Ink stays one mid-grey; only a hair of extra weight in the darkest
-        // dots, exactly as measured on the reference print.
-        const grey = Math.round(INK_LIGHT + (INK_DARK - INK_LIGHT) * d);
-        ctx.fillStyle = `rgb(${grey},${grey},${grey})`;
+        // Value carries volume alongside area: light grey on the paper-facing
+        // planes, near-charcoal (slightly cool) in the deepest shadows.
+        const [ir, ig, ib] = inkAt(d);
+        ctx.fillStyle = `rgb(${ir},${ig},${ib})`;
 
         if (d <= SQUARE_AT) {
           ctx.beginPath();
           ctx.arc(x, y, r, 0, Math.PI * 2);
           ctx.fill();
         } else {
-          // High coverage: the dot squares off with a shrinking corner radius.
+          // High coverage: the dot squares off with a shrinking corner radius,
+          // but never grows — the paper gap between cells is preserved.
           const sq = (d - SQUARE_AT) / (1 - SQUARE_AT);
-          const s = r * (1 + 0.14 * sq);
-          const corner = r * (1 - 0.62 * sq);
+          const s = r * (1 - 0.04 * sq);
+          const corner = r * (1 - 0.6 * sq);
           ctx.beginPath();
           ctx.roundRect(x - s, y - s, s * 2, s * 2, corner);
           ctx.fill();
         }
+
       }
 
       raf = requestAnimationFrame(draw);
