@@ -309,30 +309,30 @@ const FRAG = /* glsl */ `
       float tail   = 1.0 - smoothstep(0.92, 1.00, b);
       float env    = appear * tail;
 
-      // ---- Composite: black hole first ----
-      col = mix(col, vec3(0.0), burned);
+      // ---- Composite: white hole first (light-background inversion) ----
+      col = mix(col, vec3(1.0), burned);
 
-      // ---- Multi-layer glowing edge (only outside the burned hole) ----
+      // ---- Multi-layer dark edge (only outside the burned hole) ----
       float outside = 1.0 - burned;
 
-      // L0 — thin core rim, near-white, opaque-ish
+      // L0 — thin core rim, near-black, opaque-ish
       float L0 = smoothstep(0.014, 0.000, abs(d)) * outside * env;
-      col += vec3(1.00, 0.99, 1.00) * L0 * uCoreRimA;
+      col += vec3(0.08, 0.08, 0.10) * L0 * uCoreRimA;
 
-      // L1 — hot halo, warm lavender-white, additive
+      // L1 — cool shadow halo, additive
       float L1 = smoothstep(0.055, 0.010, abs(d)) * outside * env;
-      col += vec3(0.96, 0.92, 1.00) * L1 * uHotHaloA;
+      col += vec3(0.18, 0.16, 0.22) * L1 * uHotHaloA;
 
-      // L2 — cloudy diffusion, lavender, additive, exp falloff + noise
+      // L2 — cloudy diffusion, cool gray, additive, exp falloff + noise
       float cloud = fbm(pw * 5.0 + vec2(t * 0.15, -t * 0.1));
       float dOut2 = max(d, 0.0);
       float L2 = exp(-dOut2 / (0.09 * uHaloFalloff)) * outside * env * (0.65 + 0.55 * cloud);
-      col += vec3(0.77, 0.66, 1.00) * L2 * uCloudDiffA;
+      col += vec3(0.28, 0.26, 0.34) * L2 * uCloudDiffA;
 
-      // L3 — outer misty falloff, cooler lavender, additive, grainy
+      // L3 — outer misty falloff, cooler gray, additive, grainy
       float grain = fract(sin(dot(uv * uResolution + t, vec2(12.9898, 78.233))) * 43758.5453);
       float L3 = exp(-dOut2 / (0.22 * uHaloFalloff)) * outside * env * (0.55 + 0.45 * grain);
-      col += vec3(0.62, 0.54, 0.95) * L3 * uMistA;
+      col += vec3(0.35, 0.32, 0.42) * L3 * uMistA;
 
       // ---- Edge glitch band: unify with page GlitchGrainOverlay ----
       // Narrow band hugging the burn front, only outside the burned hole.
@@ -342,8 +342,8 @@ const FRAG = /* glsl */ `
         vec2 nrm = normalize(pw + vec2(1e-4));
         vec2 pxNrm = nrm / uResolution;
 
-        // (1) Scanlines — echo GlitchGrainOverlay horizontal lines.
-        float scan = sin(gl_FragCoord.y * 1.6 + t * 4.0) * 0.08;
+        // (1) Scanlines — echo GlitchGrainOverlay horizontal lines (dark for light bg).
+        float scan = sin(gl_FragCoord.y * 1.6 + t * 4.0) * -0.08;
 
         // (2) Chroma split along the edge normal (~0.9px).
         vec2 chOff = pxNrm * 0.9;
@@ -360,7 +360,7 @@ const FRAG = /* glsl */ `
 
         // (4) High-freq grain on the core band.
         float eg = fract(sin(dot(gl_FragCoord.xy + t * 37.0, vec2(12.9898, 78.233))) * 43758.5453);
-        float grainN = (eg - 0.5) * 0.08;
+        float grainN = (eg - 0.5) * -0.08;
 
         // Compose: chroma split & shear blended into col; add scanline + grain.
         vec3 mixed = mix(col, chroma, 0.55);
@@ -371,8 +371,8 @@ const FRAG = /* glsl */ `
       }
     }
 
-    // Highlight roll-off again after additive glow to guarantee no white flash.
-    col = col - max(vec3(0.0), col - vec3(0.985));
+    // Shadow roll-off after dark additive edges to guarantee no black flash on light bg.
+    col = col + max(vec3(0.0), vec3(0.015) - col);
 
     gl_FragColor = vec4(col, 1.0);
   }

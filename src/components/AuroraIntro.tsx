@@ -3,7 +3,7 @@ import Aurora from "@/components/Aurora/Aurora";
 
 /**
  * Wraps Aurora with a soft entry animation.
- * Listens for the same `app-bg-change: dark` cue that drives the hero entry,
+ * Listens for the same `app-bg-change: light` cue that drives the hero entry,
  * then eases opacity from 0 → 1.
  */
 export function AuroraIntro() {
@@ -11,7 +11,7 @@ export function AuroraIntro() {
   const [entered, setEntered] = useState(false);
 
   useEffect(() => {
-    // Enter together with the nav + chat dock, which react to `app-bg-change: dark`.
+    // Enter together with the nav + chat dock, which react to `app-bg-change: light`.
     // Double rAF guarantees the browser paints at opacity 0 before we flip to 1,
     // so the CSS transition actually runs instead of being coalesced away.
     let raf1 = 0;
@@ -24,7 +24,7 @@ export function AuroraIntro() {
     const onBg = (e: Event) => {
       const detail = (e as CustomEvent<string | { mode?: string }>).detail;
       const mode = typeof detail === "string" ? detail : detail?.mode;
-      if (mode === "dark") reveal();
+      if (mode === "light") reveal();
     };
     window.addEventListener("app-bg-change", onBg as EventListener);
 
@@ -32,7 +32,7 @@ export function AuroraIntro() {
       const sectionBg = wrapperRef.current?.closest("section")
         ? getComputedStyle(wrapperRef.current.closest("section") as HTMLElement).backgroundColor
         : "";
-      if (sectionBg === "rgb(0, 0, 0)" || sectionBg === "#000") {
+      if (sectionBg === "rgb(255, 255, 255)" || sectionBg === "#fff" || sectionBg === "#ffffff") {
         raf2 = requestAnimationFrame(() => setEntered(true));
       }
     });
