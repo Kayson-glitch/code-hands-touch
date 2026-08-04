@@ -624,7 +624,10 @@ function sampleImage(
         : wJ > 0
           ? (r.j - part.minJ) / wJ
           : 0;
+    // Near-black cells: leave the paper empty so silhouettes stay crisp.
+    if (b < INK_CUTOFF) continue;
     const idx = indexFor(b);
+
     silIdx[gi] = cells.length;
     cells.push({
       x: targetRect.x + r.i * CELL_W,
