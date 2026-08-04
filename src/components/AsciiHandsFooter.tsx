@@ -232,7 +232,7 @@ function stepDyeField(
 const FLOW_DENSITY = 14;          // phase cycles across arm length
 const FLOW_SPEED = 0.35;          // phase cycles per second
 const FLOW_JITTER = 0.6;          // per-cell phase offset (fraction of 2π)
-const FLOW_IDX_AMP = 2;           // ± ramp steps swapped by the wave
+const FLOW_IDX_AMP = 1;           // ± ramp steps swapped by the wave
 const FLOW_BRIGHTNESS_AMP = 0.06; // ± tonal multiplier from the wave
 // Finger separation — the source photo has touching fingers, so the seam
 // between them must be carved out explicitly or the ASCII fuses into a blob.
