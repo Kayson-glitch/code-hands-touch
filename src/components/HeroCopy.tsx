@@ -36,7 +36,7 @@ export function HeroCopy() {
   useEffect(() => {
     const onBg = (e: Event) => {
       const detail = (e as CustomEvent<"light" | "dark">).detail;
-      if (detail === "dark") {
+      if (detail === "light") {
         // Stage B: hero title reveals ~640ms after the background flips,
         // so nav + chat dock (Stage A) can finish their fade first.
         window.setTimeout(() => setVisible(true), 640);
