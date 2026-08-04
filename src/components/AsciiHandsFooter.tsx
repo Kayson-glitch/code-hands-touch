@@ -73,24 +73,150 @@ const TILT_FALLOFF = 320;
 // characters are "woken up" into a hand-set angle where the cursor reveals
 // them, and stay upright everywhere else.
 const REVEAL_TILT_MAX_DEG = 12;
-// Hover mosaic-shatter reveal — inside the disc, cells are replaced by
-// broken tiles of the raw source image so the underlying photo peeks
-// through a shattered ASCII surface. Numbers below tuned against the
-// existing 10×10 cell pitch.
-const MOSAIC_MASK_THRESHOLD = 0.04;
-const MOSAIC_SHATTER_PX = 1.8; // max positional break at the disc edge
-const MOSAIC_SCALE_MIN = 0.88; // min tile occupancy at the disc edge
-const MOSAIC_SCALE_MAX = 0.92; // max tile occupancy (center) — leaves paper gaps
-// Peak opacity of a mosaic tile. Kept well under 1 so the photo reads as a
-// shadow behind the glyphs instead of covering them like a censor bar.
-const MOSAIC_MAX_ALPHA = 0.55;
-// Ink range the mosaic tiles are remapped into (paper → carbon), matching the
-// glyph palette so the reveal never introduces hue.
-const MOSAIC_INK_LIGHT = 226;
-const MOSAIC_INK_DARK = 24;
+// ---------------------------------------------------------------------------
+// Cursor dye field (lightweight 2D fluid, one sample per character cell).
+// Mirrors what speakeasy.com does on the GPU: the pointer injects dye and
+// velocity into a fluid, the field advects + dissipates on its own, and the
+// character layer samples it to lift tone (heavier glyph) and pick a hue.
+// Nothing is ever drawn on top of the glyphs.
+// ---------------------------------------------------------------------------
+const DYE_RADIUS = 3.5;        // injection radius, in cells
+const DYE_INJECT = 1.0;        // injection strength per frame
+const DYE_DISSIPATION = 0.94;  // per-frame dye decay
+const DYE_DIFFUSE = 0.16;      // neighbour blur amount per frame
+const VEL_INJECT = 0.35;       // pointer displacement → velocity gain
+const VEL_DAMP = 0.96;         // per-frame velocity decay
+const DYE_TONE_BOOST = 0.30;   // how much dye darkens/thickens the ink
+const DYE_IDX_BOOST = 6;       // ramp steps a fully-dyed cell jumps
+const DYE_COLOR_MIN = 0.08;    // density below this stays graphite
+const HUE_DRIFT = 0.05;        // palette drift per second
 
-const MOSAIC_SPLATTER_PROB = 0.06; // % of tiles that fling further out
-const MOSAIC_SPLATTER_PX = 5;
+// Palette sampled by dye density (+ drift): warm ember → amber → citrus →
+// leaf → teal, wrapping back to ember so the drift is continuous.
+const DYE_PALETTE: [number, number, number][] = [
+  [214, 108, 42],
+  [226, 158, 44],
+  [206, 196, 58],
+  [128, 190, 84],
+  [72, 172, 148],
+  [214, 108, 42],
+];
+
+function dyePalette(t: number): [number, number, number] {
+  const n = DYE_PALETTE.length - 1;
+  const x = Math.min(0.9999, Math.max(0, t)) * n;
+  const i = Math.floor(x);
+  const f = x - i;
+  const a = DYE_PALETTE[i];
+  const b = DYE_PALETTE[i + 1];
+  return [
+    a[0] + (b[0] - a[0]) * f,
+    a[1] + (b[1] - a[1]) * f,
+    a[2] + (b[2] - a[2]) * f,
+  ];
+}
+
+type DyeField = {
+  cols: number;
+  rows: number;
+  dye: Float32Array;
+  tmp: Float32Array;
+  vx: Float32Array;
+  vy: Float32Array;
+};
+
+function makeDyeField(cols: number, rows: number): DyeField {
+  const n = cols * rows;
+  return {
+    cols,
+    rows,
+    dye: new Float32Array(n),
+    tmp: new Float32Array(n),
+    vx: new Float32Array(n),
+    vy: new Float32Array(n),
+  };
+}
+
+function bilinear(f: Float32Array, cols: number, rows: number, x: number, y: number) {
+  const cx = Math.min(cols - 1, Math.max(0, x));
+  const cy = Math.min(rows - 1, Math.max(0, y));
+  const i0 = Math.floor(cx);
+  const j0 = Math.floor(cy);
+  const i1 = Math.min(cols - 1, i0 + 1);
+  const j1 = Math.min(rows - 1, j0 + 1);
+  const fx = cx - i0;
+  const fy = cy - j0;
+  const a = f[j0 * cols + i0];
+  const b = f[j0 * cols + i1];
+  const c = f[j1 * cols + i0];
+  const d = f[j1 * cols + i1];
+  return (a + (b - a) * fx) * (1 - fy) + (c + (d - c) * fx) * fy;
+}
+
+// One simulation step: inject at the pointer, advect (semi-Lagrangian),
+// diffuse slightly, then dissipate. Cost is O(cols*rows) ≈ 20k ops.
+function stepDyeField(
+  f: DyeField,
+  inject: { i: number; j: number; dx: number; dy: number } | null,
+  dtScale: number,
+) {
+  const { cols, rows, dye, tmp, vx, vy } = f;
+
+  if (inject) {
+    const rad = DYE_RADIUS;
+    const i0 = Math.max(0, Math.floor(inject.i - rad * 2));
+    const i1 = Math.min(cols - 1, Math.ceil(inject.i + rad * 2));
+    const j0 = Math.max(0, Math.floor(inject.j - rad * 2));
+    const j1 = Math.min(rows - 1, Math.ceil(inject.j + rad * 2));
+    for (let j = j0; j <= j1; j++) {
+      for (let i = i0; i <= i1; i++) {
+        const dx = i - inject.i;
+        const dy = j - inject.j;
+        const g = Math.exp(-(dx * dx + dy * dy) / (2 * rad * rad));
+        if (g < 0.01) continue;
+        const idx = j * cols + i;
+        dye[idx] = Math.min(1.6, dye[idx] + g * DYE_INJECT * dtScale);
+        vx[idx] += inject.dx * VEL_INJECT * g;
+        vy[idx] += inject.dy * VEL_INJECT * g;
+      }
+    }
+  }
+
+  // Advect dye along the velocity field (backward trace).
+  for (let j = 0; j < rows; j++) {
+    for (let i = 0; i < cols; i++) {
+      const idx = j * cols + i;
+      const d = dye[idx];
+      const u = vx[idx];
+      const v = vy[idx];
+      if (d < 0.0015 && u * u + v * v < 1e-6) {
+        tmp[idx] = 0;
+        continue;
+      }
+      tmp[idx] = bilinear(dye, cols, rows, i - u * dtScale, j - v * dtScale);
+    }
+  }
+
+  // Diffuse + dissipate in one pass; velocity just damps (no pressure solve —
+  // at cell resolution the visual difference is not worth the cost).
+  const decay = Math.pow(DYE_DISSIPATION, dtScale);
+  const vDecay = Math.pow(VEL_DAMP, dtScale);
+  for (let j = 0; j < rows; j++) {
+    for (let i = 0; i < cols; i++) {
+      const idx = j * cols + i;
+      const c = tmp[idx];
+      const l = i > 0 ? tmp[idx - 1] : c;
+      const rr = i < cols - 1 ? tmp[idx + 1] : c;
+      const up = j > 0 ? tmp[idx - cols] : c;
+      const dn = j < rows - 1 ? tmp[idx + cols] : c;
+      const blurred = c + ((l + rr + up + dn) * 0.25 - c) * DYE_DIFFUSE;
+      dye[idx] = blurred < 0.0012 ? 0 : blurred * decay;
+      vx[idx] *= vDecay;
+      vy[idx] *= vDecay;
+    }
+  }
+}
+
 // Click-to-lock reveal — per hand toggle that expands a mosaic disc from
 // the click point until it fully covers that hand, then collapses on the
 // next click. Timings kept snappy but eased so the transition reads as
@@ -624,6 +750,10 @@ export function AsciiHandsFooter({
   });
   const imageRef = useRef<HTMLImageElement | null>(null);
   const mouseSpeedRef = useRef(0);
+  // Cursor dye field + last pointer cell (for velocity injection).
+  const dyeRef = useRef<DyeField | null>(null);
+  const dyePrevRef = useRef<{ i: number; j: number } | null>(null);
+
   const lastMoveRef = useRef<{ x: number; y: number; t: number } | null>(null);
   const introStartRef = useRef<number | null>(null);
   const introDoneRef = useRef(false);
@@ -909,13 +1039,6 @@ export function AsciiHandsFooter({
       const discLerp = DISC_LERP_MIN + (DISC_LERP_MAX - DISC_LERP_MIN) * speedK;
       const intensityLerp =
         INTENSITY_LERP_MIN + (INTENSITY_LERP_MAX - INTENSITY_LERP_MIN) * speedK;
-      // Speed-adaptive mosaic diffusion / dissipation.
-      const shatterK = 1 + smoothSpeedK * 0.9;
-        const scaleMinDyn = MOSAIC_SCALE_MIN + smoothSpeedK * 0.10;
-      const alphaGamma = 0.85 - smoothSpeedK * 0.25;
-      const fadeLo = 0.35 - smoothSpeedK * 0.15;
-      const fadeHi = 0.85 - smoothSpeedK * 0.20;
-      const fadeSpan = Math.max(0.05, fadeHi - fadeLo);
 
       // Disable hover reveal disc while the arms are still growing in.
       const targetIntensity = m.active && !prefersReduce && !intro ? 1 : 0;
@@ -932,6 +1055,37 @@ export function AsciiHandsFooter({
           discY += (m.y - discY) * discLerp;
         }
       }
+
+      // ---- Cursor dye field step -------------------------------------------
+      // Allocate/resize lazily against the current grid, inject at the raw
+      // cursor (not the eased disc, so fast flicks leave a long streak), then
+      // let the field advect + dissipate on its own.
+      let dyeField = dyeRef.current;
+      if (grid && !prefersReduce) {
+        if (!dyeField || dyeField.cols !== grid.cols || dyeField.rows !== grid.rows) {
+          dyeField = makeDyeField(grid.cols, grid.rows);
+          dyeRef.current = dyeField;
+        }
+        const dtScale = Math.min(2.5, dt / 16.67);
+        let inject: { i: number; j: number; dx: number; dy: number } | null = null;
+        if (m.active && !intro) {
+          const gi = (m.x - grid.originX) / CELL_W;
+          const gj = (m.y - grid.originY) / CELL_H;
+          if (gi > -4 && gj > -4 && gi < grid.cols + 4 && gj < grid.rows + 4) {
+            const prev = dyePrevRef.current;
+            const ddx = prev ? gi - prev.i : 0;
+            const ddy = prev ? gj - prev.j : 0;
+            dyePrevRef.current = { i: gi, j: gj };
+            inject = { i: gi, j: gj, dx: ddx, dy: ddy };
+          }
+        } else {
+          dyePrevRef.current = null;
+        }
+        stepDyeField(dyeField, inject, dtScale);
+      } else {
+        dyeField = null;
+      }
+
 
       // Bump scramble seed a few times per second so glyphs inside the disc
       // visibly re-shuffle, matching the source's continuous scramble.
@@ -1062,6 +1216,14 @@ export function AsciiHandsFooter({
         const flowIdxOffset = Math.round(flowWave * FLOW_IDX_AMP * flowAmp);
         const flowBrightness = 1 + flowWave * FLOW_BRIGHTNESS_AMP * flowAmp;
 
+        // Cursor dye density for this cell (0..~1.5). This is the local value
+        // of the fluid field the pointer injects into — the source site does
+        // exactly this with a GPU fluid texture (uFluidDensity).
+        const dyeAmt =
+          dyeField && grid
+            ? Math.min(1.4, dyeField.dye[cellJ * grid.cols + cellI] ?? 0)
+            : 0;
+
         // Ink-on-paper tone: brightness of the source still drives how much ink
         // a cell gets (dark source = background = no ink), but the response is
         // remapped with a lifted black point and a hard S-curve so faint planes
@@ -1075,24 +1237,49 @@ export function AsciiHandsFooter({
         // Ordered-ish dither from the stable cell seed breaks the remaining
         // banding, so neighbouring tones blend instead of stepping.
         const dither = (cellSeed - 0.5) * 0.07;
-        const tonal = Math.min(1, Math.max(0, shade * 0.9 + 0.05 + dither));
+        // Dye lifts the tonal value, which is what pushes the cell into a
+        // heavier glyph and a darker/denser ink (their fluidMultiplier).
+        const tonal = Math.min(
+          1,
+          Math.max(0, shade * 0.9 + 0.05 + dither + dyeAmt * DYE_TONE_BOOST),
+        );
         let r = (232 - tonal * 224) / flowBrightness;
         let g = (233 - tonal * 224) / flowBrightness;
         let bl = (236 - tonal * 226) / flowBrightness;
 
-
+        // Dye colouring: below the threshold the glyph stays graphite; above
+        // it we ramp along the palette (warm → amber → citrus → green) with a
+        // slow hue drift over time, then mix by density so trail edges fade
+        // seamlessly back into grey instead of ending on a hard rim.
+        if (dyeAmt > DYE_COLOR_MIN) {
+          const dRel = Math.min(
+            1,
+            (dyeAmt - DYE_COLOR_MIN) / (1 - DYE_COLOR_MIN),
+          );
+          const hueT = fract(dRel * 0.85 + timeSec * HUE_DRIFT);
+          const [pr, pg, pb] = dyePalette(hueT);
+          // Stronger dye = more saturated; also keeps the glyph readable by
+          // never fully replacing the ink value.
+          const mixK = Math.min(0.92, dRel * 1.15) * (0.45 + tonal * 0.55);
+          r += (pr - r) * mixK;
+          g += (pg - g) * mixK;
+          bl += (pb - bl) * mixK;
+        }
 
         const baseIdx =
-          ((c.idx + flowIdxOffset) % RAMP_LEN + RAMP_LEN) % RAMP_LEN;
+          ((c.idx +
+            flowIdxOffset +
+            Math.round(dyeAmt * DYE_IDX_BOOST)) %
+            RAMP_LEN +
+            RAMP_LEN) %
+          RAMP_LEN;
         let ch = glyphAt(baseIdx);
 
 
         let jitterX = 0;
         let jitterY = 0;
         let revealTilt = 0;
-        // Set true when this cell is covered by a mosaic-shatter tile — we
-        // then skip the ASCII glyph pass so the raw image reads cleanly.
-        let mosaicAlpha = 0;
+
         // Post-front settle alpha — cells that just crossed the front fade
         // the last bit of opacity in over INTRO_SETTLE_WIDTH of armT.
         let cellAlpha = 1;
@@ -1235,71 +1422,9 @@ export function AsciiHandsFooter({
               g += (HG - g) * sharpL;
               bl += (HB - bl) * sharpL;
 
-              // Mosaic-shatter reveal: draw the raw source pixel as a broken
-              // tile behind (in place of) the glyph. Uses the same `gooey`
-              // mask so the shatter edge matches the ASCII reveal edge.
-              if (gooey > MOSAIC_MASK_THRESHOLD) {
-                const shatter = 1 - gooey; // 0 at center, ~1 at disc edge
-                const jx =
-                  (fract(Math.sin(seed * 12.7) * 91.3) - 0.5) *
-                  2 *
-                  MOSAIC_SHATTER_PX * shatterK *
-                  shatter;
-                const jy =
-                  (fract(Math.sin(seed * 41.9) * 57.1) - 0.5) *
-                  2 *
-                  MOSAIC_SHATTER_PX * shatterK *
-                  shatter;
-                // Occasional splatter tiles fling further along arm normal
-                // — small clumps of image break loose from the crowd.
-                const splat = fract(Math.sin(seed * 73.1) * 811.7);
-                const splatterActive = splat < MOSAIC_SPLATTER_PROB ? 1 : 0;
-                const splatMag = splatterActive * MOSAIC_SPLATTER_PX * shatterK * shatter;
-                // Perpendicular to arm axis (rotate arm dir 90°).
-                const normX = -armDy;
-                const normY = armDx;
-                const splatSign =
-                  fract(Math.sin(seed * 19.3) * 313.7) > 0.5 ? 1 : -1;
-                const sx = jx + normX * splatMag * splatSign;
-                const sy = jy + normY * splatMag * splatSign;
-                const scale =
-                  scaleMinDyn +
-                  (MOSAIC_SCALE_MAX - scaleMinDyn) * (1 - shatter);
-                const tw = CELL_W * scale;
-                const th = CELL_H * scale;
-                const tx =
-                  c.x + offX * (0.30 + bb * 0.55 + c.armT * 0.45) +
-                  sx + (CELL_W - tw) * 0.5;
-                const ty =
-                  c.y + offY * (0.30 + bb * 0.55 + c.armT * 0.45) +
-                  sy + (CELL_H - th) * 0.5;
-                // Lookup source color for this cell from grid.color.
-                const colBase =
-                  (Math.floor((c.y - grid.originY) / CELL_H) * grid.cols +
-                    Math.floor((c.x - grid.originX) / CELL_W)) *
-                  3;
-                const cr = grid.color[colBase + 0] ?? 0;
-                const cg = grid.color[colBase + 1] ?? 0;
-                const cb = grid.color[colBase + 2] ?? 0;
-                // Desaturate the source pixel into the same graphite ramp the
-                // glyphs use, so the reveal stays monochrome on the paper.
-                const luma =
-                  (0.2126 * cr + 0.7152 * cg + 0.0722 * cb) / 255;
-                const ink = Math.round(
-                  MOSAIC_INK_LIGHT -
-                    (MOSAIC_INK_LIGHT - MOSAIC_INK_DARK) * (1 - luma),
-                );
-                // Smoothstep-shaped alpha: strongest at the disc core, fading
-                // quadratically through the shattered edge so tiles dissolve
-                // into the surrounding ASCII rather than snapping off.
-                const gg = Math.min(1, Math.max(0, gooey));
-                const ss = gg * gg * (3 - 2 * gg);
-                mosaicAlpha =
-                  Math.pow(ss, alphaGamma) * ss * MOSAIC_MAX_ALPHA;
-                ctx.fillStyle = `rgba(${ink},${ink},${ink},${mosaicAlpha})`;
-                ctx.fillRect(tx, ty, tw, th);
+              // Cursor dye (fluid) handles the visual reveal — no tiles are
+              // drawn over the glyphs.
 
-              }
             }
           }
         }
@@ -1388,56 +1513,8 @@ export function AsciiHandsFooter({
                 if (Math.abs(lockTilt) > Math.abs(revealTilt)) {
                   revealTilt = lockTilt;
                 }
-                if (gooey2 > MOSAIC_MASK_THRESHOLD) {
-                  const shatter = 1 - gooey2;
-                  const jx =
-                    (fract(Math.sin(cellSeed * 12.7) * 91.3) - 0.5) *
-                    2 * MOSAIC_SHATTER_PX * shatterK * shatter;
-                  const jy =
-                    (fract(Math.sin(cellSeed * 41.9) * 57.1) - 0.5) *
-                    2 * MOSAIC_SHATTER_PX * shatterK * shatter;
-                  const splat = fract(Math.sin(cellSeed * 73.1) * 811.7);
-                  const splatterActive =
-                    splat < MOSAIC_SPLATTER_PROB ? 1 : 0;
-                  const splatMag =
-                    splatterActive * MOSAIC_SPLATTER_PX * shatterK * shatter;
-                  const normX = -armDy;
-                  const normY = armDx;
-                  const splatSign =
-                    fract(Math.sin(cellSeed * 19.3) * 313.7) > 0.5 ? 1 : -1;
-                  const sx = jx + normX * splatMag * splatSign;
-                  const sy = jy + normY * splatMag * splatSign;
-                  const scale =
-                    scaleMinDyn +
-                    (MOSAIC_SCALE_MAX - scaleMinDyn) * (1 - shatter);
-                  const tw = CELL_W * scale;
-                  const th = CELL_H * scale;
-                  const tx =
-                    c.x + offX * (0.30 + bb * 0.55 + c.armT * 0.45) +
-                    sx + (CELL_W - tw) * 0.5;
-                  const ty =
-                    c.y + offY * (0.30 + bb * 0.55 + c.armT * 0.45) +
-                    sy + (CELL_H - th) * 0.5;
-                  const colBase = (cellJ * grid.cols + cellI) * 3;
-                  const cr = grid.color[colBase + 0] ?? 0;
-                  const cg = grid.color[colBase + 1] ?? 0;
-                  const cb = grid.color[colBase + 2] ?? 0;
-                  const luma =
-                    (0.2126 * cr + 0.7152 * cg + 0.0722 * cb) / 255;
-                  const ink = Math.round(
-                    MOSAIC_INK_LIGHT -
-                      (MOSAIC_INK_LIGHT - MOSAIC_INK_DARK) * (1 - luma),
-                  );
-                  const gg = Math.min(1, Math.max(0, gooey2));
-                  const ss = gg * gg * (3 - 2 * gg);
-                  const lockAlpha =
-                    Math.pow(ss, alphaGamma) * ss * MOSAIC_MAX_ALPHA;
-                  if (lockAlpha > mosaicAlpha) mosaicAlpha = lockAlpha;
-                  ctx.fillStyle = `rgba(${ink},${ink},${ink},${lockAlpha})`;
-                  ctx.fillRect(tx, ty, tw, th);
-
-                }
               }
+
             }
           }
         }
@@ -1461,15 +1538,9 @@ export function AsciiHandsFooter({
           }
         }
 
-        // The mosaic tile is a shadow behind the glyph, not a replacement: the
-        // glyph keeps most of its opacity so the ASCII surface never vanishes
-        // into a pixelated photo patch.
-        let residueAlpha = 1;
-        if (mosaicAlpha > 0) {
-          const t = Math.min(1, Math.max(0, (mosaicAlpha - fadeLo) / fadeSpan));
-          const fade = t * t * (3 - 2 * t);
-          residueAlpha = 1 - fade * 0.35;
-        }
+        // Glyphs are the only visible layer — nothing is ever painted over them.
+        const residueAlpha = 1;
+
 
         const drawX = c.x + cellOffX + jitterX;
         const drawY = c.y + FONT_PX + cellOffY + jitterY;
