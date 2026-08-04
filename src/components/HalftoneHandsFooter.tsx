@@ -460,7 +460,8 @@ export function HalftoneHandsFooter({
         let density = dot.d * breath;
         let radiusScale = 1;
 
-        if (hoverMode === "magnetic" && cursor.active) {
+        const mode = hoverModeRef.current;
+        if (mode === "magnetic" && cursor.active) {
           const dx = x - cx;
           const dy = y - cy;
           const dist = Math.hypot(dx, dy);
@@ -472,14 +473,14 @@ export function HalftoneHandsFooter({
           x -= Math.cos(angle) * pull;
           y -= Math.sin(angle) * pull;
           radiusScale = 1 + falloff * 0.15;
-        } else if (hoverMode === "deepen" && cursor.active) {
+        } else if (mode === "deepen" && cursor.active) {
           const dx = x - cx;
           const dy = y - cy;
           const dist = Math.hypot(dx, dy);
           const radius = 180;
           const falloff = dist < radius ? smoothstep(1 - dist / radius) : 0;
           density += falloff * 0.22;
-        } else if (hoverMode === "breathe") {
+        } else if (mode === "breathe") {
           const cw = canvas.clientWidth;
           const ch = canvas.clientHeight;
           const bx = x - cw * 0.5;
