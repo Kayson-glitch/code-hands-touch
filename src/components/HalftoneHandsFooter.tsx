@@ -79,7 +79,141 @@ type Dot = {
   cx: number;
 };
 
-type HoverMode = "magnetic" | "deepen" | "breathe";
+// ------------------------------------------------------------- ink fluid
+// Warm, low-saturation dye gradient: pale amber → orange → rose.
+const DYE_STOPS: Array<[number, number, number]> = [
+  [0xe6, 0xcf, 0x9b],
+  [0xe1, 0x84, 0x3a],
+  [0xcd, 0x3c, 0x66],
+];
+
+/** Interpolate the dye gradient at t (0..1). */
+function dyeAt(t: number): [number, number, number] {
+  const x = Math.min(1, Math.max(0, t));
+  const seg = x < 0.5 ? 0 : 1;
+  const f = seg === 0 ? x / 0.5 : (x - 0.5) / 0.5;
+  const a = DYE_STOPS[seg];
+  const b = DYE_STOPS[seg + 1];
+  return [
+    a[0] + (b[0] - a[0]) * f,
+    a[1] + (b[1] - a[1]) * f,
+    a[2] + (b[2] - a[2]) * f,
+  ];
+}
+
+/**
+ * Tiny semi-Lagrangian dye/velocity field (no pressure projection).
+ * The pointer injects dye plus a directional impulse; each step advects both
+ * along the velocity, blurs a little and decays, giving the wispy trailing
+ * smear of ink pushed across paper instead of a hard cursor halo.
+ */
+class FluidField {
+  cols: number;
+  rows: number;
+  cellW: number;
+  cellH: number;
+  u: Float32Array;
+  v: Float32Array;
+  d: Float32Array;
+  private tu: Float32Array;
+  private tv: Float32Array;
+  private td: Float32Array;
+
+  constructor(width: number, height: number, targetCols = 110) {
+    this.cols = Math.max(16, Math.min(targetCols, Math.round(targetCols)));
+    this.rows = Math.max(12, Math.round((this.cols * height) / Math.max(1, width)));
+    this.cellW = width / this.cols;
+    this.cellH = height / this.rows;
+    const n = this.cols * this.rows;
+    this.u = new Float32Array(n);
+    this.v = new Float32Array(n);
+    this.d = new Float32Array(n);
+    this.tu = new Float32Array(n);
+    this.tv = new Float32Array(n);
+    this.td = new Float32Array(n);
+  }
+
+  /** Inject dye + impulse at a canvas-space point. vx/vy are px per second. */
+  splat(px: number, py: number, vx: number, vy: number, strength = 1) {
+    const gi = px / this.cellW;
+    const gj = py / this.cellH;
+    const rad = 2.6;
+    const i0 = Math.max(0, Math.floor(gi - rad));
+    const i1 = Math.min(this.cols - 1, Math.ceil(gi + rad));
+    const j0 = Math.max(0, Math.floor(gj - rad));
+    const j1 = Math.min(this.rows - 1, Math.ceil(gj + rad));
+    const iu = (vx / this.cellW) * 0.55;
+    const iv = (vy / this.cellH) * 0.55;
+    for (let j = j0; j <= j1; j++) {
+      for (let i = i0; i <= i1; i++) {
+        const dx = i + 0.5 - gi;
+        const dy = j + 0.5 - gj;
+        const g = Math.exp(-(dx * dx + dy * dy) / (rad * 0.75));
+        if (g < 0.01) continue;
+        const k = j * this.cols + i;
+        this.d[k] = Math.min(1.6, this.d[k] + g * 0.85 * strength);
+        this.u[k] += iu * g * strength;
+        this.v[k] += iv * g * strength;
+      }
+    }
+  }
+
+  step(dt: number) {
+    const { cols, rows, u, v, d, tu, tv, td } = this;
+    const h = Math.min(0.033, dt);
+    // --- advect dye and velocity backwards along the flow
+    for (let j = 0; j < rows; j++) {
+      for (let i = 0; i < cols; i++) {
+        const k = j * cols + i;
+        const x = i + 0.5 - u[k] * h;
+        const y = j + 0.5 - v[k] * h;
+        td[k] = this.bilinear(d, x, y);
+        tu[k] = this.bilinear(u, x, y) * 0.985;
+        tv[k] = this.bilinear(v, x, y) * 0.985;
+      }
+    }
+    // --- diffuse (single blur pass) + decay
+    const dyeDecay = Math.exp(-h / 1.9);
+    const velDecay = Math.exp(-h / 0.65);
+    for (let j = 0; j < rows; j++) {
+      for (let i = 0; i < cols; i++) {
+        const k = j * cols + i;
+        const l = i > 0 ? td[k - 1] : td[k];
+        const r = i < cols - 1 ? td[k + 1] : td[k];
+        const up = j > 0 ? td[k - cols] : td[k];
+        const dn = j < rows - 1 ? td[k + cols] : td[k];
+        d[k] = (td[k] * 0.62 + (l + r + up + dn) * 0.095) * dyeDecay;
+        if (d[k] < 0.002) d[k] = 0;
+        u[k] = tu[k] * velDecay;
+        v[k] = tv[k] * velDecay;
+      }
+    }
+  }
+
+  private bilinear(f: Float32Array, x: number, y: number) {
+    const { cols, rows } = this;
+    const px = Math.min(cols - 1.001, Math.max(0, x - 0.5));
+    const py = Math.min(rows - 1.001, Math.max(0, y - 0.5));
+    const i = Math.floor(px);
+    const j = Math.floor(py);
+    const fx = px - i;
+    const fy = py - j;
+    const k = j * cols + i;
+    const a = f[k];
+    const b = f[k + 1];
+    const c = f[k + cols];
+    const e = f[k + cols + 1];
+    return (
+      a * (1 - fx) * (1 - fy) + b * fx * (1 - fy) + c * (1 - fx) * fy + e * fx * fy
+    );
+  }
+
+  /** Dye coverage at a canvas-space point. */
+  sample(px: number, py: number) {
+    return this.bilinear(this.d, px / this.cellW, py / this.cellH);
+  }
+}
+
 
 function loadImage(src: string): Promise<HTMLImageElement> {
   return new Promise((resolve, reject) => {
@@ -201,19 +335,11 @@ export function HalftoneHandsFooter({
   const imageRef = useRef<HTMLImageElement | null>(null);
   // Pointer offset in -1..1, smoothed toward the raw target each frame.
   const pointerRef = useRef({ tx: 0, ty: 0, x: 0, y: 0 });
-  // Cursor position in CSS px within the canvas, for hover effects.
-  const cursorRef = useRef({ tx: -9999, ty: -9999, x: -9999, y: -9999, active: false });
-  // Active ripples for the breathe mode: each expands from a cursor position.
-  const ripplesRef = useRef<Array<{ x: number; y: number; t: number }>>([]);
+  // Low-res ink-fluid field driven by the pointer; colours the dots on hover.
+  const fluidRef = useRef<FluidField | null>(null);
   // Scroll-driven playhead: target frame from scroll, eased current frame.
   const playheadRef = useRef({ target: 0, current: 0 });
 
-  const [hoverMode, setHoverMode] = useState<HoverMode>("magnetic");
-  const hoverModeRef = useRef<HoverMode>(hoverMode);
-  useEffect(() => {
-    hoverModeRef.current = hoverMode;
-  }, [hoverMode]);
-  const [showSwitcher, setShowSwitcher] = useState(true);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -262,8 +388,10 @@ export function HalftoneHandsFooter({
       canvas.width = Math.floor(w * dpr);
       canvas.height = Math.floor(h * dpr);
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      if (w > 0 && h > 0) fluidRef.current = new FluidField(w, h);
       recomputeBand();
     };
+
 
     loadImage(handsFramesAsset.url).then((img) => {
       imageRef.current = img;
@@ -343,6 +471,7 @@ export function HalftoneHandsFooter({
 
 
 
+    let lastMove: { x: number; y: number; t: number } | null = null;
     const onMove = (e: MouseEvent) => {
       const rect = canvas.getBoundingClientRect();
       pointerRef.current.tx = ((e.clientX - rect.left) / rect.width) * 2 - 1;
@@ -350,30 +479,46 @@ export function HalftoneHandsFooter({
 
       const cx = e.clientX - rect.left;
       const cy = e.clientY - rect.top;
-      cursorRef.current.tx = cx;
-      cursorRef.current.ty = cy;
-      cursorRef.current.active = true;
-
-      // Breathe mode: spawn a ripple when the cursor has travelled far enough.
-      const ripples = ripplesRef.current;
-      const last = ripples[ripples.length - 1];
-      if (
-        hoverModeRef.current === "breathe" &&
-        (!last || Math.hypot(cx - last.x, cy - last.y) > 36)
-      ) {
-        ripples.push({ x: cx, y: cy, t: performance.now() });
-        if (ripples.length > 5) ripples.shift();
+      const fluid = fluidRef.current;
+      if (fluid) {
+        const prev = lastMove;
+        const now = performance.now();
+        let vx = 0;
+        let vy = 0;
+        if (prev) {
+          const dt = Math.max(0.008, Math.min(0.1, (now - prev.t) / 1000));
+          vx = (cx - prev.x) / dt;
+          vy = (cy - prev.y) / dt;
+          // Interpolate along the travelled segment so a fast flick still
+          // leaves a continuous trail instead of dashed blobs.
+          const dist = Math.hypot(cx - prev.x, cy - prev.y);
+          const steps = Math.min(12, Math.max(1, Math.round(dist / 14)));
+          for (let s = 1; s <= steps; s++) {
+            const f = s / steps;
+            fluid.splat(
+              prev.x + (cx - prev.x) * f,
+              prev.y + (cy - prev.y) * f,
+              vx,
+              vy,
+              1 / steps,
+            );
+          }
+        } else {
+          fluid.splat(cx, cy, 0, 0, 1);
+        }
+        lastMove = { x: cx, y: cy, t: now };
       }
     };
     const onLeave = () => {
       pointerRef.current.tx = 0;
       pointerRef.current.ty = 0;
-      cursorRef.current.active = false;
+      lastMove = null;
     };
     if (!prefersReduce) {
       window.addEventListener("mousemove", onMove, { passive: true });
       window.addEventListener("mouseleave", onLeave);
     }
+
 
     // Half-pitch is the theoretical maximum where neighbouring dots touch.
     const maxR = pitch * 0.5 * DOT_FILL;
@@ -433,86 +578,48 @@ export function HalftoneHandsFooter({
         : 1 + Math.sin((now / BREATH_PERIOD) * Math.PI * 2) * BREATH_AMP;
 
       const dots = dotsForFrame(Math.round(ph.current));
-      const cursor = cursorRef.current;
-      if (!prefersReduce) {
-        cursor.x += (cursor.tx - cursor.x) * 0.12;
-        cursor.y += (cursor.ty - cursor.y) * 0.12;
-      }
-      const cx = cursor.active ? cursor.x : -9999;
-      const cy = cursor.active ? cursor.y : -9999;
 
-      // Breathe mode: a slow global spatial pulse plus expanding ripples from the cursor.
-      const globalBreath = prefersReduce
-        ? 1
-        : 1 + Math.sin((now / 3200) * Math.PI * 2) * 0.02;
-      const activeRipples = prefersReduce
-        ? []
-        : ripplesRef.current.filter((r) => now - r.t < 1400);
-      ripplesRef.current = activeRipples;
+      // Step the ink-fluid field: dye advects along the velocity it was pushed
+      // with, diffuses slightly and fades back to nothing.
+      const fluid = fluidRef.current;
+      if (fluid && !prefersReduce) fluid.step(dt);
 
       for (let k = 0; k < dots.length; k++) {
         const dot = dots[k];
         // Centre dots drift more than edge dots → a shallow depth read.
         const weight = 0.35 + dot.cx * 0.65;
-        let x = dot.x + p.x * PARALLAX_X * weight;
-        let y = dot.y + p.y * PARALLAX_Y * weight;
+        const x = dot.x + p.x * PARALLAX_X * weight;
+        const y = dot.y + p.y * PARALLAX_Y * weight;
 
-        let density = dot.d * breath;
-        let radiusScale = 1;
+        const density = dot.d * breath;
 
-        const mode = hoverModeRef.current;
-        if (mode === "magnetic" && cursor.active) {
-          const dx = x - cx;
-          const dy = y - cy;
-          const dist = Math.hypot(dx, dy);
-          const radius = 160;
-          const falloff = dist < radius ? smoothstep(1 - dist / radius) : 0;
-          const maxPull = 8;
-          const pull = falloff * maxPull;
-          const angle = Math.atan2(dy, dx);
-          x -= Math.cos(angle) * pull;
-          y -= Math.sin(angle) * pull;
-          radiusScale = 1 + falloff * 0.15;
-        } else if (mode === "deepen" && cursor.active) {
-          const dx = x - cx;
-          const dy = y - cy;
-          const dist = Math.hypot(dx, dy);
-          const radius = 180;
-          const falloff = dist < radius ? smoothstep(1 - dist / radius) : 0;
-          density += falloff * 0.22;
-        } else if (mode === "breathe") {
-          const cw = canvas.clientWidth;
-          const ch = canvas.clientHeight;
-          const bx = x - cw * 0.5;
-          const by = y - ch * 0.5;
-          x = cw * 0.5 + bx * globalBreath;
-          y = ch * 0.5 + by * globalBreath;
-
-          let rippleScale = 0;
-          for (const ripple of activeRipples) {
-            const age = (now - ripple.t) / 1200;
-            const rippleRadius = age * 320;
-            const dist = Math.hypot(x - ripple.x, y - ripple.y);
-            const envelope =
-              Math.exp(-age * 2.5) * Math.max(0, 1 - Math.abs(dist - rippleRadius) / 120);
-            const wave = Math.sin(((dist - rippleRadius) / 44) * Math.PI);
-            rippleScale += wave * envelope * 0.12;
-          }
-          radiusScale = 1 + rippleScale;
-        }
+        // Dye coverage under this dot (0 when the pointer never passed here).
+        const dye = fluid ? Math.min(1, fluid.sample(x, y) * 1.25) : 0;
+        const radiusScale = 1 + dye * 0.06;
 
         const raw = Math.min(1, density);
         // Soft ceiling: large shadow regions no longer all clamp to 1.0, which
         // is what made them fuse into one flat slab.
         const d = raw < 0.8 ? raw : 0.8 + (raw - 0.8) * 0.7;
         // Area ∝ coverage — the physically correct halftone response.
-        let r = maxR * Math.sqrt(d) * radiusScale;
+        const r = maxR * Math.sqrt(d) * radiusScale;
         if (r < 0.16) continue;
 
         // Value carries volume alongside area: light grey on the paper-facing
-        // planes, near-charcoal (slightly cool) in the deepest shadows.
+        // planes, deeper grey in the shadows. Where the ink-fluid has been
+        // pushed, that grey blends toward the warm dye gradient.
         const [ir, ig, ib] = inkAt(d);
-        ctx.fillStyle = `rgb(${ir},${ig},${ib})`;
+        if (dye > 0.004) {
+          // Deeper dots take more colour, so volume survives the tint.
+          const mix = smoothstep(dye) * (0.45 + d * 0.55);
+          const [dr, dg, db] = dyeAt(Math.min(1, dye * 0.9 + d * 0.1));
+          ctx.fillStyle = `rgb(${Math.round(ir + (dr - ir) * mix)},${Math.round(
+            ig + (dg - ig) * mix,
+          )},${Math.round(ib + (db - ib) * mix)})`;
+        } else {
+          ctx.fillStyle = `rgb(${ir},${ig},${ib})`;
+        }
+
 
         if (d <= SQUARE_AT) {
           ctx.beginPath();
@@ -653,47 +760,7 @@ export function HalftoneHandsFooter({
         </div>
       )}
 
-      {stage === "hands" && showSwitcher && (
-        <div
-          className="absolute flex flex-col gap-2 rounded-xl border border-black/10 bg-white/80 p-2 shadow-lg backdrop-blur-md"
-          style={{ zIndex: 30, right: 20, bottom: 20 }}
-        >
-          <div className="flex items-center justify-between px-1">
-            <span className="text-[11px] font-medium tracking-wide text-black/60">
-              HOVER 效果
-            </span>
-            <button
-              type="button"
-              onClick={() => setShowSwitcher(false)}
-              className="text-[11px] leading-none text-black/40 transition-colors hover:text-black"
-              aria-label="关闭切换器"
-            >
-              ✕
-            </button>
-          </div>
-          <div className="flex gap-1">
-            {[
-              { key: "magnetic", label: "磁吸" },
-              { key: "deepen", label: "加深" },
-              { key: "breathe", label: "呼吸" },
-            ].map((m) => (
-              <button
-                key={m.key}
-                type="button"
-                onClick={() => setHoverMode(m.key as HoverMode)}
-                className={[
-                  "rounded-lg px-3 py-1.5 text-xs font-medium transition-all",
-                  hoverMode === m.key
-                    ? "bg-black text-white shadow-sm"
-                    : "bg-black/5 text-black/70 hover:bg-black/10 hover:text-black",
-                ].join(" ")}
-              >
-                {m.label}
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
+
     </section>
   );
 }
