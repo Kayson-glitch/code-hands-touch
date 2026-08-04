@@ -80,7 +80,15 @@ const REVEAL_TILT_MAX_DEG = 12;
 const MOSAIC_MASK_THRESHOLD = 0.04;
 const MOSAIC_SHATTER_PX = 1.8; // max positional break at the disc edge
 const MOSAIC_SCALE_MIN = 0.88; // min tile occupancy at the disc edge
-const MOSAIC_SCALE_MAX = 1.12; // max tile occupancy (center)
+const MOSAIC_SCALE_MAX = 0.92; // max tile occupancy (center) — leaves paper gaps
+// Peak opacity of a mosaic tile. Kept well under 1 so the photo reads as a
+// shadow behind the glyphs instead of covering them like a censor bar.
+const MOSAIC_MAX_ALPHA = 0.55;
+// Ink range the mosaic tiles are remapped into (paper → carbon), matching the
+// glyph palette so the reveal never introduces hue.
+const MOSAIC_INK_LIGHT = 226;
+const MOSAIC_INK_DARK = 24;
+
 const MOSAIC_SPLATTER_PROB = 0.06; // % of tiles that fling further out
 const MOSAIC_SPLATTER_PX = 5;
 // Click-to-lock reveal — per hand toggle that expands a mosaic disc from
@@ -111,7 +119,11 @@ const CREASE_DELTA = 0.045;
 const CREASE_FALLOFF = 0.55;
 // Connected components smaller than this stay on the global tonal curve
 // (speckles shouldn't get their own full-range stretch).
-const MIN_PART_CELLS = 24;
+const MIN_PART_CELLS = 40;
+// Connected components smaller than this are dropped entirely — they are the
+// speckles that showed up as stray glyph clusters away from the hands.
+const DROP_PART_CELLS = 10;
+
 // How much of each finger's tone comes from its own local range vs the global
 // one. Higher = more per-finger volume, but larger tonal jumps between parts.
 const PART_LOCAL_MIX = 0.55;
@@ -436,7 +448,10 @@ function sampleImage(
     const gi = r.j * cols + r.i;
     const pid = partOf[gi];
     const part = parts[pid];
+    // Drop speckle components outright — they read as floating noise glyphs.
+    if (part.count < DROP_PART_CELLS) continue;
     const bigEnough = part.count >= MIN_PART_CELLS;
+
     const globalStretch = Math.min(1, Math.max(0, (r.y - lo) / span));
     let stretched = globalStretch;
     if (bigEnough) {
@@ -1266,14 +1281,24 @@ export function AsciiHandsFooter({
                 const cr = grid.color[colBase + 0] ?? 0;
                 const cg = grid.color[colBase + 1] ?? 0;
                 const cb = grid.color[colBase + 2] ?? 0;
-                // Smoothstep-shaped alpha: saturated at the disc core,
-                // gracefully fading through the shattered edge so tiles
-                // dissolve into the surrounding ASCII rather than snapping off.
+                // Desaturate the source pixel into the same graphite ramp the
+                // glyphs use, so the reveal stays monochrome on the paper.
+                const luma =
+                  (0.2126 * cr + 0.7152 * cg + 0.0722 * cb) / 255;
+                const ink = Math.round(
+                  MOSAIC_INK_LIGHT -
+                    (MOSAIC_INK_LIGHT - MOSAIC_INK_DARK) * (1 - luma),
+                );
+                // Smoothstep-shaped alpha: strongest at the disc core, fading
+                // quadratically through the shattered edge so tiles dissolve
+                // into the surrounding ASCII rather than snapping off.
                 const gg = Math.min(1, Math.max(0, gooey));
                 const ss = gg * gg * (3 - 2 * gg);
-                mosaicAlpha = Math.pow(ss, alphaGamma);
-                ctx.fillStyle = `rgba(${cr},${cg},${cb},${mosaicAlpha})`;
+                mosaicAlpha =
+                  Math.pow(ss, alphaGamma) * ss * MOSAIC_MAX_ALPHA;
+                ctx.fillStyle = `rgba(${ink},${ink},${ink},${mosaicAlpha})`;
                 ctx.fillRect(tx, ty, tw, th);
+
               }
             }
           }
@@ -1397,12 +1422,20 @@ export function AsciiHandsFooter({
                   const cr = grid.color[colBase + 0] ?? 0;
                   const cg = grid.color[colBase + 1] ?? 0;
                   const cb = grid.color[colBase + 2] ?? 0;
+                  const luma =
+                    (0.2126 * cr + 0.7152 * cg + 0.0722 * cb) / 255;
+                  const ink = Math.round(
+                    MOSAIC_INK_LIGHT -
+                      (MOSAIC_INK_LIGHT - MOSAIC_INK_DARK) * (1 - luma),
+                  );
                   const gg = Math.min(1, Math.max(0, gooey2));
                   const ss = gg * gg * (3 - 2 * gg);
-                  const lockAlpha = Math.pow(ss, alphaGamma);
+                  const lockAlpha =
+                    Math.pow(ss, alphaGamma) * ss * MOSAIC_MAX_ALPHA;
                   if (lockAlpha > mosaicAlpha) mosaicAlpha = lockAlpha;
-                  ctx.fillStyle = `rgba(${cr},${cg},${cb},${lockAlpha})`;
+                  ctx.fillStyle = `rgba(${ink},${ink},${ink},${lockAlpha})`;
                   ctx.fillRect(tx, ty, tw, th);
+
                 }
               }
             }
@@ -1428,16 +1461,16 @@ export function AsciiHandsFooter({
           }
         }
 
-        // Continuous mosaic→glyph fade: as the mosaic tile grows more
-        // opaque, the underlying ASCII glyph smoothly recedes. No hard
-        // switch, so edges dissolve rather than pop.
+        // The mosaic tile is a shadow behind the glyph, not a replacement: the
+        // glyph keeps most of its opacity so the ASCII surface never vanishes
+        // into a pixelated photo patch.
         let residueAlpha = 1;
         if (mosaicAlpha > 0) {
           const t = Math.min(1, Math.max(0, (mosaicAlpha - fadeLo) / fadeSpan));
           const fade = t * t * (3 - 2 * t);
-          residueAlpha = 1 - fade;
-          if (residueAlpha < 0.02) continue;
+          residueAlpha = 1 - fade * 0.35;
         }
+
         const drawX = c.x + cellOffX + jitterX;
         const drawY = c.y + FONT_PX + cellOffY + jitterY;
         const finalAngle = angle + revealTilt;
