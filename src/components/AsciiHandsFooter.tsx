@@ -217,14 +217,6 @@ function stepDyeField(
   }
 }
 
-// Click-to-lock reveal — per hand toggle that expands a mosaic disc from
-// the click point until it fully covers that hand, then collapses on the
-// next click. Timings kept snappy but eased so the transition reads as
-// fluid rather than instant.
-const LOCK_EXPAND_MS = 900;
-const LOCK_COLLAPSE_MS = 520;
-const LOCK_SOFTNESS_UV = 0.045;
-const LOCK_RADIUS_MARGIN_UV = 0.025;
 // Continuous character flow along arm skeleton — a low-frequency, time-driven
 // phase rides along `armT` so glyphs shimmer/drift between neighbouring ramp
 // densities. Independent of hover; gives the piece a subtle "always alive" feel.
