@@ -21,7 +21,10 @@ type Cell = {
   ch: string;
   armT: number; // 0..1 along-arm progress, 0 = edge/root, 1 = fingertip/center
   isEdge?: boolean; // true if cell touches a background cell (silhouette outline)
+  partId: number; // connected-component id after finger creases are cut (-1 = tiny/unassigned)
+  partT: number; // 0..1 position inside the part along its long axis (root → tip)
 };
+
 
 type Grid = {
   cols: number;
