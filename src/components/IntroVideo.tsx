@@ -342,8 +342,8 @@ const FRAG = /* glsl */ `
         vec2 nrm = normalize(pw + vec2(1e-4));
         vec2 pxNrm = nrm / uResolution;
 
-        // (1) Scanlines — echo GlitchGrainOverlay horizontal lines.
-        float scan = sin(gl_FragCoord.y * 1.6 + t * 4.0) * 0.08;
+        // (1) Scanlines — echo GlitchGrainOverlay horizontal lines (dark for light bg).
+        float scan = sin(gl_FragCoord.y * 1.6 + t * 4.0) * -0.08;
 
         // (2) Chroma split along the edge normal (~0.9px).
         vec2 chOff = pxNrm * 0.9;
@@ -360,7 +360,7 @@ const FRAG = /* glsl */ `
 
         // (4) High-freq grain on the core band.
         float eg = fract(sin(dot(gl_FragCoord.xy + t * 37.0, vec2(12.9898, 78.233))) * 43758.5453);
-        float grainN = (eg - 0.5) * 0.08;
+        float grainN = (eg - 0.5) * -0.08;
 
         // Compose: chroma split & shear blended into col; add scanline + grain.
         vec3 mixed = mix(col, chroma, 0.55);
