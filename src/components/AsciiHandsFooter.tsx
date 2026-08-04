@@ -303,14 +303,106 @@ function sampleImage(
   };
   if (raws.length === 0) return { cells: [], grid: emptyGrid };
 
+  // ---- Finger separation -------------------------------------------------
+  // The source photo has fingers touching, so a pure luminance ramp fuses them
+  // into one blob. Detect the dark valley that runs between two touching
+  // fingers (a cell that is clearly darker than the source pixels on both
+  // sides along some axis) and carve it out: those cells get no glyph, which
+  // leaves a 1-cell gap that reads as a finger seam.
+  const lumaG = new Float32Array(cols * rows).fill(-1);
+  for (const r of raws) lumaG[r.j * cols + r.i] = r.y;
+  const lumaAt = (i: number, j: number) =>
+    i < 0 || j < 0 || i >= cols || j >= rows ? -1 : lumaG[j * cols + i];
+  const isCrease = new Uint8Array(cols * rows);
+  const VALLEY_DIRS: Array<[number, number]> = [
+    [1, 0],
+    [0, 1],
+    [1, 1],
+    [1, -1],
+  ];
+  for (const r of raws) {
+    for (const [di, dj] of VALLEY_DIRS) {
+      const a = lumaAt(r.i - di * CREASE_SPAN, r.j - dj * CREASE_SPAN);
+      const b2 = lumaAt(r.i + di * CREASE_SPAN, r.j + dj * CREASE_SPAN);
+      if (a < 0 || b2 < 0) continue;
+      if (a - r.y > CREASE_DELTA && b2 - r.y > CREASE_DELTA) {
+        isCrease[r.j * cols + r.i] = 1;
+        break;
+      }
+    }
+  }
+  const kept = raws.filter((r) => !isCrease[r.j * cols + r.i]);
+  if (kept.length === 0) return { cells: [], grid: emptyGrid };
+
+  // ---- Connected components (one per finger / palm / forearm) -------------
+  const partOf = new Int32Array(cols * rows).fill(-1);
+  const isFg = new Uint8Array(cols * rows);
+  for (const r of kept) isFg[r.j * cols + r.i] = 1;
+  type Part = {
+    count: number;
+    minI: number;
+    maxI: number;
+    minJ: number;
+    maxJ: number;
+    lumas: number[];
+  };
+  const parts: Part[] = [];
+  const stack: number[] = [];
+  for (const r of kept) {
+    const start = r.j * cols + r.i;
+    if (partOf[start] !== -1) continue;
+    const id = parts.length;
+    const part: Part = {
+      count: 0,
+      minI: r.i,
+      maxI: r.i,
+      minJ: r.j,
+      maxJ: r.j,
+      lumas: [],
+    };
+    parts.push(part);
+    partOf[start] = id;
+    stack.length = 0;
+    stack.push(start);
+    while (stack.length) {
+      const p = stack.pop()!;
+      const pi = p % cols;
+      const pj = (p - pi) / cols;
+      part.count++;
+      if (pi < part.minI) part.minI = pi;
+      if (pi > part.maxI) part.maxI = pi;
+      if (pj < part.minJ) part.minJ = pj;
+      if (pj > part.maxJ) part.maxJ = pj;
+      part.lumas.push(lumaG[p]);
+      const neighbors = [
+        pi > 0 ? p - 1 : -1,
+        pi < cols - 1 ? p + 1 : -1,
+        pj > 0 ? p - cols : -1,
+        pj < rows - 1 ? p + cols : -1,
+      ];
+      for (const n of neighbors) {
+        if (n < 0) continue;
+        if (!isFg[n] || partOf[n] !== -1) continue;
+        partOf[n] = id;
+        stack.push(n);
+      }
+    }
+  }
+  // Per-part local tonal window — lets a finger use the full ink range instead
+  // of being flattened by the (much brighter) palm.
+  const partLo: number[] = [];
+  const partHi: number[] = [];
+  for (const part of parts) {
+    const s = part.lumas.slice().sort((a, b) => a - b);
+    partLo.push(s[Math.floor(s.length * 0.06)] ?? 0);
+    partHi.push(s[Math.floor(s.length * 0.97)] ?? 1);
+  }
+
   // Percentile stretch: 2nd..98th → 0..1, then mild gamma to lift midtones.
   const sorted = raws.map((r) => r.y).sort((a, b) => a - b);
   const lo = sorted[Math.floor(sorted.length * 0.05)];
   const hi = sorted[Math.floor(sorted.length * 0.99)];
   const span = Math.max(1e-4, hi - lo);
-  // gamma < 1 lifts midtones toward highlight → brighter overall while keeping contrast.
-  // Slightly stronger gamma plus a gentle S-curve deepens the light-to-dark
-  // transition so the hand reads as more sculptural.
   const gamma = 0.86;
 
   const silIdx = new Int32Array(cols * rows).fill(-1);
@@ -320,15 +412,50 @@ function sampleImage(
   const smoothstep = (x: number) => x * x * (3 - 2 * x);
 
   const cells: Cell[] = [];
-  for (const r of raws) {
-    const stretched = Math.min(1, Math.max(0, (r.y - lo) / span));
+  for (const r of kept) {
+    const gi = r.j * cols + r.i;
+    const pid = partOf[gi];
+    const part = parts[pid];
+    const bigEnough = part.count >= MIN_PART_CELLS;
+    const globalStretch = Math.min(1, Math.max(0, (r.y - lo) / span));
+    let stretched = globalStretch;
+    if (bigEnough) {
+      const pSpan = Math.max(1e-4, partHi[pid] - partLo[pid]);
+      const local = Math.min(1, Math.max(0, (r.y - partLo[pid]) / pSpan));
+      stretched = globalStretch * (1 - PART_LOCAL_MIX) + local * PART_LOCAL_MIX;
+    }
     // Feather partial-alpha cells toward the low end of the ramp so the
     // silhouette edge dissolves into sparser glyphs instead of stepping.
     const feather = Math.pow(r.a, 0.65);
     const g = Math.pow(stretched, gamma);
-    const b = smoothstep(g) * feather;
+    let b = smoothstep(g) * feather;
+    // Cells touching a carved crease fade out so the seam reads soft, not cut.
+    let nearCrease = false;
+    for (let dj = -1; dj <= 1 && !nearCrease; dj++) {
+      for (let di = -1; di <= 1; di++) {
+        const ni = r.i + di;
+        const nj = r.j + dj;
+        if (ni < 0 || nj < 0 || ni >= cols || nj >= rows) continue;
+        if (isCrease[nj * cols + ni]) {
+          nearCrease = true;
+          break;
+        }
+      }
+    }
+    if (nearCrease) b *= CREASE_FALLOFF;
+    // Part-local position along the component's long axis (root → tip).
+    const wI = part.maxI - part.minI;
+    const wJ = part.maxJ - part.minJ;
+    const partT =
+      wI >= wJ
+        ? wI > 0
+          ? (r.i - part.minI) / wI
+          : 0
+        : wJ > 0
+          ? (r.j - part.minJ) / wJ
+          : 0;
     const idx = indexFor(b);
-    silIdx[r.j * cols + r.i] = cells.length;
+    silIdx[gi] = cells.length;
     cells.push({
       x: targetRect.x + r.i * CELL_W,
       y: targetRect.y + r.j * CELL_H,
@@ -336,6 +463,8 @@ function sampleImage(
       idx,
       ch: glyphAt(idx),
       armT: 0,
+      partId: bigEnough ? pid : -1,
+      partT,
     });
   }
   // Compute per-cell armT by projecting onto the nearest arm-skeleton
@@ -359,12 +488,13 @@ function sampleImage(
   }
 
   // Edge detection: a cell is an outline edge if any of its 8 neighbors is
-  // background (silIdx === -1). This marks the outer silhouette of fingers and
-  // palms so we can draw a subtle lift stroke behind the glyph.
+  // background (silIdx === -1) or belongs to a different part — so each finger
+  // gets its own outline instead of one merged silhouette.
   for (let k = 0; k < cells.length; k++) {
     const c = cells[k];
     const ci = Math.round((c.x - targetRect.x) / CELL_W);
     const cj = Math.round((c.y - targetRect.y) / CELL_H);
+    const ownPart = partOf[cj * cols + ci];
     let isEdge = false;
     for (let dj = -1; dj <= 1 && !isEdge; dj++) {
       for (let di = -1; di <= 1; di++) {
@@ -375,7 +505,8 @@ function sampleImage(
           isEdge = true;
           break;
         }
-        if (silIdx[nj * cols + ni] === -1) {
+        const nIdx = nj * cols + ni;
+        if (silIdx[nIdx] === -1 || partOf[nIdx] !== ownPart) {
           isEdge = true;
           break;
         }
@@ -383,6 +514,7 @@ function sampleImage(
     }
     c.isEdge = isEdge;
   }
+
 
   return {
     cells,
