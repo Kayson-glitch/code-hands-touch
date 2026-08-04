@@ -1422,12 +1422,20 @@ export function AsciiHandsFooter({
                   const cr = grid.color[colBase + 0] ?? 0;
                   const cg = grid.color[colBase + 1] ?? 0;
                   const cb = grid.color[colBase + 2] ?? 0;
+                  const luma =
+                    (0.2126 * cr + 0.7152 * cg + 0.0722 * cb) / 255;
+                  const ink = Math.round(
+                    MOSAIC_INK_LIGHT -
+                      (MOSAIC_INK_LIGHT - MOSAIC_INK_DARK) * (1 - luma),
+                  );
                   const gg = Math.min(1, Math.max(0, gooey2));
                   const ss = gg * gg * (3 - 2 * gg);
-                  const lockAlpha = Math.pow(ss, alphaGamma);
+                  const lockAlpha =
+                    Math.pow(ss, alphaGamma) * ss * MOSAIC_MAX_ALPHA;
                   if (lockAlpha > mosaicAlpha) mosaicAlpha = lockAlpha;
-                  ctx.fillStyle = `rgba(${cr},${cg},${cb},${lockAlpha})`;
+                  ctx.fillStyle = `rgba(${ink},${ink},${ink},${lockAlpha})`;
                   ctx.fillRect(tx, ty, tw, th);
+
                 }
               }
             }
