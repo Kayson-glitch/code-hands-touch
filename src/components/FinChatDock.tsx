@@ -117,7 +117,7 @@ export function FinChatDock() {
               <button
                 key={s}
                 onClick={() => pickSuggestion(s)}
-                className="pointer-events-auto rounded-[20px] bg-white/10 px-4 py-2.5 text-left text-white backdrop-blur-md transition-colors hover:bg-white/15"
+                className="pointer-events-auto rounded-[20px] bg-black/[0.06] px-4 py-2.5 text-left text-black backdrop-blur-md transition-colors hover:bg-black/10"
                 style={{
                   fontSize: 14,
                   lineHeight: "22px",
@@ -135,11 +135,13 @@ export function FinChatDock() {
           className="pointer-events-auto flex items-end gap-2 rounded-full bg-white px-3 py-2"
           onClick={() => !expanded && expand()}
           style={{
-            boxShadow: "0 8px 32px rgba(0,0,0,0.35)",
+            boxShadow: "0 8px 28px rgba(10,10,10,0.12)",
+            border: "1px solid rgba(10,10,10,0.08)",
             cursor: expanded ? "text" : "pointer",
             transition: "box-shadow 300ms ease",
           }}
         >
+
           {expanded ? (
             <textarea
             ref={inputRef}

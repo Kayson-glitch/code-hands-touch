@@ -1339,8 +1339,8 @@ export function AsciiHandsFooter({
     // Also paint html/body black immediately, so the single frame where
     // <IntroVideo> unmounts can't reveal the theme's white body background.
     if (typeof document !== "undefined") {
-      document.documentElement.style.backgroundColor = "#0a0a0a";
-      document.body.style.backgroundColor = "#0a0a0a";
+      document.documentElement.style.backgroundColor = "#F4F1EA";
+      document.body.style.backgroundColor = "#F4F1EA";
     }
     setStage("hands");
     // Delay unmounting the intro video by two frames. The video's last
@@ -1364,7 +1364,7 @@ export function AsciiHandsFooter({
     <section
       className="relative w-full overflow-hidden"
       style={{
-        backgroundColor: bgDark ? "#000" : "#EFE7DA",
+        backgroundColor: "#F4F1EA",
         height: "100vh",
         minHeight: 600,
       }}
@@ -1378,7 +1378,7 @@ export function AsciiHandsFooter({
           style={{
             position: "fixed",
             inset: 0,
-            background: "#000",
+            background: "#F4F1EA",
             zIndex: -1,
             pointerEvents: "none",
           }}
