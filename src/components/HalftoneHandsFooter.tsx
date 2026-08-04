@@ -18,24 +18,27 @@ import { AuroraIntro } from "@/components/AuroraIntro";
  */
 
 // ---------------------------------------------------------------- tuning
-// Grid pitch in CSS px (per layout tier below). Radius peaks slightly under
-// half the pitch so the darkest dots almost touch but never merge into blobs.
-const DOT_FILL = 0.46;
-// Luminance below this (i.e. lighter than) is left as bare paper.
-const MIN_DENSITY = 0.055;
-// Density → radius curve. <1 grows mid dots faster, keeping midtones readable.
-const RADIUS_EXP = 0.78;
-// Neutral ink ramp: lightest dot → darkest dot.
-const LIGHT_GREY = 0xc9;
-const DARK_GREY = 0x11;
-// Edge dissolve: fraction of the band width/height used for the falloff.
-const FADE_X = 0.3;
-const FADE_Y = 0.26;
+// Radius is a fraction of the half-pitch; 0.98 lets the darkest dots almost
+// touch, matching a real halftone screen at high coverage.
+const DOT_FILL = 0.98;
+// Coverage below this is left as bare paper.
+const MIN_DENSITY = 0.035;
+// Above this coverage the dot squares off (superellipse), as on a print screen.
+const SQUARE_AT = 0.75;
+// Single mid-grey ink. Tone comes from dot AREA, not from colour.
+const INK_LIGHT = 0xa8;
+const INK_DARK = 0x8c;
 // Pointer parallax (CSS px at full deflection) + tonal breathing amplitude.
 const PARALLAX_X = 7;
 const PARALLAX_Y = 4;
 const BREATH_AMP = 0.05;
 const BREATH_PERIOD = 5200;
+
+/** 4x4 ordered dither matrix, normalised to 0..1 — breaks up flat banding. */
+const BAYER = [
+  0, 8, 2, 10, 12, 4, 14, 6, 3, 11, 1, 9, 15, 7, 13, 5,
+].map((v) => (v + 0.5) / 16);
+
 
 type Dot = {
   x: number;
@@ -112,32 +115,45 @@ function sampleDots(
   (octx as unknown as { filter: string }).filter = "none";
   const data = octx.getImageData(0, 0, cols, rows).data;
 
+  // Pass 1 — raw premultiplied luma per cell, plus the tonal range present so
+  // the coverage curve can be normalised (the source sits almost entirely in
+  // the shadows, so a raw mapping would collapse to a flat blob).
+  const raw = new Float32Array(cols * rows);
+  let lo = 1;
+  let hi = 0;
+  for (let k = 0; k < cols * rows; k++) {
+    const p = k * 4;
+    const a = data[p + 3] / 255;
+    const luma =
+      (a * (0.2126 * data[p] + 0.7152 * data[p + 1] + 0.0722 * data[p + 2])) / 255;
+    raw[k] = luma;
+    if (luma > hi) hi = luma;
+    if (luma > 0.004 && luma < lo) lo = luma;
+  }
+  const span = Math.max(0.08, hi - lo);
+
   const dots: Dot[] = [];
   for (let j = 0; j < rows; j++) {
     for (let i = 0; i < cols; i++) {
-      const p = (j * cols + i) * 4;
-      const a = data[p + 3] / 255;
-      if (a < 0.12) continue;
-      // Rec.709 luma, premultiplied so soft PNG edges don't read as shadow.
-      const luma =
-        (a * (0.2126 * data[p] + 0.7152 * data[p + 1] + 0.0722 * data[p + 2])) / 255;
-
-      // The source is a lit subject on black, so luma itself *is* the form:
-      // bright = lit plane, dark = falling into shadow / background.
-      let density = Math.min(1, Math.max(0, luma * 1.12));
-
-      // Edge dissolve — horizontal (outer frame) and vertical (wrists).
+      const k = j * cols + i;
       const u = (i + 0.5) / cols;
       const v = (j + 0.5) / rows;
-      const fx = Math.min(smoothstep(u / FADE_X), smoothstep((1 - u) / FADE_X));
-      const fy = Math.min(smoothstep(v / FADE_Y), smoothstep((1 - v) / FADE_Y));
-      const fade = Math.min(1, fx * 0.75 + 0.25) * Math.min(1, fy * 0.8 + 0.2);
-      density *= fade;
 
-      // Stable stochastic drop-out: near the edges the surviving dots scatter.
-      const r = hash2(i, j);
-      if (r > 0.12 + fade * 0.92) continue;
+      // Normalised, near-linear coverage: 0 = paper, 1 = dots nearly touching.
+      const t = Math.min(1, Math.max(0, (raw[k] - lo) / span));
+      let density = Math.pow(t, 0.72);
+
+      // Ordered dither on the threshold only — keeps continuous tone in the
+      // midtones instead of stepping into visible bands of equal dots.
+      const dither = (BAYER[(j & 3) * 4 + (i & 3)] - 0.5) * 0.07;
+      density = Math.min(1, Math.max(0, density + dither));
+
       if (density < MIN_DENSITY) continue;
+
+      // Scattered dissolve: faint cells survive only sometimes, so the mass
+      // frays into isolated single dots instead of fading out as a block.
+      const keep = smoothstep((density - MIN_DENSITY) / 0.22);
+      if (hash2(i, j) > 0.16 + keep * 0.84) continue;
 
       dots.push({
         x: rect.x + (i + 0.5) * pitch,
@@ -149,6 +165,7 @@ function sampleDots(
   }
   return dots;
 }
+
 
 export function HalftoneHandsFooter({
   videoSrc,
@@ -235,7 +252,8 @@ export function HalftoneHandsFooter({
       window.addEventListener("mouseleave", onLeave);
     }
 
-    const maxR = pitch * DOT_FILL;
+    // Half-pitch is the theoretical maximum where neighbouring dots touch.
+    const maxR = pitch * 0.5 * DOT_FILL;
 
     const draw = (now: number) => {
       const w = canvas.clientWidth;
@@ -264,14 +282,31 @@ export function HalftoneHandsFooter({
         const y = dot.y + p.y * PARALLAX_Y * weight;
 
         const d = Math.min(1, dot.d * breath);
-        const r = maxR * Math.pow(d, RADIUS_EXP);
-        if (r < 0.18) continue;
-        const grey = Math.round(LIGHT_GREY + (DARK_GREY - LIGHT_GREY) * d);
+        // Area ∝ coverage — the physically correct halftone response.
+        const r = maxR * Math.sqrt(d);
+        if (r < 0.16) continue;
+
+        // Ink stays one mid-grey; only a hair of extra weight in the darkest
+        // dots, exactly as measured on the reference print.
+        const grey = Math.round(INK_LIGHT + (INK_DARK - INK_LIGHT) * d);
         ctx.fillStyle = `rgb(${grey},${grey},${grey})`;
-        ctx.beginPath();
-        ctx.arc(x, y, r, 0, Math.PI * 2);
-        ctx.fill();
+
+        if (d <= SQUARE_AT) {
+          ctx.beginPath();
+          ctx.arc(x, y, r, 0, Math.PI * 2);
+          ctx.fill();
+        } else {
+          // High coverage: the dot squares off with a shrinking corner radius.
+          const sq = (d - SQUARE_AT) / (1 - SQUARE_AT);
+          const s = r * (1 + 0.14 * sq);
+          const corner = r * (1 - 0.62 * sq);
+          ctx.beginPath();
+          ctx.roundRect(x - s, y - s, s * 2, s * 2, corner);
+          ctx.fill();
+        }
       }
+
+
 
       raf = requestAnimationFrame(draw);
     };
