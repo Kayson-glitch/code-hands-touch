@@ -1170,14 +1170,19 @@ export function AsciiHandsFooter({
           bl += (pb - bl) * mixK;
         }
 
+        // Glyph choice = the actual tonal carrier: source density + flow wave +
+        // a one-step dither + the cursor dye boost.
+        const ditherStep = cellSeed > 0.62 ? 1 : cellSeed < 0.38 ? -1 : 0;
         const baseIdx =
           ((c.idx +
             flowIdxOffset +
+            ditherStep +
             Math.round(dyeAmt * DYE_IDX_BOOST)) %
             RAMP_LEN +
             RAMP_LEN) %
           RAMP_LEN;
         let ch = glyphAt(baseIdx);
+
 
 
         let jitterX = 0;
