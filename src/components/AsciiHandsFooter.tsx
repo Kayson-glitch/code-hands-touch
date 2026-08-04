@@ -891,13 +891,15 @@ export function AsciiHandsFooter({
         // remapped with a lifted black point and a hard S-curve so faint planes
         // stay near-paper while lit ridges slam to carbon — that gap is what
         // reads as volume on a light canvas.
-        const t = Math.min(1, Math.max(0, (bb - 0.06) / 0.9));
-        const shade = Math.pow(t, 1.35);
-        const s1 = shade * shade * (3 - 2 * shade);
-        const tonal = s1 * s1 * (3 - 2 * s1); // double smoothstep = punchy midtones
-        let r = (243 - tonal * 235) / flowBrightness;
-        let g = (244 - tonal * 236) / flowBrightness;
-        let bl = (246 - tonal * 237) / flowBrightness;
+        const t = Math.min(1, Math.max(0, (bb - 0.02) / 0.86));
+        // Single gentle S-curve with a brightening gamma: mid planes now land in
+        // real mid-gray instead of collapsing to paper, so the form has body,
+        // while lit ridges still reach near-carbon.
+        const shade = Math.pow(t, 0.75);
+        const tonal = shade * shade * (3 - 2 * shade) * 0.35 + shade * 0.65;
+        let r = (208 - tonal * 198) / flowBrightness;
+        let g = (210 - tonal * 199) / flowBrightness;
+        let bl = (214 - tonal * 202) / flowBrightness;
 
 
         const baseIdx =
