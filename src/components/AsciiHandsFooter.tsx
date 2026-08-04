@@ -1411,7 +1411,7 @@ export function AsciiHandsFooter({
       window.removeEventListener("mouseleave", onLeave);
       window.removeEventListener("touchmove", onTouch);
       window.removeEventListener("touchend", onLeave);
-      canvas.removeEventListener("pointerdown", onDown);
+      
     };
   }, [layout]);
 
