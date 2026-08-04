@@ -371,8 +371,8 @@ const FRAG = /* glsl */ `
       }
     }
 
-    // Highlight roll-off again after additive glow to guarantee no white flash.
-    col = col - max(vec3(0.0), col - vec3(0.985));
+    // Shadow roll-off after dark additive edges to guarantee no black flash on light bg.
+    col = col + max(vec3(0.0), vec3(0.015) - col);
 
     gl_FragColor = vec4(col, 1.0);
   }
