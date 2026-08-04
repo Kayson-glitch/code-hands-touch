@@ -857,9 +857,9 @@ export function AsciiHandsFooter({
       const hoverActive = intensity > 0.01 && !prefersReduce;
       const tiltScale = TILT_MAX_DEG * (Math.PI / 180) * intensity * intensity;
 
-      // Highlight tint the revealed cells migrate toward. On the light cream
-      // backdrop this is a deep ink violet so accents read as darker, not lighter.
-      const HR = 18, HG = 10, HB = 44;
+      // Revealed cells settle toward a neutral carbon accent. Keeping the
+      // channels close removes the previous violet cast on the light canvas.
+      const HR = 12, HG = 13, HB = 15;
 
 
       for (let k = 0; k < cells.length; k++) {
@@ -886,13 +886,14 @@ export function AsciiHandsFooter({
         const flowIdxOffset = Math.round(flowWave * FLOW_IDX_AMP * flowAmp);
         const flowBrightness = 1 + flowWave * FLOW_BRIGHTNESS_AMP * flowAmp;
 
-        // Base ink color inverted for the light cream backdrop. Gamma-shaped so
-        // midtones fall deeper and the tonal range is wider → stronger volume:
-        //   near-bg rgb(228,224,240) → near-black violet rgb(12,7,30)
-        const shade = Math.pow(bb, 0.68);
-        let r = (228 - shade * 216) / flowBrightness;
-        let g = (224 - shade * 217) / flowBrightness;
-        let bl = (240 - shade * 210) / flowBrightness;
+        // Neutral graphite ink on the light canvas. The compressed highlight
+        // shoulder and steeper midtone curve keep broad planes pale while
+        // pushing creases and dense glyphs toward carbon black for more volume.
+        const shade = Math.pow(bb, 0.52);
+        const tonal = shade * shade * (3 - 2 * shade);
+        let r = (224 - tonal * 214) / flowBrightness;
+        let g = (226 - tonal * 215) / flowBrightness;
+        let bl = (229 - tonal * 215) / flowBrightness;
 
 
         const baseIdx =
@@ -1040,8 +1041,8 @@ export function AsciiHandsFooter({
                 ((c.idx + scrambleOffset) % RAMP_LEN + RAMP_LEN) % RAMP_LEN;
               ch = glyphAt(finalIdx);
 
-              // Blend base purple → cool highlight, weighted by luminance so
-              // dark regions barely brighten.
+              // Blend graphite toward carbon, weighted by luminance so the
+              // interactive region gains definition without introducing hue.
               r += (HR - r) * sharpL;
               g += (HG - g) * sharpL;
               bl += (HB - bl) * sharpL;
@@ -1276,7 +1277,7 @@ export function AsciiHandsFooter({
           ctx.translate(cx, cy);
           ctx.rotate(finalAngle);
           if (c.isEdge) {
-            ctx.fillStyle = `rgba(244,241,234,${0.75 * cellAlpha * residueAlpha})`;
+            ctx.fillStyle = `rgba(250,250,250,${0.82 * cellAlpha * residueAlpha})`;
             const lx = -CELL_W / 2;
             const ly = FONT_PX - CELL_H / 2;
             ctx.fillText(ch, lx - 1, ly - 1);
@@ -1289,7 +1290,7 @@ export function AsciiHandsFooter({
           ctx.restore();
         } else {
           if (c.isEdge) {
-            ctx.fillStyle = `rgba(244,241,234,${0.75 * cellAlpha * residueAlpha})`;
+            ctx.fillStyle = `rgba(250,250,250,${0.82 * cellAlpha * residueAlpha})`;
             ctx.fillText(ch, drawX - 1, drawY - 1);
             ctx.fillText(ch, drawX + 1, drawY - 1);
             ctx.fillText(ch, drawX - 1, drawY + 1);
@@ -1344,8 +1345,8 @@ export function AsciiHandsFooter({
     // Also paint html/body black immediately, so the single frame where
     // <IntroVideo> unmounts can't reveal the theme's white body background.
     if (typeof document !== "undefined") {
-      document.documentElement.style.backgroundColor = "#F4F1EA";
-      document.body.style.backgroundColor = "#F4F1EA";
+      document.documentElement.style.backgroundColor = "#FAFAFA";
+      document.body.style.backgroundColor = "#FAFAFA";
     }
     setStage("hands");
     // Delay unmounting the intro video by two frames. The video's last
@@ -1369,7 +1370,7 @@ export function AsciiHandsFooter({
     <section
       className="relative w-full overflow-hidden"
       style={{
-        backgroundColor: "#F4F1EA",
+        backgroundColor: "#FAFAFA",
         height: "100vh",
         minHeight: 600,
       }}
@@ -1383,7 +1384,7 @@ export function AsciiHandsFooter({
           style={{
             position: "fixed",
             inset: 0,
-            background: "#F4F1EA",
+            background: "#FAFAFA",
             zIndex: -1,
             pointerEvents: "none",
           }}

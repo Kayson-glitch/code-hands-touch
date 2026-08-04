@@ -80,7 +80,7 @@ export function MetricsSection() {
       style={{
         position: "relative",
         zIndex: 10,
-        background: "#F4F1EA",
+        background: "#FAFAFA",
         color: "#0A0A0A",
         minHeight: "100vh",
         display: "flex",
