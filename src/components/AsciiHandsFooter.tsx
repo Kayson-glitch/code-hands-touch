@@ -1461,15 +1461,9 @@ export function AsciiHandsFooter({
           }
         }
 
-        // The mosaic tile is a shadow behind the glyph, not a replacement: the
-        // glyph keeps most of its opacity so the ASCII surface never vanishes
-        // into a pixelated photo patch.
-        let residueAlpha = 1;
-        if (mosaicAlpha > 0) {
-          const t = Math.min(1, Math.max(0, (mosaicAlpha - fadeLo) / fadeSpan));
-          const fade = t * t * (3 - 2 * t);
-          residueAlpha = 1 - fade * 0.35;
-        }
+        // Glyphs are the only visible layer — nothing is ever painted over them.
+        const residueAlpha = 1;
+
 
         const drawX = c.x + cellOffX + jitterX;
         const drawY = c.y + FONT_PX + cellOffY + jitterY;
