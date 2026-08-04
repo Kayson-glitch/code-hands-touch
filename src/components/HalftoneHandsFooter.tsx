@@ -201,19 +201,11 @@ export function HalftoneHandsFooter({
   const imageRef = useRef<HTMLImageElement | null>(null);
   // Pointer offset in -1..1, smoothed toward the raw target each frame.
   const pointerRef = useRef({ tx: 0, ty: 0, x: 0, y: 0 });
-  // Cursor position in CSS px within the canvas, for hover effects.
-  const cursorRef = useRef({ tx: -9999, ty: -9999, x: -9999, y: -9999, active: false });
-  // Active ripples for the breathe mode: each expands from a cursor position.
-  const ripplesRef = useRef<Array<{ x: number; y: number; t: number }>>([]);
+  // Low-res ink-fluid field driven by the pointer; colours the dots on hover.
+  const fluidRef = useRef<FluidField | null>(null);
   // Scroll-driven playhead: target frame from scroll, eased current frame.
   const playheadRef = useRef({ target: 0, current: 0 });
 
-  const [hoverMode, setHoverMode] = useState<HoverMode>("magnetic");
-  const hoverModeRef = useRef<HoverMode>(hoverMode);
-  useEffect(() => {
-    hoverModeRef.current = hoverMode;
-  }, [hoverMode]);
-  const [showSwitcher, setShowSwitcher] = useState(true);
 
   useEffect(() => {
     const canvas = canvasRef.current;
