@@ -368,29 +368,34 @@ export function HalftoneHandsFooter({
         const x = dot.x + p.x * PARALLAX_X * weight;
         const y = dot.y + p.y * PARALLAX_Y * weight;
 
-        const d = Math.min(1, dot.d * breath);
+        const raw = Math.min(1, dot.d * breath);
+        // Soft ceiling: large shadow regions no longer all clamp to 1.0, which
+        // is what made them fuse into one flat slab.
+        const d = raw < 0.8 ? raw : 0.8 + (raw - 0.8) * 0.7;
         // Area ∝ coverage — the physically correct halftone response.
         const r = maxR * Math.sqrt(d);
         if (r < 0.16) continue;
 
-        // Ink stays one mid-grey; only a hair of extra weight in the darkest
-        // dots, exactly as measured on the reference print.
-        const grey = Math.round(INK_LIGHT + (INK_DARK - INK_LIGHT) * d);
-        ctx.fillStyle = `rgb(${grey},${grey},${grey})`;
+        // Value carries volume alongside area: light grey on the paper-facing
+        // planes, near-charcoal (slightly cool) in the deepest shadows.
+        const [ir, ig, ib] = inkAt(d);
+        ctx.fillStyle = `rgb(${ir},${ig},${ib})`;
 
         if (d <= SQUARE_AT) {
           ctx.beginPath();
           ctx.arc(x, y, r, 0, Math.PI * 2);
           ctx.fill();
         } else {
-          // High coverage: the dot squares off with a shrinking corner radius.
+          // High coverage: the dot squares off with a shrinking corner radius,
+          // but never grows — the paper gap between cells is preserved.
           const sq = (d - SQUARE_AT) / (1 - SQUARE_AT);
-          const s = r * (1 + 0.14 * sq);
-          const corner = r * (1 - 0.62 * sq);
+          const s = r * (1 - 0.04 * sq);
+          const corner = r * (1 - 0.6 * sq);
           ctx.beginPath();
           ctx.roundRect(x - s, y - s, s * 2, s * 2, corner);
           ctx.fill();
         }
+
       }
 
       raf = requestAnimationFrame(draw);
