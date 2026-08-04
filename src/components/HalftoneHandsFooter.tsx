@@ -79,6 +79,8 @@ type Dot = {
   cx: number;
 };
 
+type HoverMode = "magnetic" | "deepen" | "breathe";
+
 function loadImage(src: string): Promise<HTMLImageElement> {
   return new Promise((resolve, reject) => {
     const img = new Image();
