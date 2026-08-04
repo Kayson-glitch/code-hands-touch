@@ -653,7 +653,7 @@ export function HalftoneHandsFooter({
         </div>
       )}
 
-      {showSwitcher && (
+      {stage === "hands" && showSwitcher && (
         <div
           className="absolute flex flex-col gap-2 rounded-xl border border-black/10 bg-white/80 p-2 shadow-lg backdrop-blur-md"
           style={{ zIndex: 30, right: 20, bottom: 20 }}
