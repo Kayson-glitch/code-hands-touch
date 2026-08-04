@@ -243,22 +243,54 @@ export function HalftoneHandsFooter({
     ro.observe(canvas);
 
     // ----------------------------------------------------- scroll playhead
-    const readScroll = () => {
-      if (prefersReduce) {
-        playheadRef.current.target = FRAME_COUNT - 1;
-        playheadRef.current.current = FRAME_COUNT - 1;
-        return;
-      }
-      // The hero owns the first viewport of scroll; map that span onto the
-      // whole frame range so the hands finish as the next section arrives.
-      const span = Math.max(1, window.innerHeight);
-      const p = Math.min(1, Math.max(0, (window.scrollY || 0) / span));
-      playheadRef.current.target = p * (FRAME_COUNT - 1);
+    // The hands own the wheel until their animation has fully played: while the
+    // playhead is below 1 we swallow the scroll and spend it on frames instead,
+    // then hand the wheel back to the document. Scrolling back up at the very
+    // top rewinds the hands before the page can move again.
+    const progressRef = { value: 0 };
+    const lockSpan = () => Math.max(400, window.innerHeight * 1.15);
+
+    const applyProgress = () => {
+      playheadRef.current.target = progressRef.value * (FRAME_COUNT - 1);
     };
-    readScroll();
+
+    if (prefersReduce) {
+      progressRef.value = 1;
+      playheadRef.current.target = FRAME_COUNT - 1;
+      playheadRef.current.current = FRAME_COUNT - 1;
+    }
+
+    // Returns true when the delta was consumed by the hands.
+    const consume = (dy: number) => {
+      if (prefersReduce || dy === 0) return false;
+      const p = progressRef.value;
+      if (dy > 0 ? p >= 1 : p <= 0 || (window.scrollY || 0) > 0) return false;
+      progressRef.value = Math.min(1, Math.max(0, p + dy / lockSpan()));
+      applyProgress();
+      return true;
+    };
+
+    const onWheel = (e: WheelEvent) => {
+      const dy = e.deltaY * (e.deltaMode === 1 ? 16 : e.deltaMode === 2 ? 100 : 1);
+      if (consume(dy)) e.preventDefault();
+    };
+    window.addEventListener("wheel", onWheel, { passive: false });
+
+    let touchY = 0;
+    const onTouchStart = (e: TouchEvent) => {
+      touchY = e.touches[0]?.clientY ?? 0;
+    };
+    const onTouchMove = (e: TouchEvent) => {
+      const y = e.touches[0]?.clientY ?? 0;
+      const dy = touchY - y;
+      touchY = y;
+      if (consume(dy * 1.4)) e.preventDefault();
+    };
+    window.addEventListener("touchstart", onTouchStart, { passive: true });
+    window.addEventListener("touchmove", onTouchMove, { passive: false });
+    applyProgress();
     playheadRef.current.current = playheadRef.current.target;
-    window.addEventListener("scroll", readScroll, { passive: true });
-    window.addEventListener("resize", readScroll);
+
 
     const onMove = (e: MouseEvent) => {
       const rect = canvas.getBoundingClientRect();
