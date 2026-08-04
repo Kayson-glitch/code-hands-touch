@@ -62,7 +62,7 @@ export function HeroCopy() {
       }}
     >
       <h1
-        className="font-display text-white"
+        className="font-display text-neutral-900"
         style={{
           fontSize: layout.titleFontSize,
           lineHeight: layout.titleLineHeight,
@@ -92,7 +92,7 @@ export function HeroCopy() {
       </h1>
 
       <p
-        className="mt-5 text-white/60"
+        className="mt-5 text-black/55"
         style={{ fontSize: layout.subtitleFontSize, lineHeight: layout.subtitleLineHeight, fontWeight: 400 }}
       >
         Intelligent Knowledge Engine for accurate, context-aware responses.
