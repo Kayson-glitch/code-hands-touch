@@ -448,7 +448,10 @@ function sampleImage(
     const gi = r.j * cols + r.i;
     const pid = partOf[gi];
     const part = parts[pid];
+    // Drop speckle components outright — they read as floating noise glyphs.
+    if (part.count < DROP_PART_CELLS) continue;
     const bigEnough = part.count >= MIN_PART_CELLS;
+
     const globalStretch = Math.min(1, Math.max(0, (r.y - lo) / span));
     let stretched = globalStretch;
     if (bigEnough) {
