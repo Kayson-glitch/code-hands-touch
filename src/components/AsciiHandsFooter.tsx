@@ -1390,7 +1390,6 @@ export function AsciiHandsFooter({
                 }
               }
 
-              }
             }
           }
         }
