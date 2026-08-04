@@ -1132,28 +1132,24 @@ export function AsciiHandsFooter({
             ? Math.min(1.4, dyeField.dye[cellJ * grid.cols + cellI] ?? 0)
             : 0;
 
-        // Ink-on-paper tone: brightness of the source still drives how much ink
-        // a cell gets (dark source = background = no ink), but the response is
-        // remapped with a lifted black point and a hard S-curve so faint planes
-        // stay near-paper while lit ridges slam to carbon — that gap is what
-        // reads as volume on a light canvas.
+        // Tone is carried by the glyph itself (ink area of the character), so
+        // every cell is drawn in the same near-carbon ink. Only a very small
+        // luminance-driven lift remains, to keep the faintest planes from
+        // looking rubber-stamped — never enough to wash the glyph out.
         const t = Math.min(1, Math.max(0, (bb - 0.01) / 0.94));
-        // Near-linear response (only a whisper of contrast shaping) so every
-        // step between paper and carbon actually exists — the previous S-curve
-        // emptied the midtones and made the form read as two flat bands.
-        const shade = Math.pow(t, 0.92);
-        // Ordered-ish dither from the stable cell seed breaks the remaining
-        // banding, so neighbouring tones blend instead of stepping.
-        const dither = (cellSeed - 0.5) * 0.07;
-        // Dye lifts the tonal value, which is what pushes the cell into a
-        // heavier glyph and a darker/denser ink (their fluidMultiplier).
+        // Dither the tonal value (not the colour) so glyph selection jitters
+        // slightly between neighbours and banding breaks up.
+        const dither = (cellSeed - 0.5) * 0.06;
         const tonal = Math.min(
           1,
-          Math.max(0, shade * 0.9 + 0.05 + dither + dyeAmt * DYE_TONE_BOOST),
+          Math.max(0, t + dither + dyeAmt * DYE_TONE_BOOST),
         );
-        let r = (232 - tonal * 224) / flowBrightness;
-        let g = (233 - tonal * 224) / flowBrightness;
-        let bl = (236 - tonal * 226) / flowBrightness;
+        // Ink lightens by at most ~34 units at the faint end of the ramp.
+        const lift = (1 - tonal) * 34;
+        let r = (INK_R + lift) / flowBrightness;
+        let g = (INK_G + lift) / flowBrightness;
+        let bl = (INK_B + lift) / flowBrightness;
+
 
         // Dye colouring: below the threshold the glyph stays graphite; above
         // it we ramp along the palette (warm → amber → citrus → green) with a
