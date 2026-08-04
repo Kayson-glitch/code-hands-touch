@@ -347,21 +347,45 @@ export function HalftoneHandsFooter({
     // Half-pitch is the theoretical maximum where neighbouring dots touch.
     const maxR = pitch * 0.5 * DOT_FILL;
 
+    let lastTs = 0;
+
     const draw = (now: number) => {
       const w = canvas.clientWidth;
       const h = canvas.clientHeight;
       ctx.clearRect(0, 0, w, h);
+
+      // Frame-rate independent step, clamped so a tab switch can't jump.
+      const dt = lastTs ? Math.min(0.05, (now - lastTs) / 1000) : 0.016;
+      lastTs = now;
 
       const ph = playheadRef.current;
       if (prefersReduce) {
         ph.target = FRAME_COUNT - 1;
         ph.current = ph.target;
       } else {
-        ph.target = progressRef.v * (FRAME_COUNT - 1);
+        // Residual glide: the flick keeps feeding the target briefly, then decays.
+        if (Math.abs(progressRef.vel) > 1e-4) {
+          progressRef.target = Math.min(
+            1,
+            Math.max(0, progressRef.target + progressRef.vel * dt * 0.25),
+          );
+          progressRef.vel *= Math.exp(-dt / 0.12);
+        } else {
+          progressRef.vel = 0;
+        }
 
-        ph.current += (ph.target - ph.current) * FRAME_EASE;
+        // Exponential ease toward the target with a fixed time constant.
+        const k = 1 - Math.exp(-dt / SMOOTH_TAU);
+        progressRef.v += (progressRef.target - progressRef.v) * k;
+        if (Math.abs(progressRef.target - progressRef.v) < 0.0005) {
+          progressRef.v = progressRef.target;
+        }
+
+        ph.target = progressRef.v * (FRAME_COUNT - 1);
+        ph.current += (ph.target - ph.current) * (1 - Math.exp(-dt / 0.05));
         if (Math.abs(ph.target - ph.current) < 0.01) ph.current = ph.target;
       }
+
 
 
       const p = pointerRef.current;
