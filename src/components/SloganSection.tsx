@@ -94,11 +94,12 @@ export function SloganSection() {
       ref={sectionRef}
       className="relative w-full"
       style={{
-        background: "#000",
+        background: "#F4F1EA",
         height: "260vh",
         position: "relative",
         zIndex: 10,
       }}
+
     >
       <GlitchGrainOverlay intensity="low" />
       <div
@@ -122,7 +123,7 @@ export function SloganSection() {
           lineHeight: 1.25,
           letterSpacing: "-0.01em",
           fontWeight: 500,
-          color: "#ffffff",
+          color: "#0A0A0A",
         }}
       >
         {LINES.map((line, li) => (

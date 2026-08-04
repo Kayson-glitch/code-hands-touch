@@ -40,15 +40,15 @@ export function SiteNav() {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  const isDark = theme === "dark";
-  const fg = isDark ? "text-white" : "text-black";
+  // The whole site now sits on a light background, so the nav is always
+  // rendered in its light (dark-ink) variant.
+  const isDark = false;
+  void theme;
+  const fg = "text-black";
   const navItem = `${fg} opacity-50 hover:opacity-100 transition-opacity duration-200`;
-  const ctaClass = isDark
-    ? "bg-white text-black"
-    : "bg-black text-white";
-  const glassBg = isDark
-    ? "rgba(10,10,10,0.55)"
-    : "rgba(255,255,255,0.55)";
+  const ctaClass = "bg-black text-white";
+  const glassBg = "rgba(244,241,234,0.65)";
+
 
   return (
     <nav
@@ -119,7 +119,8 @@ export function SiteNav() {
           width: "100%",
           height: 1,
           background:
-            "linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.1) 50%, transparent 100%)",
+            "linear-gradient(90deg, transparent 0%, rgba(10,10,10,0.12) 50%, transparent 100%)",
+
         }}
       />
     </nav>
