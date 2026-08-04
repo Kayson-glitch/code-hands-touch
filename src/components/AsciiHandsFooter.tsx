@@ -886,11 +886,12 @@ export function AsciiHandsFooter({
         const flowIdxOffset = Math.round(flowWave * FLOW_IDX_AMP * flowAmp);
         const flowBrightness = 1 + flowWave * FLOW_BRIGHTNESS_AMP * flowAmp;
 
-        // Base lavender purple color from the ramp:
-        //   shadow rgb(45, 35, 70) → highlight rgb(197, 169, 255)
-        let r = (45 + bb * 152) * flowBrightness;
-        let g = (35 + bb * 134) * flowBrightness;
-        let bl = (70 + bb * 185) * flowBrightness;
+        // Base ink color inverted for the light cream backdrop:
+        //   faint rgb(202,196,222) → deep violet rgb(42,26,78)
+        let r = (202 - bb * 160) / flowBrightness;
+        let g = (196 - bb * 170) / flowBrightness;
+        let bl = (222 - bb * 144) / flowBrightness;
+
         const baseIdx =
           ((c.idx + flowIdxOffset) % RAMP_LEN + RAMP_LEN) % RAMP_LEN;
         let ch = glyphAt(baseIdx);
