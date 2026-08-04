@@ -270,24 +270,41 @@ export function HalftoneHandsFooter({
     // frame is reached the wheel is swallowed, so the page stays put; once the
     // sequence is complete the wheel is handed back to the page. Scrolling back
     // to the very top and continuing upward rewinds the hands.
-    const progressRef = { v: prefersReduce ? 1 : 0 };
+    //
+    // Feel: the wheel feeds a TARGET progress; the rendered progress chases it
+    // with a time-constant (frame-rate independent) exponential ease, plus a
+    // little residual glide so a flick keeps sliding instead of stopping dead.
+    const progressRef = {
+      target: prefersReduce ? 1 : 0,
+      v: prefersReduce ? 1 : 0,
+      vel: 0,
+    };
 
-    const lockSpan = () => Math.max(320, window.innerHeight);
+    const lockSpan = () => Math.max(420, window.innerHeight * 1.15);
+    // Seconds to close ~63% of the remaining distance.
+    const SMOOTH_TAU = 0.16;
+    // Per-event clamp: one huge trackpad delta can't slam the sequence forward.
+    const MAX_STEP = 0.06;
 
     /** Advance/rewind the playhead. Returns true when the wheel was consumed. */
     const consume = (rawDy: number, deltaMode = 0) => {
       if (prefersReduce) return false;
       const dy = rawDy * (deltaMode === 1 ? 16 : deltaMode === 2 ? 100 : 1);
       if (dy === 0) return false;
-      const p = progressRef.v;
+      const t = progressRef.target;
       const goingDown = dy > 0;
       const atTop = window.scrollY <= 0;
-      const canForward = goingDown && p < 1;
-      const canRewind = !goingDown && p > 0 && atTop;
+      const canForward = goingDown && t < 1;
+      const canRewind = !goingDown && t > 0 && atTop;
       if (!canForward && !canRewind) return false;
-      progressRef.v = Math.min(1, Math.max(0, p + dy / lockSpan()));
+      const raw = dy / lockSpan();
+      const step = Math.max(-MAX_STEP, Math.min(MAX_STEP, raw));
+      progressRef.target = Math.min(1, Math.max(0, t + step));
+      // Blend into the glide velocity (progress units per second).
+      progressRef.vel = progressRef.vel * 0.7 + step * 7;
       return true;
     };
+
 
     const onWheel = (e: WheelEvent) => {
       if (stageRef.current !== "hands") return;
