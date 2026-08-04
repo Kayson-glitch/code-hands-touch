@@ -22,7 +22,7 @@ import { AuroraIntro } from "@/components/AuroraIntro";
 // touch, matching a real halftone screen at high coverage.
 const DOT_FILL = 0.98;
 // Coverage below this is left as bare paper.
-const MIN_DENSITY = 0.05;
+const MIN_DENSITY = 0.035;
 // Above this coverage the dot squares off (superellipse), as on a print screen.
 const SQUARE_AT = 0.75;
 // Single mid-grey ink. Tone comes from dot AREA, not from colour.
@@ -141,7 +141,7 @@ function sampleDots(
 
       // Normalised, near-linear coverage: 0 = paper, 1 = dots nearly touching.
       const t = Math.min(1, Math.max(0, (raw[k] - lo) / span));
-      let density = Math.pow(t, 0.9);
+      let density = Math.pow(t, 0.72);
 
       // Ordered dither on the threshold only — keeps continuous tone in the
       // midtones instead of stepping into visible bands of equal dots.
@@ -152,7 +152,7 @@ function sampleDots(
 
       // Scattered dissolve: faint cells survive only sometimes, so the mass
       // frays into isolated single dots instead of fading out as a block.
-      const keep = smoothstep((density - MIN_DENSITY) / 0.32);
+      const keep = smoothstep((density - MIN_DENSITY) / 0.22);
       if (hash2(i, j) > 0.16 + keep * 0.84) continue;
 
       dots.push({
