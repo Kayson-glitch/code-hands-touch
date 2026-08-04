@@ -209,6 +209,10 @@ export function HalftoneHandsFooter({
   const playheadRef = useRef({ target: 0, current: 0 });
 
   const [hoverMode, setHoverMode] = useState<HoverMode>("magnetic");
+  const hoverModeRef = useRef<HoverMode>(hoverMode);
+  useEffect(() => {
+    hoverModeRef.current = hoverMode;
+  }, [hoverMode]);
   const [showSwitcher, setShowSwitcher] = useState(true);
 
   useEffect(() => {
