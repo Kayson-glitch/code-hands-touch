@@ -1035,13 +1035,6 @@ export function AsciiHandsFooter({
       const discLerp = DISC_LERP_MIN + (DISC_LERP_MAX - DISC_LERP_MIN) * speedK;
       const intensityLerp =
         INTENSITY_LERP_MIN + (INTENSITY_LERP_MAX - INTENSITY_LERP_MIN) * speedK;
-      // Speed-adaptive mosaic diffusion / dissipation.
-      const shatterK = 1 + smoothSpeedK * 0.9;
-        const scaleMinDyn = MOSAIC_SCALE_MIN + smoothSpeedK * 0.10;
-      const alphaGamma = 0.85 - smoothSpeedK * 0.25;
-      const fadeLo = 0.35 - smoothSpeedK * 0.15;
-      const fadeHi = 0.85 - smoothSpeedK * 0.20;
-      const fadeSpan = Math.max(0.05, fadeHi - fadeLo);
 
       // Disable hover reveal disc while the arms are still growing in.
       const targetIntensity = m.active && !prefersReduce && !intro ? 1 : 0;
@@ -1058,6 +1051,37 @@ export function AsciiHandsFooter({
           discY += (m.y - discY) * discLerp;
         }
       }
+
+      // ---- Cursor dye field step -------------------------------------------
+      // Allocate/resize lazily against the current grid, inject at the raw
+      // cursor (not the eased disc, so fast flicks leave a long streak), then
+      // let the field advect + dissipate on its own.
+      let dyeField = dyeRef.current;
+      if (grid && !prefersReduce) {
+        if (!dyeField || dyeField.cols !== grid.cols || dyeField.rows !== grid.rows) {
+          dyeField = makeDyeField(grid.cols, grid.rows);
+          dyeRef.current = dyeField;
+        }
+        const dtScale = Math.min(2.5, dt / 16.67);
+        let inject: { i: number; j: number; dx: number; dy: number } | null = null;
+        if (m.active && !intro) {
+          const gi = (m.x - grid.originX) / CELL_W;
+          const gj = (m.y - grid.originY) / CELL_H;
+          if (gi > -4 && gj > -4 && gi < grid.cols + 4 && gj < grid.rows + 4) {
+            const prev = dyePrevRef.current;
+            const ddx = prev ? gi - prev.i : 0;
+            const ddy = prev ? gj - prev.j : 0;
+            dyePrevRef.current = { i: gi, j: gj };
+            inject = { i: gi, j: gj, dx: ddx, dy: ddy };
+          }
+        } else {
+          dyePrevRef.current = null;
+        }
+        stepDyeField(dyeField, inject, dtScale);
+      } else {
+        dyeField = null;
+      }
+
 
       // Bump scramble seed a few times per second so glyphs inside the disc
       // visibly re-shuffle, matching the source's continuous scramble.
