@@ -1049,15 +1049,19 @@ export function AsciiHandsFooter({
         // remapped with a lifted black point and a hard S-curve so faint planes
         // stay near-paper while lit ridges slam to carbon — that gap is what
         // reads as volume on a light canvas.
-        const t = Math.min(1, Math.max(0, (bb - 0.02) / 0.86));
-        // Single gentle S-curve with a brightening gamma: mid planes now land in
-        // real mid-gray instead of collapsing to paper, so the form has body,
-        // while lit ridges still reach near-carbon.
-        const shade = Math.pow(t, 0.75);
-        const tonal = shade * shade * (3 - 2 * shade) * 0.35 + shade * 0.65;
-        let r = (208 - tonal * 198) / flowBrightness;
-        let g = (210 - tonal * 199) / flowBrightness;
-        let bl = (214 - tonal * 202) / flowBrightness;
+        const t = Math.min(1, Math.max(0, (bb - 0.01) / 0.94));
+        // Near-linear response (only a whisper of contrast shaping) so every
+        // step between paper and carbon actually exists — the previous S-curve
+        // emptied the midtones and made the form read as two flat bands.
+        const shade = Math.pow(t, 0.92);
+        // Ordered-ish dither from the stable cell seed breaks the remaining
+        // banding, so neighbouring tones blend instead of stepping.
+        const dither = (cellSeed - 0.5) * 0.07;
+        const tonal = Math.min(1, Math.max(0, shade * 0.9 + 0.05 + dither));
+        let r = (232 - tonal * 224) / flowBrightness;
+        let g = (233 - tonal * 224) / flowBrightness;
+        let bl = (236 - tonal * 226) / flowBrightness;
+
 
 
         const baseIdx =
