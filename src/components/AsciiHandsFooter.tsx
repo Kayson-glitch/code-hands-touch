@@ -1235,71 +1235,9 @@ export function AsciiHandsFooter({
               g += (HG - g) * sharpL;
               bl += (HB - bl) * sharpL;
 
-              // Mosaic-shatter reveal: draw the raw source pixel as a broken
-              // tile behind (in place of) the glyph. Uses the same `gooey`
-              // mask so the shatter edge matches the ASCII reveal edge.
-              if (gooey > MOSAIC_MASK_THRESHOLD) {
-                const shatter = 1 - gooey; // 0 at center, ~1 at disc edge
-                const jx =
-                  (fract(Math.sin(seed * 12.7) * 91.3) - 0.5) *
-                  2 *
-                  MOSAIC_SHATTER_PX * shatterK *
-                  shatter;
-                const jy =
-                  (fract(Math.sin(seed * 41.9) * 57.1) - 0.5) *
-                  2 *
-                  MOSAIC_SHATTER_PX * shatterK *
-                  shatter;
-                // Occasional splatter tiles fling further along arm normal
-                // — small clumps of image break loose from the crowd.
-                const splat = fract(Math.sin(seed * 73.1) * 811.7);
-                const splatterActive = splat < MOSAIC_SPLATTER_PROB ? 1 : 0;
-                const splatMag = splatterActive * MOSAIC_SPLATTER_PX * shatterK * shatter;
-                // Perpendicular to arm axis (rotate arm dir 90°).
-                const normX = -armDy;
-                const normY = armDx;
-                const splatSign =
-                  fract(Math.sin(seed * 19.3) * 313.7) > 0.5 ? 1 : -1;
-                const sx = jx + normX * splatMag * splatSign;
-                const sy = jy + normY * splatMag * splatSign;
-                const scale =
-                  scaleMinDyn +
-                  (MOSAIC_SCALE_MAX - scaleMinDyn) * (1 - shatter);
-                const tw = CELL_W * scale;
-                const th = CELL_H * scale;
-                const tx =
-                  c.x + offX * (0.30 + bb * 0.55 + c.armT * 0.45) +
-                  sx + (CELL_W - tw) * 0.5;
-                const ty =
-                  c.y + offY * (0.30 + bb * 0.55 + c.armT * 0.45) +
-                  sy + (CELL_H - th) * 0.5;
-                // Lookup source color for this cell from grid.color.
-                const colBase =
-                  (Math.floor((c.y - grid.originY) / CELL_H) * grid.cols +
-                    Math.floor((c.x - grid.originX) / CELL_W)) *
-                  3;
-                const cr = grid.color[colBase + 0] ?? 0;
-                const cg = grid.color[colBase + 1] ?? 0;
-                const cb = grid.color[colBase + 2] ?? 0;
-                // Desaturate the source pixel into the same graphite ramp the
-                // glyphs use, so the reveal stays monochrome on the paper.
-                const luma =
-                  (0.2126 * cr + 0.7152 * cg + 0.0722 * cb) / 255;
-                const ink = Math.round(
-                  MOSAIC_INK_LIGHT -
-                    (MOSAIC_INK_LIGHT - MOSAIC_INK_DARK) * (1 - luma),
-                );
-                // Smoothstep-shaped alpha: strongest at the disc core, fading
-                // quadratically through the shattered edge so tiles dissolve
-                // into the surrounding ASCII rather than snapping off.
-                const gg = Math.min(1, Math.max(0, gooey));
-                const ss = gg * gg * (3 - 2 * gg);
-                mosaicAlpha =
-                  Math.pow(ss, alphaGamma) * ss * MOSAIC_MAX_ALPHA;
-                ctx.fillStyle = `rgba(${ink},${ink},${ink},${mosaicAlpha})`;
-                ctx.fillRect(tx, ty, tw, th);
+              // Cursor dye (fluid) handles the visual reveal — no tiles are
+              // drawn over the glyphs.
 
-              }
             }
           }
         }
