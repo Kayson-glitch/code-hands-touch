@@ -3,7 +3,7 @@ import Aurora from "@/components/Aurora/Aurora";
 
 /**
  * Wraps Aurora with a soft entry animation.
- * Listens for the same `app-bg-change: dark` cue that drives the hero entry,
+ * Listens for the same `app-bg-change: light` cue that drives the hero entry,
  * then eases opacity from 0 → 1.
  */
 export function AuroraIntro() {
