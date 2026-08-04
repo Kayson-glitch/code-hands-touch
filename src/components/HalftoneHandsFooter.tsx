@@ -32,13 +32,13 @@ const DOT_FILL = 0.9;
 const MIN_DENSITY = 0.05;
 // Only the very deepest dots square off, so shadows stay legible as a screen.
 const SQUARE_AT = 0.88;
-// Ink ramp: paper-side light grey -> mid grey -> near-charcoal, with a faint
-// cool shift in the shadows and a warm-neutral bias in the highlights. Tone is
-// carried by dot AREA *and* value, which is what reads as volume.
+// Ink ramp: the previous single mid-grey is now the deepest tone; from there
+// the value decreases evenly toward near-paper light grey. Tone is carried
+// almost entirely by dot AREA, keeping the halftone read clean and neutral.
 const INK_STOPS: Array<[number, number, number]> = [
-  [0xb6, 0xb4, 0xb1],
-  [0x94, 0x95, 0x98],
-  [0x2c, 0x30, 0x38],
+  [0xe8, 0xe8, 0xe8],
+  [0xc8, 0xc8, 0xc8],
+  [0xa8, 0xa8, 0xa8],
 ];
 
 /** Interpolate the three-stop ink ramp at coverage d (0..1). */
