@@ -859,7 +859,7 @@ export function AsciiHandsFooter({
 
       // Highlight tint the revealed cells migrate toward. On the light cream
       // backdrop this is a deep ink violet so accents read as darker, not lighter.
-      const HR = 38, HG = 26, HB = 72;
+      const HR = 18, HG = 10, HB = 44;
 
 
       for (let k = 0; k < cells.length; k++) {
