@@ -99,6 +99,26 @@ const FLOW_SPEED = 0.35;          // phase cycles per second
 const FLOW_JITTER = 0.6;          // per-cell phase offset (fraction of 2π)
 const FLOW_IDX_AMP = 2;           // ± ramp steps swapped by the wave
 const FLOW_BRIGHTNESS_AMP = 0.06; // ± tonal multiplier from the wave
+// Finger separation — the source photo has touching fingers, so the seam
+// between them must be carved out explicitly or the ASCII fuses into a blob.
+// CREASE_SPAN: how far (in cells) to look for the brighter finger bodies on
+// either side of a candidate seam cell. CREASE_DELTA: how much brighter both
+// sides must be (normalized luma) for the cell to count as a seam.
+const CREASE_SPAN = 2;
+const CREASE_DELTA = 0.045;
+// Cells adjacent to a carved seam get their ink scaled by this so the gap
+// fades in rather than looking die-cut.
+const CREASE_FALLOFF = 0.55;
+// Connected components smaller than this stay on the global tonal curve
+// (speckles shouldn't get their own full-range stretch).
+const MIN_PART_CELLS = 24;
+// How much of each finger's tone comes from its own local range vs the global
+// one. Higher = more per-finger volume, but larger tonal jumps between parts.
+const PART_LOCAL_MIX = 0.55;
+// Per-part phase offset for the flowing character shimmer, so fingers animate
+// out of lockstep with each other.
+const PART_FLOW_STAGGER = 0.37;
+
 // Reveal disc smoothly chases the cursor (source-site behaviour). Smaller =
 // stickier follow, which naturally reads as a gentle hover-in latency without
 // a hard delay gate.
