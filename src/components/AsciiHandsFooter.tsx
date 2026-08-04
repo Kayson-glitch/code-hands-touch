@@ -1461,16 +1461,16 @@ export function AsciiHandsFooter({
           }
         }
 
-        // Continuous mosaic→glyph fade: as the mosaic tile grows more
-        // opaque, the underlying ASCII glyph smoothly recedes. No hard
-        // switch, so edges dissolve rather than pop.
+        // The mosaic tile is a shadow behind the glyph, not a replacement: the
+        // glyph keeps most of its opacity so the ASCII surface never vanishes
+        // into a pixelated photo patch.
         let residueAlpha = 1;
         if (mosaicAlpha > 0) {
           const t = Math.min(1, Math.max(0, (mosaicAlpha - fadeLo) / fadeSpan));
           const fade = t * t * (3 - 2 * t);
-          residueAlpha = 1 - fade;
-          if (residueAlpha < 0.02) continue;
+          residueAlpha = 1 - fade * 0.35;
         }
+
         const drawX = c.x + cellOffX + jitterX;
         const drawY = c.y + FONT_PX + cellOffY + jitterY;
         const finalAngle = angle + revealTilt;
