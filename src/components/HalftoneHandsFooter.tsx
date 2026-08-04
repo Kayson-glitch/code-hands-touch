@@ -343,6 +343,7 @@ export function HalftoneHandsFooter({
 
 
 
+    let lastMove: { x: number; y: number; t: number } | null = null;
     const onMove = (e: MouseEvent) => {
       const rect = canvas.getBoundingClientRect();
       pointerRef.current.tx = ((e.clientX - rect.left) / rect.width) * 2 - 1;
@@ -350,30 +351,46 @@ export function HalftoneHandsFooter({
 
       const cx = e.clientX - rect.left;
       const cy = e.clientY - rect.top;
-      cursorRef.current.tx = cx;
-      cursorRef.current.ty = cy;
-      cursorRef.current.active = true;
-
-      // Breathe mode: spawn a ripple when the cursor has travelled far enough.
-      const ripples = ripplesRef.current;
-      const last = ripples[ripples.length - 1];
-      if (
-        hoverModeRef.current === "breathe" &&
-        (!last || Math.hypot(cx - last.x, cy - last.y) > 36)
-      ) {
-        ripples.push({ x: cx, y: cy, t: performance.now() });
-        if (ripples.length > 5) ripples.shift();
+      const fluid = fluidRef.current;
+      if (fluid) {
+        const prev = lastMove;
+        const now = performance.now();
+        let vx = 0;
+        let vy = 0;
+        if (prev) {
+          const dt = Math.max(0.008, Math.min(0.1, (now - prev.t) / 1000));
+          vx = (cx - prev.x) / dt;
+          vy = (cy - prev.y) / dt;
+          // Interpolate along the travelled segment so a fast flick still
+          // leaves a continuous trail instead of dashed blobs.
+          const dist = Math.hypot(cx - prev.x, cy - prev.y);
+          const steps = Math.min(12, Math.max(1, Math.round(dist / 14)));
+          for (let s = 1; s <= steps; s++) {
+            const f = s / steps;
+            fluid.splat(
+              prev.x + (cx - prev.x) * f,
+              prev.y + (cy - prev.y) * f,
+              vx,
+              vy,
+              1 / steps,
+            );
+          }
+        } else {
+          fluid.splat(cx, cy, 0, 0, 1);
+        }
+        lastMove = { x: cx, y: cy, t: now };
       }
     };
     const onLeave = () => {
       pointerRef.current.tx = 0;
       pointerRef.current.ty = 0;
-      cursorRef.current.active = false;
+      lastMove = null;
     };
     if (!prefersReduce) {
       window.addEventListener("mousemove", onMove, { passive: true });
       window.addEventListener("mouseleave", onLeave);
     }
+
 
     // Half-pitch is the theoretical maximum where neighbouring dots touch.
     const maxR = pitch * 0.5 * DOT_FILL;
