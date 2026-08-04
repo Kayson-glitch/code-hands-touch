@@ -1036,7 +1036,10 @@ export function AsciiHandsFooter({
         const flowPhase =
           c.armT * FLOW_DENSITY -
           timeSec * FLOW_SPEED +
-          cellSeed * FLOW_JITTER;
+          cellSeed * FLOW_JITTER +
+          (c.partId >= 0 ? c.partId * PART_FLOW_STAGGER : 0) +
+          c.partT * 0.35;
+
         const flowWave = Math.sin(flowPhase * Math.PI * 2);
         const flowIdxOffset = Math.round(flowWave * FLOW_IDX_AMP * flowAmp);
         const flowBrightness = 1 + flowWave * FLOW_BRIGHTNESS_AMP * flowAmp;
