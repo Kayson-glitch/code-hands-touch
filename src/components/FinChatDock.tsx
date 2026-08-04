@@ -117,7 +117,7 @@ export function FinChatDock() {
               <button
                 key={s}
                 onClick={() => pickSuggestion(s)}
-                className="pointer-events-auto rounded-[20px] bg-white/10 px-4 py-2.5 text-left text-white backdrop-blur-md transition-colors hover:bg-white/15"
+                className="pointer-events-auto rounded-[20px] bg-black/5 px-4 py-2.5 text-left text-neutral-900 backdrop-blur-md transition-colors hover:bg-black/10"
                 style={{
                   fontSize: 14,
                   lineHeight: "22px",
