@@ -7,11 +7,20 @@ import { AuroraIntro } from "@/components/AuroraIntro";
 
 // Ordered density ramp, dark → bright. Mirrors the exact 70-glyph set used by
 // good-fella.com's ASCII footer (recovered by hooking their canvas atlas).
-// Ordering follows the Paul Bourke density ramp, with the digits 0/1/8 slotted
-// in at their approximate visual weight.
-const RAMP =
-  " .`'^\",:;Il!i1><~+_-?][}{)(|\\/tfjrxnuvczXYUJCLQOZ0mwqpdbkhao*#MW8&%B@$";
+// Short, steep density ramp. Contrast in character art comes from how much
+// *ink area* each glyph covers, so a compact ramp whose steps are visibly
+// different in weight reads far crisper than a 70-step ramp where a dozen
+// neighbouring glyphs are indistinguishable at a 10px cell.
+const RAMP = " .,:;=+ox*%#@";
 const RAMP_LEN = RAMP.length;
+// Single ink colour for every glyph — tone is carried by glyph density, not
+// by per-cell greys (mixing both cancels the contrast out).
+const INK_R = 22;
+const INK_G = 23;
+const INK_B = 27;
+// Cells below this normalized luminance are left as bare paper.
+const INK_CUTOFF = 0.055;
+
 
 type Cell = {
   x: number;
