@@ -47,7 +47,7 @@ export function SiteNav() {
   const fg = "text-black";
   const navItem = `${fg} opacity-50 hover:opacity-100 transition-opacity duration-200`;
   const ctaClass = "bg-black text-white";
-  const glassBg = "rgba(244,241,234,0.65)";
+  const glassBg = "rgba(250,250,250,0.72)";
 
 
   return (
