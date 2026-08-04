@@ -7,11 +7,20 @@ import { AuroraIntro } from "@/components/AuroraIntro";
 
 // Ordered density ramp, dark → bright. Mirrors the exact 70-glyph set used by
 // good-fella.com's ASCII footer (recovered by hooking their canvas atlas).
-// Ordering follows the Paul Bourke density ramp, with the digits 0/1/8 slotted
-// in at their approximate visual weight.
-const RAMP =
-  " .`'^\",:;Il!i1><~+_-?][}{)(|\\/tfjrxnuvczXYUJCLQOZ0mwqpdbkhao*#MW8&%B@$";
+// Short, steep density ramp. Contrast in character art comes from how much
+// *ink area* each glyph covers, so a compact ramp whose steps are visibly
+// different in weight reads far crisper than a 70-step ramp where a dozen
+// neighbouring glyphs are indistinguishable at a 10px cell.
+const RAMP = " .,:;=+ox*%#@";
 const RAMP_LEN = RAMP.length;
+// Single ink colour for every glyph — tone is carried by glyph density, not
+// by per-cell greys (mixing both cancels the contrast out).
+const INK_R = 22;
+const INK_G = 23;
+const INK_B = 27;
+// Cells below this normalized luminance are left as bare paper.
+const INK_CUTOFF = 0.055;
+
 
 type Cell = {
   x: number;
@@ -87,7 +96,7 @@ const DYE_DIFFUSE = 0.16;      // neighbour blur amount per frame
 const VEL_INJECT = 0.35;       // pointer displacement → velocity gain
 const VEL_DAMP = 0.96;         // per-frame velocity decay
 const DYE_TONE_BOOST = 0.30;   // how much dye darkens/thickens the ink
-const DYE_IDX_BOOST = 6;       // ramp steps a fully-dyed cell jumps
+const DYE_IDX_BOOST = 4;       // ramp steps a fully-dyed cell jumps
 const DYE_COLOR_MIN = 0.08;    // density below this stays graphite
 const HUE_DRIFT = 0.05;        // palette drift per second
 
@@ -217,21 +226,13 @@ function stepDyeField(
   }
 }
 
-// Click-to-lock reveal — per hand toggle that expands a mosaic disc from
-// the click point until it fully covers that hand, then collapses on the
-// next click. Timings kept snappy but eased so the transition reads as
-// fluid rather than instant.
-const LOCK_EXPAND_MS = 900;
-const LOCK_COLLAPSE_MS = 520;
-const LOCK_SOFTNESS_UV = 0.045;
-const LOCK_RADIUS_MARGIN_UV = 0.025;
 // Continuous character flow along arm skeleton — a low-frequency, time-driven
 // phase rides along `armT` so glyphs shimmer/drift between neighbouring ramp
 // densities. Independent of hover; gives the piece a subtle "always alive" feel.
 const FLOW_DENSITY = 14;          // phase cycles across arm length
 const FLOW_SPEED = 0.35;          // phase cycles per second
 const FLOW_JITTER = 0.6;          // per-cell phase offset (fraction of 2π)
-const FLOW_IDX_AMP = 2;           // ± ramp steps swapped by the wave
+const FLOW_IDX_AMP = 1;           // ± ramp steps swapped by the wave
 const FLOW_BRIGHTNESS_AMP = 0.06; // ± tonal multiplier from the wave
 // Finger separation — the source photo has touching fingers, so the seam
 // between them must be carved out explicitly or the ASCII fuses into a blob.
@@ -589,9 +590,14 @@ function sampleImage(
     // silhouette edge dissolves into sparser glyphs instead of stepping.
     const feather = Math.pow(r.a, 0.65);
     const g = Math.pow(stretched, gamma);
-    // Mostly linear, lightly S-shaped: a full smoothstep here pushed cells to
-    // the two ends of the ramp and hollowed out the mid tones.
-    let b = (g * 0.78 + smoothstep(g) * 0.22) * feather;
+    // Contrast enhancement (normalize → power → denormalize), the same trick
+    // ASCII shaders use: it exaggerates the separation between planes so
+    // fingers detach from the palm instead of faithfully reproducing greys.
+    const CONTRAST_EXP = 0.62;
+    const enhanced = Math.pow(Math.min(1, Math.max(0, g)), CONTRAST_EXP);
+    // Slight S on top keeps highlights from flattening at the top of the ramp.
+    let b = (enhanced * 0.7 + smoothstep(enhanced) * 0.3) * feather;
+
 
     // Cells touching a carved crease fade out so the seam reads soft, not cut.
     let nearCrease = false;
@@ -618,7 +624,10 @@ function sampleImage(
         : wJ > 0
           ? (r.j - part.minJ) / wJ
           : 0;
+    // Near-black cells: leave the paper empty so silhouettes stay crisp.
+    if (b < INK_CUTOFF) continue;
     const idx = indexFor(b);
+
     silIdx[gi] = cells.length;
     cells.push({
       x: targetRect.x + r.i * CELL_W,
@@ -758,13 +767,6 @@ export function AsciiHandsFooter({
   const introStartRef = useRef<number | null>(null);
   const introDoneRef = useRef(false);
   const introVisibleRef = useRef(false);
-  // Per-hand click lock state. `progress` tweens toward `target` each frame
-  // (0 = collapsed, 1 = fully expanded). `radiusUv` is snapshotted on click
-  // so the disc always reaches every cell of the hand from that click point.
-  const lockRef = useRef({
-    left:  { x: 0, y: 0, radiusUv: 0, progress: 0, target: 0 },
-    right: { x: 0, y: 0, radiusUv: 0, progress: 0, target: 0 },
-  });
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -916,55 +918,8 @@ export function AsciiHandsFooter({
     window.addEventListener("touchmove", onTouch, { passive: true });
     window.addEventListener("touchend", onLeave);
 
-    // Click / tap to toggle a hand lock. Clicks on the left half target the
-    // human hand, right half targets the robot hand. Second click on the
-    // same hand collapses it back. Ignored while the intro is still
-    // playing so users don't fight the growth animation.
-    const onDown = (e: PointerEvent) => {
-      if (!introDoneRef.current) return;
-      const rect = canvas.getBoundingClientRect();
-      const x = e.clientX - rect.left;
-      const y = e.clientY - rect.top;
-      const w = canvas.clientWidth;
-      const h = canvas.clientHeight;
-      const visualRect = getHandsVisualRect(layout, w, h);
-      if (
-        x < visualRect.x ||
-        y < visualRect.y ||
-        x > visualRect.x + visualRect.w ||
-        y > visualRect.y + visualRect.h
-      ) return;
-      const side: "left" | "right" = x < w / 2 ? "left" : "right";
-      const st = lockRef.current[side];
-      if (st.target > 0.5) {
-        // Collapse — retract from current click origin.
-        st.target = 0;
-        return;
-      }
-      // Snapshot click origin and compute a radius (in UV space) that
-      // reaches the furthest cell on this hand so the disc always covers
-      // the whole silhouette regardless of where the user clicked.
-      const minWH = Math.min(w, h);
-      const aspectX = w / h;
-      const oxUv = (x / minWH) * aspectX;
-      const oyUv = y / minWH;
-      let rMax = 0;
-      const cells = cellsRef.current;
-      for (let i = 0; i < cells.length; i++) {
-        const c = cells[i];
-        const cellSideLeft = c.x < w / 2;
-        if ((side === "left") !== cellSideLeft) continue;
-        const cUvX = (c.x / minWH) * aspectX;
-        const cUvY = c.y / minWH;
-        const dd = Math.hypot(cUvX - oxUv, cUvY - oyUv);
-        if (dd > rMax) rMax = dd;
-      }
-      st.x = x;
-      st.y = y;
-      st.radiusUv = rMax + LOCK_RADIUS_MARGIN_UV;
-      st.target = 1;
-    };
-    canvas.addEventListener("pointerdown", onDown);
+
+
 
     let frame = 0;
     let lastT = performance.now();
@@ -1100,55 +1055,8 @@ export function AsciiHandsFooter({
       const minWH = Math.min(w, h);
       const aspectX = w / h;
 
-      // ---- Click-lock: advance each side's progress toward its target ----
-      const lockL = lockRef.current.left;
-      const lockR = lockRef.current.right;
-      const stepLock = (st: { progress: number; target: number }) => {
-        if (st.progress === st.target) return;
-        const dir = st.target > st.progress ? 1 : -1;
-        const dur = dir > 0 ? LOCK_EXPAND_MS : LOCK_COLLAPSE_MS;
-        let p = st.progress + (dt / dur) * dir;
-        if (p > 1) p = 1;
-        if (p < 0) p = 0;
-        st.progress = p;
-      };
-      stepLock(lockL);
-      stepLock(lockR);
-      // Elastic-ish easings: expand overshoots then settles, collapse loads
-      // slightly backward before snapping in.
-      const easeOutBack = (t: number, s = 1.4) => {
-        const c1 = s;
-        const c3 = c1 + 1;
-        const u = t - 1;
-        return 1 + c3 * u * u * u + c1 * u * u;
-      };
-      const easeInBack = (t: number, s = 1.2) => {
-        const c1 = s;
-        const c3 = c1 + 1;
-        return c3 * t * t * t - c1 * t * t;
-      };
-      const lockEase = (st: { progress: number; target: number }) =>
-        st.target >= 0.5 ? easeOutBack(st.progress) : 1 - easeInBack(1 - st.progress);
-      const lockLE = lockEase(lockL);
-      const lockRE = lockEase(lockR);
-      const lockLActive = lockLE > 0.001 && grid;
-      const lockRActive = lockRE > 0.001 && grid;
-      const lockLUvX = lockLActive ? (lockL.x / minWH) * aspectX : 0;
-      const lockLUvY = lockLActive ? lockL.y / minWH : 0;
-      const lockRUvX = lockRActive ? (lockR.x / minWH) * aspectX : 0;
-      const lockRUvY = lockRActive ? lockR.y / minWH : 0;
-      // Tiny sinusoidal overshoot in the last 15% of the expand phase to
-      // reinforce the elastic feel; disabled while collapsing.
-      const lockRadiusPulse = (st: { progress: number; target: number }) => {
-        if (st.target < 0.5) return 1;
-        const p = st.progress;
-        if (p <= 0.85) return 1;
-        const k = (p - 0.85) / 0.15;
-        return 1 + 0.03 * Math.sin(k * Math.PI) * (1 - p);
-      };
-      const lockLR = lockLActive ? lockL.radiusUv * lockLE * lockRadiusPulse(lockL) : 0;
-      const lockRR = lockRActive ? lockR.radiusUv * lockRE * lockRadiusPulse(lockR) : 0;
       // Arm direction is mirrored per side (left = +, right = -).
+
       const armDxL = Math.cos((ARM_ANGLE_DEG * Math.PI) / 180);
       const armDxR = -armDxL;
       const armDyLR = -Math.sin((ARM_ANGLE_DEG * Math.PI) / 180);
@@ -1224,28 +1132,24 @@ export function AsciiHandsFooter({
             ? Math.min(1.4, dyeField.dye[cellJ * grid.cols + cellI] ?? 0)
             : 0;
 
-        // Ink-on-paper tone: brightness of the source still drives how much ink
-        // a cell gets (dark source = background = no ink), but the response is
-        // remapped with a lifted black point and a hard S-curve so faint planes
-        // stay near-paper while lit ridges slam to carbon — that gap is what
-        // reads as volume on a light canvas.
+        // Tone is carried by the glyph itself (ink area of the character), so
+        // every cell is drawn in the same near-carbon ink. Only a very small
+        // luminance-driven lift remains, to keep the faintest planes from
+        // looking rubber-stamped — never enough to wash the glyph out.
         const t = Math.min(1, Math.max(0, (bb - 0.01) / 0.94));
-        // Near-linear response (only a whisper of contrast shaping) so every
-        // step between paper and carbon actually exists — the previous S-curve
-        // emptied the midtones and made the form read as two flat bands.
-        const shade = Math.pow(t, 0.92);
-        // Ordered-ish dither from the stable cell seed breaks the remaining
-        // banding, so neighbouring tones blend instead of stepping.
-        const dither = (cellSeed - 0.5) * 0.07;
-        // Dye lifts the tonal value, which is what pushes the cell into a
-        // heavier glyph and a darker/denser ink (their fluidMultiplier).
+        // Dither the tonal value (not the colour) so glyph selection jitters
+        // slightly between neighbours and banding breaks up.
+        const dither = (cellSeed - 0.5) * 0.06;
         const tonal = Math.min(
           1,
-          Math.max(0, shade * 0.9 + 0.05 + dither + dyeAmt * DYE_TONE_BOOST),
+          Math.max(0, t + dither + dyeAmt * DYE_TONE_BOOST),
         );
-        let r = (232 - tonal * 224) / flowBrightness;
-        let g = (233 - tonal * 224) / flowBrightness;
-        let bl = (236 - tonal * 226) / flowBrightness;
+        // Ink lightens by at most ~34 units at the faint end of the ramp.
+        const lift = (1 - tonal) * 34;
+        let r = (INK_R + lift) / flowBrightness;
+        let g = (INK_G + lift) / flowBrightness;
+        let bl = (INK_B + lift) / flowBrightness;
+
 
         // Dye colouring: below the threshold the glyph stays graphite; above
         // it we ramp along the palette (warm → amber → citrus → green) with a
@@ -1266,14 +1170,19 @@ export function AsciiHandsFooter({
           bl += (pb - bl) * mixK;
         }
 
+        // Glyph choice = the actual tonal carrier: source density + flow wave +
+        // a one-step dither + the cursor dye boost.
+        const ditherStep = cellSeed > 0.62 ? 1 : cellSeed < 0.38 ? -1 : 0;
         const baseIdx =
           ((c.idx +
             flowIdxOffset +
+            ditherStep +
             Math.round(dyeAmt * DYE_IDX_BOOST)) %
             RAMP_LEN +
             RAMP_LEN) %
           RAMP_LEN;
         let ch = glyphAt(baseIdx);
+
 
 
         let jitterX = 0;
@@ -1429,95 +1338,8 @@ export function AsciiHandsFooter({
           }
         }
 
-        // ---- Click-lock reveal (per hand) ----
-        // Runs independently of hover: if this cell belongs to a side whose
-        // lock disc is currently expanded, paint the mosaic tile + scrambled
-        // glyph the same way the hover disc does, but centered on the
-        // click origin and sized to cover the whole hand.
-        {
-          const cellIsLeft = c.x < w / 2;
-          const lockActive = cellIsLeft ? lockLActive : lockRActive;
-          if (lockActive && grid) {
-            const oxUv = cellIsLeft ? lockLUvX : lockRUvX;
-            const oyUv = cellIsLeft ? lockLUvY : lockRUvY;
-            const R2 = cellIsLeft ? lockLR : lockRR;
-            const S2 = LOCK_SOFTNESS_UV;
-            const cellUvX = (c.x / minWH) * aspectX;
-            const cellUvY = c.y / minWH;
-            const ddx = cellUvX - oxUv;
-            const ddy = cellUvY - oyUv;
-            const d2 = Math.sqrt(ddx * ddx + ddy * ddy);
-            const armDx = cellIsLeft ? armDxL : armDxR;
-            const armDy = armDyLR;
-            const nx = d2 > 1e-5 ? ddx / d2 : 0;
-            const ny = d2 > 1e-5 ? ddy / d2 : 0;
-            const along = nx * armDx + ny * armDy;
-            const dirW = 1 + ARM_ALIGN_STRENGTH * (along * along * 2 - 1);
-            // Larger disc → scale up noise magnitude so the broken edge
-            // reads at the same visual weight as the small hover disc.
-            const NS = 2.4;
-            const lowFreq = (cellSeed * 2 - 1) * GOOEY_NOISE * 1.5 * NS;
-            const localI = cellI * armDx + cellJ * armDy;
-            const localJ = -cellI * armDy + cellJ * armDx;
-            const midFreq =
-              Math.sin(localI * 0.3 + localJ * 0.9 + cellSeed * 1.5) *
-              GOOEY_NOISE * 2.6 * NS;
-            const lowFreq2 =
-              Math.sin(localI * 0.15 + localJ * 0.42 + cellSeed * 3.1) *
-              GOOEY_NOISE * 3.0 * NS;
-            const wobble = prefersReduce
-              ? 0
-              : Math.sin(timeSec * 0.5 + cellSeed * 6.28318) *
-                GOOEY_NOISE * 0.6 * NS;
-            const highFreq =
-              (fract(Math.sin(cellSeed * 45.7) * 123.45) - 0.5) *
-              GOOEY_NOISE * 0.35 * NS;
-            const microFract =
-              (fract(Math.sin(cellSeed * 137.9) * 437.58) - 0.5) *
-              GOOEY_NOISE * 0.2 * NS;
-            const distorted2 =
-              d2 + lowFreq + midFreq * dirW + lowFreq2 * dirW +
-              wobble + highFreq * dirW + microFract * dirW;
-            const rLo2 = R2 - S2;
-            const rHi2 = R2 + S2;
-            if (distorted2 < rHi2) {
-              const tt2 = Math.min(
-                1,
-                Math.max(0, (distorted2 - rLo2) / Math.max(1e-4, rHi2 - rLo2)),
-              );
-              const gooey2 = 1 - tt2 * tt2 * (3 - 2 * tt2);
-              const sh2 = Math.min(1, Math.max(0, gooey2 / 0.15));
-              const sharp2 = sh2 * sh2 * (3 - 2 * sh2);
-              if (sharp2 > 0.01) {
-                const lumaWeight = Math.pow(bb, 0.6);
-                const sharpL = sharp2 * lumaWeight;
-                const scramble = fract(
-                  Math.sin((cellSeed + scrambleSeed) * 12.9898) * 43758.5453,
-                );
-                const scrambleOffset = Math.floor(
-                  (scramble - 0.5) * RAMP_LEN * 0.25 * sharpL,
-                );
-                const finalIdx =
-                  ((c.idx + scrambleOffset) % RAMP_LEN + RAMP_LEN) % RAMP_LEN;
-                ch = glyphAt(finalIdx);
-                r += (HR - r) * sharpL;
-                g += (HG - g) * sharpL;
-                bl += (HB - bl) * sharpL;
-                const rawT = (cellSeed - 0.5) * 2;
-                const shapedPhase =
-                  Math.sign(rawT) * Math.pow(Math.abs(rawT), 1.4);
-                const lockTilt =
-                  shapedPhase *
-                  ((REVEAL_TILT_MAX_DEG * Math.PI) / 180) *
-                  sharp2;
-                if (Math.abs(lockTilt) > Math.abs(revealTilt)) {
-                  revealTilt = lockTilt;
-                }
-              }
 
-            }
-          }
-        }
+
 
         // Per-cell depth parallax: brighter (foreground) cells drift more,
         // dark cells hold back — reads as pseudo-3D layering.
@@ -1592,7 +1414,7 @@ export function AsciiHandsFooter({
       window.removeEventListener("mouseleave", onLeave);
       window.removeEventListener("touchmove", onTouch);
       window.removeEventListener("touchend", onLeave);
-      canvas.removeEventListener("pointerdown", onDown);
+      
     };
   }, [layout]);
 
