@@ -1,44 +1,52 @@
 import { useEffect, useRef, useState } from "react";
-import handsPairAsset from "@/assets/hands-pair.png.asset.json";
+import handsFramesAsset from "@/assets/hands-frames.webp.asset.json";
 import { IntroVideo, type IntroProgressInfo } from "./IntroVideo";
 import { useHeroLayout, type HeroLayout } from "@/hooks/useHeroLayout";
 import { GlitchGrainOverlay } from "@/components/GlitchGrainOverlay";
 import { AuroraIntro } from "@/components/AuroraIntro";
 
 /**
- * Halftone dot-matrix hands.
+ * Halftone dot-matrix hands, scrubbed by scroll.
  *
- * The hands are rendered as a regular grid of neutral-grey circles whose radius
- * and darkness track the source image's luminance: bright planes become small
- * pale dots, shadow ridges become large near-carbon dots. Toward the outer
- * frame edges the dots shrink and drop out probabilistically so the arms
- * dissolve into the paper instead of ending on a hard rectangle.
- *
- * No characters, no tiles, no fluid field — tone is carried purely by dot area.
+ * The source is a sprite atlas of 49 greyscale frames (two hands entering from
+ * both sides on white paper). Scroll position — not a clock — picks the frame,
+ * so the motion is entirely under the reader's wheel and never loops on its own.
+ * Each frame is downsampled onto a fixed dot grid where the dot AREA carries the
+ * tone: small dots for near-paper planes, near-touching rounded squares in the
+ * deepest shadows, isolated single dots fraying out at the silhouette edge.
  */
+
+// ------------------------------------------------------------- atlas layout
+const ATLAS_COLS = 7;
+const ATLAS_ROWS = 7;
+const FRAME_COUNT = 49;
+const FRAME_W = 320;
+const FRAME_H = 178;
+const FRAME_AR = FRAME_W / FRAME_H;
 
 // ---------------------------------------------------------------- tuning
 // Radius is a fraction of the half-pitch; 0.98 lets the darkest dots almost
 // touch, matching a real halftone screen at high coverage.
 const DOT_FILL = 0.98;
 // Coverage below this is left as bare paper.
-const MIN_DENSITY = 0.035;
+const MIN_DENSITY = 0.05;
 // Above this coverage the dot squares off (superellipse), as on a print screen.
 const SQUARE_AT = 0.75;
 // Single mid-grey ink. Tone comes from dot AREA, not from colour.
 const INK_LIGHT = 0xa8;
 const INK_DARK = 0x8c;
 // Pointer parallax (CSS px at full deflection) + tonal breathing amplitude.
-const PARALLAX_X = 7;
-const PARALLAX_Y = 4;
-const BREATH_AMP = 0.05;
+const PARALLAX_X = 4;
+const PARALLAX_Y = 2.5;
+const BREATH_AMP = 0.035;
 const BREATH_PERIOD = 5200;
+// How fast the rendered frame chases the scroll-derived target frame.
+const FRAME_EASE = 0.16;
 
 /** 4x4 ordered dither matrix, normalised to 0..1 — breaks up flat banding. */
 const BAYER = [
   0, 8, 2, 10, 12, 4, 14, 6, 3, 11, 1, 9, 15, 7, 13, 5,
 ].map((v) => (v + 0.5) / 16);
-
 
 type Dot = {
   x: number;
@@ -94,9 +102,10 @@ function getHandsVisualRect(layout: HeroLayout, viewportW: number, viewportH: nu
   };
 }
 
-/** Downsample the source image onto the dot grid. */
+/** Downsample one atlas frame onto the dot grid. */
 function sampleDots(
-  img: HTMLImageElement,
+  atlas: HTMLImageElement,
+  frame: number,
   rect: { x: number; y: number; w: number; h: number },
   pitch: number,
 ): Dot[] {
@@ -108,40 +117,25 @@ function sampleDots(
   const octx = off.getContext("2d", { willReadFrequently: true });
   if (!octx) return [];
   octx.imageSmoothingEnabled = true;
-  // A touch of blur before the downsample keeps the coarse grid from aliasing
-  // the finger edges into stair-steps.
+  const idx = Math.min(FRAME_COUNT - 1, Math.max(0, frame));
+  const sx = (idx % ATLAS_COLS) * FRAME_W;
+  const sy = Math.floor(idx / ATLAS_COLS) * FRAME_H;
+  // Slight blur before the downsample keeps the coarse grid from aliasing the
+  // finger edges into stair-steps.
   (octx as unknown as { filter: string }).filter = "blur(0.5px)";
-  octx.drawImage(img, 0, 0, cols, rows);
+  octx.drawImage(atlas, sx, sy, FRAME_W, FRAME_H, 0, 0, cols, rows);
   (octx as unknown as { filter: string }).filter = "none";
   const data = octx.getImageData(0, 0, cols, rows).data;
-
-  // Pass 1 — raw premultiplied luma per cell, plus the tonal range present so
-  // the coverage curve can be normalised (the source sits almost entirely in
-  // the shadows, so a raw mapping would collapse to a flat blob).
-  const raw = new Float32Array(cols * rows);
-  let lo = 1;
-  let hi = 0;
-  for (let k = 0; k < cols * rows; k++) {
-    const p = k * 4;
-    const a = data[p + 3] / 255;
-    const luma =
-      (a * (0.2126 * data[p] + 0.7152 * data[p + 1] + 0.0722 * data[p + 2])) / 255;
-    raw[k] = luma;
-    if (luma > hi) hi = luma;
-    if (luma > 0.004 && luma < lo) lo = luma;
-  }
-  const span = Math.max(0.08, hi - lo);
 
   const dots: Dot[] = [];
   for (let j = 0; j < rows; j++) {
     for (let i = 0; i < cols; i++) {
-      const k = j * cols + i;
+      const p = (j * cols + i) * 4;
       const u = (i + 0.5) / cols;
-      const v = (j + 0.5) / rows;
-
-      // Normalised, near-linear coverage: 0 = paper, 1 = dots nearly touching.
-      const t = Math.min(1, Math.max(0, (raw[k] - lo) / span));
-      let density = Math.pow(t, 0.72);
+      const luma = (0.2126 * data[p] + 0.7152 * data[p + 1] + 0.0722 * data[p + 2]) / 255;
+      // Source is dark subject on white paper → ink is the INVERSE of luma.
+      const t = Math.min(1, Math.max(0, (1 - luma - 0.02) / 0.88));
+      let density = Math.pow(t, 0.8);
 
       // Ordered dither on the threshold only — keeps continuous tone in the
       // midtones instead of stepping into visible bands of equal dots.
@@ -166,7 +160,6 @@ function sampleDots(
   return dots;
 }
 
-
 export function HalftoneHandsFooter({
   videoSrc,
   debug,
@@ -180,11 +173,11 @@ export function HalftoneHandsFooter({
     stageRef.current = stage;
   }, [stage]);
 
-  const dotsRef = useRef<Dot[]>([]);
-  const pitchRef = useRef(layout.cellSize);
   const imageRef = useRef<HTMLImageElement | null>(null);
   // Pointer offset in -1..1, smoothed toward the raw target each frame.
   const pointerRef = useRef({ tx: 0, ty: 0, x: 0, y: 0 });
+  // Scroll-driven playhead: target frame from scroll, eased current frame.
+  const playheadRef = useRef({ target: 0, current: 0 });
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -195,24 +188,35 @@ export function HalftoneHandsFooter({
     const prefersReduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
     const pitch = Math.max(5, Math.round(layout.cellSize * 0.62));
-    pitchRef.current = pitch;
 
-    const resample = () => {
+    // Per-frame dot cache — scrubbing back and forth never recomputes a frame.
+    let cache = new Map<number, Dot[]>();
+    let bandRect = { x: 0, y: 0, w: 0, h: 0 };
+
+    const dotsForFrame = (frame: number): Dot[] => {
       const img = imageRef.current;
-      if (!img) return;
+      if (!img || bandRect.w <= 0) return [];
+      const hit = cache.get(frame);
+      if (hit) return hit;
+      const built = sampleDots(img, frame, bandRect, pitch);
+      cache.set(frame, built);
+      return built;
+    };
+
+    const recomputeBand = () => {
       const w = canvas.clientWidth;
       const h = canvas.clientHeight;
       if (w <= 0 || h <= 0) return;
-      const imgAR = img.naturalWidth / img.naturalHeight;
       const visualRect = getHandsVisualRect(layout, w, h);
       const bandW = visualRect.w;
-      const bandH = bandW / imgAR;
-      const bandY = visualRect.y + visualRect.h * 0.5 - bandH * 0.5;
-      dotsRef.current = sampleDots(
-        img,
-        { x: visualRect.x, y: bandY, w: bandW, h: bandH },
-        pitch,
-      );
+      const bandH = bandW / FRAME_AR;
+      bandRect = {
+        x: visualRect.x,
+        y: visualRect.y + visualRect.h * 0.5 - bandH * 0.5,
+        w: bandW,
+        h: bandH,
+      };
+      cache = new Map();
     };
 
     const resize = () => {
@@ -222,10 +226,10 @@ export function HalftoneHandsFooter({
       canvas.width = Math.floor(w * dpr);
       canvas.height = Math.floor(h * dpr);
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-      resample();
+      recomputeBand();
     };
 
-    loadImage(handsPairAsset.url).then((img) => {
+    loadImage(handsFramesAsset.url).then((img) => {
       imageRef.current = img;
       resize();
     });
@@ -237,6 +241,24 @@ export function HalftoneHandsFooter({
     };
     const ro = new ResizeObserver(scheduleResize);
     ro.observe(canvas);
+
+    // ----------------------------------------------------- scroll playhead
+    const readScroll = () => {
+      if (prefersReduce) {
+        playheadRef.current.target = FRAME_COUNT - 1;
+        playheadRef.current.current = FRAME_COUNT - 1;
+        return;
+      }
+      // The hero owns the first viewport of scroll; map that span onto the
+      // whole frame range so the hands finish as the next section arrives.
+      const span = Math.max(1, window.innerHeight);
+      const p = Math.min(1, Math.max(0, (window.scrollY || 0) / span));
+      playheadRef.current.target = p * (FRAME_COUNT - 1);
+    };
+    readScroll();
+    playheadRef.current.current = playheadRef.current.target;
+    window.addEventListener("scroll", readScroll, { passive: true });
+    window.addEventListener("resize", readScroll);
 
     const onMove = (e: MouseEvent) => {
       const rect = canvas.getBoundingClientRect();
@@ -260,6 +282,14 @@ export function HalftoneHandsFooter({
       const h = canvas.clientHeight;
       ctx.clearRect(0, 0, w, h);
 
+      const ph = playheadRef.current;
+      if (prefersReduce) {
+        ph.current = ph.target;
+      } else {
+        ph.current += (ph.target - ph.current) * FRAME_EASE;
+        if (Math.abs(ph.target - ph.current) < 0.01) ph.current = ph.target;
+      }
+
       const p = pointerRef.current;
       if (prefersReduce) {
         p.x = 0;
@@ -273,7 +303,7 @@ export function HalftoneHandsFooter({
         ? 1
         : 1 + Math.sin((now / BREATH_PERIOD) * Math.PI * 2) * BREATH_AMP;
 
-      const dots = dotsRef.current;
+      const dots = dotsForFrame(Math.round(ph.current));
       for (let k = 0; k < dots.length; k++) {
         const dot = dots[k];
         // Centre dots drift more than edge dots → a shallow depth read.
@@ -306,8 +336,6 @@ export function HalftoneHandsFooter({
         }
       }
 
-
-
       raf = requestAnimationFrame(draw);
     };
     raf = requestAnimationFrame(draw);
@@ -316,6 +344,8 @@ export function HalftoneHandsFooter({
       cancelAnimationFrame(raf);
       window.clearTimeout(resizeTimer);
       ro.disconnect();
+      window.removeEventListener("scroll", readScroll);
+      window.removeEventListener("resize", readScroll);
       window.removeEventListener("mousemove", onMove);
       window.removeEventListener("mouseleave", onLeave);
     };
