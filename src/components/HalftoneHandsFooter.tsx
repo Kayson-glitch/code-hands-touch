@@ -79,7 +79,141 @@ type Dot = {
   cx: number;
 };
 
-type HoverMode = "magnetic" | "deepen" | "breathe";
+// ------------------------------------------------------------- ink fluid
+// Warm, low-saturation dye gradient: pale amber → orange → rose.
+const DYE_STOPS: Array<[number, number, number]> = [
+  [0xe6, 0xcf, 0x9b],
+  [0xe1, 0x84, 0x3a],
+  [0xcd, 0x3c, 0x66],
+];
+
+/** Interpolate the dye gradient at t (0..1). */
+function dyeAt(t: number): [number, number, number] {
+  const x = Math.min(1, Math.max(0, t));
+  const seg = x < 0.5 ? 0 : 1;
+  const f = seg === 0 ? x / 0.5 : (x - 0.5) / 0.5;
+  const a = DYE_STOPS[seg];
+  const b = DYE_STOPS[seg + 1];
+  return [
+    a[0] + (b[0] - a[0]) * f,
+    a[1] + (b[1] - a[1]) * f,
+    a[2] + (b[2] - a[2]) * f,
+  ];
+}
+
+/**
+ * Tiny semi-Lagrangian dye/velocity field (no pressure projection).
+ * The pointer injects dye plus a directional impulse; each step advects both
+ * along the velocity, blurs a little and decays, giving the wispy trailing
+ * smear of ink pushed across paper instead of a hard cursor halo.
+ */
+class FluidField {
+  cols: number;
+  rows: number;
+  cellW: number;
+  cellH: number;
+  u: Float32Array;
+  v: Float32Array;
+  d: Float32Array;
+  private tu: Float32Array;
+  private tv: Float32Array;
+  private td: Float32Array;
+
+  constructor(width: number, height: number, targetCols = 110) {
+    this.cols = Math.max(16, Math.min(targetCols, Math.round(targetCols)));
+    this.rows = Math.max(12, Math.round((this.cols * height) / Math.max(1, width)));
+    this.cellW = width / this.cols;
+    this.cellH = height / this.rows;
+    const n = this.cols * this.rows;
+    this.u = new Float32Array(n);
+    this.v = new Float32Array(n);
+    this.d = new Float32Array(n);
+    this.tu = new Float32Array(n);
+    this.tv = new Float32Array(n);
+    this.td = new Float32Array(n);
+  }
+
+  /** Inject dye + impulse at a canvas-space point. vx/vy are px per second. */
+  splat(px: number, py: number, vx: number, vy: number, strength = 1) {
+    const gi = px / this.cellW;
+    const gj = py / this.cellH;
+    const rad = 2.6;
+    const i0 = Math.max(0, Math.floor(gi - rad));
+    const i1 = Math.min(this.cols - 1, Math.ceil(gi + rad));
+    const j0 = Math.max(0, Math.floor(gj - rad));
+    const j1 = Math.min(this.rows - 1, Math.ceil(gj + rad));
+    const iu = (vx / this.cellW) * 0.55;
+    const iv = (vy / this.cellH) * 0.55;
+    for (let j = j0; j <= j1; j++) {
+      for (let i = i0; i <= i1; i++) {
+        const dx = i + 0.5 - gi;
+        const dy = j + 0.5 - gj;
+        const g = Math.exp(-(dx * dx + dy * dy) / (rad * 0.75));
+        if (g < 0.01) continue;
+        const k = j * this.cols + i;
+        this.d[k] = Math.min(1.6, this.d[k] + g * 0.85 * strength);
+        this.u[k] += iu * g * strength;
+        this.v[k] += iv * g * strength;
+      }
+    }
+  }
+
+  step(dt: number) {
+    const { cols, rows, u, v, d, tu, tv, td } = this;
+    const h = Math.min(0.033, dt);
+    // --- advect dye and velocity backwards along the flow
+    for (let j = 0; j < rows; j++) {
+      for (let i = 0; i < cols; i++) {
+        const k = j * cols + i;
+        const x = i + 0.5 - u[k] * h;
+        const y = j + 0.5 - v[k] * h;
+        td[k] = this.bilinear(d, x, y);
+        tu[k] = this.bilinear(u, x, y) * 0.985;
+        tv[k] = this.bilinear(v, x, y) * 0.985;
+      }
+    }
+    // --- diffuse (single blur pass) + decay
+    const dyeDecay = Math.exp(-h / 1.9);
+    const velDecay = Math.exp(-h / 0.65);
+    for (let j = 0; j < rows; j++) {
+      for (let i = 0; i < cols; i++) {
+        const k = j * cols + i;
+        const l = i > 0 ? td[k - 1] : td[k];
+        const r = i < cols - 1 ? td[k + 1] : td[k];
+        const up = j > 0 ? td[k - cols] : td[k];
+        const dn = j < rows - 1 ? td[k + cols] : td[k];
+        d[k] = (td[k] * 0.62 + (l + r + up + dn) * 0.095) * dyeDecay;
+        if (d[k] < 0.002) d[k] = 0;
+        u[k] = tu[k] * velDecay;
+        v[k] = tv[k] * velDecay;
+      }
+    }
+  }
+
+  private bilinear(f: Float32Array, x: number, y: number) {
+    const { cols, rows } = this;
+    const px = Math.min(cols - 1.001, Math.max(0, x - 0.5));
+    const py = Math.min(rows - 1.001, Math.max(0, y - 0.5));
+    const i = Math.floor(px);
+    const j = Math.floor(py);
+    const fx = px - i;
+    const fy = py - j;
+    const k = j * cols + i;
+    const a = f[k];
+    const b = f[k + 1];
+    const c = f[k + cols];
+    const e = f[k + cols + 1];
+    return (
+      a * (1 - fx) * (1 - fy) + b * fx * (1 - fy) + c * (1 - fx) * fy + e * fx * fy
+    );
+  }
+
+  /** Dye coverage at a canvas-space point. */
+  sample(px: number, py: number) {
+    return this.bilinear(this.d, px / this.cellW, py / this.cellH);
+  }
+}
+
 
 function loadImage(src: string): Promise<HTMLImageElement> {
   return new Promise((resolve, reject) => {
