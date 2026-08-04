@@ -42,8 +42,8 @@ const BREATH_AMP = 0.035;
 const BREATH_PERIOD = 5200;
 // How fast the rendered frame chases the target frame.
 const FRAME_EASE = 0.16;
-// One-shot playback length, from the first frame to the last.
-const PLAY_DURATION = 2000;
+
+
 
 
 /** 4x4 ordered dither matrix, normalised to 0..1 — breaks up flat banding. */
@@ -245,30 +245,50 @@ export function HalftoneHandsFooter({
     const ro = new ResizeObserver(scheduleResize);
     ro.observe(canvas);
 
-    // ----------------------------------------------------- one-shot playback
-    // The hands rest on frame 1 until the reader's first wheel or click, then
-    // play straight through once and stay on the last frame forever. Scrolling
-    // is never swallowed — the page keeps moving as usual.
-    const playback = { startedAt: null as number | null };
+    // -------------------------------------------------- wheel-driven playhead
+    // The hands rest on frame 1 and are scrubbed by the wheel. Until the last
+    // frame is reached the wheel is swallowed, so the page stays put; once the
+    // sequence is complete the wheel is handed back to the page. Scrolling back
+    // to the very top and continuing upward rewinds the hands.
+    const progressRef = { v: prefersReduce ? 1 : 0 };
 
-    playheadRef.current.target = 0;
-    playheadRef.current.current = 0;
+    const lockSpan = () => Math.max(320, window.innerHeight);
 
-    if (prefersReduce) {
-      playheadRef.current.target = FRAME_COUNT - 1;
-      playheadRef.current.current = FRAME_COUNT - 1;
-    }
-
-    const start = () => {
-      if (prefersReduce || playback.startedAt !== null) return;
-      if (stageRef.current !== "hands") return;
-      playback.startedAt = performance.now();
-      window.removeEventListener("wheel", onTrigger);
-      window.removeEventListener("pointerdown", onTrigger);
+    /** Advance/rewind the playhead. Returns true when the wheel was consumed. */
+    const consume = (rawDy: number, deltaMode = 0) => {
+      if (prefersReduce) return false;
+      const dy = rawDy * (deltaMode === 1 ? 16 : deltaMode === 2 ? 100 : 1);
+      if (dy === 0) return false;
+      const p = progressRef.v;
+      const goingDown = dy > 0;
+      const atTop = window.scrollY <= 0;
+      const canForward = goingDown && p < 1;
+      const canRewind = !goingDown && p > 0 && atTop;
+      if (!canForward && !canRewind) return false;
+      progressRef.v = Math.min(1, Math.max(0, p + dy / lockSpan()));
+      return true;
     };
-    const onTrigger = () => start();
-    window.addEventListener("wheel", onTrigger, { passive: true });
-    window.addEventListener("pointerdown", onTrigger, { passive: true });
+
+    const onWheel = (e: WheelEvent) => {
+      if (stageRef.current !== "hands") return;
+      if (consume(e.deltaY, e.deltaMode)) e.preventDefault();
+    };
+    window.addEventListener("wheel", onWheel, { passive: false });
+
+    let touchY: number | null = null;
+    const onTouchStart = (e: TouchEvent) => {
+      touchY = e.touches[0]?.clientY ?? null;
+    };
+    const onTouchMove = (e: TouchEvent) => {
+      if (stageRef.current !== "hands" || touchY === null) return;
+      const y = e.touches[0]?.clientY ?? touchY;
+      const dy = touchY - y;
+      touchY = y;
+      if (consume(dy * 1.6)) e.preventDefault();
+    };
+    window.addEventListener("touchstart", onTouchStart, { passive: true });
+    window.addEventListener("touchmove", onTouchMove, { passive: false });
+
 
 
 
@@ -300,10 +320,8 @@ export function HalftoneHandsFooter({
         ph.target = FRAME_COUNT - 1;
         ph.current = ph.target;
       } else {
-        if (playback.startedAt !== null) {
-          const t = Math.min(1, (now - playback.startedAt) / PLAY_DURATION);
-          ph.target = smoothstep(t) * (FRAME_COUNT - 1);
-        }
+        ph.target = progressRef.v * (FRAME_COUNT - 1);
+
         ph.current += (ph.target - ph.current) * FRAME_EASE;
         if (Math.abs(ph.target - ph.current) < 0.01) ph.current = ph.target;
       }
@@ -363,8 +381,10 @@ export function HalftoneHandsFooter({
       cancelAnimationFrame(raf);
       window.clearTimeout(resizeTimer);
       ro.disconnect();
-      window.removeEventListener("wheel", onTrigger);
-      window.removeEventListener("pointerdown", onTrigger);
+      window.removeEventListener("wheel", onWheel);
+      window.removeEventListener("touchstart", onTouchStart);
+      window.removeEventListener("touchmove", onTouchMove);
+
 
 
       window.removeEventListener("mousemove", onMove);
