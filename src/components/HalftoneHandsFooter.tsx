@@ -388,8 +388,10 @@ export function HalftoneHandsFooter({
       canvas.width = Math.floor(w * dpr);
       canvas.height = Math.floor(h * dpr);
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      if (w > 0 && h > 0) fluidRef.current = new FluidField(w, h);
       recomputeBand();
     };
+
 
     loadImage(handsFramesAsset.url).then((img) => {
       imageRef.current = img;
