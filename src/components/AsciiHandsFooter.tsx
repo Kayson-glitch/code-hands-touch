@@ -857,9 +857,8 @@ export function AsciiHandsFooter({
       const hoverActive = intensity > 0.01 && !prefersReduce;
       const tiltScale = TILT_MAX_DEG * (Math.PI / 180) * intensity * intensity;
 
-      // Highlight tint the revealed cells migrate toward. A soft near-white
-      // with a lavender purple bias to match the #C5A9FF base color scheme.
-      const HR = 45, HG = 40, HB = 60;
+      // Hover accent: a rich dark purple that glyphs migrate toward on interaction.
+      const HR = 55, HG = 50, HB = 80;
 
       for (let k = 0; k < cells.length; k++) {
         const c = cells[k];
