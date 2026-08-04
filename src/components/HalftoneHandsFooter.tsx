@@ -242,54 +242,61 @@ export function HalftoneHandsFooter({
     const ro = new ResizeObserver(scheduleResize);
     ro.observe(canvas);
 
-    // ----------------------------------------------------- scroll playhead
-    // The hands own the wheel until their animation has fully played: while the
-    // playhead is below 1 we swallow the scroll and spend it on frames instead,
-    // then hand the wheel back to the document. Scrolling back up at the very
-    // top rewinds the hands before the page can move again.
-    const progressRef = { value: 0 };
-    const lockSpan = () => Math.max(400, window.innerHeight * 1.15);
+    // ------------------------------------------------- one-shot playback
+    // The hands hold on frame 0 until the reader scrolls or clicks; that first
+    // gesture starts a timed playthrough that swallows the wheel until the last
+    // frame, where the hands rest for good and the page scrolls normally again.
+    const PLAY_MS = 3600;
+    const play = { started: false, t0: 0, done: prefersReduce };
+    const progressRef = { value: prefersReduce ? 1 : 0 };
 
     const applyProgress = () => {
       playheadRef.current.target = progressRef.value * (FRAME_COUNT - 1);
     };
+    applyProgress();
+    playheadRef.current.current = playheadRef.current.target;
 
-    if (prefersReduce) {
-      progressRef.value = 1;
-      playheadRef.current.target = FRAME_COUNT - 1;
-      playheadRef.current.current = FRAME_COUNT - 1;
-    }
-
-    // Returns true when the delta was consumed by the hands.
-    const consume = (dy: number) => {
-      if (prefersReduce || dy === 0) return false;
-      const p = progressRef.value;
-      if (dy > 0 ? p >= 1 : p <= 0 || (window.scrollY || 0) > 0) return false;
-      progressRef.value = Math.min(1, Math.max(0, p + dy / lockSpan()));
-      applyProgress();
+    const startPlay = () => {
+      if (prefersReduce || play.started) return false;
+      play.started = true;
+      play.t0 = performance.now();
       return true;
     };
 
+    // Advance the timed playhead; called from the render loop.
+    const tickPlay = (now: number) => {
+      if (!play.started || play.done) return;
+      const t = Math.min(1, (now - play.t0) / PLAY_MS);
+      progressRef.value = t;
+      applyProgress();
+      if (t >= 1) play.done = true;
+    };
+
+    const shouldLock = () => !prefersReduce && !play.done && (window.scrollY || 0) <= 0;
+
     const onWheel = (e: WheelEvent) => {
-      const dy = e.deltaY * (e.deltaMode === 1 ? 16 : e.deltaMode === 2 ? 100 : 1);
-      if (consume(dy)) e.preventDefault();
+      if (!shouldLock()) return;
+      if (e.deltaY <= 0 && !play.started) return;
+      startPlay();
+      e.preventDefault();
     };
     window.addEventListener("wheel", onWheel, { passive: false });
 
-    let touchY = 0;
+    const onPointerDown = () => {
+      startPlay();
+    };
+    window.addEventListener("pointerdown", onPointerDown, { passive: true });
+
     const onTouchStart = (e: TouchEvent) => {
-      touchY = e.touches[0]?.clientY ?? 0;
+      void e;
+      startPlay();
     };
     const onTouchMove = (e: TouchEvent) => {
-      const y = e.touches[0]?.clientY ?? 0;
-      const dy = touchY - y;
-      touchY = y;
-      if (consume(dy * 1.4)) e.preventDefault();
+      if (shouldLock()) e.preventDefault();
     };
     window.addEventListener("touchstart", onTouchStart, { passive: true });
     window.addEventListener("touchmove", onTouchMove, { passive: false });
-    applyProgress();
-    playheadRef.current.current = playheadRef.current.target;
+
 
 
     const onMove = (e: MouseEvent) => {
@@ -314,7 +321,9 @@ export function HalftoneHandsFooter({
       const h = canvas.clientHeight;
       ctx.clearRect(0, 0, w, h);
 
+      tickPlay(now);
       const ph = playheadRef.current;
+
       if (prefersReduce) {
         ph.current = ph.target;
       } else {
@@ -379,6 +388,8 @@ export function HalftoneHandsFooter({
       window.removeEventListener("wheel", onWheel);
       window.removeEventListener("touchstart", onTouchStart);
       window.removeEventListener("touchmove", onTouchMove);
+      window.removeEventListener("pointerdown", onPointerDown);
+
 
       window.removeEventListener("mousemove", onMove);
       window.removeEventListener("mouseleave", onLeave);
