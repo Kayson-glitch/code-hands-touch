@@ -653,47 +653,7 @@ export function HalftoneHandsFooter({
         </div>
       )}
 
-      {stage === "hands" && showSwitcher && (
-        <div
-          className="absolute flex flex-col gap-2 rounded-xl border border-black/10 bg-white/80 p-2 shadow-lg backdrop-blur-md"
-          style={{ zIndex: 30, right: 20, bottom: 20 }}
-        >
-          <div className="flex items-center justify-between px-1">
-            <span className="text-[11px] font-medium tracking-wide text-black/60">
-              HOVER 效果
-            </span>
-            <button
-              type="button"
-              onClick={() => setShowSwitcher(false)}
-              className="text-[11px] leading-none text-black/40 transition-colors hover:text-black"
-              aria-label="关闭切换器"
-            >
-              ✕
-            </button>
-          </div>
-          <div className="flex gap-1">
-            {[
-              { key: "magnetic", label: "磁吸" },
-              { key: "deepen", label: "加深" },
-              { key: "breathe", label: "呼吸" },
-            ].map((m) => (
-              <button
-                key={m.key}
-                type="button"
-                onClick={() => setHoverMode(m.key as HoverMode)}
-                className={[
-                  "rounded-lg px-3 py-1.5 text-xs font-medium transition-all",
-                  hoverMode === m.key
-                    ? "bg-black text-white shadow-sm"
-                    : "bg-black/5 text-black/70 hover:bg-black/10 hover:text-black",
-                ].join(" ")}
-              >
-                {m.label}
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
+
     </section>
   );
 }
