@@ -1388,55 +1388,8 @@ export function AsciiHandsFooter({
                 if (Math.abs(lockTilt) > Math.abs(revealTilt)) {
                   revealTilt = lockTilt;
                 }
-                if (gooey2 > MOSAIC_MASK_THRESHOLD) {
-                  const shatter = 1 - gooey2;
-                  const jx =
-                    (fract(Math.sin(cellSeed * 12.7) * 91.3) - 0.5) *
-                    2 * MOSAIC_SHATTER_PX * shatterK * shatter;
-                  const jy =
-                    (fract(Math.sin(cellSeed * 41.9) * 57.1) - 0.5) *
-                    2 * MOSAIC_SHATTER_PX * shatterK * shatter;
-                  const splat = fract(Math.sin(cellSeed * 73.1) * 811.7);
-                  const splatterActive =
-                    splat < MOSAIC_SPLATTER_PROB ? 1 : 0;
-                  const splatMag =
-                    splatterActive * MOSAIC_SPLATTER_PX * shatterK * shatter;
-                  const normX = -armDy;
-                  const normY = armDx;
-                  const splatSign =
-                    fract(Math.sin(cellSeed * 19.3) * 313.7) > 0.5 ? 1 : -1;
-                  const sx = jx + normX * splatMag * splatSign;
-                  const sy = jy + normY * splatMag * splatSign;
-                  const scale =
-                    scaleMinDyn +
-                    (MOSAIC_SCALE_MAX - scaleMinDyn) * (1 - shatter);
-                  const tw = CELL_W * scale;
-                  const th = CELL_H * scale;
-                  const tx =
-                    c.x + offX * (0.30 + bb * 0.55 + c.armT * 0.45) +
-                    sx + (CELL_W - tw) * 0.5;
-                  const ty =
-                    c.y + offY * (0.30 + bb * 0.55 + c.armT * 0.45) +
-                    sy + (CELL_H - th) * 0.5;
-                  const colBase = (cellJ * grid.cols + cellI) * 3;
-                  const cr = grid.color[colBase + 0] ?? 0;
-                  const cg = grid.color[colBase + 1] ?? 0;
-                  const cb = grid.color[colBase + 2] ?? 0;
-                  const luma =
-                    (0.2126 * cr + 0.7152 * cg + 0.0722 * cb) / 255;
-                  const ink = Math.round(
-                    MOSAIC_INK_LIGHT -
-                      (MOSAIC_INK_LIGHT - MOSAIC_INK_DARK) * (1 - luma),
-                  );
-                  const gg = Math.min(1, Math.max(0, gooey2));
-                  const ss = gg * gg * (3 - 2 * gg);
-                  const lockAlpha =
-                    Math.pow(ss, alphaGamma) * ss * MOSAIC_MAX_ALPHA;
-                  if (lockAlpha > mosaicAlpha) mosaicAlpha = lockAlpha;
-                  ctx.fillStyle = `rgba(${ink},${ink},${ink},${lockAlpha})`;
-                  ctx.fillRect(tx, ty, tw, th);
+              }
 
-                }
               }
             }
           }
