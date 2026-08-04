@@ -80,7 +80,15 @@ const REVEAL_TILT_MAX_DEG = 12;
 const MOSAIC_MASK_THRESHOLD = 0.04;
 const MOSAIC_SHATTER_PX = 1.8; // max positional break at the disc edge
 const MOSAIC_SCALE_MIN = 0.88; // min tile occupancy at the disc edge
-const MOSAIC_SCALE_MAX = 1.12; // max tile occupancy (center)
+const MOSAIC_SCALE_MAX = 0.92; // max tile occupancy (center) — leaves paper gaps
+// Peak opacity of a mosaic tile. Kept well under 1 so the photo reads as a
+// shadow behind the glyphs instead of covering them like a censor bar.
+const MOSAIC_MAX_ALPHA = 0.55;
+// Ink range the mosaic tiles are remapped into (paper → carbon), matching the
+// glyph palette so the reveal never introduces hue.
+const MOSAIC_INK_LIGHT = 226;
+const MOSAIC_INK_DARK = 24;
+
 const MOSAIC_SPLATTER_PROB = 0.06; // % of tiles that fling further out
 const MOSAIC_SPLATTER_PX = 5;
 // Click-to-lock reveal — per hand toggle that expands a mosaic disc from
