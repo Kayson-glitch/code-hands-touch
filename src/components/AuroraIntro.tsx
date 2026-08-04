@@ -24,7 +24,7 @@ export function AuroraIntro() {
     const onBg = (e: Event) => {
       const detail = (e as CustomEvent<string | { mode?: string }>).detail;
       const mode = typeof detail === "string" ? detail : detail?.mode;
-      if (mode === "dark") reveal();
+      if (mode === "light") reveal();
     };
     window.addEventListener("app-bg-change", onBg as EventListener);
 
@@ -32,7 +32,7 @@ export function AuroraIntro() {
       const sectionBg = wrapperRef.current?.closest("section")
         ? getComputedStyle(wrapperRef.current.closest("section") as HTMLElement).backgroundColor
         : "";
-      if (sectionBg === "rgb(0, 0, 0)" || sectionBg === "#000") {
+      if (sectionBg === "rgb(255, 255, 255)" || sectionBg === "#fff" || sectionBg === "#ffffff") {
         raf2 = requestAnimationFrame(() => setEntered(true));
       }
     });
