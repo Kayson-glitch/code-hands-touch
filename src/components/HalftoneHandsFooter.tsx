@@ -358,7 +358,7 @@ export function HalftoneHandsFooter({
       const ripples = ripplesRef.current;
       const last = ripples[ripples.length - 1];
       if (
-        hoverMode === "breathe" &&
+        hoverModeRef.current === "breathe" &&
         (!last || Math.hypot(cx - last.x, cy - last.y) > 36)
       ) {
         ripples.push({ x: cx, y: cy, t: performance.now() });
