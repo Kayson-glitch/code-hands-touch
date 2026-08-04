@@ -79,6 +79,8 @@ type Dot = {
   cx: number;
 };
 
+type HoverMode = "magnetic" | "deepen" | "breathe";
+
 function loadImage(src: string): Promise<HTMLImageElement> {
   return new Promise((resolve, reject) => {
     const img = new Image();
@@ -199,8 +201,19 @@ export function HalftoneHandsFooter({
   const imageRef = useRef<HTMLImageElement | null>(null);
   // Pointer offset in -1..1, smoothed toward the raw target each frame.
   const pointerRef = useRef({ tx: 0, ty: 0, x: 0, y: 0 });
+  // Cursor position in CSS px within the canvas, for hover effects.
+  const cursorRef = useRef({ tx: -9999, ty: -9999, x: -9999, y: -9999, active: false });
+  // Active ripples for the breathe mode: each expands from a cursor position.
+  const ripplesRef = useRef<Array<{ x: number; y: number; t: number }>>([]);
   // Scroll-driven playhead: target frame from scroll, eased current frame.
   const playheadRef = useRef({ target: 0, current: 0 });
+
+  const [hoverMode, setHoverMode] = useState<HoverMode>("magnetic");
+  const hoverModeRef = useRef<HoverMode>(hoverMode);
+  useEffect(() => {
+    hoverModeRef.current = hoverMode;
+  }, [hoverMode]);
+  const [showSwitcher, setShowSwitcher] = useState(true);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -334,10 +347,28 @@ export function HalftoneHandsFooter({
       const rect = canvas.getBoundingClientRect();
       pointerRef.current.tx = ((e.clientX - rect.left) / rect.width) * 2 - 1;
       pointerRef.current.ty = ((e.clientY - rect.top) / rect.height) * 2 - 1;
+
+      const cx = e.clientX - rect.left;
+      const cy = e.clientY - rect.top;
+      cursorRef.current.tx = cx;
+      cursorRef.current.ty = cy;
+      cursorRef.current.active = true;
+
+      // Breathe mode: spawn a ripple when the cursor has travelled far enough.
+      const ripples = ripplesRef.current;
+      const last = ripples[ripples.length - 1];
+      if (
+        hoverModeRef.current === "breathe" &&
+        (!last || Math.hypot(cx - last.x, cy - last.y) > 36)
+      ) {
+        ripples.push({ x: cx, y: cy, t: performance.now() });
+        if (ripples.length > 5) ripples.shift();
+      }
     };
     const onLeave = () => {
       pointerRef.current.tx = 0;
       pointerRef.current.ty = 0;
+      cursorRef.current.active = false;
     };
     if (!prefersReduce) {
       window.addEventListener("mousemove", onMove, { passive: true });
@@ -402,19 +433,80 @@ export function HalftoneHandsFooter({
         : 1 + Math.sin((now / BREATH_PERIOD) * Math.PI * 2) * BREATH_AMP;
 
       const dots = dotsForFrame(Math.round(ph.current));
+      const cursor = cursorRef.current;
+      if (!prefersReduce) {
+        cursor.x += (cursor.tx - cursor.x) * 0.12;
+        cursor.y += (cursor.ty - cursor.y) * 0.12;
+      }
+      const cx = cursor.active ? cursor.x : -9999;
+      const cy = cursor.active ? cursor.y : -9999;
+
+      // Breathe mode: a slow global spatial pulse plus expanding ripples from the cursor.
+      const globalBreath = prefersReduce
+        ? 1
+        : 1 + Math.sin((now / 3200) * Math.PI * 2) * 0.02;
+      const activeRipples = prefersReduce
+        ? []
+        : ripplesRef.current.filter((r) => now - r.t < 1400);
+      ripplesRef.current = activeRipples;
+
       for (let k = 0; k < dots.length; k++) {
         const dot = dots[k];
         // Centre dots drift more than edge dots → a shallow depth read.
         const weight = 0.35 + dot.cx * 0.65;
-        const x = dot.x + p.x * PARALLAX_X * weight;
-        const y = dot.y + p.y * PARALLAX_Y * weight;
+        let x = dot.x + p.x * PARALLAX_X * weight;
+        let y = dot.y + p.y * PARALLAX_Y * weight;
 
-        const raw = Math.min(1, dot.d * breath);
+        let density = dot.d * breath;
+        let radiusScale = 1;
+
+        const mode = hoverModeRef.current;
+        if (mode === "magnetic" && cursor.active) {
+          const dx = x - cx;
+          const dy = y - cy;
+          const dist = Math.hypot(dx, dy);
+          const radius = 160;
+          const falloff = dist < radius ? smoothstep(1 - dist / radius) : 0;
+          const maxPull = 8;
+          const pull = falloff * maxPull;
+          const angle = Math.atan2(dy, dx);
+          x -= Math.cos(angle) * pull;
+          y -= Math.sin(angle) * pull;
+          radiusScale = 1 + falloff * 0.15;
+        } else if (mode === "deepen" && cursor.active) {
+          const dx = x - cx;
+          const dy = y - cy;
+          const dist = Math.hypot(dx, dy);
+          const radius = 180;
+          const falloff = dist < radius ? smoothstep(1 - dist / radius) : 0;
+          density += falloff * 0.22;
+        } else if (mode === "breathe") {
+          const cw = canvas.clientWidth;
+          const ch = canvas.clientHeight;
+          const bx = x - cw * 0.5;
+          const by = y - ch * 0.5;
+          x = cw * 0.5 + bx * globalBreath;
+          y = ch * 0.5 + by * globalBreath;
+
+          let rippleScale = 0;
+          for (const ripple of activeRipples) {
+            const age = (now - ripple.t) / 1200;
+            const rippleRadius = age * 320;
+            const dist = Math.hypot(x - ripple.x, y - ripple.y);
+            const envelope =
+              Math.exp(-age * 2.5) * Math.max(0, 1 - Math.abs(dist - rippleRadius) / 120);
+            const wave = Math.sin(((dist - rippleRadius) / 44) * Math.PI);
+            rippleScale += wave * envelope * 0.12;
+          }
+          radiusScale = 1 + rippleScale;
+        }
+
+        const raw = Math.min(1, density);
         // Soft ceiling: large shadow regions no longer all clamp to 1.0, which
         // is what made them fuse into one flat slab.
         const d = raw < 0.8 ? raw : 0.8 + (raw - 0.8) * 0.7;
         // Area ∝ coverage — the physically correct halftone response.
-        const r = maxR * Math.sqrt(d);
+        let r = maxR * Math.sqrt(d) * radiusScale;
         if (r < 0.16) continue;
 
         // Value carries volume alongside area: light grey on the paper-facing
@@ -558,6 +650,48 @@ export function HalftoneHandsFooter({
       {(burstProgress > 0 || handsVisible) && (
         <div className="absolute inset-0" style={{ zIndex: 7, pointerEvents: "none" }}>
           <GlitchGrainOverlay visible intensity="low" />
+        </div>
+      )}
+
+      {stage === "hands" && showSwitcher && (
+        <div
+          className="absolute flex flex-col gap-2 rounded-xl border border-black/10 bg-white/80 p-2 shadow-lg backdrop-blur-md"
+          style={{ zIndex: 30, right: 20, bottom: 20 }}
+        >
+          <div className="flex items-center justify-between px-1">
+            <span className="text-[11px] font-medium tracking-wide text-black/60">
+              HOVER 效果
+            </span>
+            <button
+              type="button"
+              onClick={() => setShowSwitcher(false)}
+              className="text-[11px] leading-none text-black/40 transition-colors hover:text-black"
+              aria-label="关闭切换器"
+            >
+              ✕
+            </button>
+          </div>
+          <div className="flex gap-1">
+            {[
+              { key: "magnetic", label: "磁吸" },
+              { key: "deepen", label: "加深" },
+              { key: "breathe", label: "呼吸" },
+            ].map((m) => (
+              <button
+                key={m.key}
+                type="button"
+                onClick={() => setHoverMode(m.key as HoverMode)}
+                className={[
+                  "rounded-lg px-3 py-1.5 text-xs font-medium transition-all",
+                  hoverMode === m.key
+                    ? "bg-black text-white shadow-sm"
+                    : "bg-black/5 text-black/70 hover:bg-black/10 hover:text-black",
+                ].join(" ")}
+              >
+                {m.label}
+              </button>
+            ))}
+          </div>
         </div>
       )}
     </section>
