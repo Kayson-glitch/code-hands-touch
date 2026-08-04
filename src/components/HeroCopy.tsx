@@ -99,7 +99,7 @@ export function HeroCopy() {
       </p>
 
       <button
-        className="pointer-events-auto group relative mt-8 inline-flex items-center justify-center overflow-visible font-medium text-black"
+        className="pointer-events-auto group relative mt-8 inline-flex items-center justify-center overflow-visible font-medium text-white"
         style={{
           height: 40,
           fontSize: 14,
@@ -108,8 +108,8 @@ export function HeroCopy() {
           borderRadius: 10,
           border: "1px solid transparent",
           backgroundImage:
-            "linear-gradient(#ffffff,#ffffff)," +
-            "linear-gradient(#ffffff 50%, rgba(255,255,255,0.65) 80%, rgba(255,255,255,0)),"+
+            "linear-gradient(#0a0a0a,#0a0a0a)," +
+            "linear-gradient(#0a0a0a 50%, rgba(10,10,10,0.65) 80%, rgba(10,10,10,0)),"+
             "linear-gradient(90deg, #ff1245, #d018ff, #185dff, #4b3aff, #e81a8a, #ff1245)",
           backgroundSize: "200%",
           backgroundClip: "padding-box, border-box, border-box",
