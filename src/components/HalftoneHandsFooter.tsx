@@ -18,24 +18,27 @@ import { AuroraIntro } from "@/components/AuroraIntro";
  */
 
 // ---------------------------------------------------------------- tuning
-// Grid pitch in CSS px (per layout tier below). Radius peaks slightly under
-// half the pitch so the darkest dots almost touch but never merge into blobs.
-const DOT_FILL = 0.46;
-// Luminance below this (i.e. lighter than) is left as bare paper.
-const MIN_DENSITY = 0.055;
-// Density → radius curve. <1 grows mid dots faster, keeping midtones readable.
-const RADIUS_EXP = 0.78;
-// Neutral ink ramp: lightest dot → darkest dot.
-const LIGHT_GREY = 0xc9;
-const DARK_GREY = 0x11;
-// Edge dissolve: fraction of the band width/height used for the falloff.
-const FADE_X = 0.3;
-const FADE_Y = 0.26;
+// Radius is a fraction of the half-pitch; 0.98 lets the darkest dots almost
+// touch, matching a real halftone screen at high coverage.
+const DOT_FILL = 0.98;
+// Coverage below this is left as bare paper.
+const MIN_DENSITY = 0.05;
+// Above this coverage the dot squares off (superellipse), as on a print screen.
+const SQUARE_AT = 0.75;
+// Single mid-grey ink. Tone comes from dot AREA, not from colour.
+const INK_LIGHT = 0xa8;
+const INK_DARK = 0x8c;
 // Pointer parallax (CSS px at full deflection) + tonal breathing amplitude.
 const PARALLAX_X = 7;
 const PARALLAX_Y = 4;
 const BREATH_AMP = 0.05;
 const BREATH_PERIOD = 5200;
+
+/** 4x4 ordered dither matrix, normalised to 0..1 — breaks up flat banding. */
+const BAYER = [
+  0, 8, 2, 10, 12, 4, 14, 6, 3, 11, 1, 9, 15, 7, 13, 5,
+].map((v) => (v + 0.5) / 16);
+
 
 type Dot = {
   x: number;
