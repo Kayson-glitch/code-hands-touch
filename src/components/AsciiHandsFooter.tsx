@@ -859,7 +859,7 @@ export function AsciiHandsFooter({
 
       // Highlight tint the revealed cells migrate toward. A soft near-white
       // with a lavender purple bias to match the #C5A9FF base color scheme.
-      const HR = 250, HG = 245, HB = 255;
+      const HR = 45, HG = 40, HB = 60;
 
       for (let k = 0; k < cells.length; k++) {
         const c = cells[k];
