@@ -119,7 +119,11 @@ const CREASE_DELTA = 0.045;
 const CREASE_FALLOFF = 0.55;
 // Connected components smaller than this stay on the global tonal curve
 // (speckles shouldn't get their own full-range stretch).
-const MIN_PART_CELLS = 24;
+const MIN_PART_CELLS = 40;
+// Connected components smaller than this are dropped entirely — they are the
+// speckles that showed up as stray glyph clusters away from the hands.
+const DROP_PART_CELLS = 10;
+
 // How much of each finger's tone comes from its own local range vs the global
 // one. Higher = more per-finger volume, but larger tonal jumps between parts.
 const PART_LOCAL_MIX = 0.55;
