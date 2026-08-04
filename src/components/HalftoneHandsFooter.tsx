@@ -40,8 +40,11 @@ const PARALLAX_X = 4;
 const PARALLAX_Y = 2.5;
 const BREATH_AMP = 0.035;
 const BREATH_PERIOD = 5200;
-// How fast the rendered frame chases the scroll-derived target frame.
+// How fast the rendered frame chases the target frame.
 const FRAME_EASE = 0.16;
+// One-shot playback length, from the first frame to the last.
+const PLAY_DURATION = 2000;
+
 
 /** 4x4 ordered dither matrix, normalised to 0..1 — breaks up flat banding. */
 const BAYER = [
