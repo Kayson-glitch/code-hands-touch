@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { Clapperboard, Magnet, CircleDot } from "lucide-react";
 import handsFramesAsset from "@/assets/hands-frames.webp.asset.json";
 import { IntroVideo, type IntroProgressInfo } from "./IntroVideo";
 import { useHeroLayout, type HeroLayout } from "@/hooks/useHeroLayout";
