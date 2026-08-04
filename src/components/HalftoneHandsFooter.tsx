@@ -252,7 +252,8 @@ export function HalftoneHandsFooter({
       window.addEventListener("mouseleave", onLeave);
     }
 
-    const maxR = pitch * DOT_FILL;
+    // Half-pitch is the theoretical maximum where neighbouring dots touch.
+    const maxR = pitch * 0.5 * DOT_FILL;
 
     const draw = (now: number) => {
       const w = canvas.clientWidth;
@@ -281,14 +282,31 @@ export function HalftoneHandsFooter({
         const y = dot.y + p.y * PARALLAX_Y * weight;
 
         const d = Math.min(1, dot.d * breath);
-        const r = maxR * Math.pow(d, RADIUS_EXP);
-        if (r < 0.18) continue;
-        const grey = Math.round(LIGHT_GREY + (DARK_GREY - LIGHT_GREY) * d);
+        // Area ∝ coverage — the physically correct halftone response.
+        const r = maxR * Math.sqrt(d);
+        if (r < 0.16) continue;
+
+        // Ink stays one mid-grey; only a hair of extra weight in the darkest
+        // dots, exactly as measured on the reference print.
+        const grey = Math.round(INK_LIGHT + (INK_DARK - INK_LIGHT) * d);
         ctx.fillStyle = `rgb(${grey},${grey},${grey})`;
-        ctx.beginPath();
-        ctx.arc(x, y, r, 0, Math.PI * 2);
-        ctx.fill();
+
+        if (d <= SQUARE_AT) {
+          ctx.beginPath();
+          ctx.arc(x, y, r, 0, Math.PI * 2);
+          ctx.fill();
+        } else {
+          // High coverage: the dot squares off with a shrinking corner radius.
+          const sq = (d - SQUARE_AT) / (1 - SQUARE_AT);
+          const s = r * (1 + 0.14 * sq);
+          const corner = r * (1 - 0.62 * sq);
+          ctx.beginPath();
+          ctx.roundRect(x - s, y - s, s * 2, s * 2, corner);
+          ctx.fill();
+        }
       }
+
+
 
       raf = requestAnimationFrame(draw);
     };
