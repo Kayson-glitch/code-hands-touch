@@ -857,9 +857,10 @@ export function AsciiHandsFooter({
       const hoverActive = intensity > 0.01 && !prefersReduce;
       const tiltScale = TILT_MAX_DEG * (Math.PI / 180) * intensity * intensity;
 
-      // Highlight tint the revealed cells migrate toward. A soft near-white
-      // with a lavender purple bias to match the #C5A9FF base color scheme.
-      const HR = 250, HG = 245, HB = 255;
+      // Highlight tint the revealed cells migrate toward. On the light cream
+      // backdrop this is a deep ink violet so accents read as darker, not lighter.
+      const HR = 38, HG = 26, HB = 72;
+
 
       for (let k = 0; k < cells.length; k++) {
         const c = cells[k];
