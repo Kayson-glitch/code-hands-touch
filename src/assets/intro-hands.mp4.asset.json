@@ -1,11 +1,11 @@
 {
-  "version": 1,
   "asset_id": "8765ac4a-2041-4eed-8ca2-9028bad2df91",
-  "project_id": "5f189616-74af-43e1-9d81-6bf187196947",
-  "url": "/__l5e/assets-v1/8765ac4a-2041-4eed-8ca2-9028bad2df91/intro-hands.mp4",
-  "r2_key": "a/v1/5f189616-74af-43e1-9d81-6bf187196947/8765ac4a-2041-4eed-8ca2-9028bad2df91/intro-hands.mp4",
-  "original_filename": "intro-hands.mp4",
-  "size": 6250544,
   "content_type": "video/mp4",
-  "created_at": "2026-07-23T08:35:12Z"
+  "created_at": "2026-07-23T08:35:12Z",
+  "original_filename": "intro-hands.mp4",
+  "project_id": "a27dbc7a-5298-4792-b24a-d83be8be2ac7",
+  "r2_key": "a/v1/a27dbc7a-5298-4792-b24a-d83be8be2ac7/8765ac4a-2041-4eed-8ca2-9028bad2df91/intro-hands.mp4",
+  "size": 6250544,
+  "url": "/__l5e/assets-v1/8765ac4a-2041-4eed-8ca2-9028bad2df91/intro-hands.mp4",
+  "version": 1
 }
