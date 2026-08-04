@@ -1273,7 +1273,7 @@ export function AsciiHandsFooter({
           ctx.translate(cx, cy);
           ctx.rotate(finalAngle);
           if (c.isEdge) {
-            ctx.fillStyle = `rgba(15,12,25,${0.75 * cellAlpha * residueAlpha})`;
+            ctx.fillStyle = `rgba(244,241,234,${0.75 * cellAlpha * residueAlpha})`;
             const lx = -CELL_W / 2;
             const ly = FONT_PX - CELL_H / 2;
             ctx.fillText(ch, lx - 1, ly - 1);
@@ -1286,7 +1286,7 @@ export function AsciiHandsFooter({
           ctx.restore();
         } else {
           if (c.isEdge) {
-            ctx.fillStyle = `rgba(15,12,25,${0.75 * cellAlpha * residueAlpha})`;
+            ctx.fillStyle = `rgba(244,241,234,${0.75 * cellAlpha * residueAlpha})`;
             ctx.fillText(ch, drawX - 1, drawY - 1);
             ctx.fillText(ch, drawX + 1, drawY - 1);
             ctx.fillText(ch, drawX - 1, drawY + 1);
