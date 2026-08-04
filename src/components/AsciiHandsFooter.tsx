@@ -857,8 +857,9 @@ export function AsciiHandsFooter({
       const hoverActive = intensity > 0.01 && !prefersReduce;
       const tiltScale = TILT_MAX_DEG * (Math.PI / 180) * intensity * intensity;
 
-      // Hover accent: a rich dark purple that glyphs migrate toward on interaction.
-      const HR = 55, HG = 50, HB = 80;
+      // Highlight tint the revealed cells migrate toward. A soft near-white
+      // with a lavender purple bias to match the #C5A9FF base color scheme.
+      const HR = 250, HG = 245, HB = 255;
 
       for (let k = 0; k < cells.length; k++) {
         const c = cells[k];
@@ -884,11 +885,11 @@ export function AsciiHandsFooter({
         const flowIdxOffset = Math.round(flowWave * FLOW_IDX_AMP * flowAmp);
         const flowBrightness = 1 + flowWave * FLOW_BRIGHTNESS_AMP * flowAmp;
 
-        // Dark charcoal-purple glyphs for the light-background inversion:
-        //   shadow rgb(28, 25, 38) → highlight rgb(92, 82, 120)
-        let r = (28 + bb * 64) * flowBrightness;
-        let g = (25 + bb * 57) * flowBrightness;
-        let bl = (38 + bb * 82) * flowBrightness;
+        // Base lavender purple color from the ramp:
+        //   shadow rgb(45, 35, 70) → highlight rgb(197, 169, 255)
+        let r = (45 + bb * 152) * flowBrightness;
+        let g = (35 + bb * 134) * flowBrightness;
+        let bl = (70 + bb * 185) * flowBrightness;
         const baseIdx =
           ((c.idx + flowIdxOffset) % RAMP_LEN + RAMP_LEN) % RAMP_LEN;
         let ch = glyphAt(baseIdx);
@@ -1329,17 +1330,17 @@ export function AsciiHandsFooter({
   };
   const handleIntroEnded = () => {
     if (stageRef.current !== "orb") return;
-    setBgDark(false);
-    // Reveal nav immediately as the diffusion completes so the light handoff
+    setBgDark(true);
+    // Reveal nav immediately as the diffusion completes so the black handoff
     // is filled by the UI rather than sitting empty.
     if (typeof window !== "undefined") {
       window.dispatchEvent(new CustomEvent("app-nav-visibility", { detail: "visible" }));
     }
-    // Also paint html/body light immediately, so the single frame where
-    // <IntroVideo> unmounts can't reveal the theme's dark body background.
+    // Also paint html/body black immediately, so the single frame where
+    // <IntroVideo> unmounts can't reveal the theme's white body background.
     if (typeof document !== "undefined") {
-      document.documentElement.style.backgroundColor = "#ffffff";
-      document.body.style.backgroundColor = "#ffffff";
+      document.documentElement.style.backgroundColor = "#0a0a0a";
+      document.body.style.backgroundColor = "#0a0a0a";
     }
     setStage("hands");
     // Delay unmounting the intro video by two frames. The video's last
@@ -1363,21 +1364,21 @@ export function AsciiHandsFooter({
     <section
       className="relative w-full overflow-hidden"
       style={{
-        backgroundColor: "#ffffff",
+        backgroundColor: bgDark ? "#000" : "#EFE7DA",
         height: "100vh",
         minHeight: 600,
       }}
     >
-      {/* Fallback white underlay: once the burn ends, keep an always-light
-          full-viewport layer behind everything so no dark body background
+      {/* Fallback black underlay: once the burn ends, keep an always-black
+          full-viewport layer behind everything so no white body background
           can leak through during single-frame compositing gaps. */}
-      {!bgDark && (
+      {bgDark && (
         <div
           aria-hidden
           style={{
             position: "fixed",
             inset: 0,
-            background: "#ffffff",
+            background: "#000",
             zIndex: -1,
             pointerEvents: "none",
           }}
@@ -1387,7 +1388,7 @@ export function AsciiHandsFooter({
         Good Fella Studio — ASCII Creation of Adam
       </h1>
 
-      {!bgDark && <AuroraIntro />}
+      {bgDark && <AuroraIntro />}
 
       <canvas
         ref={canvasRef}
@@ -1422,7 +1423,7 @@ export function AsciiHandsFooter({
 
       {(burstProgress > 0 || handsVisible) && (
         <div className="absolute inset-0" style={{ zIndex: 7, pointerEvents: "none" }}>
-          <GlitchGrainOverlay visible intensity="low" inverted />
+          <GlitchGrainOverlay visible intensity="low" />
         </div>
       )}
     </section>

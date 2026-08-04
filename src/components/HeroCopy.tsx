@@ -36,7 +36,7 @@ export function HeroCopy() {
   useEffect(() => {
     const onBg = (e: Event) => {
       const detail = (e as CustomEvent<"light" | "dark">).detail;
-      if (detail === "light") {
+      if (detail === "dark") {
         // Stage B: hero title reveals ~640ms after the background flips,
         // so nav + chat dock (Stage A) can finish their fade first.
         window.setTimeout(() => setVisible(true), 640);
@@ -62,7 +62,7 @@ export function HeroCopy() {
       }}
     >
       <h1
-        className="font-display text-neutral-900"
+        className="font-display text-white"
         style={{
           fontSize: layout.titleFontSize,
           lineHeight: layout.titleLineHeight,
@@ -92,14 +92,14 @@ export function HeroCopy() {
       </h1>
 
       <p
-        className="mt-5 text-black/55"
+        className="mt-5 text-white/60"
         style={{ fontSize: layout.subtitleFontSize, lineHeight: layout.subtitleLineHeight, fontWeight: 400 }}
       >
         Intelligent Knowledge Engine for accurate, context-aware responses.
       </p>
 
       <button
-        className="pointer-events-auto group relative mt-8 inline-flex items-center justify-center overflow-visible font-medium text-white"
+        className="pointer-events-auto group relative mt-8 inline-flex items-center justify-center overflow-visible font-medium text-black"
         style={{
           height: 40,
           fontSize: 14,
@@ -108,8 +108,8 @@ export function HeroCopy() {
           borderRadius: 10,
           border: "1px solid transparent",
           backgroundImage:
-            "linear-gradient(#0a0a0a,#0a0a0a)," +
-            "linear-gradient(#0a0a0a 50%, rgba(10,10,10,0.65) 80%, rgba(10,10,10,0)),"+
+            "linear-gradient(#ffffff,#ffffff)," +
+            "linear-gradient(#ffffff 50%, rgba(255,255,255,0.65) 80%, rgba(255,255,255,0)),"+
             "linear-gradient(90deg, #ff1245, #d018ff, #185dff, #4b3aff, #e81a8a, #ff1245)",
           backgroundSize: "200%",
           backgroundClip: "padding-box, border-box, border-box",
