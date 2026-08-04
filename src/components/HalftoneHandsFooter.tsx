@@ -40,8 +40,11 @@ const PARALLAX_X = 4;
 const PARALLAX_Y = 2.5;
 const BREATH_AMP = 0.035;
 const BREATH_PERIOD = 5200;
-// How fast the rendered frame chases the scroll-derived target frame.
+// How fast the rendered frame chases the target frame.
 const FRAME_EASE = 0.16;
+// One-shot playback length, from the first frame to the last.
+const PLAY_DURATION = 2000;
+
 
 /** 4x4 ordered dither matrix, normalised to 0..1 — breaks up flat banding. */
 const BAYER = [
@@ -242,54 +245,32 @@ export function HalftoneHandsFooter({
     const ro = new ResizeObserver(scheduleResize);
     ro.observe(canvas);
 
-    // ----------------------------------------------------- scroll playhead
-    // The hands own the wheel until their animation has fully played: while the
-    // playhead is below 1 we swallow the scroll and spend it on frames instead,
-    // then hand the wheel back to the document. Scrolling back up at the very
-    // top rewinds the hands before the page can move again.
-    const progressRef = { value: 0 };
-    const lockSpan = () => Math.max(400, window.innerHeight * 1.15);
+    // ----------------------------------------------------- one-shot playback
+    // The hands rest on frame 1 until the reader's first wheel or click, then
+    // play straight through once and stay on the last frame forever. Scrolling
+    // is never swallowed — the page keeps moving as usual.
+    const playback = { startedAt: null as number | null };
 
-    const applyProgress = () => {
-      playheadRef.current.target = progressRef.value * (FRAME_COUNT - 1);
-    };
+    playheadRef.current.target = 0;
+    playheadRef.current.current = 0;
 
     if (prefersReduce) {
-      progressRef.value = 1;
       playheadRef.current.target = FRAME_COUNT - 1;
       playheadRef.current.current = FRAME_COUNT - 1;
     }
 
-    // Returns true when the delta was consumed by the hands.
-    const consume = (dy: number) => {
-      if (prefersReduce || dy === 0) return false;
-      const p = progressRef.value;
-      if (dy > 0 ? p >= 1 : p <= 0 || (window.scrollY || 0) > 0) return false;
-      progressRef.value = Math.min(1, Math.max(0, p + dy / lockSpan()));
-      applyProgress();
-      return true;
+    const start = () => {
+      if (prefersReduce || playback.startedAt !== null) return;
+      if (stageRef.current !== "hands") return;
+      playback.startedAt = performance.now();
+      window.removeEventListener("wheel", onTrigger);
+      window.removeEventListener("pointerdown", onTrigger);
     };
+    const onTrigger = () => start();
+    window.addEventListener("wheel", onTrigger, { passive: true });
+    window.addEventListener("pointerdown", onTrigger, { passive: true });
 
-    const onWheel = (e: WheelEvent) => {
-      const dy = e.deltaY * (e.deltaMode === 1 ? 16 : e.deltaMode === 2 ? 100 : 1);
-      if (consume(dy)) e.preventDefault();
-    };
-    window.addEventListener("wheel", onWheel, { passive: false });
 
-    let touchY = 0;
-    const onTouchStart = (e: TouchEvent) => {
-      touchY = e.touches[0]?.clientY ?? 0;
-    };
-    const onTouchMove = (e: TouchEvent) => {
-      const y = e.touches[0]?.clientY ?? 0;
-      const dy = touchY - y;
-      touchY = y;
-      if (consume(dy * 1.4)) e.preventDefault();
-    };
-    window.addEventListener("touchstart", onTouchStart, { passive: true });
-    window.addEventListener("touchmove", onTouchMove, { passive: false });
-    applyProgress();
-    playheadRef.current.current = playheadRef.current.target;
 
 
     const onMove = (e: MouseEvent) => {
@@ -316,11 +297,17 @@ export function HalftoneHandsFooter({
 
       const ph = playheadRef.current;
       if (prefersReduce) {
+        ph.target = FRAME_COUNT - 1;
         ph.current = ph.target;
       } else {
+        if (playback.startedAt !== null) {
+          const t = Math.min(1, (now - playback.startedAt) / PLAY_DURATION);
+          ph.target = smoothstep(t) * (FRAME_COUNT - 1);
+        }
         ph.current += (ph.target - ph.current) * FRAME_EASE;
         if (Math.abs(ph.target - ph.current) < 0.01) ph.current = ph.target;
       }
+
 
       const p = pointerRef.current;
       if (prefersReduce) {
@@ -376,9 +363,9 @@ export function HalftoneHandsFooter({
       cancelAnimationFrame(raf);
       window.clearTimeout(resizeTimer);
       ro.disconnect();
-      window.removeEventListener("wheel", onWheel);
-      window.removeEventListener("touchstart", onTouchStart);
-      window.removeEventListener("touchmove", onTouchMove);
+      window.removeEventListener("wheel", onTrigger);
+      window.removeEventListener("pointerdown", onTrigger);
+
 
       window.removeEventListener("mousemove", onMove);
       window.removeEventListener("mouseleave", onLeave);
