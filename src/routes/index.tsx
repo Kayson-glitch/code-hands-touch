@@ -100,7 +100,7 @@ function Index() {
               willChange: "transform",
             }}
           >
-            <AsciiHandsFooter videoSrc={videoSrc} debug={debug} handoffVideo={handoffVideo} />
+            <HalftoneHandsFooter videoSrc={videoSrc} debug={debug} handoffVideo={handoffVideo} />
             <HeroCopy />
           </div>
           <SiteNav />
