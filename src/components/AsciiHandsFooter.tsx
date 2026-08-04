@@ -859,7 +859,7 @@ export function AsciiHandsFooter({
 
       // Highlight tint the revealed cells migrate toward. On the light cream
       // backdrop this is a deep ink violet so accents read as darker, not lighter.
-      const HR = 38, HG = 26, HB = 72;
+      const HR = 18, HG = 10, HB = 44;
 
 
       for (let k = 0; k < cells.length; k++) {
@@ -886,11 +886,14 @@ export function AsciiHandsFooter({
         const flowIdxOffset = Math.round(flowWave * FLOW_IDX_AMP * flowAmp);
         const flowBrightness = 1 + flowWave * FLOW_BRIGHTNESS_AMP * flowAmp;
 
-        // Base ink color inverted for the light cream backdrop:
-        //   faint rgb(202,196,222) → deep violet rgb(42,26,78)
-        let r = (202 - bb * 160) / flowBrightness;
-        let g = (196 - bb * 170) / flowBrightness;
-        let bl = (222 - bb * 144) / flowBrightness;
+        // Base ink color inverted for the light cream backdrop. Gamma-shaped so
+        // midtones fall deeper and the tonal range is wider → stronger volume:
+        //   near-bg rgb(228,224,240) → near-black violet rgb(12,7,30)
+        const shade = Math.pow(bb, 0.68);
+        let r = (228 - shade * 216) / flowBrightness;
+        let g = (224 - shade * 217) / flowBrightness;
+        let bl = (240 - shade * 210) / flowBrightness;
+
 
         const baseIdx =
           ((c.idx + flowIdxOffset) % RAMP_LEN + RAMP_LEN) % RAMP_LEN;
