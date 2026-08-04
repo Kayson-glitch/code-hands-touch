@@ -343,10 +343,28 @@ export function HalftoneHandsFooter({
       const rect = canvas.getBoundingClientRect();
       pointerRef.current.tx = ((e.clientX - rect.left) / rect.width) * 2 - 1;
       pointerRef.current.ty = ((e.clientY - rect.top) / rect.height) * 2 - 1;
+
+      const cx = e.clientX - rect.left;
+      const cy = e.clientY - rect.top;
+      cursorRef.current.tx = cx;
+      cursorRef.current.ty = cy;
+      cursorRef.current.active = true;
+
+      // Breathe mode: spawn a ripple when the cursor has travelled far enough.
+      const ripples = ripplesRef.current;
+      const last = ripples[ripples.length - 1];
+      if (
+        hoverMode === "breathe" &&
+        (!last || Math.hypot(cx - last.x, cy - last.y) > 36)
+      ) {
+        ripples.push({ x: cx, y: cy, t: performance.now() });
+        if (ripples.length > 5) ripples.shift();
+      }
     };
     const onLeave = () => {
       pointerRef.current.tx = 0;
       pointerRef.current.ty = 0;
+      cursorRef.current.active = false;
     };
     if (!prefersReduce) {
       window.addEventListener("mousemove", onMove, { passive: true });
