@@ -1329,17 +1329,17 @@ export function AsciiHandsFooter({
   };
   const handleIntroEnded = () => {
     if (stageRef.current !== "orb") return;
-    setBgDark(true);
-    // Reveal nav immediately as the diffusion completes so the black handoff
+    setBgDark(false);
+    // Reveal nav immediately as the diffusion completes so the light handoff
     // is filled by the UI rather than sitting empty.
     if (typeof window !== "undefined") {
       window.dispatchEvent(new CustomEvent("app-nav-visibility", { detail: "visible" }));
     }
-    // Also paint html/body black immediately, so the single frame where
-    // <IntroVideo> unmounts can't reveal the theme's white body background.
+    // Also paint html/body light immediately, so the single frame where
+    // <IntroVideo> unmounts can't reveal the theme's dark body background.
     if (typeof document !== "undefined") {
-      document.documentElement.style.backgroundColor = "#0a0a0a";
-      document.body.style.backgroundColor = "#0a0a0a";
+      document.documentElement.style.backgroundColor = "#ffffff";
+      document.body.style.backgroundColor = "#ffffff";
     }
     setStage("hands");
     // Delay unmounting the intro video by two frames. The video's last
