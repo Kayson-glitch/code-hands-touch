@@ -886,21 +886,24 @@ export function AsciiHandsFooter({
         const flowIdxOffset = Math.round(flowWave * FLOW_IDX_AMP * flowAmp);
         const flowBrightness = 1 + flowWave * FLOW_BRIGHTNESS_AMP * flowAmp;
 
-        // On a light canvas the drawing has to read as ink-on-paper: shadows
-        // carry dense dark glyphs, lit planes stay near-empty pale marks. So we
-        // invert both the tone and the density ramp relative to the dark theme.
-        const dark = 1 - bb;                       // 0 = lit, 1 = deep shadow
-        const shade = Math.pow(dark, 0.85);
-        const tonal = shade * shade * (3 - 2 * shade); // S-curve for local contrast
-        let r = (238 - tonal * 230) / flowBrightness;
-        let g = (239 - tonal * 230) / flowBrightness;
-        let bl = (242 - tonal * 232) / flowBrightness;
+        // Ink-on-paper tone: brightness of the source still drives how much ink
+        // a cell gets (dark source = background = no ink), but the response is
+        // remapped with a lifted black point and a hard S-curve so faint planes
+        // stay near-paper while lit ridges slam to carbon — that gap is what
+        // reads as volume on a light canvas.
+        const t = Math.min(1, Math.max(0, (bb - 0.06) / 0.9));
+        const shade = Math.pow(t, 1.35);
+        const s1 = shade * shade * (3 - 2 * shade);
+        const tonal = s1 * s1 * (3 - 2 * s1); // double smoothstep = punchy midtones
+        let r = (243 - tonal * 235) / flowBrightness;
+        let g = (244 - tonal * 236) / flowBrightness;
+        let bl = (246 - tonal * 237) / flowBrightness;
 
 
-        const invIdx = RAMP_LEN - 1 - c.idx;
         const baseIdx =
-          ((invIdx + flowIdxOffset) % RAMP_LEN + RAMP_LEN) % RAMP_LEN;
+          ((c.idx + flowIdxOffset) % RAMP_LEN + RAMP_LEN) % RAMP_LEN;
         let ch = glyphAt(baseIdx);
+
 
         let jitterX = 0;
         let jitterY = 0;
