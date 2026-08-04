@@ -320,10 +320,8 @@ export function HalftoneHandsFooter({
         ph.target = FRAME_COUNT - 1;
         ph.current = ph.target;
       } else {
-        if (playback.startedAt !== null) {
-          const t = Math.min(1, (now - playback.startedAt) / PLAY_DURATION);
-          ph.target = smoothstep(t) * (FRAME_COUNT - 1);
-        }
+        ph.target = progressRef.v * (FRAME_COUNT - 1);
+
         ph.current += (ph.target - ph.current) * FRAME_EASE;
         if (Math.abs(ph.target - ph.current) < 0.01) ph.current = ph.target;
       }
