@@ -73,24 +73,150 @@ const TILT_FALLOFF = 320;
 // characters are "woken up" into a hand-set angle where the cursor reveals
 // them, and stay upright everywhere else.
 const REVEAL_TILT_MAX_DEG = 12;
-// Hover mosaic-shatter reveal — inside the disc, cells are replaced by
-// broken tiles of the raw source image so the underlying photo peeks
-// through a shattered ASCII surface. Numbers below tuned against the
-// existing 10×10 cell pitch.
-const MOSAIC_MASK_THRESHOLD = 0.04;
-const MOSAIC_SHATTER_PX = 1.8; // max positional break at the disc edge
-const MOSAIC_SCALE_MIN = 0.88; // min tile occupancy at the disc edge
-const MOSAIC_SCALE_MAX = 0.92; // max tile occupancy (center) — leaves paper gaps
-// Peak opacity of a mosaic tile. Kept well under 1 so the photo reads as a
-// shadow behind the glyphs instead of covering them like a censor bar.
-const MOSAIC_MAX_ALPHA = 0.55;
-// Ink range the mosaic tiles are remapped into (paper → carbon), matching the
-// glyph palette so the reveal never introduces hue.
-const MOSAIC_INK_LIGHT = 226;
-const MOSAIC_INK_DARK = 24;
+// ---------------------------------------------------------------------------
+// Cursor dye field (lightweight 2D fluid, one sample per character cell).
+// Mirrors what speakeasy.com does on the GPU: the pointer injects dye and
+// velocity into a fluid, the field advects + dissipates on its own, and the
+// character layer samples it to lift tone (heavier glyph) and pick a hue.
+// Nothing is ever drawn on top of the glyphs.
+// ---------------------------------------------------------------------------
+const DYE_RADIUS = 3.5;        // injection radius, in cells
+const DYE_INJECT = 1.0;        // injection strength per frame
+const DYE_DISSIPATION = 0.94;  // per-frame dye decay
+const DYE_DIFFUSE = 0.16;      // neighbour blur amount per frame
+const VEL_INJECT = 0.35;       // pointer displacement → velocity gain
+const VEL_DAMP = 0.96;         // per-frame velocity decay
+const DYE_TONE_BOOST = 0.30;   // how much dye darkens/thickens the ink
+const DYE_IDX_BOOST = 6;       // ramp steps a fully-dyed cell jumps
+const DYE_COLOR_MIN = 0.08;    // density below this stays graphite
+const HUE_DRIFT = 0.05;        // palette drift per second
 
-const MOSAIC_SPLATTER_PROB = 0.06; // % of tiles that fling further out
-const MOSAIC_SPLATTER_PX = 5;
+// Palette sampled by dye density (+ drift): warm ember → amber → citrus →
+// leaf → teal, wrapping back to ember so the drift is continuous.
+const DYE_PALETTE: [number, number, number][] = [
+  [214, 108, 42],
+  [226, 158, 44],
+  [206, 196, 58],
+  [128, 190, 84],
+  [72, 172, 148],
+  [214, 108, 42],
+];
+
+function dyePalette(t: number): [number, number, number] {
+  const n = DYE_PALETTE.length - 1;
+  const x = Math.min(0.9999, Math.max(0, t)) * n;
+  const i = Math.floor(x);
+  const f = x - i;
+  const a = DYE_PALETTE[i];
+  const b = DYE_PALETTE[i + 1];
+  return [
+    a[0] + (b[0] - a[0]) * f,
+    a[1] + (b[1] - a[1]) * f,
+    a[2] + (b[2] - a[2]) * f,
+  ];
+}
+
+type DyeField = {
+  cols: number;
+  rows: number;
+  dye: Float32Array;
+  tmp: Float32Array;
+  vx: Float32Array;
+  vy: Float32Array;
+};
+
+function makeDyeField(cols: number, rows: number): DyeField {
+  const n = cols * rows;
+  return {
+    cols,
+    rows,
+    dye: new Float32Array(n),
+    tmp: new Float32Array(n),
+    vx: new Float32Array(n),
+    vy: new Float32Array(n),
+  };
+}
+
+function bilinear(f: Float32Array, cols: number, rows: number, x: number, y: number) {
+  const cx = Math.min(cols - 1, Math.max(0, x));
+  const cy = Math.min(rows - 1, Math.max(0, y));
+  const i0 = Math.floor(cx);
+  const j0 = Math.floor(cy);
+  const i1 = Math.min(cols - 1, i0 + 1);
+  const j1 = Math.min(rows - 1, j0 + 1);
+  const fx = cx - i0;
+  const fy = cy - j0;
+  const a = f[j0 * cols + i0];
+  const b = f[j0 * cols + i1];
+  const c = f[j1 * cols + i0];
+  const d = f[j1 * cols + i1];
+  return (a + (b - a) * fx) * (1 - fy) + (c + (d - c) * fx) * fy;
+}
+
+// One simulation step: inject at the pointer, advect (semi-Lagrangian),
+// diffuse slightly, then dissipate. Cost is O(cols*rows) ≈ 20k ops.
+function stepDyeField(
+  f: DyeField,
+  inject: { i: number; j: number; dx: number; dy: number } | null,
+  dtScale: number,
+) {
+  const { cols, rows, dye, tmp, vx, vy } = f;
+
+  if (inject) {
+    const rad = DYE_RADIUS;
+    const i0 = Math.max(0, Math.floor(inject.i - rad * 2));
+    const i1 = Math.min(cols - 1, Math.ceil(inject.i + rad * 2));
+    const j0 = Math.max(0, Math.floor(inject.j - rad * 2));
+    const j1 = Math.min(rows - 1, Math.ceil(inject.j + rad * 2));
+    for (let j = j0; j <= j1; j++) {
+      for (let i = i0; i <= i1; i++) {
+        const dx = i - inject.i;
+        const dy = j - inject.j;
+        const g = Math.exp(-(dx * dx + dy * dy) / (2 * rad * rad));
+        if (g < 0.01) continue;
+        const idx = j * cols + i;
+        dye[idx] = Math.min(1.6, dye[idx] + g * DYE_INJECT * dtScale);
+        vx[idx] += inject.dx * VEL_INJECT * g;
+        vy[idx] += inject.dy * VEL_INJECT * g;
+      }
+    }
+  }
+
+  // Advect dye along the velocity field (backward trace).
+  for (let j = 0; j < rows; j++) {
+    for (let i = 0; i < cols; i++) {
+      const idx = j * cols + i;
+      const d = dye[idx];
+      const u = vx[idx];
+      const v = vy[idx];
+      if (d < 0.0015 && u * u + v * v < 1e-6) {
+        tmp[idx] = 0;
+        continue;
+      }
+      tmp[idx] = bilinear(dye, cols, rows, i - u * dtScale, j - v * dtScale);
+    }
+  }
+
+  // Diffuse + dissipate in one pass; velocity just damps (no pressure solve —
+  // at cell resolution the visual difference is not worth the cost).
+  const decay = Math.pow(DYE_DISSIPATION, dtScale);
+  const vDecay = Math.pow(VEL_DAMP, dtScale);
+  for (let j = 0; j < rows; j++) {
+    for (let i = 0; i < cols; i++) {
+      const idx = j * cols + i;
+      const c = tmp[idx];
+      const l = i > 0 ? tmp[idx - 1] : c;
+      const rr = i < cols - 1 ? tmp[idx + 1] : c;
+      const up = j > 0 ? tmp[idx - cols] : c;
+      const dn = j < rows - 1 ? tmp[idx + cols] : c;
+      const blurred = c + ((l + rr + up + dn) * 0.25 - c) * DYE_DIFFUSE;
+      dye[idx] = blurred < 0.0012 ? 0 : blurred * decay;
+      vx[idx] *= vDecay;
+      vy[idx] *= vDecay;
+    }
+  }
+}
+
 // Click-to-lock reveal — per hand toggle that expands a mosaic disc from
 // the click point until it fully covers that hand, then collapses on the
 // next click. Timings kept snappy but eased so the transition reads as
