@@ -1,45 +1,43 @@
-## 第三屏 - Metrics Section
+# 让每根手指单独成形（字符化不再糊成一片）
 
-### 结构与层级
-- 新建 `src/components/MetricsSection.tsx`
-- 在 `src/routes/index.tsx` 中紧跟 `SloganSection` 之后挂载
-- 背景：浅色 `#F4F1EA`（暖米色，与整体黑/紫极光形成呼吸对比，避免纯白刺眼）
-- 高度：`min-height: 100vh`，与前两屏节奏保持一致
-- 需要覆盖住 fixed 的第一屏 → `position: relative; z-index: 10`
-- 顶部保留 `GlitchGrainOverlay`（低强度，混合模式适配浅底），维持整体故障风统一
+## 问题
 
-### 布局（横向三等分）
-- 外层：`max-width: 1280px`，居中，左右 `6vw` padding
-- 顶部：小标签 `INDICATORS / 指标` + 分段主标题（Clash Display）
-- 三列 grid（desktop `grid-cols-3`，tablet `grid-cols-1`）：
-  - 列之间用 `1px` 竖向渐变分隔线（透明→黑10%→透明）
-  - 每列结构：
-    - 序号 `01 / 02 / 03`（Geist Mono，小号，opacity 40%）
-    - 大数字（Clash Display，`clamp(72px, 9vw, 132px)`，字重 500）
-    - 小标题（Montserrat 600，16px）
-    - 注释文案（Montserrat 400，13px，opacity 60%，2-3 行）
+原图里手指是贴在一起的，字符化时只按亮度分级，手指之间的暗缝没有被当成"边界"，
+所以相邻手指的字符连成一整块，看不出指节和分指。
 
-### 数据（占位随机文案）
-1. `85%+` — Resolution Rate — Tickets resolved on first contact without human handoff
-2. `12K` — Conversations / Day — Handled across 30+ languages in real time
-3. `92%+` — CSAT Score — Measured across enterprise deployments in 2025
+## 思路
 
-### 动画方案（Count-up 数字滚动）
-- 使用 IntersectionObserver 触发（threshold 0.35）
-- 触发后：
-  - 数字：`requestAnimationFrame` 从 0 滚到目标值，1400ms，`easeOutExpo` 缓动；保留 `%` / `K` / `+` 后缀
-  - 标签/注释：模糊淡入 `blur(8px)→0`，`translateY(12px)→0`，600ms，按列 stagger 120ms
-  - 分隔线：`scaleY(0)→1`，`transform-origin: top`，700ms
-  - 顶部标题走一次 `BlurText`（复用已有组件）
-- 只触发一次，反滚不重置
+在采样阶段（`sampleImage`）增加两步：
 
-### 与整体风格保持一致
-- 字体：主数字/标题 Clash Display；正文 Montserrat；序号 Geist Mono
-- 颜色 tokens：新增 `--metrics-bg / --metrics-fg / --metrics-muted / --metrics-rule` 至 `src/styles.css`
-- 保留全屏 `GlitchGrainOverlay`（在此区域降低不透明度到浅底可见的程度）
-- 无第三方依赖，纯 React + CSS
+1. **缝隙检测（分指）**：对下采样后的亮度图做一次局部梯度 + 局部暗谷检测（Sobel 幅值
+   和"比邻域明显更暗"的判断）。落在指缝暗谷上的格子被标记为 crease：
+   - 谷底最暗的一列格子直接不生成字符（留白 1 格），形成清晰的分指缝；
+   - 紧邻缝隙的格子降级为更稀疏的字符，让边缘自然收口。
 
-### 变更文件
-- 新增 `src/components/MetricsSection.tsx`
-- 修改 `src/routes/index.tsx`（在 `<SloganSection />` 后追加 `<MetricsSection />`）
-- 修改 `src/styles.css`（新增 4 个 CSS token）
+2. **连通域标号（每根手指一个 id）**：切开缝隙后做一次 4 邻域 flood fill，
+   得到若干连通块（每根手指、掌部、手臂各自一块）。为每个 cell 记录
+   `partId`，以及该块内的归一化位置 `partT`（从指根到指尖）。
+
+有了 `partId` / `partT` 后，逐指效果就成立：
+
+- 每根手指有独立的明暗归一化（局部百分位拉伸），指尖不再被掌部的亮度压平，
+  单指内部的体积感明显增强；
+- 手指轮廓单独描边（沿用现有 `isEdge` 的 lift stroke，但只在同一 partId 之间断开）；
+- 入场/悬停的墨流按手指分批错开（每根手指一个小延迟），而不是整只手一起亮。
+
+## 技术细节
+
+- 全部改动集中在 `src/components/AsciiHandsFooter.tsx`：
+  - `Cell` 类型增加 `partId: number`、`partT: number`、`crease?: boolean`；
+  - `sampleImage` 内在 raws 之后、armT 之前插入 crease 检测与连通域标号；
+  - 每根手指的局部亮度拉伸替换/叠加在现有的全图 5%–99% 百分位拉伸之上
+    （保留全局曲线做基线，再按 part 做一次较弱的局部拉伸，避免各指亮度跳变）；
+  - `isEdge` 邻域判定同时把"邻居 partId 不同"视为边界；
+  - 渲染循环里给入场与 hover 时间加上 `partId` 派生的相位偏移。
+- 阈值（缝隙深度、最小连通块尺寸）作为顶部常量暴露，方便后续微调。
+- 不改动配色、几何布局、马赛克 shatter 逻辑与文案。
+
+## 验收
+
+刷新预览后：手指之间有可见留白缝，每根手指有独立的亮到暗渐变，
+整只手不再是一团均匀噪点。缝隙宽度和分指对比度可以再按你的观感调一档。
