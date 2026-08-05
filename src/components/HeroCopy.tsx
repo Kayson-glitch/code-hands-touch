@@ -87,10 +87,12 @@ export function HeroCopy() {
           </span>
           <span
             aria-hidden
-            className="pointer-events-none absolute bottom-0 left-0 right-0 z-0"
+            className="pointer-events-none absolute bottom-0 z-0"
             style={{
+              left: 12,
+              right: 12,
               height: 2,
-              borderRadius: "0 0 12px 12px",
+
               backgroundImage:
                 "linear-gradient(90deg, #137DFF 0%, #FF18AA 33.333%, #FFCD17 66.666%, #137DFF 100%)",
               backgroundSize: "150% 100%",
