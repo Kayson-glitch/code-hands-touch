@@ -65,6 +65,12 @@ const BREATH_PERIOD = 5200;
 // Per-dot transparency breathing: each dot pulses independently.
 const DOT_ALPHA_AMP = 0.2; // range 0.8 .. 1.0
 const DOT_ALPHA_PERIOD = 5000;
+// After the last video frame is reached, keep the hands frozen for this many
+// extra video frames of scroll distance before releasing the page wheel.
+const HOLD_FRAMES = 4;
+
+
+
 
 
 
@@ -445,8 +451,19 @@ export function HalftoneHandsFooter({
       v: prefersReduce ? 1 : 0,
       vel: 0,
     };
+    const holdRef = {
+      target: 0,
+      v: 0,
+      vel: 0,
+    };
 
-    const lockSpan = () => Math.max(420, window.innerHeight * 1.15);
+    const frameSpan = () => Math.max(420, window.innerHeight * 1.15);
+
+
+    // Distance over which the post-roll hold consumes HOLD_FRAMES video frames.
+    const holdSpan = () => frameSpan() * (HOLD_FRAMES / FRAME_COUNT);
+
+
     // Seconds to close ~63% of the remaining distance.
     const SMOOTH_TAU = 0.16;
     // Per-event clamp: one huge trackpad delta can't slam the sequence forward.
@@ -457,19 +474,51 @@ export function HalftoneHandsFooter({
       if (prefersReduce) return false;
       const dy = rawDy * (deltaMode === 1 ? 16 : deltaMode === 2 ? 100 : 1);
       if (dy === 0) return false;
-      const t = progressRef.target;
       const goingDown = dy > 0;
       const atTop = window.scrollY <= 0;
-      const canForward = goingDown && t < 1;
-      const canRewind = !goingDown && t > 0 && atTop;
-      if (!canForward && !canRewind) return false;
-      const raw = dy / lockSpan();
-      const step = Math.max(-MAX_STEP, Math.min(MAX_STEP, raw));
-      progressRef.target = Math.min(1, Math.max(0, t + step));
-      // Blend into the glide velocity (progress units per second).
-      progressRef.vel = progressRef.vel * 0.7 + step * 7;
-      return true;
+
+      // Use the same physical clamp for both phases so the feel stays consistent.
+      const maxPx = frameSpan() * MAX_STEP;
+      const clampedDy = Math.max(-maxPx, Math.min(maxPx, dy));
+
+      if (goingDown) {
+
+        // Phase A: scrub through the 49 video frames.
+        if (progressRef.target < 1) {
+          const step = clampedDy / frameSpan();
+          progressRef.target = Math.min(1, Math.max(0, progressRef.target + step));
+          progressRef.vel = progressRef.vel * 0.7 + step * 7;
+          return true;
+        }
+        // Phase B: hold on the last frame for a few extra frames of scroll.
+        if (holdRef.target < 1) {
+          const step = clampedDy / holdSpan();
+          holdRef.target = Math.min(1, Math.max(0, holdRef.target + step));
+          holdRef.vel = holdRef.vel * 0.7 + step * 7;
+          return true;
+        }
+        // Phase C: release the wheel to the page.
+        return false;
+      }
+
+
+      // Going up: reverse the hold first, then rewind the video frames.
+      if (atTop && holdRef.target > 0) {
+        const step = clampedDy / holdSpan();
+        holdRef.target = Math.min(1, Math.max(0, holdRef.target + step));
+        holdRef.vel = holdRef.vel * 0.7 + step * 7;
+        return true;
+      }
+      if (atTop && progressRef.target > 0) {
+        const step = clampedDy / frameSpan();
+        progressRef.target = Math.min(1, Math.max(0, progressRef.target + step));
+        progressRef.vel = progressRef.vel * 0.7 + step * 7;
+        return true;
+      }
+      return false;
     };
+
+
 
 
     const onWheel = (e: WheelEvent) => {
@@ -565,27 +614,41 @@ export function HalftoneHandsFooter({
         ph.current = ph.target;
       } else {
         // Residual glide: the flick keeps feeding the target briefly, then decays.
-        if (Math.abs(progressRef.vel) > 1e-4) {
-          progressRef.target = Math.min(
-            1,
-            Math.max(0, progressRef.target + progressRef.vel * dt * 0.25),
-          );
-          progressRef.vel *= Math.exp(-dt / 0.12);
-        } else {
-          progressRef.vel = 0;
-        }
+        const applyGlide = (
+          ref: typeof progressRef,
+          span: () => number,
+        ) => {
+          if (Math.abs(ref.vel) > 1e-4) {
+            ref.target = Math.min(
+              1,
+              Math.max(0, ref.target + ref.vel * dt * 0.25),
+            );
+            ref.vel *= Math.exp(-dt / 0.12);
+          } else {
+            ref.vel = 0;
+          }
+        };
+        applyGlide(progressRef, frameSpan);
+        applyGlide(holdRef, holdSpan);
 
         // Exponential ease toward the target with a fixed time constant.
         const k = 1 - Math.exp(-dt / SMOOTH_TAU);
         progressRef.v += (progressRef.target - progressRef.v) * k;
+        holdRef.v += (holdRef.target - holdRef.v) * k;
         if (Math.abs(progressRef.target - progressRef.v) < 0.0005) {
           progressRef.v = progressRef.target;
         }
+        if (Math.abs(holdRef.target - holdRef.v) < 0.0005) {
+          holdRef.v = holdRef.target;
+        }
 
+        // The playhead is driven solely by the frame progress; during the hold
+        // phase progressRef.v stays at 1, so the last frame remains frozen.
         ph.target = progressRef.v * (FRAME_COUNT - 1);
         ph.current += (ph.target - ph.current) * (1 - Math.exp(-dt / 0.05));
         if (Math.abs(ph.target - ph.current) < 0.01) ph.current = ph.target;
       }
+
 
 
 
