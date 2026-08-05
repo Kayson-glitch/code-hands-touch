@@ -693,12 +693,26 @@ export function HalftoneHandsFooter({
 
       // ---- ghost preview of the last frame (10% ink) --------------------
       if (!prefersReduce) {
-        if (!ghost.started) {
-          ghost.in = Math.min(1, ghost.in + dt / 0.8);
-        } else {
-          ghost.out = Math.max(0, ghost.out - dt / 1.2);
+        // Entry state = page at top with the sequence fully rewound. It is
+        // reachable again by scrolling back up, so the ghost + scroll hint
+        // return instead of being gone for good.
+        const atEntry =
+          window.scrollY <= 0 &&
+          progressRef.target <= 0.002 &&
+          progressRef.v <= 0.01 &&
+          holdRef.target <= 0.002;
+        if (atEntry !== ghost.atEntry) {
+          ghost.atEntry = atEntry;
+          window.dispatchEvent(
+            new CustomEvent("hands-entry-state", { detail: { atEntry } }),
+          );
         }
+        ghost.in = Math.min(1, ghost.in + dt / 0.8);
+        ghost.out = atEntry
+          ? Math.min(1, ghost.out + dt / 1.2)
+          : Math.max(0, ghost.out - dt / 1.2);
         const gA = GHOST_ALPHA * ghost.in * ghost.out;
+
         if (gA > 0.001) {
           const gDots = dotsForFrame(FRAME_COUNT - 1);
           ctx.globalAlpha = gA;
