@@ -13,6 +13,15 @@ const smoothstep = (a: number, b: number, x: number) => {
   return t * t * (3 - 2 * t);
 };
 
+const REVIEWS: string[] = [
+  "Synergy cut our first-response time by 80%. It feels like every customer is talking to a real agent.",
+  "The bot learned our brand voice in a day. Our team finally has space to focus on high-value conversations.",
+  "I was skeptical, but the 24/7 coverage alone paid for itself within the first month.",
+  "It routes complex tickets to humans instantly while handling routine questions on its own.",
+  "Our CSAT score went up 18% after launch. Customers love the fast, natural replies.",
+  "Setup took minutes, not months. The AI keeps getting smarter with every conversation.",
+];
+
 export function SloganSection() {
   const sectionRef = useRef<HTMLElement | null>(null);
   const [progress, setProgress] = useState(0);
