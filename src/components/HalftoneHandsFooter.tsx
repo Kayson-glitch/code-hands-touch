@@ -501,12 +501,21 @@ export function HalftoneHandsFooter({
           holdRef.vel = holdRef.vel * 0.7 + step * 7;
           return true;
         }
-        // Phase C: release the wheel to the page.
+        // Phase C: one wheel notch snaps the page into the second screen.
+        if (window.scrollY < snapTarget() - 2) {
+          snapTo(snapTarget());
+          return true;
+        }
         return false;
       }
 
 
-      // Going up: reverse the hold first, then rewind the video frames.
+      // Going up: snap back out of the second screen first.
+      if (window.scrollY > 0 && window.scrollY <= snapTarget() + 2) {
+        snapTo(0);
+        return true;
+      }
+      // Then reverse the hold, then rewind the video frames.
       if (atTop && holdRef.target > 0) {
         const step = clampedDy / holdSpan();
         holdRef.target = Math.min(1, Math.max(0, holdRef.target + step));
@@ -521,6 +530,36 @@ export function HalftoneHandsFooter({
       }
       return false;
     };
+
+    // ------------------------------------------------------------- snap scroll
+    // A single wheel gesture slides the page a whole screen instead of the
+    // reader having to keep scrolling. While a snap runs every wheel event is
+    // swallowed so the gesture can't be fought mid-flight.
+    const snapTarget = () => window.innerHeight;
+    const snapState = { active: false, from: 0, to: 0, t0: 0, raf: 0 };
+    const SNAP_MS = 900;
+    const easeInOut = (x: number) =>
+      x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2;
+
+    const snapTo = (to: number) => {
+      if (snapState.active) return;
+      snapState.active = true;
+      snapState.from = window.scrollY;
+      snapState.to = to;
+      snapState.t0 = performance.now();
+      const tick = (now: number) => {
+        const p = Math.min(1, (now - snapState.t0) / SNAP_MS);
+        window.scrollTo(0, snapState.from + (snapState.to - snapState.from) * easeInOut(p));
+        if (p < 1) {
+          snapState.raf = requestAnimationFrame(tick);
+        } else {
+          snapState.active = false;
+          snapState.raf = 0;
+        }
+      };
+      snapState.raf = requestAnimationFrame(tick);
+    };
+
 
 
     // ---------------------------------------------------------- ghost preview
