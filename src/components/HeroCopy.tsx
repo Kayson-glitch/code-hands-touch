@@ -1,15 +1,13 @@
 import { useEffect, useState } from "react";
 import { ArrowRight } from "lucide-react";
 import { useHeroLayout } from "@/hooks/useHeroLayout";
-import { useInverted } from "@/hooks/useInvertTheme";
 
 
 export function HeroCopy() {
   const [visible, setVisible] = useState(false);
   const layout = useHeroLayout();
-  const inverted = useInverted();
-  const btnFace = inverted ? "#FAFAFA" : "#0E0B22";
-  const btnFaceRgb = inverted ? "250,250,250" : "14,11,34";
+  const btnFace = "#0E0B22";
+  const btnFaceRgb = "14,11,34";
 
 
 
@@ -81,7 +79,7 @@ export function HeroCopy() {
             padding: "0 32px",
             borderRadius: 12,
             border: "0.125rem solid transparent",
-            color: inverted ? "#0A0A0A" : "#FFFFFF",
+            color: "#FFFFFF",
             backgroundImage: [
               `linear-gradient(${btnFace},${btnFace})`,
               `linear-gradient(${btnFace} 50%, rgba(${btnFaceRgb},0.6) 80%, rgba(${btnFaceRgb},0))`,

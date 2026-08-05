@@ -1,12 +1,10 @@
 import { useEffect, useState } from "react";
 import logo from "@/assets/synergy-logo-v3.png.asset.json";
-import { useInverted } from "@/hooks/useInvertTheme";
 
 export function SiteNav() {
   const [theme, setTheme] = useState<"light" | "dark">("light");
   const [hidden, setHidden] = useState(true);
   const [scrolled, setScrolled] = useState(false);
-  const inverted = useInverted();
 
   useEffect(() => {
     // Nav starts hidden through the intro video + burst. Only show it
@@ -48,10 +46,10 @@ export function SiteNav() {
   void theme;
   const navItem =
     "flex cursor-pointer items-center gap-1.5 p-4 capitalize transition-colors duration-200 hover:text-[#0E0B22]";
-  const glassBg = inverted ? "rgba(10,10,10,0.72)" : "rgba(250,250,250,0.72)";
-  const inkStrong = inverted ? "#FAFAFA" : "#0E0B22";
-  const inkSoft = inverted ? "#9B99A6" : "#7A7885";
-  const hairline = inverted ? "#23222A" : "#F1F1F3";
+  const glassBg = "rgba(250,250,250,0.72)";
+  const inkStrong = "#0E0B22";
+  const inkSoft = "#7A7885";
+  const hairline = "#F1F1F3";
 
   return (
     <nav
@@ -148,9 +146,9 @@ export function SiteNav() {
                 lineHeight: "20px",
                 padding: "0 14px",
                 borderRadius: 10,
-                color: inverted ? "#0A0A0A" : "#FFFFFF",
-                background: inverted ? "#FAFAFA" : "#0E0B22",
-                border: `1px solid ${inverted ? "#FAFAFA" : "#0E0B22"}`,
+                color: "#FFFFFF",
+                background: "#0E0B22",
+                border: "1px solid #0E0B22",
                 transition: "background 300ms ease, color 300ms ease, border-color 300ms ease",
               }}
             >
