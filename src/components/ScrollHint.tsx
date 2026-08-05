@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 /**
  * Figma-spec scroll hint (node 1415:20938):
  * row, gap 8px — "scroll" (Montserrat 14/20, capitalize, #000) +
- * 20x20 box, 2px padding, 1px #E1E0E4 border, radius 12px, arrow-down icon.
+ * 24x24 box, 2px padding, 1px #E1E0E4 border, radius 12px, 20x20 arrow-down icon.
  * Position: horizontally centered, top 624px in the 1440x900 frame
  * (element center at 634/900 = 70.4% of the viewport height).
  */
@@ -72,8 +72,8 @@ export function ScrollHint({ visible = true }: { visible?: boolean }) {
       </span>
       <span
         style={{
-          width: 20,
-          height: 20,
+          width: 24,
+          height: 24,
           padding: 2,
           border: "1px solid #E1E0E4",
           borderRadius: 12,
@@ -83,10 +83,10 @@ export function ScrollHint({ visible = true }: { visible?: boolean }) {
           boxSizing: "border-box",
         }}
       >
-        {/* Figma vuesax/linear/arrow-down (node 1415:20941) */}
+        {/* Figma vuesax/linear/arrow-down (node 1415:20941) — icon 20x20 */}
         <svg
-          width="16"
-          height="16"
+          width="20"
+          height="20"
           viewBox="0 0 20 20"
           fill="none"
           style={{ animation: "scroll-hint-arrow 2.8s ease-in-out infinite" }}
@@ -106,7 +106,6 @@ export function ScrollHint({ visible = true }: { visible?: boolean }) {
             strokeLinejoin="round"
           />
         </svg>
-
       </span>
       </div>
       <style>{`
