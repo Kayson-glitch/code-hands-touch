@@ -1,0 +1,25 @@
+# 圆点独立随机透明度呼吸
+
+## 目标
+把第一屏手部点阵的透明度呼吸从「整体统一脉动」改成「每个圆点各自随机相位/周期的独立呼吸」，并尝试 0.6–1.0 的透明度范围。
+
+## 改动
+- `src/components/HalftoneHandsFooter.tsx`：
+  1. 在 `Dot` 类型上新增两个字段：
+     - `alphaPhase`: number — 随机相位偏移（0–2π）。
+     - `alphaSpeed`: number — 随机周期倍率（如 0.7–1.3）。
+  2. 在生成每一帧点阵的函数里，为每个 `Dot` 生成随机 `alphaPhase` 与 `alphaSpeed`。
+  3. 绘制循环中：
+     - 移除现有的全局 `ctx.globalAlpha = alphaBreath`。
+     - 对每个圆点单独计算 `dotAlpha = 1 - Math.sin(now * speed + phase) * 0.4`，得到 0.6–1.0 范围。
+     - 在绘制每个圆点前设置 `ctx.globalAlpha = dotAlpha`，绘制后恢复为 1。
+  4. 删除（或注释掉）不再需要的 `ALPHA_BREATH_AMP` 与 `ALPHA_BREATH_PERIOD` 常量，或保留仅作备用。
+
+## 不变
+- 网点的大小呼吸（tonal breathing）保持现有全局逻辑。
+- 流体墨迹 hover、滚轮驱动手部动画、入场/UI 动画视频交接逻辑不变。
+
+## 验收
+- 静态不滚动时，手部所有圆点各自以不同节奏做透明度呼吸，整体呈现闪烁/呼吸感而非整体升降。
+- 透明度下限约 0.6，上限 1.0。
+- 类型检查通过。
