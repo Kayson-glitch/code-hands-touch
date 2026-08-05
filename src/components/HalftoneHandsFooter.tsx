@@ -4,6 +4,7 @@ import { IntroVideo, type IntroProgressInfo } from "./IntroVideo";
 import { useHeroLayout, type HeroLayout } from "@/hooks/useHeroLayout";
 import { GlitchGrainOverlay } from "@/components/GlitchGrainOverlay";
 
+import { useInverted } from "@/hooks/useInvertTheme";
 import { INTRO_ENABLED } from "@/components/intro/introConfig";
 
 
@@ -43,6 +44,10 @@ const INK_STOPS: Array<[number, number, number]> = [
   [0xa8, 0xa8, 0xa8],
 ];
 
+// Flipped by the global invert skin: on a near-black paper the same ramp is
+// mirrored (dark dots near paper → bright dots in the deepest shadows).
+let INVERTED_INK = false;
+
 /** Interpolate the three-stop ink ramp at coverage d (0..1). */
 function inkAt(d: number) {
   const t = Math.min(1, Math.max(0, d));
@@ -50,11 +55,12 @@ function inkAt(d: number) {
   const f = seg === 0 ? t / 0.5 : (t - 0.5) / 0.5;
   const a = INK_STOPS[seg];
   const b = INK_STOPS[seg + 1];
-  return [
+  const out = [
     Math.round(a[0] + (b[0] - a[0]) * f),
     Math.round(a[1] + (b[1] - a[1]) * f),
     Math.round(a[2] + (b[2] - a[2]) * f),
   ];
+  return INVERTED_INK ? out.map((c) => 255 - c) : out;
 }
 
 // Pointer parallax (CSS px at full deflection) + breathing.
@@ -361,6 +367,16 @@ export function HalftoneHandsFooter({
 }: { videoSrc?: string; debug?: boolean; handoffVideo?: HTMLVideoElement | null } = {}) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const layout = useHeroLayout();
+  const inverted = useInverted();
+
+  // Mirror the halftone ink ramp + page paper whenever the skin flips.
+  useEffect(() => {
+    INVERTED_INK = inverted;
+    if (typeof document === "undefined") return;
+    const paper = inverted ? "#0A0A0A" : "#FAFAFA";
+    document.documentElement.style.backgroundColor = paper;
+    document.body.style.backgroundColor = paper;
+  }, [inverted]);
   const [stage, setStage] = useState<"orb" | "hands">(INTRO_ENABLED ? "orb" : "hands");
   const stageRef = useRef(stage);
   useEffect(() => {
@@ -896,7 +912,12 @@ export function HalftoneHandsFooter({
   return (
     <section
       className="relative w-full overflow-hidden"
-      style={{ backgroundColor: "#FAFAFA", height: "100vh", minHeight: 600 }}
+      style={{
+        backgroundColor: inverted ? "#0A0A0A" : "#FAFAFA",
+        transition: "background-color 300ms ease",
+        height: "100vh",
+        minHeight: 600,
+      }}
     >
       {bgDark && (
         <div
@@ -904,7 +925,8 @@ export function HalftoneHandsFooter({
           style={{
             position: "fixed",
             inset: 0,
-            background: "#FAFAFA",
+            background: inverted ? "#0A0A0A" : "#FAFAFA",
+            transition: "background-color 300ms ease",
             zIndex: -1,
             pointerEvents: "none",
           }}

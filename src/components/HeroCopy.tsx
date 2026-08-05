@@ -1,11 +1,15 @@
 import { useEffect, useState } from "react";
 import { ArrowRight } from "lucide-react";
 import { useHeroLayout } from "@/hooks/useHeroLayout";
+import { useInverted } from "@/hooks/useInvertTheme";
 
 
 export function HeroCopy() {
   const [visible, setVisible] = useState(false);
   const layout = useHeroLayout();
+  const inverted = useInverted();
+  const btnFace = inverted ? "#FAFAFA" : "#0E0B22";
+  const btnFaceRgb = inverted ? "250,250,250" : "14,11,34";
 
 
 
@@ -68,7 +72,7 @@ export function HeroCopy() {
         </div>
 
         <button
-          className="pointer-events-auto group relative inline-flex shrink-0 cursor-pointer items-center justify-center font-medium text-white transition-all"
+          className="pointer-events-auto group relative inline-flex shrink-0 cursor-pointer items-center justify-center font-medium transition-all"
           style={{
             height: 40,
             fontSize: 14,
@@ -77,9 +81,10 @@ export function HeroCopy() {
             padding: "0 32px",
             borderRadius: 12,
             border: "0.125rem solid transparent",
+            color: inverted ? "#0A0A0A" : "#FFFFFF",
             backgroundImage: [
-              "linear-gradient(#0E0B22,#0E0B22)",
-              "linear-gradient(#0E0B22 50%, rgba(14,11,34,0.6) 80%, rgba(14,11,34,0))",
+              `linear-gradient(${btnFace},${btnFace})`,
+              `linear-gradient(${btnFace} 50%, rgba(${btnFaceRgb},0.6) 80%, rgba(${btnFaceRgb},0))`,
               "linear-gradient(90deg, #137DFF 0%, #FF18AA 33.333%, #FFCD17 66.666%, #137DFF 100%)",
             ].join(","),
             backgroundClip: "padding-box, border-box, border-box",

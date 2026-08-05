@@ -1,10 +1,12 @@
 import { useEffect, useState } from "react";
 import logo from "@/assets/synergy-logo-v3.png.asset.json";
+import { useInverted } from "@/hooks/useInvertTheme";
 
 export function SiteNav() {
   const [theme, setTheme] = useState<"light" | "dark">("light");
   const [hidden, setHidden] = useState(true);
   const [scrolled, setScrolled] = useState(false);
+  const inverted = useInverted();
 
   useEffect(() => {
     // Nav starts hidden through the intro video + burst. Only show it
@@ -46,7 +48,10 @@ export function SiteNav() {
   void theme;
   const navItem =
     "flex cursor-pointer items-center gap-1.5 p-4 capitalize transition-colors duration-200 hover:text-[#0E0B22]";
-  const glassBg = "rgba(250,250,250,0.72)";
+  const glassBg = inverted ? "rgba(10,10,10,0.72)" : "rgba(250,250,250,0.72)";
+  const inkStrong = inverted ? "#FAFAFA" : "#0E0B22";
+  const inkSoft = inverted ? "#9B99A6" : "#7A7885";
+  const hairline = inverted ? "#23222A" : "#F1F1F3";
 
   return (
     <nav
@@ -75,7 +80,7 @@ export function SiteNav() {
         className="flex items-center justify-center px-6"
         style={{
           height: 64,
-          borderBottom: "1px solid #F1F1F3",
+          borderBottom: `1px solid ${hairline}`,
           background: scrolled ? glassBg : "transparent",
           backdropFilter: scrolled ? "blur(18px) saturate(140%)" : "none",
           transition:
@@ -87,7 +92,7 @@ export function SiteNav() {
           <a
             href="/"
             className="pointer-events-auto flex shrink-0 items-center gap-2"
-            style={{ height: 28, color: "#0E0B22" }}
+            style={{ height: 28, color: inkStrong, transition: "color 300ms ease" }}
           >
             <img
               src={logo.url}
@@ -113,16 +118,16 @@ export function SiteNav() {
             className="pointer-events-auto hidden flex-1 items-center justify-center gap-2.5 md:flex"
             style={{ fontSize: 14, lineHeight: "22px" }}
           >
-            <li className={navItem} style={{ color: "#0E0B22" }}>
+            <li className={navItem} style={{ color: inkStrong }}>
               Platform <Chevron />
             </li>
-            <li className={navItem} style={{ color: "#7A7885" }}>
+            <li className={navItem} style={{ color: inkSoft }}>
               Solution <Chevron />
             </li>
-            <li className={navItem} style={{ color: "#7A7885" }}>
+            <li className={navItem} style={{ color: inkSoft }}>
               Pricing
             </li>
-            <li className={navItem} style={{ color: "#7A7885" }}>
+            <li className={navItem} style={{ color: inkSoft }}>
               Company Hub
             </li>
           </ul>
@@ -131,20 +136,22 @@ export function SiteNav() {
           <div className="pointer-events-auto flex shrink-0 items-center gap-2.5">
             <button
               className="px-4 py-[7px] capitalize"
-              style={{ fontSize: 14, lineHeight: "22px", color: "#0E0B22" }}
+              style={{ fontSize: 14, lineHeight: "22px", color: inkStrong }}
             >
               Log in
             </button>
             <button
-              className="font-medium text-white transition-transform hover:scale-[1.02]"
+              className="font-medium transition-transform hover:scale-[1.02]"
               style={{
                 height: 32,
                 fontSize: 12,
                 lineHeight: "20px",
                 padding: "0 14px",
                 borderRadius: 10,
-                background: "#0E0B22",
-                border: "1px solid #0E0B22",
+                color: inverted ? "#0A0A0A" : "#FFFFFF",
+                background: inverted ? "#FAFAFA" : "#0E0B22",
+                border: `1px solid ${inverted ? "#FAFAFA" : "#0E0B22"}`,
+                transition: "background 300ms ease, color 300ms ease, border-color 300ms ease",
               }}
             >
               Book a Demo

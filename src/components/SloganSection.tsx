@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { GlitchGrainOverlay } from "./GlitchGrainOverlay";
+import { setInvertedTheme } from "@/hooks/useInvertTheme";
 
 const LINES: string[][] = [
   ["We", "craft", "intelligent", "support", "experiences"],
@@ -17,6 +18,7 @@ export function SloganSection() {
   const sectionRef = useRef<HTMLElement | null>(null);
   const [progress, setProgress] = useState(0);
   const [dark, setDark] = useState(false);
+  const darkRef = useRef(false);
   const [instant, setInstant] = useState(false);
   const words = useMemo(() => LINES.flat(), []);
   const totalChars = useMemo(
@@ -31,7 +33,9 @@ export function SloganSection() {
     if (reduced) {
       setProgress(1);
       setInstant(true);
+      darkRef.current = true;
       setDark(true);
+      setInvertedTheme(true);
       return;
     }
 
@@ -55,13 +59,15 @@ export function SloganSection() {
 
       // Threshold flip: dark once the section has revealed ~20% of the
       // viewport. Hysteresis (0.80 in / 0.84 out) prevents flicker.
-      setDark((prev) => {
-        const enter = rect.top <= vh * 0.8;
-        const exit = rect.top > vh * 0.84;
-        if (!prev && enter) return true;
-        if (prev && exit) return false;
-        return prev;
-      });
+      const prev = darkRef.current;
+      const enter = rect.top <= vh * 0.8;
+      const exit = rect.top > vh * 0.84;
+      const next = !prev && enter ? true : prev && exit ? false : prev;
+      if (next !== prev) {
+        darkRef.current = next;
+        setDark(next);
+        setInvertedTheme(next);
+      }
     };
 
     const schedule = () => {
@@ -86,6 +92,7 @@ export function SloganSection() {
     if (sectionRef.current) io.observe(sectionRef.current);
 
     return () => {
+      setInvertedTheme(false);
       io.disconnect();
       window.removeEventListener("scroll", schedule);
       window.removeEventListener("resize", schedule);

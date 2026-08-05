@@ -33,6 +33,29 @@ body::-webkit-scrollbar {
   --ink-ghost: #c7c6cd;
   --hairline: #e1e0e4;
   --accent-blue: #137dff;
+  --paper: #fafafa;
+}
+
+/* Inverted (dark) skin — toggled by the second screen's scroll threshold. */
+html[data-invert="1"] {
+  --ink: #fafafa;
+  --ink-muted: #9b99a6;
+  --ink-faint: #6f6d7a;
+  --ink-ghost: #47454f;
+  --hairline: #23222a;
+  --paper: #0a0a0a;
+}
+
+html,
+body {
+  transition: background-color 300ms ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html,
+  body {
+    transition: none;
+  }
 }
 
 @theme inline {
@@ -41,6 +64,7 @@ body::-webkit-scrollbar {
   --color-ink-faint: var(--ink-faint);
   --color-ink-ghost: var(--ink-ghost);
   --color-hairline: var(--hairline);
+  --color-paper: var(--paper);
   --color-accent-blue: var(--accent-blue);
 }
 

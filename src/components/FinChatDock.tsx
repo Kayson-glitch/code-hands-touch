@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { useInverted } from "@/hooks/useInvertTheme";
 import { Mic, Paperclip, ArrowUp } from "lucide-react";
 
 const SUGGESTIONS = [
@@ -17,6 +18,7 @@ export function FinChatDock() {
   const [hintIndex, setHintIndex] = useState(0);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const wrapperRef = useRef<HTMLDivElement>(null);
+  const inverted = useInverted();
 
   useEffect(() => {
     const onBg = (e: Event) => {
@@ -117,12 +119,15 @@ export function FinChatDock() {
               <button
                 key={s}
                 onClick={() => pickSuggestion(s)}
-                className="pointer-events-auto rounded-[20px] bg-black/[0.06] px-4 py-2.5 text-left text-black backdrop-blur-md transition-colors hover:bg-black/10"
+                className="pointer-events-auto rounded-[20px] px-4 py-2.5 text-left text-ink backdrop-blur-md transition-colors"
                 style={{
                   fontSize: 14,
                   lineHeight: "22px",
                   marginLeft: i === 1 ? 32 : i === 2 ? 12 : 0,
                   animation: `finRise 500ms ${i * 80}ms both ease-out`,
+                  backgroundColor: inverted
+                    ? "rgba(250,250,250,0.10)"
+                    : "rgba(0,0,0,0.06)",
                 }}
               >
                 {s}
@@ -132,7 +137,7 @@ export function FinChatDock() {
         )}
 
         <div
-          className="pointer-events-auto flex items-center justify-between bg-white"
+          className="pointer-events-auto flex items-center justify-between"
           onClick={() => !expanded && expand()}
           style={{
             minHeight: 48,
@@ -143,9 +148,12 @@ export function FinChatDock() {
             paddingBottom: 6,
             gap: 8,
             alignItems: expanded ? "flex-end" : "center",
-            boxShadow: "0 12px 20px rgba(0,0,0,0.05)",
+            backgroundColor: inverted ? "#17171B" : "#FFFFFF",
+            boxShadow: inverted
+              ? "0 12px 20px rgba(0,0,0,0.35)"
+              : "0 12px 20px rgba(0,0,0,0.05)",
+            transition: "box-shadow 300ms ease, background-color 300ms ease",
             cursor: expanded ? "text" : "pointer",
-            transition: "box-shadow 300ms ease",
           }}
         >
 
