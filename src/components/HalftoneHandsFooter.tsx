@@ -481,11 +481,8 @@ export function HalftoneHandsFooter({
       const maxPx = frameSpan() * MAX_STEP;
       const clampedDy = Math.max(-maxPx, Math.min(maxPx, dy));
 
-      // DEBUG: log every 10th downward event
-      // eslint-disable-next-line no-console
-      if (Math.random() < 0.02) console.log("consume", { rawDy, dy, progress: progressRef.target, hold: holdRef.target, scrollY: window.scrollY });
-
       if (goingDown) {
+
         // Phase A: scrub through the 49 video frames.
         if (progressRef.target < 1) {
           const step = clampedDy / frameSpan();
