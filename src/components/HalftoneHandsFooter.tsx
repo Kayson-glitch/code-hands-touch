@@ -596,6 +596,7 @@ export function HalftoneHandsFooter({
       const fluid = fluidRef.current;
       if (fluid && !prefersReduce) fluid.step(dt);
 
+      ctx.globalAlpha = alphaBreath;
       for (let k = 0; k < dots.length; k++) {
         const dot = dots[k];
         // Centre dots drift more than edge dots → a shallow depth read.
