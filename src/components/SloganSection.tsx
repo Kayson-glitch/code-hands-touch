@@ -218,7 +218,7 @@ export function SloganSection() {
           style={{
             display: "flex",
             width: "max-content",
-            animation: "testimonial-marquee 40s linear infinite",
+            animation: "testimonial-marquee 60s linear infinite",
           }}
         >
           {[...REVIEWS, ...REVIEWS].map((text, i) => (
