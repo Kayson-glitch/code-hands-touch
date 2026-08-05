@@ -32,9 +32,10 @@ export const Route = createFileRoute("/")({
 });
 
 function Index() {
-  const [videoSrc, setVideoSrc] = useState<string | null>(null);
+  const [videoSrc, setVideoSrc] = useState<string | null>(INTRO_ENABLED ? null : "");
   const [handoffVideo, setHandoffVideo] = useState<HTMLVideoElement | null>(null);
-  const [shown, setShown] = useState(false);
+  const [shown, setShown] = useState(!INTRO_ENABLED);
+
   const [debug, setDebug] = useState(false);
   const [scrollY, setScrollY] = useState(0);
 
