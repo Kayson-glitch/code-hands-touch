@@ -70,6 +70,7 @@ const DOT_ALPHA_PERIOD = 5000;
 const HOLD_FRAMES = 4;
 // Entry-state ghost preview of the final frame.
 const GHOST_ALPHA = 0.1;
+const GHOST_ALPHA_MAX = 0.2;
 
 
 
