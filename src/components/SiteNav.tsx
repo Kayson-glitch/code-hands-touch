@@ -155,10 +155,11 @@ export function SiteNav() {
                 fontSize: 12,
                 lineHeight: "20px",
                 padding: "0 14px",
-                borderRadius: 10,
-                color: "#FFFFFF",
-                background: "#0E0B22",
-                border: "1px solid #0E0B22",
+                borderRadius: onDark ? 12 : 10,
+                color: onDark ? "#0E0B22" : "#FFFFFF",
+                background: onDark ? "#FFFFFF" : "#0E0B22",
+                border: `1px solid ${onDark ? "#FFFFFF" : "#0E0B22"}`,
+
                 transition: "background 300ms ease, color 300ms ease, border-color 300ms ease",
               }}
             >
