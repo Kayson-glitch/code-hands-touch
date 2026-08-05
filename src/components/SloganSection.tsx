@@ -106,7 +106,7 @@ export function SloganSection() {
       <div
         aria-hidden
         style={{
-          position: "absolute",
+          position: "fixed",
           top: 0,
           right: "100px",
           bottom: 0,
