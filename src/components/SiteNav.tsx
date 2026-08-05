@@ -156,8 +156,7 @@ export function SiteNav() {
   );
 }
 
-  );
-}
+
 
 function Chevron() {
   return (
