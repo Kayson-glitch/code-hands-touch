@@ -696,9 +696,9 @@ export function HalftoneHandsFooter({
   }, [layout]);
 
   const handsVisible = stage === "hands";
-  const [orbMounted, setOrbMounted] = useState(true);
+  const [orbMounted, setOrbMounted] = useState(INTRO_ENABLED);
   const [burstProgress, setBurstProgress] = useState(0);
-  const [bgDark, setBgDark] = useState(false);
+  const [bgDark, setBgDark] = useState(!INTRO_ENABLED);
   const navHiddenRef = useRef(false);
 
   useEffect(() => {
@@ -707,6 +707,18 @@ export function HalftoneHandsFooter({
       new CustomEvent("app-bg-change", { detail: bgDark ? "dark" : "light" }),
     );
   }, [bgDark]);
+
+  // Intro sealed: reveal the nav immediately and set the page background,
+  // matching the state the intro handoff would normally leave behind.
+  useEffect(() => {
+    if (INTRO_ENABLED || typeof window === "undefined") return;
+    window.dispatchEvent(
+      new CustomEvent("app-nav-visibility", { detail: "visible" }),
+    );
+    document.documentElement.style.backgroundColor = "#FAFAFA";
+    document.body.style.backgroundColor = "#FAFAFA";
+  }, []);
+
 
   const handleIntroProgress = (info: IntroProgressInfo) => {
     setBurstProgress(info.burstProgress);
