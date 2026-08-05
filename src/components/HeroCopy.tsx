@@ -61,90 +61,59 @@ export function HeroCopy() {
         willChange: "opacity, filter, transform",
       }}
     >
-      <h1
-        className="font-display text-black"
+      <div className="flex w-full max-w-[800px] flex-col items-center gap-10">
+        <div className="flex w-full flex-col items-center gap-2.5">
+          <h1
+            className="font-display capitalize text-ink-ghost"
+            style={{
+              fontSize: layout.titleFontSize,
+              lineHeight: layout.titleLineHeight,
+              fontWeight: 500,
+              margin: 0,
+            }}
+          >
+            Support that drives revenue,
+            <br />
+            <span className="text-ink">powered by Synergy.AI.</span>
+          </h1>
 
-        style={{
-          fontSize: layout.titleFontSize,
-          lineHeight: layout.titleLineHeight,
-          fontWeight: 500,
-          letterSpacing: "-0.01em",
-          maxWidth: 900,
-          margin: 0,
-        }}
-      >
-        Support that drives revenue,
-        <br />
-        powered by{" "}
-        <span
-          ref={gradientRef}
+          <p
+            className="text-ink"
+            style={{
+              fontSize: layout.subtitleFontSize,
+              lineHeight: layout.subtitleLineHeight,
+              fontWeight: 400,
+              maxWidth: 380,
+              margin: 0,
+            }}
+          >
+            Intelligent Knowledge Engine for accurate, context-aware responses.
+          </p>
+        </div>
+
+        <button
+          className="pointer-events-auto group relative inline-flex items-center justify-center bg-ink font-medium text-white transition-transform hover:scale-[1.02]"
           style={{
-            background:
-              "linear-gradient(115deg, #185DFF 0%, #4B3AFF 22%, #8B22FF 44%, #D018FF 62%, #E81A8A 82%, #185DFF 100%)",
-            backgroundSize: "260% 260%",
-            WebkitBackgroundClip: "text",
-            backgroundClip: "text",
-            WebkitTextFillColor: "transparent",
-            color: "transparent",
+            height: 40,
+            fontSize: 16,
+            lineHeight: "24px",
+            padding: "0 24px",
+            borderRadius: 12,
+            borderBottom: "1px solid var(--accent-blue)",
           }}
         >
-          Synergy.AI.
-        </span>
-      </h1>
-
-      <p
-        className="mt-5 text-black/60"
-        style={{ fontSize: layout.subtitleFontSize, lineHeight: layout.subtitleLineHeight, fontWeight: 400 }}
-      >
-        Intelligent Knowledge Engine for accurate, context-aware responses.
-      </p>
-
-      <button
-        className="pointer-events-auto group relative mt-8 inline-flex items-center justify-center overflow-visible font-medium text-white"
-        style={{
-          height: 40,
-          fontSize: 14,
-          lineHeight: "22px",
-          padding: "0 24px",
-          borderRadius: 10,
-          border: "1px solid transparent",
-          backgroundImage:
-            "linear-gradient(#0a0a0a,#0a0a0a)," +
-            "linear-gradient(#0a0a0a 50%, rgba(10,10,10,0.65) 80%, rgba(10,10,10,0)),"+
-            "linear-gradient(90deg, #ff1245, #d018ff, #185dff, #4b3aff, #e81a8a, #ff1245)",
-          backgroundSize: "200%",
-          backgroundClip: "padding-box, border-box, border-box",
-          backgroundOrigin: "border-box",
-          animation: "rainbow-btn-flow 2s linear infinite",
-        }}
-      >
-
-        {/* Rainbow glow underneath */}
-        <span
-          aria-hidden
-          className="pointer-events-none absolute left-1/2 z-0 -translate-x-1/2"
-          style={{
-            bottom: "-20%",
-            height: "20%",
-            width: "60%",
-            filter: "blur(0.75rem)",
-            background:
-              "linear-gradient(90deg, #ff1245, #d018ff, #185dff, #4b3aff, #e81a8a, #ff1245)",
-            backgroundSize: "200% 100%",
-            animation: "rainbow-btn-flow 2s linear infinite",
-          }}
-        />
-        <span className="relative z-10 inline-flex items-center gap-1.5">
-          Book a Demo
-          <span
-            className="inline-flex max-w-0 -translate-x-1.5 overflow-hidden opacity-0 transition-all duration-300 ease-out group-hover:max-w-[20px] group-hover:translate-x-0 group-hover:opacity-100"
-          >
-            <ArrowRight size={14} strokeWidth={2} className="relative -top-px flex-shrink-0" />
+          <span className="relative z-10 inline-flex items-center gap-1.5">
+            Book a Demo
+            <span
+              className="inline-flex max-w-0 -translate-x-1.5 overflow-hidden opacity-0 transition-all duration-300 ease-out group-hover:max-w-[20px] group-hover:translate-x-0 group-hover:opacity-100"
+            >
+              <ArrowRight size={16} strokeWidth={2} className="relative -top-px flex-shrink-0" />
+            </span>
           </span>
-        </span>
-      </button>
-
+        </button>
+      </div>
     </div>
+
   );
 }
 
