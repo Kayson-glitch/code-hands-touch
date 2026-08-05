@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { GlitchGrainOverlay } from "./GlitchGrainOverlay";
+
 
 const LINES: string[][] = [
   ["We", "craft", "intelligent", "support", "experiences"],
@@ -102,7 +102,21 @@ export function SloganSection() {
       }}
 
     >
-      <GlitchGrainOverlay intensity="low" />
+      {/* Faint dot-grid texture over the black backdrop */}
+      <div
+        aria-hidden
+        style={{
+          position: "absolute",
+          inset: 0,
+          pointerEvents: "none",
+          backgroundImage:
+            "radial-gradient(rgba(255,255,255,0.13) 1px, transparent 1.2px)",
+          backgroundSize: "32px 32px",
+          backgroundPosition: "0 0",
+          zIndex: 0,
+        }}
+      />
+
       <div
         style={{
           position: "sticky",
