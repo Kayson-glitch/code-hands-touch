@@ -68,6 +68,9 @@ const DOT_ALPHA_PERIOD = 5000;
 // After the last video frame is reached, keep the hands frozen for this many
 // extra video frames of scroll distance before releasing the page wheel.
 const HOLD_FRAMES = 4;
+// Entry-state ghost preview of the final frame.
+const GHOST_ALPHA = 0.1;
+
 
 
 
