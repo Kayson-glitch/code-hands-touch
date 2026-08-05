@@ -778,7 +778,7 @@ export function HalftoneHandsFooter({
         Good Fella Studio — Halftone Creation of Adam
       </h1>
 
-      {bgDark && <AuroraIntro />}
+      
 
       <canvas
         ref={canvasRef}
