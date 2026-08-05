@@ -68,14 +68,13 @@ export function HeroCopy() {
         </div>
 
         <button
-          className="pointer-events-auto group relative inline-flex items-center justify-center bg-ink font-medium text-white transition-transform hover:scale-[1.02]"
+          className="pointer-events-auto group relative inline-flex items-center justify-center overflow-hidden bg-ink font-medium text-white transition-transform hover:scale-[1.02]"
           style={{
             height: 40,
             fontSize: 16,
             lineHeight: "24px",
-            padding: "0 24px",
+            padding: "0 32px",
             borderRadius: 12,
-            borderBottom: "1px solid var(--accent-blue)",
           }}
         >
           <span className="relative z-10 inline-flex items-center gap-1.5">
@@ -86,6 +85,18 @@ export function HeroCopy() {
               <ArrowRight size={16} strokeWidth={2} className="relative -top-px flex-shrink-0" />
             </span>
           </span>
+          <span
+            aria-hidden
+            className="pointer-events-none absolute bottom-0 left-0 right-0 z-0"
+            style={{
+              height: 2,
+              borderRadius: "0 0 12px 12px",
+              backgroundImage:
+                "linear-gradient(90deg, #137DFF 0%, #FF18AA 33.333%, #FFCD17 66.666%, #137DFF 100%)",
+              backgroundSize: "150% 100%",
+              animation: "btn-border-flow 9s linear infinite",
+            }}
+          />
         </button>
       </div>
     </div>
