@@ -57,13 +57,15 @@ export function SloganSection() {
 
       // Threshold flip: dark once the section has revealed ~20% of the
       // viewport. Hysteresis (0.80 in / 0.84 out) prevents flicker.
-      setDark((prev) => {
-        const enter = rect.top <= vh * 0.8;
-        const exit = rect.top > vh * 0.84;
-        const next = !prev && enter ? true : prev && exit ? false : prev;
+      const prev = darkRef.current;
+      const enter = rect.top <= vh * 0.8;
+      const exit = rect.top > vh * 0.84;
+      const next = !prev && enter ? true : prev && exit ? false : prev;
+      if (next !== prev) {
+        darkRef.current = next;
+        setDark(next);
         setInvertedTheme(next);
-        return next;
-      });
+      }
     };
 
     const schedule = () => {
