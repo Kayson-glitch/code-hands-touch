@@ -476,8 +476,10 @@ export function HalftoneHandsFooter({
     /** Advance/rewind the playhead. Returns true when the wheel was consumed. */
     const consume = (rawDy: number, deltaMode = 0) => {
       if (prefersReduce) return false;
+      if (snapState.active) return true;
       const dy = rawDy * (deltaMode === 1 ? 16 : deltaMode === 2 ? 100 : 1);
       if (dy === 0) return false;
+
       const goingDown = dy > 0;
       const atTop = window.scrollY <= 0;
 
