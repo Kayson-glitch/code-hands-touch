@@ -80,11 +80,11 @@ type Dot = {
 };
 
 // ------------------------------------------------------------- ink fluid
-// Warm, low-saturation dye gradient: pale amber → orange → rose.
+// Vivid fluid dye gradient: blue → magenta → yellow.
 const DYE_STOPS: Array<[number, number, number]> = [
-  [0xe6, 0xcf, 0x9b],
-  [0xe1, 0x84, 0x3a],
-  [0xcd, 0x3c, 0x66],
+  [0x13, 0x7d, 0xff],
+  [0xff, 0x18, 0xaa],
+  [0xff, 0xcd, 0x17],
 ];
 
 /** Interpolate the dye gradient at t (0..1). */
