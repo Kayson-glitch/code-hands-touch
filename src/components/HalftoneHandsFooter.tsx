@@ -2,7 +2,6 @@ import { useEffect, useRef, useState } from "react";
 import handsFramesAsset from "@/assets/hands-frames.webp.asset.json";
 import { IntroVideo, type IntroProgressInfo } from "./IntroVideo";
 import { useHeroLayout, type HeroLayout } from "@/hooks/useHeroLayout";
-import { GlitchGrainOverlay } from "@/components/GlitchGrainOverlay";
 
 import { useInverted } from "@/hooks/useInvertTheme";
 import { INTRO_ENABLED } from "@/components/intro/introConfig";
@@ -44,8 +43,16 @@ const INK_STOPS: Array<[number, number, number]> = [
   [0xa8, 0xa8, 0xa8],
 ];
 
-// Flipped by the global invert skin: on a near-black paper the same ramp is
-// mirrored (dark dots near paper → bright dots in the deepest shadows).
+// Dark skin gets its own ramp instead of a straight numeric inversion: a pure
+// mirror lands around #171717–#575757, which is nearly invisible on #0A0A0A.
+// Here near-paper cells stay dim and the deepest shadows read bright.
+const INK_STOPS_DARK: Array<[number, number, number]> = [
+  [0x3a, 0x3a, 0x3a],
+  [0x8c, 0x8c, 0x8c],
+  [0xed, 0xed, 0xed],
+];
+
+// Flipped by the global invert skin; selects which ramp inkAt() samples.
 let INVERTED_INK = false;
 
 /** Interpolate the three-stop ink ramp at coverage d (0..1). */
@@ -53,14 +60,15 @@ function inkAt(d: number) {
   const t = Math.min(1, Math.max(0, d));
   const seg = t < 0.5 ? 0 : 1;
   const f = seg === 0 ? t / 0.5 : (t - 0.5) / 0.5;
-  const a = INK_STOPS[seg];
-  const b = INK_STOPS[seg + 1];
+  const stops = INVERTED_INK ? INK_STOPS_DARK : INK_STOPS;
+  const a = stops[seg];
+  const b = stops[seg + 1];
   const out = [
     Math.round(a[0] + (b[0] - a[0]) * f),
     Math.round(a[1] + (b[1] - a[1]) * f),
     Math.round(a[2] + (b[2] - a[2]) * f),
   ];
-  return INVERTED_INK ? out.map((c) => 255 - c) : out;
+  return out;
 }
 
 // Pointer parallax (CSS px at full deflection) + breathing.
@@ -969,11 +977,6 @@ export function HalftoneHandsFooter({
         </div>
       )}
 
-      {(burstProgress > 0 || handsVisible) && (
-        <div className="absolute inset-0" style={{ zIndex: 7, pointerEvents: "none" }}>
-          <GlitchGrainOverlay visible intensity="low" />
-        </div>
-      )}
 
 
     </section>
