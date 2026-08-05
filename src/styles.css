@@ -36,16 +36,6 @@ body::-webkit-scrollbar {
   --paper: #fafafa;
 }
 
-/* Inverted (dark) skin — toggled by the second screen's scroll threshold. */
-html[data-invert="1"] {
-  --ink: #fafafa;
-  --ink-muted: #9b99a6;
-  --ink-faint: #6f6d7a;
-  --ink-ghost: #47454f;
-  --hairline: #23222a;
-  --paper: #0a0a0a;
-}
-
 html,
 body {
   transition: background-color 300ms ease;

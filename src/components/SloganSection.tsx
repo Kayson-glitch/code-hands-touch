@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { GlitchGrainOverlay } from "./GlitchGrainOverlay";
-import { setInvertedTheme } from "@/hooks/useInvertTheme";
 
 const LINES: string[][] = [
   ["We", "craft", "intelligent", "support", "experiences"],
@@ -17,9 +16,6 @@ const smoothstep = (a: number, b: number, x: number) => {
 export function SloganSection() {
   const sectionRef = useRef<HTMLElement | null>(null);
   const [progress, setProgress] = useState(0);
-  const [dark, setDark] = useState(false);
-  const darkRef = useRef(false);
-  const [instant, setInstant] = useState(false);
   const words = useMemo(() => LINES.flat(), []);
   const totalChars = useMemo(
     () => words.reduce((sum, w) => sum + w.length, 0),
@@ -32,10 +28,6 @@ export function SloganSection() {
       window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     if (reduced) {
       setProgress(1);
-      setInstant(true);
-      darkRef.current = true;
-      setDark(true);
-      setInvertedTheme(true);
       return;
     }
 
@@ -57,17 +49,6 @@ export function SloganSection() {
       const p = scrolled / travel;
       setProgress(Math.max(0, Math.min(1, p)));
 
-      // Threshold flip: dark once the section has revealed ~20% of the
-      // viewport. Hysteresis (0.80 in / 0.84 out) prevents flicker.
-      const prev = darkRef.current;
-      const enter = rect.top <= vh * 0.8;
-      const exit = rect.top > vh * 0.84;
-      const next = !prev && enter ? true : prev && exit ? false : prev;
-      if (next !== prev) {
-        darkRef.current = next;
-        setDark(next);
-        setInvertedTheme(next);
-      }
     };
 
     const schedule = () => {
@@ -92,7 +73,6 @@ export function SloganSection() {
     if (sectionRef.current) io.observe(sectionRef.current);
 
     return () => {
-      setInvertedTheme(false);
       io.disconnect();
       window.removeEventListener("scroll", schedule);
       window.removeEventListener("resize", schedule);
@@ -115,8 +95,7 @@ export function SloganSection() {
       ref={sectionRef}
       className="relative w-full"
       style={{
-        backgroundColor: dark ? "#0A0A0A" : "#FAFAFA",
-        transition: instant ? "none" : "background-color 300ms ease",
+        backgroundColor: "#0A0A0A",
         height: "260vh",
         position: "relative",
         zIndex: 10,
@@ -145,8 +124,7 @@ export function SloganSection() {
           lineHeight: 1.25,
           letterSpacing: "-0.01em",
           fontWeight: 500,
-          color: dark ? "#FAFAFA" : "#0A0A0A",
-          transition: instant ? "none" : "color 300ms ease",
+          color: "#FAFAFA",
         }}
       >
         {LINES.map((line, li) => (
