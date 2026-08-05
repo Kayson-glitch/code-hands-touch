@@ -68,13 +68,23 @@ export function HeroCopy() {
         </div>
 
         <button
-          className="pointer-events-auto group relative inline-flex items-center justify-center overflow-hidden bg-ink font-medium text-white transition-transform hover:scale-[1.02]"
+          className="pointer-events-auto group relative inline-flex items-center justify-center font-medium text-white transition-transform hover:scale-[1.02]"
           style={{
             height: 40,
             fontSize: 16,
             lineHeight: "24px",
             padding: "0 32px",
             borderRadius: 12,
+            border: "0 solid transparent",
+            borderBottomWidth: 2,
+            backgroundImage: [
+              "linear-gradient(#0E0B22,#0E0B22)",
+              "linear-gradient(90deg, #137DFF 0%, #FF18AA 33.333%, #FFCD17 66.666%, #137DFF 100%)",
+            ].join(","),
+            backgroundClip: "padding-box, border-box",
+            backgroundOrigin: "border-box",
+            backgroundSize: "200% 100%",
+            animation: "rainbow-btn-flow 6s linear infinite",
           }}
         >
           <span className="relative z-10 inline-flex items-center gap-1.5">
@@ -85,22 +95,8 @@ export function HeroCopy() {
               <ArrowRight size={16} strokeWidth={2} className="relative -top-px flex-shrink-0" />
             </span>
           </span>
-          <span
-            aria-hidden
-            className="pointer-events-none absolute bottom-0 z-0"
-            style={{
-              left: 0,
-              right: 0,
-              height: 2,
-              borderBottomLeftRadius: 12,
-              borderBottomRightRadius: 12,
-              backgroundImage:
-                "linear-gradient(90deg, #137DFF 0%, #FF18AA 33.333%, #FFCD17 66.666%, #137DFF 100%)",
-              backgroundSize: "150% 100%",
-              animation: "btn-border-flow 9s linear infinite",
-            }}
-          />
         </button>
+
       </div>
     </div>
 
