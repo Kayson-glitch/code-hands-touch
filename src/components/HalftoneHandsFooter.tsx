@@ -586,10 +586,6 @@ export function HalftoneHandsFooter({
       const breath = prefersReduce
         ? 1
         : 1 + Math.sin((now / BREATH_PERIOD) * Math.PI * 2) * BREATH_AMP;
-      // Gentle opacity breathing on the whole dot field when static.
-      const alphaBreath = prefersReduce
-        ? 1
-        : 1 - Math.sin((now / ALPHA_BREATH_PERIOD) * Math.PI * 2) * ALPHA_BREATH_AMP;
 
       const dots = dotsForFrame(Math.round(ph.current));
 
