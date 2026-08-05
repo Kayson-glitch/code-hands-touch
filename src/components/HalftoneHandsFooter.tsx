@@ -449,8 +449,15 @@ export function HalftoneHandsFooter({
       v: prefersReduce ? 1 : 0,
       vel: 0,
     };
+    const holdRef = {
+      target: 0,
+      v: 0,
+      vel: 0,
+    };
 
-    const lockSpan = () => Math.max(420, window.innerHeight * 1.15);
+    const frameSpan = () => Math.max(420, window.innerHeight * 1.15);
+    // Distance over which the post-roll hold consumes HOLD_FRAMES video frames.
+    const holdSpan = () => frameSpan() * (HOLD_FRAMES / FRAME_COUNT);
     // Seconds to close ~63% of the remaining distance.
     const SMOOTH_TAU = 0.16;
     // Per-event clamp: one huge trackpad delta can't slam the sequence forward.
@@ -461,19 +468,48 @@ export function HalftoneHandsFooter({
       if (prefersReduce) return false;
       const dy = rawDy * (deltaMode === 1 ? 16 : deltaMode === 2 ? 100 : 1);
       if (dy === 0) return false;
-      const t = progressRef.target;
       const goingDown = dy > 0;
       const atTop = window.scrollY <= 0;
-      const canForward = goingDown && t < 1;
-      const canRewind = !goingDown && t > 0 && atTop;
-      if (!canForward && !canRewind) return false;
-      const raw = dy / lockSpan();
-      const step = Math.max(-MAX_STEP, Math.min(MAX_STEP, raw));
-      progressRef.target = Math.min(1, Math.max(0, t + step));
-      // Blend into the glide velocity (progress units per second).
-      progressRef.vel = progressRef.vel * 0.7 + step * 7;
-      return true;
+
+      // Use the same physical clamp for both phases so the feel stays consistent.
+      const maxPx = frameSpan() * MAX_STEP;
+      const clampedDy = Math.max(-maxPx, Math.min(maxPx, dy));
+
+      if (goingDown) {
+        // Phase A: scrub through the 49 video frames.
+        if (progressRef.target < 1) {
+          const step = clampedDy / frameSpan();
+          progressRef.target = Math.min(1, Math.max(0, progressRef.target + step));
+          progressRef.vel = progressRef.vel * 0.7 + step * 7;
+          return true;
+        }
+        // Phase B: hold on the last frame for a few extra frames of scroll.
+        if (holdRef.target < 1) {
+          const step = clampedDy / holdSpan();
+          holdRef.target = Math.min(1, Math.max(0, holdRef.target + step));
+          holdRef.vel = holdRef.vel * 0.7 + step * 7;
+          return true;
+        }
+        // Phase C: release the wheel to the page.
+        return false;
+      }
+
+      // Going up: reverse the hold first, then rewind the video frames.
+      if (atTop && holdRef.target > 0) {
+        const step = clampedDy / holdSpan();
+        holdRef.target = Math.min(1, Math.max(0, holdRef.target + step));
+        holdRef.vel = holdRef.vel * 0.7 + step * 7;
+        return true;
+      }
+      if (atTop && progressRef.target > 0) {
+        const step = clampedDy / frameSpan();
+        progressRef.target = Math.min(1, Math.max(0, progressRef.target + step));
+        progressRef.vel = progressRef.vel * 0.7 + step * 7;
+        return true;
+      }
+      return false;
     };
+
 
 
     const onWheel = (e: WheelEvent) => {
