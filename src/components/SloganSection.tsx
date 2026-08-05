@@ -18,6 +18,7 @@ export function SloganSection() {
   const sectionRef = useRef<HTMLElement | null>(null);
   const [progress, setProgress] = useState(0);
   const [dark, setDark] = useState(false);
+  const darkRef = useRef(false);
   const [instant, setInstant] = useState(false);
   const words = useMemo(() => LINES.flat(), []);
   const totalChars = useMemo(
@@ -32,6 +33,7 @@ export function SloganSection() {
     if (reduced) {
       setProgress(1);
       setInstant(true);
+      darkRef.current = true;
       setDark(true);
       setInvertedTheme(true);
       return;
