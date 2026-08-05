@@ -33,23 +33,33 @@ export function SiteNav() {
     return () => window.removeEventListener("app-nav-visibility", onVis);
   }, []);
 
+  const [onDark, setOnDark] = useState(false);
+
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 8);
+    const onScroll = () => {
+      setScrolled(window.scrollY > 8);
+      // The second screen (black) starts one viewport down; once its top
+      // slides under the nav bar, the nav flips to its dark variant.
+      setOnDark(window.scrollY > window.innerHeight - 69);
+    };
     onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
+    window.addEventListener("resize", onScroll);
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", onScroll);
+    };
   }, []);
 
-  // The whole site now sits on a light background, so the nav is always
-  // rendered in its light (dark-ink) variant.
-  void theme;
   void theme;
   const navItem =
-    "flex cursor-pointer items-center gap-1.5 p-4 capitalize transition-colors duration-200 hover:text-[#0E0B22]";
-  const glassBg = "rgba(250,250,250,0.72)";
-  const inkStrong = "#0E0B22";
+    "flex cursor-pointer items-center gap-1.5 p-4 capitalize transition-colors duration-200 hover:opacity-80";
+  // Light variant (first screen) / dark variant (black second screen, per Figma).
+  const glassBg = onDark ? "rgba(10,10,10,0.72)" : "rgba(250,250,250,0.72)";
+  const inkStrong = onDark ? "#FFFFFF" : "#0E0B22";
   const inkSoft = "#7A7885";
-  const hairline = "#F1F1F3";
+  const hairline = onDark ? "rgba(255,255,255,0.15)" : "#F1F1F3";
+
 
   return (
     <nav
@@ -145,10 +155,11 @@ export function SiteNav() {
                 fontSize: 12,
                 lineHeight: "20px",
                 padding: "0 14px",
-                borderRadius: 10,
-                color: "#FFFFFF",
-                background: "#0E0B22",
-                border: "1px solid #0E0B22",
+                borderRadius: onDark ? 12 : 10,
+                color: onDark ? "#0E0B22" : "#FFFFFF",
+                background: onDark ? "#FFFFFF" : "#0E0B22",
+                border: `1px solid ${onDark ? "#FFFFFF" : "#0E0B22"}`,
+
                 transition: "background 300ms ease, color 300ms ease, border-color 300ms ease",
               }}
             >
