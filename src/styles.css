@@ -18,6 +18,26 @@ html, body {
   font-variation-settings: "wght" 500;
 }
 
+/* Brand tokens from the Figma design system (Synergy.AI) */
+:root {
+  --ink: #0e0b22;
+  --ink-muted: #7a7885;
+  --ink-faint: #a1a0a9;
+  --ink-ghost: #c7c6cd;
+  --hairline: #e1e0e4;
+  --accent-blue: #137dff;
+}
+
+@theme inline {
+  --color-ink: var(--ink);
+  --color-ink-muted: var(--ink-muted);
+  --color-ink-faint: var(--ink-faint);
+  --color-ink-ghost: var(--ink-ghost);
+  --color-hairline: var(--hairline);
+  --color-accent-blue: var(--accent-blue);
+}
+
+
 /*
  * Design system definition.
  *

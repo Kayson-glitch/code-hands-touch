@@ -107,7 +107,7 @@ export function FinChatDock() {
         ref={wrapperRef}
         className="w-full"
         style={{
-          maxWidth: expanded ? 680 : 440,
+          maxWidth: expanded ? 680 : 400,
           transition: "max-width 420ms cubic-bezier(0.22, 1, 0.36, 1)",
         }}
       >
@@ -132,11 +132,18 @@ export function FinChatDock() {
         )}
 
         <div
-          className="pointer-events-auto flex items-end gap-2 rounded-full bg-white px-3 py-2"
+          className="pointer-events-auto flex items-center justify-between bg-white"
           onClick={() => !expanded && expand()}
           style={{
-            boxShadow: "0 8px 28px rgba(10,10,10,0.12)",
-            border: "1px solid rgba(10,10,10,0.08)",
+            minHeight: 48,
+            borderRadius: 666,
+            paddingLeft: 20,
+            paddingRight: 6,
+            paddingTop: 6,
+            paddingBottom: 6,
+            gap: 8,
+            alignItems: expanded ? "flex-end" : "center",
+            boxShadow: "0 12px 20px rgba(0,0,0,0.05)",
             cursor: expanded ? "text" : "pointer",
             transition: "box-shadow 300ms ease",
           }}
@@ -154,16 +161,16 @@ export function FinChatDock() {
             rows={1}
             placeholder="Ask anything…"
             aria-label="Ask Fin"
-            className="flex-1 resize-none border-0 bg-transparent px-3 py-2 text-neutral-900 placeholder:text-neutral-400 focus:outline-none"
-            style={{ fontSize: 14, lineHeight: "22px", maxHeight: 96 }}
+            className="flex-1 resize-none border-0 bg-transparent py-2 text-ink placeholder:text-ink-faint focus:outline-none"
+            style={{ fontSize: 14, lineHeight: "20px", maxHeight: 96 }}
           />
           ) : (
             <div
               key={hintIndex}
-              className="flex-1 truncate px-3 py-2 text-neutral-400"
+              className="flex-1 truncate text-ink-faint"
               style={{
-                fontSize: 15,
-                lineHeight: "22px",
+                fontSize: 14,
+                lineHeight: "20px",
                 animation: "finHintFade 500ms ease-out",
               }}
               aria-hidden
@@ -173,7 +180,7 @@ export function FinChatDock() {
           )}
           <button
             aria-label="语音输入"
-            className="grid h-9 w-9 place-items-center rounded-full text-neutral-500 hover:bg-neutral-100"
+            className="grid h-9 w-9 place-items-center rounded-full text-ink-muted hover:bg-black/[0.04]"
             style={{
               width: expanded ? 36 : 0,
               opacity: expanded ? 1 : 0,
@@ -186,7 +193,7 @@ export function FinChatDock() {
           </button>
           <button
             aria-label="附件"
-            className="grid h-9 w-9 place-items-center rounded-full text-neutral-500 hover:bg-neutral-100"
+            className="grid h-9 w-9 place-items-center rounded-full text-ink-muted hover:bg-black/[0.04]"
             style={{
               width: expanded ? 36 : 0,
               opacity: expanded ? 1 : 0,
@@ -200,11 +207,13 @@ export function FinChatDock() {
           <button
             aria-label="发送"
             onClick={send}
-            className="grid h-9 w-9 place-items-center rounded-full bg-neutral-200 text-neutral-900 transition-colors hover:bg-neutral-300"
+            className="grid shrink-0 place-items-center bg-ink-ghost text-white transition-opacity hover:opacity-80"
+            style={{ width: 36, height: 36, borderRadius: 20 }}
           >
-            <ArrowUp size={18} />
+            <ArrowUp size={24} />
           </button>
         </div>
+
 
       </div>
 
