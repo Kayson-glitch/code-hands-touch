@@ -112,7 +112,7 @@ function Index() {
           <SiteNav />
 
           {/* Spacer so the page can scroll to reveal the second screen */}
-          <div aria-hidden style={{ height: "100vh" }} />
+          <div aria-hidden style={{ height: "100dvh" }} />
           {/* Second screen: slides up over the fixed hero */}
           <SloganSection />
           {/* Always pinned to bottom, unaffected by parallax */}

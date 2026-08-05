@@ -16,6 +16,7 @@ const smoothstep = (a: number, b: number, x: number) => {
 export function SloganSection() {
   const sectionRef = useRef<HTMLElement | null>(null);
   const [progress, setProgress] = useState(0);
+  const [darkT, setDarkT] = useState(0);
   const words = useMemo(() => LINES.flat(), []);
   const totalChars = useMemo(
     () => words.reduce((sum, w) => sum + w.length, 0),
@@ -28,6 +29,7 @@ export function SloganSection() {
       window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     if (reduced) {
       setProgress(1);
+      setDarkT(1);
       return;
     }
 
@@ -48,6 +50,13 @@ export function SloganSection() {
       const scrolled = LEAD_IN - rect.top;
       const p = scrolled / travel;
       setProgress(Math.max(0, Math.min(1, p)));
+
+      // Own-track progress: 0 when the section's top reaches the viewport top,
+      // 1 when its bottom aligns with the viewport bottom.
+      const track = Math.max(1, el.offsetHeight - vh);
+      const own = Math.max(0, Math.min(1, -rect.top / track));
+      // Flip to the dark theme around 40% of the section.
+      setDarkT(smoothstep(0.34, 0.46, own));
     };
 
     const schedule = () => {
@@ -87,6 +96,8 @@ export function SloganSection() {
     return smoothstep(start, start + overlap, progress);
   };
 
+  const mix = (a: number, b: number) => Math.round(a + (b - a) * darkT);
+
   let ci = 0;
 
   return (
@@ -94,7 +105,7 @@ export function SloganSection() {
       ref={sectionRef}
       className="relative w-full"
       style={{
-        background: "#FAFAFA",
+        background: `rgb(${mix(250, 10)}, ${mix(250, 10)}, ${mix(250, 10)})`,
         height: "260vh",
         position: "relative",
         zIndex: 10,
@@ -123,7 +134,7 @@ export function SloganSection() {
           lineHeight: 1.25,
           letterSpacing: "-0.01em",
           fontWeight: 500,
-          color: "#0A0A0A",
+          color: `rgb(${mix(10, 250)}, ${mix(10, 250)}, ${mix(10, 250)})`,
         }}
       >
         {LINES.map((line, li) => (
