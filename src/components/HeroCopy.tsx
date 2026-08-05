@@ -77,36 +77,18 @@ export function HeroCopy() {
             paddingLeft: 32,
             paddingRight: 32,
             borderRadius: 12,
-            border: "0.125rem solid transparent",
+            border: "1.5px solid transparent",
             backgroundImage: [
               "linear-gradient(#0E0B22,#0E0B22)",
-              "linear-gradient(#0E0B22 50%, rgba(14,11,34,0.6) 80%, rgba(14,11,34,0))",
               "linear-gradient(90deg, #137DFF 0%, #FF18AA 33.333%, #FFCD17 66.666%, #137DFF 100%)",
             ].join(","),
-            backgroundClip: "padding-box, border-box, border-box",
+            backgroundClip: "padding-box, border-box",
             backgroundOrigin: "border-box",
-            backgroundSize: "auto, auto, 120vw 100%",
-            backgroundRepeat: "no-repeat, no-repeat, repeat-x",
+            backgroundSize: "auto, 120vw 100%",
+            backgroundRepeat: "no-repeat, repeat-x",
             animation: "nav-border-flow 9s linear infinite",
           }}
         >
-          {/* Rainbow glow beneath the button (MagicUI ::before) */}
-          <span
-            aria-hidden
-            className="pointer-events-none absolute left-1/2 -translate-x-1/2"
-            style={{
-              bottom: "-20%",
-              zIndex: 0,
-              height: "20%",
-              width: "60%",
-              backgroundImage:
-                "linear-gradient(90deg, #137DFF 0%, #FF18AA 33.333%, #FFCD17 66.666%, #137DFF 100%)",
-              backgroundSize: "120vw 100%",
-              backgroundRepeat: "repeat-x",
-              filter: "blur(0.75rem)",
-              animation: "nav-border-flow 9s linear infinite",
-            }}
-          />
           <span className="relative z-10 inline-flex items-center">
             Book a Demo
             <span
