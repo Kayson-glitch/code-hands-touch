@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import logo from "@/assets/synergy-logo-v2.png.asset.json";
+import logo from "@/assets/synergy-logo-v3.png.asset.json";
 
 export function SiteNav() {
   const [theme, setTheme] = useState<"light" | "dark">("light");
@@ -94,7 +94,7 @@ export function SiteNav() {
               display: "block",
               borderRadius: 888,
               objectFit: "cover",
-              filter: isDark ? "none" : "invert(1)",
+              
             }}
           />
           <span
