@@ -61,7 +61,7 @@ const PARALLAX_Y = 2.5;
 const BREATH_AMP = 0.035;
 const BREATH_PERIOD = 5200;
 // Per-dot transparency breathing: each dot pulses independently.
-const DOT_ALPHA_AMP = 0.4;
+const DOT_ALPHA_AMP = 0.2; // range 0.8 .. 1.0
 const DOT_ALPHA_PERIOD = 5000;
 
 
@@ -82,7 +82,7 @@ type Dot = {
   cx: number;
   /** Independent transparency breathing phase (radians). */
   alphaPhase: number;
-  /** Independent transparency breathing speed multiplier. */
+  /** Independent transparency breathing speed multiplier (kept slow). */
   alphaSpeed: number;
 };
 
@@ -325,7 +325,7 @@ function sampleDots(
         d: density,
         cx: Math.min(1, Math.min(u, 1 - u) * 2.2),
         alphaPhase: Math.random() * Math.PI * 2,
-        alphaSpeed: 0.7 + Math.random() * 0.6,
+        alphaSpeed: 0.15 + Math.random() * 0.25,
       });
     }
   }
