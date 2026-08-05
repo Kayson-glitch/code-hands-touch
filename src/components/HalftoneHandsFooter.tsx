@@ -176,7 +176,8 @@ class FluidField {
       }
     }
     // --- diffuse (single blur pass) + decay
-    const dyeDecay = Math.exp(-h / 1.9);
+    // Slow the dye fade so the blue core and mid-tone trail linger longer.
+    const dyeDecay = Math.exp(-h / 3.8);
     const velDecay = Math.exp(-h / 0.65);
     for (let j = 0; j < rows; j++) {
       for (let i = 0; i < cols; i++) {
