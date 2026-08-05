@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState } from "react";
-import { useInverted } from "@/hooks/useInvertTheme";
 import { Mic, Paperclip, ArrowUp } from "lucide-react";
 
 const SUGGESTIONS = [
@@ -18,7 +17,6 @@ export function FinChatDock() {
   const [hintIndex, setHintIndex] = useState(0);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const wrapperRef = useRef<HTMLDivElement>(null);
-  const inverted = useInverted();
 
   useEffect(() => {
     const onBg = (e: Event) => {
@@ -125,9 +123,7 @@ export function FinChatDock() {
                   lineHeight: "22px",
                   marginLeft: i === 1 ? 32 : i === 2 ? 12 : 0,
                   animation: `finRise 500ms ${i * 80}ms both ease-out`,
-                  backgroundColor: inverted
-                    ? "rgba(250,250,250,0.10)"
-                    : "rgba(0,0,0,0.06)",
+                  backgroundColor: "rgba(0,0,0,0.06)",
                 }}
               >
                 {s}
@@ -148,11 +144,9 @@ export function FinChatDock() {
             paddingBottom: 6,
             gap: 8,
             alignItems: expanded ? "flex-end" : "center",
-            backgroundColor: inverted ? "#17171B" : "#FFFFFF",
-            boxShadow: inverted
-              ? "0 12px 20px rgba(0,0,0,0.35)"
-              : "0 12px 20px rgba(0,0,0,0.05)",
-            transition: "box-shadow 300ms ease, background-color 300ms ease",
+            backgroundColor: "#FFFFFF",
+            boxShadow: "0 12px 20px rgba(0,0,0,0.05)",
+            transition: "box-shadow 300ms ease",
             cursor: expanded ? "text" : "pointer",
           }}
         >
