@@ -45,11 +45,18 @@ export function ScrollHint({ visible = true }: { visible?: boolean }) {
         pointerEvents: "none",
         zIndex: 90,
         display: "flex",
-        flexDirection: "row",
-        alignItems: "center",
-        gap: 8,
       }}
     >
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "row",
+          alignItems: "center",
+          gap: 8,
+          animation: "scroll-hint-breathe 1.8s ease-in-out infinite",
+          willChange: "opacity",
+        }}
+      >
       <span
         style={{
           fontFamily: "'Montserrat', system-ui, sans-serif",
@@ -101,10 +108,15 @@ export function ScrollHint({ visible = true }: { visible?: boolean }) {
         </svg>
 
       </span>
+      </div>
       <style>{`
         @keyframes scroll-hint-arrow {
-          0%, 100% { transform: translateY(-1px); opacity: 0.75; }
-          50% { transform: translateY(1.5px); opacity: 1; }
+          0%, 100% { transform: translateY(-1px); }
+          50% { transform: translateY(1.5px); }
+        }
+        @keyframes scroll-hint-breathe {
+          0%, 100% { opacity: 0.6; }
+          50% { opacity: 1; }
         }
       `}</style>
     </div>
