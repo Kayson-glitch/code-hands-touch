@@ -65,7 +65,7 @@ export function SiteNav() {
           height: 5,
           backgroundImage:
             "linear-gradient(90deg, #137DFF 0%, #FF18AA 33.333%, #FFCD17 66.666%, #137DFF 100%)",
-          backgroundSize: "900px 100%",
+          backgroundSize: "120vw 100%",
           backgroundRepeat: "repeat-x",
           animation: "nav-border-flow 9s linear infinite",
         }}

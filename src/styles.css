@@ -198,7 +198,12 @@ body::-webkit-scrollbar {
 }
 
 @keyframes nav-border-flow {
-  0%   { background-position: 0px 50%; }
-  100% { background-position: -900px 50%; }
+  0%   { background-position: 0vw 50%; }
+  100% { background-position: -120vw 50%; }
+}
+
+@keyframes btn-border-flow {
+  0%   { background-position: 0% 50%; }
+  100% { background-position: -300% 50%; }
 }
 
