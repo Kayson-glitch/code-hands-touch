@@ -785,7 +785,7 @@ export function HalftoneHandsFooter({
         }}
       />
 
-      {orbMounted && (
+      {INTRO_ENABLED && orbMounted && (
         <div
           className="absolute inset-0"
           style={{
