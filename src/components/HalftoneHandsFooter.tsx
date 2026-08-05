@@ -597,7 +597,6 @@ export function HalftoneHandsFooter({
       const fluid = fluidRef.current;
       if (fluid && !prefersReduce) fluid.step(dt);
 
-      ctx.globalAlpha = alphaBreath;
       for (let k = 0; k < dots.length; k++) {
         const dot = dots[k];
         // Centre dots drift more than edge dots → a shallow depth read.
@@ -618,6 +617,17 @@ export function HalftoneHandsFooter({
         // Area ∝ coverage — the physically correct halftone response.
         const r = maxR * Math.sqrt(d) * radiusScale;
         if (r < 0.16) continue;
+
+        // Each dot breathes opacity on its own random phase/speed.
+        const dotAlpha = prefersReduce
+          ? 1
+          : 1 -
+            Math.sin(
+              (now / DOT_ALPHA_PERIOD) * Math.PI * 2 * dot.alphaSpeed +
+                dot.alphaPhase,
+            ) *
+              DOT_ALPHA_AMP;
+        ctx.globalAlpha = dotAlpha;
 
         // Value carries volume alongside area: light grey on the paper-facing
         // planes, deeper grey in the shadows. Where the ink-fluid has been
