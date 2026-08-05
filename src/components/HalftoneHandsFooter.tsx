@@ -70,6 +70,7 @@ const DOT_ALPHA_PERIOD = 5000;
 const HOLD_FRAMES = 4;
 // Entry-state ghost preview of the final frame.
 const GHOST_ALPHA = 0.1;
+const GHOST_ALPHA_MAX = 0.2;
 
 
 
@@ -711,7 +712,12 @@ export function HalftoneHandsFooter({
         ghost.out = atEntry
           ? Math.min(1, ghost.out + dt / 1.2)
           : Math.max(0, ghost.out - dt / 1.2);
-        const gA = GHOST_ALPHA * ghost.in * ghost.out;
+        // Opacity breathes 10% -> 20% in sync with the scroll-hint arrow
+        // bounce (1.8s, min at cycle ends, max at mid-cycle).
+        const gPhase = (now / 1800) % 1;
+        const gPulse = 0.5 - 0.5 * Math.cos(gPhase * Math.PI * 2);
+        const gAlphaBase = GHOST_ALPHA + (GHOST_ALPHA_MAX - GHOST_ALPHA) * gPulse;
+        const gA = gAlphaBase * ghost.in * ghost.out;
 
         if (gA > 0.001) {
           const gDots = dotsForFrame(FRAME_COUNT - 1);
