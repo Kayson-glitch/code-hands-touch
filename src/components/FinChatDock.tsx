@@ -107,7 +107,7 @@ export function FinChatDock() {
         ref={wrapperRef}
         className="w-full"
         style={{
-          maxWidth: expanded ? 680 : 440,
+          maxWidth: expanded ? 680 : 400,
           transition: "max-width 420ms cubic-bezier(0.22, 1, 0.36, 1)",
         }}
       >
