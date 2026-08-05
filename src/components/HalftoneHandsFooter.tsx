@@ -650,6 +650,7 @@ export function HalftoneHandsFooter({
         }
 
       }
+      ctx.globalAlpha = 1;
 
       raf = requestAnimationFrame(draw);
     };
