@@ -325,6 +325,8 @@ function sampleDots(
         y: rect.y + (j + 0.5) * pitch,
         d: density,
         cx: Math.min(1, Math.min(u, 1 - u) * 2.2),
+        alphaPhase: Math.random() * Math.PI * 2,
+        alphaSpeed: 0.7 + Math.random() * 0.6,
       });
     }
   }
