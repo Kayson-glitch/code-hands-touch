@@ -72,8 +72,8 @@ export function ScrollHint({ visible = true }: { visible?: boolean }) {
       </span>
       <span
         style={{
-          width: 20,
-          height: 20,
+          width: 24,
+          height: 24,
           padding: 2,
           border: "1px solid #E1E0E4",
           borderRadius: 12,
@@ -83,10 +83,10 @@ export function ScrollHint({ visible = true }: { visible?: boolean }) {
           boxSizing: "border-box",
         }}
       >
-        {/* Figma vuesax/linear/arrow-down (node 1415:20941) */}
+        {/* Figma vuesax/linear/arrow-down (node 1415:20941) — icon 20x20 */}
         <svg
-          width="16"
-          height="16"
+          width="20"
+          height="20"
           viewBox="0 0 20 20"
           fill="none"
           style={{ animation: "scroll-hint-arrow 2.8s ease-in-out infinite" }}
@@ -106,7 +106,6 @@ export function ScrollHint({ visible = true }: { visible?: boolean }) {
             strokeLinejoin="round"
           />
         </svg>
-
       </span>
       </div>
       <style>{`
