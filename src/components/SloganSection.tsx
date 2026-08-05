@@ -13,6 +13,15 @@ const smoothstep = (a: number, b: number, x: number) => {
   return t * t * (3 - 2 * t);
 };
 
+const REVIEWS: string[] = [
+  "Synergy cut our first-response time by 80%. It feels like every customer is talking to a real agent.",
+  "The bot learned our brand voice in a day. Our team finally has space to focus on high-value conversations.",
+  "I was skeptical, but the 24/7 coverage alone paid for itself within the first month.",
+  "It routes complex tickets to humans instantly while handling routine questions on its own.",
+  "Our CSAT score went up 18% after launch. Customers love the fast, natural replies.",
+  "Setup took minutes, not months. The AI keeps getting smarter with every conversation.",
+];
+
 export function SloganSection() {
   const sectionRef = useRef<HTMLElement | null>(null);
   const [progress, setProgress] = useState(0);
@@ -182,6 +191,68 @@ export function SloganSection() {
             })}
           </div>
         ))}
+      </div>
+
+      {/* Auto-scrolling customer reviews */}
+      <style>{`
+        @keyframes testimonial-marquee {
+          0% { transform: translateX(0); }
+          100% { transform: translateX(-50%); }
+        }
+        @media (prefers-reduced-motion: reduce) {
+          .testimonial-track {
+            animation: none !important;
+          }
+        }
+      `}</style>
+      <div
+        style={{
+          position: "absolute",
+          top: 96,
+          left: 0,
+          right: 0,
+          overflow: "hidden",
+          zIndex: 2,
+        }}
+      >
+        <div
+          className="testimonial-track"
+          style={{
+            display: "flex",
+            width: "max-content",
+            animation: "testimonial-marquee 40s linear infinite",
+          }}
+        >
+          {[...REVIEWS, ...REVIEWS].map((text, i) => (
+            <div
+              key={i}
+              style={{
+                width: 320,
+                padding: "0 32px",
+                borderRight: "1px solid rgba(255,255,255,0.12)",
+                flexShrink: 0,
+              }}
+            >
+              <p
+                style={{
+                  margin: 0,
+                  fontFamily: '"Montserrat", sans-serif',
+                  fontStyle: "italic",
+                  fontWeight: 400,
+                  fontSize: 14,
+                  lineHeight: "22px",
+                  color: "rgba(255,255,255,0.72)",
+                  display: "-webkit-box",
+                  WebkitLineClamp: 3,
+                  WebkitBoxOrient: "vertical",
+                  overflow: "hidden",
+                }}
+              >
+                “{text}”
+              </p>
+            </div>
+          ))}
+        </div>
       </div>
       </div>
     </section>
