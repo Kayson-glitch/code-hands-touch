@@ -3,7 +3,7 @@ import handsFramesAsset from "@/assets/hands-frames.webp.asset.json";
 import { IntroVideo, type IntroProgressInfo } from "./IntroVideo";
 import { useHeroLayout, type HeroLayout } from "@/hooks/useHeroLayout";
 import { GlitchGrainOverlay } from "@/components/GlitchGrainOverlay";
-import { AuroraIntro } from "@/components/AuroraIntro";
+
 import { INTRO_ENABLED } from "@/components/intro/introConfig";
 
 
@@ -778,7 +778,7 @@ export function HalftoneHandsFooter({
         Good Fella Studio — Halftone Creation of Adam
       </h1>
 
-      {bgDark && <AuroraIntro />}
+      
 
       <canvas
         ref={canvasRef}
