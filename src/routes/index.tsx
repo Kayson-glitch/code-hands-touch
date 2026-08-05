@@ -5,9 +5,11 @@ import { SiteNav } from "@/components/SiteNav";
 import { HeroCopy } from "@/components/HeroCopy";
 import { FinChatDock } from "@/components/FinChatDock";
 import { IntroPreloader } from "@/components/IntroPreloader";
+import { INTRO_ENABLED } from "@/components/intro/introConfig";
 
 import { SloganSection } from "@/components/SloganSection";
 import videoAsset from "@/assets/intro-hands.mp4.asset.json";
+
 
 export const Route = createFileRoute("/")({
   head: () => ({
