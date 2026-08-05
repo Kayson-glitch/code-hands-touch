@@ -61,7 +61,7 @@ const PARALLAX_Y = 2.5;
 const BREATH_AMP = 0.035;
 const BREATH_PERIOD = 5200;
 // Per-dot transparency breathing: each dot pulses independently.
-const DOT_ALPHA_AMP = 0.4;
+const DOT_ALPHA_AMP = 0.2; // range 0.8 .. 1.0
 const DOT_ALPHA_PERIOD = 5000;
 
 
