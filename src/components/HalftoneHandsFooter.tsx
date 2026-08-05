@@ -4,6 +4,8 @@ import { IntroVideo, type IntroProgressInfo } from "./IntroVideo";
 import { useHeroLayout, type HeroLayout } from "@/hooks/useHeroLayout";
 import { GlitchGrainOverlay } from "@/components/GlitchGrainOverlay";
 import { AuroraIntro } from "@/components/AuroraIntro";
+import { INTRO_ENABLED } from "@/components/intro/introConfig";
+
 
 /**
  * Halftone dot-matrix hands, scrubbed by scroll.
@@ -349,7 +351,7 @@ export function HalftoneHandsFooter({
 }: { videoSrc?: string; debug?: boolean; handoffVideo?: HTMLVideoElement | null } = {}) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const layout = useHeroLayout();
-  const [stage, setStage] = useState<"orb" | "hands">("orb");
+  const [stage, setStage] = useState<"orb" | "hands">(INTRO_ENABLED ? "orb" : "hands");
   const stageRef = useRef(stage);
   useEffect(() => {
     stageRef.current = stage;
@@ -694,9 +696,9 @@ export function HalftoneHandsFooter({
   }, [layout]);
 
   const handsVisible = stage === "hands";
-  const [orbMounted, setOrbMounted] = useState(true);
+  const [orbMounted, setOrbMounted] = useState(INTRO_ENABLED);
   const [burstProgress, setBurstProgress] = useState(0);
-  const [bgDark, setBgDark] = useState(false);
+  const [bgDark, setBgDark] = useState(!INTRO_ENABLED);
   const navHiddenRef = useRef(false);
 
   useEffect(() => {
@@ -705,6 +707,25 @@ export function HalftoneHandsFooter({
       new CustomEvent("app-bg-change", { detail: bgDark ? "dark" : "light" }),
     );
   }, [bgDark]);
+
+  // Intro sealed: reveal the nav immediately and set the page background,
+  // matching the state the intro handoff would normally leave behind.
+  // Deferred one frame so sibling listeners (nav, hero copy, chat dock) are
+  // already subscribed when the cues fire.
+  useEffect(() => {
+    if (INTRO_ENABLED || typeof window === "undefined") return;
+    document.documentElement.style.backgroundColor = "#FAFAFA";
+    document.body.style.backgroundColor = "#FAFAFA";
+    const raf = requestAnimationFrame(() => {
+      window.dispatchEvent(new CustomEvent("app-bg-change", { detail: "dark" }));
+      window.dispatchEvent(
+        new CustomEvent("app-nav-visibility", { detail: "visible" }),
+      );
+    });
+    return () => cancelAnimationFrame(raf);
+  }, []);
+
+
 
   const handleIntroProgress = (info: IntroProgressInfo) => {
     setBurstProgress(info.burstProgress);
@@ -771,7 +792,7 @@ export function HalftoneHandsFooter({
         }}
       />
 
-      {orbMounted && (
+      {INTRO_ENABLED && orbMounted && (
         <div
           className="absolute inset-0"
           style={{

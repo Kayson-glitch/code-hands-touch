@@ -5,9 +5,11 @@ import { SiteNav } from "@/components/SiteNav";
 import { HeroCopy } from "@/components/HeroCopy";
 import { FinChatDock } from "@/components/FinChatDock";
 import { IntroPreloader } from "@/components/IntroPreloader";
+import { INTRO_ENABLED } from "@/components/intro/introConfig";
 
 import { SloganSection } from "@/components/SloganSection";
 import videoAsset from "@/assets/intro-hands.mp4.asset.json";
+
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -30,9 +32,10 @@ export const Route = createFileRoute("/")({
 });
 
 function Index() {
-  const [videoSrc, setVideoSrc] = useState<string | null>(null);
+  const [videoSrc, setVideoSrc] = useState<string | null>(INTRO_ENABLED ? null : "");
   const [handoffVideo, setHandoffVideo] = useState<HTMLVideoElement | null>(null);
-  const [shown, setShown] = useState(false);
+  const [shown, setShown] = useState(!INTRO_ENABLED);
+
   const [debug, setDebug] = useState(false);
   const [scrollY, setScrollY] = useState(0);
 
@@ -79,9 +82,10 @@ function Index() {
 
   return (
     <div className="relative min-h-screen">
-      {videoSrc === null && (
+      {INTRO_ENABLED && videoSrc === null && (
         <IntroPreloader src={videoAsset.url} onReady={handleReady} onFail={handleFail} />
       )}
+
       {videoSrc !== null && (
         <div
           style={{
