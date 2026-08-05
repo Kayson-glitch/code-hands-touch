@@ -71,34 +71,47 @@ export function HeroCopy() {
           className="pointer-events-auto group relative inline-flex shrink-0 cursor-pointer items-center justify-center font-medium text-white transition-all"
           style={{
             height: 40,
-            fontSize: 14,
-            lineHeight: "22px",
-            fontWeight: 500,
-            paddingLeft: 32,
-            paddingRight: 32,
+            fontSize: 16,
+            lineHeight: "24px",
+            padding: "0 32px",
             borderRadius: 12,
-            border: "1.5px solid transparent",
+            border: "0.125rem solid transparent",
             backgroundImage: [
               "linear-gradient(#0E0B22,#0E0B22)",
-              "linear-gradient(90deg, #137DFF 0%, #FF18AA 33.333%, #FFCD17 66.666%, #137DFF 100%)",
+              "linear-gradient(#0E0B22 50%, rgba(14,11,34,0.6) 80%, rgba(14,11,34,0))",
+              "linear-gradient(90deg, #137DFF, #FF18AA, #FFCD17, #137DFF)",
             ].join(","),
-            backgroundClip: "padding-box, border-box",
+            backgroundClip: "padding-box, border-box, border-box",
             backgroundOrigin: "border-box",
-            backgroundSize: "auto, 120vw 100%",
-            backgroundRepeat: "no-repeat, repeat-x",
-            animation: "nav-border-flow 9s linear infinite",
+            backgroundSize: "200%",
+            animation: "rainbow-btn-flow var(--rainbow-speed, 2s) infinite linear",
           }}
         >
-          <span className="relative z-10 inline-flex items-center">
+          {/* Rainbow glow beneath the button (MagicUI ::before) */}
+          <span
+            aria-hidden
+            className="pointer-events-none absolute left-1/2 -translate-x-1/2"
+            style={{
+              bottom: "-20%",
+              zIndex: 0,
+              height: "20%",
+              width: "60%",
+              backgroundImage:
+                "linear-gradient(90deg, #137DFF, #FF18AA, #FFCD17, #137DFF)",
+              backgroundSize: "200%",
+              filter: "blur(0.75rem)",
+              animation: "rainbow-btn-flow var(--rainbow-speed, 2s) infinite linear",
+            }}
+          />
+          <span className="relative z-10 inline-flex items-center gap-1.5">
             Book a Demo
             <span
-              className="inline-flex max-w-0 overflow-hidden opacity-0 transition-all duration-300 ease-out group-hover:ml-1.5 group-hover:max-w-[20px] group-hover:opacity-100"
+              className="inline-flex max-w-0 -translate-x-1.5 overflow-hidden opacity-0 transition-all duration-300 ease-out group-hover:max-w-[20px] group-hover:translate-x-0 group-hover:opacity-100"
             >
               <ArrowRight size={16} strokeWidth={2} className="relative -top-px flex-shrink-0" />
             </span>
           </span>
         </button>
-
 
 
       </div>
