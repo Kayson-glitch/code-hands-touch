@@ -87,9 +87,12 @@ const DYE_STOPS: Array<[number, number, number]> = [
   [0x13, 0x7d, 0xff],
 ];
 
-/** Interpolate the dye gradient at t (0..1). */
+/** Interpolate the dye gradient at t (0..1).
+ *  Bias the curve so yellow occupies most of the visible trail, magenta is a
+ *  transition band, and blue only appears at the very highest concentration.
+ */
 function dyeAt(t: number): [number, number, number] {
-  const x = Math.min(1, Math.max(0, t));
+  const x = Math.min(1, Math.max(0, Math.pow(t, 1.6)));
   const seg = x < 0.5 ? 0 : 1;
   const f = seg === 0 ? x / 0.5 : (x - 0.5) / 0.5;
   const a = DYE_STOPS[seg];
@@ -594,7 +597,7 @@ export function HalftoneHandsFooter({
         const density = dot.d * breath;
 
         // Dye coverage under this dot (0 when the pointer never passed here).
-        const dye = fluid ? Math.min(1, fluid.sample(x, y) * 1.25) : 0;
+        const dye = fluid ? Math.min(1, fluid.sample(x, y) * 1.0) : 0;
         const radiusScale = 1 + dye * 0.06;
 
         const raw = Math.min(1, density);
@@ -612,7 +615,7 @@ export function HalftoneHandsFooter({
         if (dye > 0.004) {
           // Deeper dots take more colour, so volume survives the tint.
           const mix = smoothstep(dye) * (0.45 + d * 0.55);
-          const [dr, dg, db] = dyeAt(Math.min(1, dye * 0.9 + d * 0.1));
+          const [dr, dg, db] = dyeAt(Math.min(1, dye * 0.9 + d * 0.02));
           ctx.fillStyle = `rgb(${Math.round(ir + (dr - ir) * mix)},${Math.round(
             ig + (dg - ig) * mix,
           )},${Math.round(ib + (db - ib) * mix)})`;
