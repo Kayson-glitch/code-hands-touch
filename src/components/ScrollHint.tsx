@@ -81,21 +81,30 @@ export function ScrollHint({ visible = true }: { visible?: boolean }) {
           boxSizing: "border-box",
         }}
       >
+        {/* Figma vuesax/linear/arrow-down (node 1415:20941) */}
         <svg
-          width="14"
-          height="14"
-          viewBox="0 0 24 24"
+          width="16"
+          height="16"
+          viewBox="0 0 20 20"
           fill="none"
           style={{ animation: "scroll-hint-arrow 1.8s ease-in-out infinite" }}
         >
           <path
-            d="M19 9L12 16L5 9"
-            stroke="#0E0B22"
-            strokeWidth="1.6"
+            d="M15.0581 10.3581L9.99974 15.4164L4.94141 10.3581"
+            stroke="#5E5C6A"
+            strokeMiterlimit="10"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+          <path
+            d="M10 4.58333V15.275"
+            stroke="#5E5C6A"
+            strokeMiterlimit="10"
             strokeLinecap="round"
             strokeLinejoin="round"
           />
         </svg>
+
       </span>
       <style>{`
         @keyframes scroll-hint-arrow {
