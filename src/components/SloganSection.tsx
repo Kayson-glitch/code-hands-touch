@@ -14,12 +14,10 @@ const smoothstep = (a: number, b: number, x: number) => {
 };
 
 const REVIEWS: string[] = [
-  "Synergy cut our first-response time by 80%. It feels like every customer is talking to a real agent.",
-  "The bot learned our brand voice in a day. Our team finally has space to focus on high-value conversations.",
-  "I was skeptical, but the 24/7 coverage alone paid for itself within the first month.",
-  "It routes complex tickets to humans instantly while handling routine questions on its own.",
-  "Our CSAT score went up 18% after launch. Customers love the fast, natural replies.",
-  "Setup took minutes, not months. The AI keeps getting smarter with every conversation.",
+  "Synergy cut our first-response time by 80% and freed the team to focus on high-impact conversations. It feels like every customer is talking to a real agent who actually remembers the context.",
+  "The bot learned our brand voice in a single afternoon. Within a week it was handling routine questions, escalating complex issues, and sounding indistinguishable from our best support rep.",
+  "I was skeptical about AI support, but the 24/7 coverage alone paid for itself within the first month. Our customers get instant answers at 2 a.m. without us hiring a night shift.",
+  "It routes complex tickets to humans instantly while handling the repetitive work on its own. That balance saved us hours every day and made the whole support experience feel effortless.",
 ];
 
 export function SloganSection() {
@@ -220,15 +218,15 @@ export function SloganSection() {
           style={{
             display: "flex",
             width: "max-content",
-            animation: "testimonial-marquee 40s linear infinite",
+            animation: "testimonial-marquee 60s linear infinite",
           }}
         >
           {[...REVIEWS, ...REVIEWS].map((text, i) => (
             <div
               key={i}
               style={{
-                width: 320,
-                padding: "0 32px",
+            width: 520,
+                padding: "0 48px",
                 borderRight: "1px solid rgba(255,255,255,0.12)",
                 flexShrink: 0,
               }}
