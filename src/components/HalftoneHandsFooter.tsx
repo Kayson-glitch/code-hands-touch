@@ -56,8 +56,8 @@ function inkAt(d: number) {
 }
 
 // Pointer parallax (CSS px at full deflection) + breathing.
-const PARALLAX_X = 4;
-const PARALLAX_Y = 2.5;
+const PARALLAX_X = 6;
+const PARALLAX_Y = 4;
 const BREATH_AMP = 0.035;
 const BREATH_PERIOD = 5200;
 // Per-dot transparency breathing: each dot pulses independently.
