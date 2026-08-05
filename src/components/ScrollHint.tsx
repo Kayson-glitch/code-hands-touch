@@ -53,7 +53,7 @@ export function ScrollHint({ visible = true }: { visible?: boolean }) {
           flexDirection: "row",
           alignItems: "center",
           gap: 8,
-          animation: "scroll-hint-breathe 1.8s ease-in-out infinite",
+          animation: "scroll-hint-breathe 2.8s ease-in-out infinite",
           willChange: "opacity",
         }}
       >
@@ -89,7 +89,7 @@ export function ScrollHint({ visible = true }: { visible?: boolean }) {
           height="16"
           viewBox="0 0 20 20"
           fill="none"
-          style={{ animation: "scroll-hint-arrow 1.8s ease-in-out infinite" }}
+          style={{ animation: "scroll-hint-arrow 2.8s ease-in-out infinite" }}
         >
           <path
             d="M15.0581 10.3581L9.99974 15.4164L4.94141 10.3581"
@@ -115,7 +115,7 @@ export function ScrollHint({ visible = true }: { visible?: boolean }) {
           50% { transform: translateY(1.5px); }
         }
         @keyframes scroll-hint-breathe {
-          0%, 100% { opacity: 0.6; }
+          0%, 100% { opacity: 0.5; }
           50% { opacity: 1; }
         }
       `}</style>

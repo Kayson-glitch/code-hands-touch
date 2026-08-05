@@ -713,8 +713,8 @@ export function HalftoneHandsFooter({
           ? Math.min(1, ghost.out + dt / 1.2)
           : Math.max(0, ghost.out - dt / 1.2);
         // Opacity breathes 10% -> 20% in sync with the scroll-hint arrow
-        // bounce (1.8s, min at cycle ends, max at mid-cycle).
-        const gPhase = (now / 1800) % 1;
+        // bounce (2.8s, min at cycle ends, max at mid-cycle).
+        const gPhase = (now / 2800) % 1;
         const gPulse = 0.5 - 0.5 * Math.cos(gPhase * Math.PI * 2);
         const gAlphaBase = GHOST_ALPHA + (GHOST_ALPHA_MAX - GHOST_ALPHA) * gPulse;
         const gA = gAlphaBase * ghost.in * ghost.out;
