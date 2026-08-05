@@ -4,6 +4,7 @@ import { IntroVideo, type IntroProgressInfo } from "./IntroVideo";
 import { useHeroLayout, type HeroLayout } from "@/hooks/useHeroLayout";
 import { GlitchGrainOverlay } from "@/components/GlitchGrainOverlay";
 
+import { useInverted } from "@/hooks/useInvertTheme";
 import { INTRO_ENABLED } from "@/components/intro/introConfig";
 
 
@@ -43,6 +44,10 @@ const INK_STOPS: Array<[number, number, number]> = [
   [0xa8, 0xa8, 0xa8],
 ];
 
+// Flipped by the global invert skin: on a near-black paper the same ramp is
+// mirrored (dark dots near paper → bright dots in the deepest shadows).
+let INVERTED_INK = false;
+
 /** Interpolate the three-stop ink ramp at coverage d (0..1). */
 function inkAt(d: number) {
   const t = Math.min(1, Math.max(0, d));
@@ -50,11 +55,12 @@ function inkAt(d: number) {
   const f = seg === 0 ? t / 0.5 : (t - 0.5) / 0.5;
   const a = INK_STOPS[seg];
   const b = INK_STOPS[seg + 1];
-  return [
+  const out = [
     Math.round(a[0] + (b[0] - a[0]) * f),
     Math.round(a[1] + (b[1] - a[1]) * f),
     Math.round(a[2] + (b[2] - a[2]) * f),
   ];
+  return INVERTED_INK ? out.map((c) => 255 - c) : out;
 }
 
 // Pointer parallax (CSS px at full deflection) + breathing.
