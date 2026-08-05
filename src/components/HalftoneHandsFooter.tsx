@@ -519,10 +519,17 @@ export function HalftoneHandsFooter({
     };
 
 
-
+    // ---------------------------------------------------------- ghost preview
+    // On entry the last frame is shown at 10% as a hint of what's coming, with
+    // the scroll hint on top. The first scroll intent fades it out slowly.
+    const ghost = { in: 0, out: 1, started: false };
+    const markScrollIntent = () => {
+      ghost.started = true;
+    };
 
     const onWheel = (e: WheelEvent) => {
       if (stageRef.current !== "hands") return;
+      markScrollIntent();
       if (consume(e.deltaY, e.deltaMode)) e.preventDefault();
     };
     window.addEventListener("wheel", onWheel, { passive: false });
@@ -533,6 +540,7 @@ export function HalftoneHandsFooter({
     };
     const onTouchMove = (e: TouchEvent) => {
       if (stageRef.current !== "hands" || touchY === null) return;
+      markScrollIntent();
       const y = e.touches[0]?.clientY ?? touchY;
       const dy = touchY - y;
       touchY = y;
@@ -540,6 +548,14 @@ export function HalftoneHandsFooter({
     };
     window.addEventListener("touchstart", onTouchStart, { passive: true });
     window.addEventListener("touchmove", onTouchMove, { passive: false });
+
+    const onKeyIntent = (e: KeyboardEvent) => {
+      if (["ArrowDown", "PageDown", "ArrowUp", "PageUp", " ", "Space"].includes(e.key)) {
+        markScrollIntent();
+      }
+    };
+    window.addEventListener("keydown", onKeyIntent, { passive: true });
+
 
 
 
