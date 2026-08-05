@@ -605,27 +605,41 @@ export function HalftoneHandsFooter({
         ph.current = ph.target;
       } else {
         // Residual glide: the flick keeps feeding the target briefly, then decays.
-        if (Math.abs(progressRef.vel) > 1e-4) {
-          progressRef.target = Math.min(
-            1,
-            Math.max(0, progressRef.target + progressRef.vel * dt * 0.25),
-          );
-          progressRef.vel *= Math.exp(-dt / 0.12);
-        } else {
-          progressRef.vel = 0;
-        }
+        const applyGlide = (
+          ref: typeof progressRef,
+          span: () => number,
+        ) => {
+          if (Math.abs(ref.vel) > 1e-4) {
+            ref.target = Math.min(
+              1,
+              Math.max(0, ref.target + ref.vel * dt * 0.25),
+            );
+            ref.vel *= Math.exp(-dt / 0.12);
+          } else {
+            ref.vel = 0;
+          }
+        };
+        applyGlide(progressRef, frameSpan);
+        applyGlide(holdRef, holdSpan);
 
         // Exponential ease toward the target with a fixed time constant.
         const k = 1 - Math.exp(-dt / SMOOTH_TAU);
         progressRef.v += (progressRef.target - progressRef.v) * k;
+        holdRef.v += (holdRef.target - holdRef.v) * k;
         if (Math.abs(progressRef.target - progressRef.v) < 0.0005) {
           progressRef.v = progressRef.target;
         }
+        if (Math.abs(holdRef.target - holdRef.v) < 0.0005) {
+          holdRef.v = holdRef.target;
+        }
 
+        // The playhead is driven solely by the frame progress; during the hold
+        // phase progressRef.v stays at 1, so the last frame remains frozen.
         ph.target = progressRef.v * (FRAME_COUNT - 1);
         ph.current += (ph.target - ph.current) * (1 - Math.exp(-dt / 0.05));
         if (Math.abs(ph.target - ph.current) < 0.01) ph.current = ph.target;
       }
+
 
 
 
