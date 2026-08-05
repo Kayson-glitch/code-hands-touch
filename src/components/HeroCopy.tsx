@@ -89,10 +89,11 @@ export function HeroCopy() {
             aria-hidden
             className="pointer-events-none absolute bottom-0 z-0"
             style={{
-              left: 12,
-              right: 12,
+              left: 0,
+              right: 0,
               height: 2,
-
+              borderBottomLeftRadius: 12,
+              borderBottomRightRadius: 12,
               backgroundImage:
                 "linear-gradient(90deg, #137DFF 0%, #FF18AA 33.333%, #FFCD17 66.666%, #137DFF 100%)",
               backgroundSize: "150% 100%",
