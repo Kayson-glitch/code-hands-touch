@@ -107,7 +107,10 @@ export function SloganSection() {
         aria-hidden
         style={{
           position: "absolute",
-          inset: 0,
+          top: 0,
+          right: "100px",
+          bottom: 0,
+          left: "100px",
           pointerEvents: "none",
           backgroundImage:
             "radial-gradient(rgba(255,255,255,0.08) 2px, transparent 2.4px)",
