@@ -629,12 +629,13 @@ export function HalftoneHandsFooter({
         if (r < 0.16) continue;
 
         // Each dot breathes opacity on its own random phase/speed.
+        // Use a smooth ease-in-out wave so the fade feels like a gentle swell.
         const dotAlpha = prefersReduce
           ? 1
           : 1 -
-            Math.sin(
-              (now / DOT_ALPHA_PERIOD) * Math.PI * 2 * dot.alphaSpeed +
-                dot.alphaPhase,
+            breathWave(
+              (now / DOT_ALPHA_PERIOD) * dot.alphaSpeed +
+                dot.alphaPhase / (Math.PI * 2),
             ) *
               DOT_ALPHA_AMP;
         ctx.globalAlpha = dotAlpha;
