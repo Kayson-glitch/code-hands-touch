@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { GlitchGrainOverlay } from "./GlitchGrainOverlay";
+
 
 const LINES: string[][] = [
   ["We", "craft", "intelligent", "support", "experiences"],
