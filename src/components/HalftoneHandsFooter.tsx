@@ -688,6 +688,38 @@ export function HalftoneHandsFooter({
       const fluid = fluidRef.current;
       if (fluid && !prefersReduce) fluid.step(dt);
 
+      // ---- ghost preview of the last frame (10% ink) --------------------
+      if (!prefersReduce) {
+        if (!ghost.started) {
+          ghost.in = Math.min(1, ghost.in + dt / 0.8);
+        } else {
+          ghost.out = Math.max(0, ghost.out - dt / 1.2);
+        }
+        const gA = GHOST_ALPHA * ghost.in * ghost.out;
+        if (gA > 0.001) {
+          const gDots = dotsForFrame(FRAME_COUNT - 1);
+          ctx.globalAlpha = gA;
+          for (let k = 0; k < gDots.length; k++) {
+            const dot = gDots[k];
+            const weight = 0.35 + dot.cx * 0.65;
+            const gx = dot.x + p.x * PARALLAX_X * weight;
+            const gy = dot.y + p.y * PARALLAX_Y * weight;
+            const raw = Math.min(1, dot.d * breath);
+            const gd = raw < 0.8 ? raw : 0.8 + (raw - 0.8) * 0.7;
+            const gr = maxR * Math.sqrt(gd);
+            if (gr < 0.16) continue;
+            const [gr0, gg0, gb0] = inkAt(gd);
+            ctx.fillStyle = `rgb(${gr0},${gg0},${gb0})`;
+            ctx.beginPath();
+            ctx.arc(gx, gy, gr, 0, Math.PI * 2);
+            ctx.fill();
+          }
+          ctx.globalAlpha = 1;
+        }
+      }
+
+
+
       for (let k = 0; k < dots.length; k++) {
         const dot = dots[k];
         // Centre dots drift more than edge dots → a shallow depth read.
