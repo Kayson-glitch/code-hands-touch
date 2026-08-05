@@ -55,11 +55,15 @@ function inkAt(d: number) {
   ];
 }
 
-// Pointer parallax (CSS px at full deflection) + tonal breathing amplitude.
+// Pointer parallax (CSS px at full deflection) + breathing.
 const PARALLAX_X = 4;
 const PARALLAX_Y = 2.5;
 const BREATH_AMP = 0.035;
 const BREATH_PERIOD = 5200;
+// Subtle transparency breathing on static dots — separate period so it doesn't
+// lock in phase with the tonal breathing.
+const ALPHA_BREATH_AMP = 0.06;
+const ALPHA_BREATH_PERIOD = 7300;
 
 
 
