@@ -42,7 +42,6 @@ export function SiteNav() {
 
   // The whole site now sits on a light background, so the nav is always
   // rendered in its light (dark-ink) variant.
-  const isDark = false;
   void theme;
   const navItem =
     "flex cursor-pointer items-center gap-1.5 p-4 capitalize text-ink-muted transition-colors duration-200 hover:text-ink";
