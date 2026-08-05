@@ -524,11 +524,11 @@ export function HalftoneHandsFooter({
 
     // ---------------------------------------------------------- ghost preview
     // On entry the last frame is shown at 10% as a hint of what's coming, with
-    // the scroll hint on top. The first scroll intent fades it out slowly.
-    const ghost = { in: 0, out: 1, started: false };
-    const markScrollIntent = () => {
-      ghost.started = true;
-    };
+    // the scroll hint on top. It fades out as soon as the sequence advances and
+    // fades back in when the user rewinds all the way to the entry state.
+    const ghost = { in: 0, out: 1, atEntry: true };
+    const markScrollIntent = () => {};
+
 
     const onWheel = (e: WheelEvent) => {
       if (stageRef.current !== "hands") return;
