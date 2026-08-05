@@ -367,6 +367,16 @@ export function HalftoneHandsFooter({
 }: { videoSrc?: string; debug?: boolean; handoffVideo?: HTMLVideoElement | null } = {}) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const layout = useHeroLayout();
+  const inverted = useInverted();
+
+  // Mirror the halftone ink ramp + page paper whenever the skin flips.
+  useEffect(() => {
+    INVERTED_INK = inverted;
+    if (typeof document === "undefined") return;
+    const paper = inverted ? "#0A0A0A" : "#FAFAFA";
+    document.documentElement.style.backgroundColor = paper;
+    document.body.style.backgroundColor = paper;
+  }, [inverted]);
   const [stage, setStage] = useState<"orb" | "hands">(INTRO_ENABLED ? "orb" : "hands");
   const stageRef = useRef(stage);
   useEffect(() => {
@@ -902,7 +912,12 @@ export function HalftoneHandsFooter({
   return (
     <section
       className="relative w-full overflow-hidden"
-      style={{ backgroundColor: "#FAFAFA", height: "100vh", minHeight: 600 }}
+      style={{
+        backgroundColor: inverted ? "#0A0A0A" : "#FAFAFA",
+        transition: "background-color 300ms ease",
+        height: "100vh",
+        minHeight: 600,
+      }}
     >
       {bgDark && (
         <div
@@ -910,7 +925,8 @@ export function HalftoneHandsFooter({
           style={{
             position: "fixed",
             inset: 0,
-            background: "#FAFAFA",
+            background: inverted ? "#0A0A0A" : "#FAFAFA",
+            transition: "background-color 300ms ease",
             zIndex: -1,
             pointerEvents: "none",
           }}
