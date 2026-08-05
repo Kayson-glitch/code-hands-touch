@@ -20,7 +20,7 @@ const DESKTOP: HeroLayout = {
   subtitleLineHeight: "24px",
   handsTop: "calc(46vh - 28px)",
   handsHeight: "51vh",
-  handsMaxWidth: 1440,
+  handsMaxWidth: Infinity,
   cellSize: 10,
 };
 
@@ -60,7 +60,7 @@ const WIDE: HeroLayout = {
   titleLineHeight: "64px",
   handsTop: "calc(44vh - 28px)",
   handsHeight: "55vh",
-  handsMaxWidth: 1720,
+  handsMaxWidth: Infinity,
   cellSize: 12,
 };
 
@@ -70,7 +70,7 @@ const ULTRA: HeroLayout = {
   titleLineHeight: "72px",
   handsTop: "calc(42vh - 28px)",
   handsHeight: "58vh",
-  handsMaxWidth: 2000,
+  handsMaxWidth: Infinity,
   cellSize: 14,
 };
 
