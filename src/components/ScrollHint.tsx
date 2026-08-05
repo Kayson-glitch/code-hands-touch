@@ -115,7 +115,7 @@ export function ScrollHint({ visible = true }: { visible?: boolean }) {
           50% { transform: translateY(1.5px); }
         }
         @keyframes scroll-hint-breathe {
-          0%, 100% { opacity: 0.5; }
+          0%, 100% { opacity: 0.3; }
           50% { opacity: 1; }
         }
       `}</style>
