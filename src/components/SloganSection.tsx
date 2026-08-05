@@ -111,7 +111,7 @@ export function SloganSection() {
           pointerEvents: "none",
           backgroundImage:
             "radial-gradient(rgba(255,255,255,0.13) 2px, transparent 2.4px)",
-          backgroundSize: "64px 64px",
+          backgroundSize: "40px 40px",
           backgroundPosition: "0 0",
           zIndex: 0,
         }}
