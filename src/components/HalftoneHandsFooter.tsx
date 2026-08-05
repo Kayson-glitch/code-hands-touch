@@ -82,7 +82,7 @@ type Dot = {
   cx: number;
   /** Independent transparency breathing phase (radians). */
   alphaPhase: number;
-  /** Independent transparency breathing speed multiplier. */
+  /** Independent transparency breathing speed multiplier (kept slow). */
   alphaSpeed: number;
 };
 
