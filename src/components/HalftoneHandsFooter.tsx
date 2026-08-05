@@ -62,7 +62,7 @@ const BREATH_AMP = 0.035;
 const BREATH_PERIOD = 5200;
 // Subtle transparency breathing on static dots — separate period so it doesn't
 // lock in phase with the tonal breathing.
-const ALPHA_BREATH_AMP = 0.06;
+const ALPHA_BREATH_AMP = 0.2;
 const ALPHA_BREATH_PERIOD = 7300;
 
 
