@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 /**
  * Figma-spec scroll hint (node 1415:20938):
  * row, gap 8px — "scroll" (Montserrat 14/20, capitalize, #000) +
- * 20x20 box, 2px padding, 1px #E1E0E4 border, radius 12px, arrow-down icon.
+ * 24x24 box, 2px padding, 1px #E1E0E4 border, radius 12px, 20x20 arrow-down icon.
  * Position: horizontally centered, top 624px in the 1440x900 frame
  * (element center at 634/900 = 70.4% of the viewport height).
  */
