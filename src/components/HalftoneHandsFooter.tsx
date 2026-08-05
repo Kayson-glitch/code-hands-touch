@@ -68,6 +68,9 @@ const DOT_ALPHA_PERIOD = 5000;
 // After the last video frame is reached, keep the hands frozen for this many
 // extra video frames of scroll distance before releasing the page wheel.
 const HOLD_FRAMES = 4;
+// Entry-state ghost preview of the final frame.
+const GHOST_ALPHA = 0.1;
+
 
 
 
@@ -519,10 +522,17 @@ export function HalftoneHandsFooter({
     };
 
 
-
+    // ---------------------------------------------------------- ghost preview
+    // On entry the last frame is shown at 10% as a hint of what's coming, with
+    // the scroll hint on top. The first scroll intent fades it out slowly.
+    const ghost = { in: 0, out: 1, started: false };
+    const markScrollIntent = () => {
+      ghost.started = true;
+    };
 
     const onWheel = (e: WheelEvent) => {
       if (stageRef.current !== "hands") return;
+      markScrollIntent();
       if (consume(e.deltaY, e.deltaMode)) e.preventDefault();
     };
     window.addEventListener("wheel", onWheel, { passive: false });
@@ -533,6 +543,7 @@ export function HalftoneHandsFooter({
     };
     const onTouchMove = (e: TouchEvent) => {
       if (stageRef.current !== "hands" || touchY === null) return;
+      markScrollIntent();
       const y = e.touches[0]?.clientY ?? touchY;
       const dy = touchY - y;
       touchY = y;
@@ -540,6 +551,14 @@ export function HalftoneHandsFooter({
     };
     window.addEventListener("touchstart", onTouchStart, { passive: true });
     window.addEventListener("touchmove", onTouchMove, { passive: false });
+
+    const onKeyIntent = (e: KeyboardEvent) => {
+      if (["ArrowDown", "PageDown", "ArrowUp", "PageUp", " ", "Space"].includes(e.key)) {
+        markScrollIntent();
+      }
+    };
+    window.addEventListener("keydown", onKeyIntent, { passive: true });
+
 
 
 
@@ -672,6 +691,38 @@ export function HalftoneHandsFooter({
       const fluid = fluidRef.current;
       if (fluid && !prefersReduce) fluid.step(dt);
 
+      // ---- ghost preview of the last frame (10% ink) --------------------
+      if (!prefersReduce) {
+        if (!ghost.started) {
+          ghost.in = Math.min(1, ghost.in + dt / 0.8);
+        } else {
+          ghost.out = Math.max(0, ghost.out - dt / 1.2);
+        }
+        const gA = GHOST_ALPHA * ghost.in * ghost.out;
+        if (gA > 0.001) {
+          const gDots = dotsForFrame(FRAME_COUNT - 1);
+          ctx.globalAlpha = gA;
+          for (let k = 0; k < gDots.length; k++) {
+            const dot = gDots[k];
+            const weight = 0.35 + dot.cx * 0.65;
+            const gx = dot.x + p.x * PARALLAX_X * weight;
+            const gy = dot.y + p.y * PARALLAX_Y * weight;
+            const raw = Math.min(1, dot.d * breath);
+            const gd = raw < 0.8 ? raw : 0.8 + (raw - 0.8) * 0.7;
+            const gr = maxR * Math.sqrt(gd);
+            if (gr < 0.16) continue;
+            const [gr0, gg0, gb0] = inkAt(gd);
+            ctx.fillStyle = `rgb(${gr0},${gg0},${gb0})`;
+            ctx.beginPath();
+            ctx.arc(gx, gy, gr, 0, Math.PI * 2);
+            ctx.fill();
+          }
+          ctx.globalAlpha = 1;
+        }
+      }
+
+
+
       for (let k = 0; k < dots.length; k++) {
         const dot = dots[k];
         // Centre dots drift more than edge dots → a shallow depth read.
@@ -750,6 +801,8 @@ export function HalftoneHandsFooter({
       window.removeEventListener("wheel", onWheel);
       window.removeEventListener("touchstart", onTouchStart);
       window.removeEventListener("touchmove", onTouchMove);
+      window.removeEventListener("keydown", onKeyIntent);
+
 
 
 

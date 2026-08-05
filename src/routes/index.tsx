@@ -4,6 +4,8 @@ import { HalftoneHandsFooter } from "@/components/HalftoneHandsFooter";
 import { SiteNav } from "@/components/SiteNav";
 import { HeroCopy } from "@/components/HeroCopy";
 import { FinChatDock } from "@/components/FinChatDock";
+import { ScrollHint } from "@/components/ScrollHint";
+
 import { IntroPreloader } from "@/components/IntroPreloader";
 import { INTRO_ENABLED } from "@/components/intro/introConfig";
 
@@ -106,7 +108,9 @@ function Index() {
             <HalftoneHandsFooter videoSrc={videoSrc} debug={debug} handoffVideo={handoffVideo} />
             <HeroCopy />
           </div>
+          <ScrollHint />
           <SiteNav />
+
           {/* Spacer so the page can scroll to reveal the second screen */}
           <div aria-hidden style={{ height: "100vh" }} />
           {/* Second screen: slides up over the fixed hero */}

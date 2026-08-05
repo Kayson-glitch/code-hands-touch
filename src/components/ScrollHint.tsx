@@ -43,7 +43,7 @@ export function ScrollHint({ visible = true }: { visible?: boolean }) {
         top: "50%",
         transform: "translate(-50%, -50%)",
         opacity: on ? 1 : 0,
-        transition: "opacity 640ms cubic-bezier(0.4, 0, 0.2, 1)",
+        transition: "opacity 1200ms cubic-bezier(0.4, 0, 0.2, 1)",
         willChange: "opacity",
         pointerEvents: "none",
         zIndex: 90,
