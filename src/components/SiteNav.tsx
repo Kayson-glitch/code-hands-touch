@@ -71,9 +71,10 @@ export function SiteNav() {
         style={{
           height: 2,
           backgroundImage:
-            "repeating-linear-gradient(90deg, #137DFF 0px, #FF18AA 300px, #FFCD17 600px, #FF18AA 900px, #137DFF 1200px)",
+            "linear-gradient(90deg, #137DFF 0%, #FF18AA 33.333%, #FFCD17 66.666%, #137DFF 100%)",
+          backgroundSize: "900px 100%",
+          backgroundRepeat: "repeat-x",
           animation: "nav-border-flow 9s linear infinite",
-
         }}
       />
 
