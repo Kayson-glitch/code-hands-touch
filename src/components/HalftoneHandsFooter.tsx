@@ -80,11 +80,11 @@ type Dot = {
 };
 
 // ------------------------------------------------------------- ink fluid
-// Vivid fluid dye gradient: yellow (outer/diffuse) → magenta → blue (core).
+// Vivid fluid dye gradient: yellow (outer/diffuse) → blue → magenta (core).
 const DYE_STOPS: Array<[number, number, number]> = [
   [0xff, 0xcd, 0x17],
-  [0xff, 0x18, 0xaa],
   [0x13, 0x7d, 0xff],
+  [0xff, 0x18, 0xaa],
 ];
 
 /** Interpolate the dye gradient at t (0..1). */
