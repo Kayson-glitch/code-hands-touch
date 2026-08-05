@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 
 
 const LINES: string[][] = [
@@ -13,11 +13,19 @@ const smoothstep = (a: number, b: number, x: number) => {
   return t * t * (3 - 2 * t);
 };
 
-const REVIEWS: string[] = [
-  "Synergy cut our first-response time by 80% and freed the team to focus on high-impact conversations. It feels like every customer is talking to a real agent who actually remembers the context.",
-  "The bot learned our brand voice in a single afternoon. Within a week it was handling routine questions, escalating complex issues, and sounding indistinguishable from our best support rep.",
-  "I was skeptical about AI support, but the 24/7 coverage alone paid for itself within the first month. Our customers get instant answers at 2 a.m. without us hiring a night shift.",
-  "It routes complex tickets to humans instantly while handling the repetitive work on its own. That balance saved us hours every day and made the whole support experience feel effortless.",
+const REVIEWS: ReactNode[] = [
+  <>
+    Synergy cut our <span style={{ color: "#5749FF" }}>first-response time</span> by <span style={{ color: "#5749FF" }}>80%</span> and freed the team to focus on high-impact conversations. It feels like every customer is talking to a real agent who actually remembers the context.
+  </>,
+  <>
+    The bot learned our brand voice in <span style={{ color: "#5749FF" }}>a single afternoon</span>. <span style={{ color: "#5749FF" }}>Within a week</span> it was handling routine questions, escalating complex issues, and sounding indistinguishable from our best support rep.
+  </>,
+  <>
+    I was skeptical about AI support, but the <span style={{ color: "#5749FF" }}>24/7 coverage</span> alone paid for itself within the <span style={{ color: "#5749FF" }}>first month</span>. Our customers get instant answers at 2 a.m. without us hiring a night shift.
+  </>,
+  <>
+    It routes complex tickets to humans <span style={{ color: "#5749FF" }}>instantly</span> while handling the repetitive work on its own. That balance saved us <span style={{ color: "#5749FF" }}>hours every day</span> and made the whole support experience feel effortless.
+  </>,
 ];
 
 export function SloganSection() {
