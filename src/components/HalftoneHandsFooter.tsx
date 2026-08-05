@@ -524,11 +524,11 @@ export function HalftoneHandsFooter({
 
     // ---------------------------------------------------------- ghost preview
     // On entry the last frame is shown at 10% as a hint of what's coming, with
-    // the scroll hint on top. The first scroll intent fades it out slowly.
-    const ghost = { in: 0, out: 1, started: false };
-    const markScrollIntent = () => {
-      ghost.started = true;
-    };
+    // the scroll hint on top. It fades out as soon as the sequence advances and
+    // fades back in when the user rewinds all the way to the entry state.
+    const ghost = { in: 0, out: 1, atEntry: true };
+    const markScrollIntent = () => {};
+
 
     const onWheel = (e: WheelEvent) => {
       if (stageRef.current !== "hands") return;
@@ -693,12 +693,26 @@ export function HalftoneHandsFooter({
 
       // ---- ghost preview of the last frame (10% ink) --------------------
       if (!prefersReduce) {
-        if (!ghost.started) {
-          ghost.in = Math.min(1, ghost.in + dt / 0.8);
-        } else {
-          ghost.out = Math.max(0, ghost.out - dt / 1.2);
+        // Entry state = page at top with the sequence fully rewound. It is
+        // reachable again by scrolling back up, so the ghost + scroll hint
+        // return instead of being gone for good.
+        const atEntry =
+          window.scrollY <= 0 &&
+          progressRef.target <= 0.002 &&
+          progressRef.v <= 0.01 &&
+          holdRef.target <= 0.002;
+        if (atEntry !== ghost.atEntry) {
+          ghost.atEntry = atEntry;
+          window.dispatchEvent(
+            new CustomEvent("hands-entry-state", { detail: { atEntry } }),
+          );
         }
+        ghost.in = Math.min(1, ghost.in + dt / 0.8);
+        ghost.out = atEntry
+          ? Math.min(1, ghost.out + dt / 1.2)
+          : Math.max(0, ghost.out - dt / 1.2);
         const gA = GHOST_ALPHA * ghost.in * ghost.out;
+
         if (gA > 0.001) {
           const gDots = dotsForFrame(FRAME_COUNT - 1);
           ctx.globalAlpha = gA;

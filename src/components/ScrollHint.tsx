@@ -8,7 +8,7 @@ import { useEffect, useState } from "react";
  * (element center at 634/900 = 70.4% of the viewport height).
  */
 export function ScrollHint({ visible = true }: { visible?: boolean }) {
-  const [dismissed, setDismissed] = useState(false);
+  const [atEntry, setAtEntry] = useState(true);
   const [entered, setEntered] = useState(false);
 
   useEffect(() => {
@@ -17,24 +17,19 @@ export function ScrollHint({ visible = true }: { visible?: boolean }) {
   }, []);
 
   useEffect(() => {
-    if (dismissed) return;
-    const dismiss = () => setDismissed(true);
-    const onWheel = () => dismiss();
-    const onTouchMove = () => dismiss();
-    const onKey = (e: KeyboardEvent) => {
-      if (["ArrowDown", "PageDown", "ArrowUp", "PageUp", "Space", " "].includes(e.key)) dismiss();
+    // The hands sequence owns the entry state and broadcasts it, so the hint
+    // fades out when the scrub starts and fades back in when it is rewound.
+    const onState = (e: Event) => {
+      const detail = (e as CustomEvent<{ atEntry: boolean }>).detail;
+      setAtEntry(Boolean(detail?.atEntry));
     };
-    window.addEventListener("wheel", onWheel, { passive: true, once: true });
-    window.addEventListener("touchmove", onTouchMove, { passive: true, once: true });
-    window.addEventListener("keydown", onKey);
-    return () => {
-      window.removeEventListener("wheel", onWheel);
-      window.removeEventListener("touchmove", onTouchMove);
-      window.removeEventListener("keydown", onKey);
-    };
-  }, [dismissed]);
+    window.addEventListener("hands-entry-state", onState as EventListener);
+    return () =>
+      window.removeEventListener("hands-entry-state", onState as EventListener);
+  }, []);
 
-  const on = visible && entered && !dismissed;
+  const on = visible && entered && atEntry;
+
 
   return (
     <div
