@@ -351,7 +351,7 @@ export function HalftoneHandsFooter({
 }: { videoSrc?: string; debug?: boolean; handoffVideo?: HTMLVideoElement | null } = {}) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const layout = useHeroLayout();
-  const [stage, setStage] = useState<"orb" | "hands">("orb");
+  const [stage, setStage] = useState<"orb" | "hands">(INTRO_ENABLED ? "orb" : "hands");
   const stageRef = useRef(stage);
   useEffect(() => {
     stageRef.current = stage;
