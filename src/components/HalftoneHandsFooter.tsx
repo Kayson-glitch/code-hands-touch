@@ -26,9 +26,9 @@ const FRAME_H = 178;
 const FRAME_AR = FRAME_W / FRAME_H;
 
 // ---------------------------------------------------------------- tuning
-// Radius is a fraction of the half-pitch. Set to 1.8 so the dot diameter is
-// twice the previous size; darkest cells will merge into rounded squares.
-const DOT_FILL = 1.8;
+// Radius is a fraction of the half-pitch. Kept below 1 so even the darkest
+// cells keep a sliver of paper between them and never weld into a solid mass.
+const DOT_FILL = 0.9;
 // Coverage below this is left as bare paper.
 const MIN_DENSITY = 0.05;
 // Only the very deepest dots square off, so shadows stay legible as a screen.
