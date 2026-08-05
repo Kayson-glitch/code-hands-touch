@@ -71,9 +71,9 @@ export function SiteNav() {
         style={{
           height: 2,
           backgroundImage:
-            "linear-gradient(90deg, #137DFF 0%, #FF18AA 33%, #FFCD17 55%, #FF18AA 78%, #137DFF 100%)",
-          backgroundSize: "200% 100%",
-          animation: "nav-border-flow 7s linear infinite",
+            "repeating-linear-gradient(90deg, #137DFF 0px, #FF18AA 300px, #FFCD17 600px, #FF18AA 900px, #137DFF 1200px)",
+          animation: "nav-border-flow 9s linear infinite",
+
         }}
       />
 
