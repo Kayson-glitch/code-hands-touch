@@ -515,6 +515,7 @@ export function HalftoneHandsFooter({
 
 
 
+
     const onWheel = (e: WheelEvent) => {
       if (stageRef.current !== "hands") return;
       if (consume(e.deltaY, e.deltaMode)) e.preventDefault();
