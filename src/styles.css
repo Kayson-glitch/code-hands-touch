@@ -11,6 +11,13 @@
 
 html, body {
   font-family: "Montserrat", ui-sans-serif, system-ui, sans-serif;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+html::-webkit-scrollbar,
+body::-webkit-scrollbar {
+  display: none;
 }
 
 .font-display {
