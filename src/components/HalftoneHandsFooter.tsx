@@ -65,6 +65,10 @@ const BREATH_PERIOD = 5200;
 // Per-dot transparency breathing: each dot pulses independently.
 const DOT_ALPHA_AMP = 0.2; // range 0.8 .. 1.0
 const DOT_ALPHA_PERIOD = 5000;
+// After the last video frame is reached, keep the hands frozen for this many
+// extra video frames of scroll distance before releasing the page wheel.
+const HOLD_FRAMES = 4;
+
 
 
 
