@@ -106,7 +106,9 @@ function Index() {
             <HalftoneHandsFooter videoSrc={videoSrc} debug={debug} handoffVideo={handoffVideo} />
             <HeroCopy />
           </div>
+          <ScrollHint />
           <SiteNav />
+
           {/* Spacer so the page can scroll to reveal the second screen */}
           <div aria-hidden style={{ height: "100vh" }} />
           {/* Second screen: slides up over the fixed hero */}
