@@ -710,14 +710,21 @@ export function HalftoneHandsFooter({
 
   // Intro sealed: reveal the nav immediately and set the page background,
   // matching the state the intro handoff would normally leave behind.
+  // Deferred one frame so sibling listeners (nav, hero copy, chat dock) are
+  // already subscribed when the cues fire.
   useEffect(() => {
     if (INTRO_ENABLED || typeof window === "undefined") return;
-    window.dispatchEvent(
-      new CustomEvent("app-nav-visibility", { detail: "visible" }),
-    );
     document.documentElement.style.backgroundColor = "#FAFAFA";
     document.body.style.backgroundColor = "#FAFAFA";
+    const raf = requestAnimationFrame(() => {
+      window.dispatchEvent(new CustomEvent("app-bg-change", { detail: "dark" }));
+      window.dispatchEvent(
+        new CustomEvent("app-nav-visibility", { detail: "visible" }),
+      );
+    });
+    return () => cancelAnimationFrame(raf);
   }, []);
+
 
 
   const handleIntroProgress = (info: IntroProgressInfo) => {
