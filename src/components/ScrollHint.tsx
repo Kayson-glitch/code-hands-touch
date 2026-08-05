@@ -1,5 +1,12 @@
 import { useEffect, useState } from "react";
 
+/**
+ * Figma-spec scroll hint (node 1415:20938):
+ * row, gap 8px — "scroll" (Montserrat 14/20, capitalize, #000) +
+ * 20x20 box, 2px padding, 1px #E1E0E4 border, radius 12px, arrow-down icon.
+ * Position: horizontally centered, top 624px in the 1440x900 frame
+ * (element center at 634/900 = 70.4% of the viewport height).
+ */
 export function ScrollHint({ visible = true }: { visible?: boolean }) {
   const [dismissed, setDismissed] = useState(false);
   const [entered, setEntered] = useState(false);
@@ -11,9 +18,6 @@ export function ScrollHint({ visible = true }: { visible?: boolean }) {
 
   useEffect(() => {
     if (dismissed) return;
-    // Any scroll intent (wheel / touch / key) triggers the exit animation
-    // once. No follow-scroll — the CSS transition owns the motion so it stays
-    // silky regardless of wheel cadence.
     const dismiss = () => setDismissed(true);
     const onWheel = () => dismiss();
     const onTouchMove = () => dismiss();
@@ -31,8 +35,6 @@ export function ScrollHint({ visible = true }: { visible?: boolean }) {
   }, [dismissed]);
 
   const on = visible && entered && !dismissed;
-  // Exit animation: pure fade only. The container stays exactly centered and
-  // never moves, so there is zero displacement on dismissal.
 
   return (
     <div
@@ -40,7 +42,7 @@ export function ScrollHint({ visible = true }: { visible?: boolean }) {
       style={{
         position: "fixed",
         left: "50%",
-        top: "50%",
+        top: "70.4%",
         transform: "translate(-50%, -50%)",
         opacity: on ? 1 : 0,
         transition: "opacity 1200ms cubic-bezier(0.4, 0, 0.2, 1)",
@@ -48,62 +50,59 @@ export function ScrollHint({ visible = true }: { visible?: boolean }) {
         pointerEvents: "none",
         zIndex: 90,
         display: "flex",
-        flexDirection: "column",
+        flexDirection: "row",
         alignItems: "center",
-        gap: 12,
-        color: "rgba(0,0,0,0.82)",
+        gap: 8,
       }}
     >
-      <svg width="22" height="34" viewBox="0 0 22 34" fill="none">
-        <rect
-          x="0.75"
-          y="0.75"
-          width="20.5"
-          height="32.5"
-          rx="10.25"
-          stroke="currentColor"
-          strokeWidth="1.25"
-          opacity="0.85"
-        />
-        <circle cx="11" cy="9" r="1.6" fill="currentColor">
-          <animate
-            attributeName="cy"
-            values="7;15;7"
-            dur="1.8s"
-            repeatCount="indefinite"
-            keyTimes="0;0.55;1"
-            keySplines="0.4 0 0.2 1; 0.4 0 0.2 1"
-            calcMode="spline"
-          />
-          <animate
-            attributeName="opacity"
-            values="0;1;1;0"
-            dur="1.8s"
-            repeatCount="indefinite"
-            keyTimes="0;0.2;0.75;1"
-          />
-        </circle>
-      </svg>
-      <div
+      <span
         style={{
           fontFamily: "'Montserrat', system-ui, sans-serif",
-          fontSize: 11,
-          letterSpacing: "0.22em",
-          textTransform: "uppercase",
-          fontWeight: 500,
-          color: "rgba(0,0,0,0.72)",
+          fontSize: 14,
+          lineHeight: "20px",
+          fontWeight: 400,
+          textTransform: "capitalize",
+          color: "#000000",
+          whiteSpace: "nowrap",
         }}
       >
-        Scroll to explore
-      </div>
-      <div
+        scroll
+      </span>
+      <span
         style={{
-          width: 1,
-          height: 18,
-          background:
-            "linear-gradient(to bottom, rgba(0,0,0,0.45), rgba(0,0,0,0))",
+          width: 20,
+          height: 20,
+          padding: 2,
+          border: "1px solid #E1E0E4",
+          borderRadius: 12,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          boxSizing: "border-box",
         }}
-      />
+      >
+        <svg
+          width="14"
+          height="14"
+          viewBox="0 0 24 24"
+          fill="none"
+          style={{ animation: "scroll-hint-arrow 1.8s ease-in-out infinite" }}
+        >
+          <path
+            d="M19 9L12 16L5 9"
+            stroke="#0E0B22"
+            strokeWidth="1.6"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        </svg>
+      </span>
+      <style>{`
+        @keyframes scroll-hint-arrow {
+          0%, 100% { transform: translateY(-1px); opacity: 0.75; }
+          50% { transform: translateY(1.5px); opacity: 1; }
+        }
+      `}</style>
     </div>
   );
 }
