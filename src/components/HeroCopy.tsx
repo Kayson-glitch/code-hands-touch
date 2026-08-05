@@ -68,7 +68,7 @@ export function HeroCopy() {
         </div>
 
         <button
-          className="pointer-events-auto group relative inline-flex items-center justify-center font-medium text-white transition-transform hover:scale-[1.02]"
+          className="pointer-events-auto group relative inline-flex items-center justify-center overflow-hidden font-medium text-white transition-transform hover:scale-[1.02]"
           style={{
             height: 40,
             fontSize: 16,
@@ -87,6 +87,20 @@ export function HeroCopy() {
             animation: "rainbow-btn-flow 6s linear infinite",
           }}
         >
+          {/* Inner diffuse gradient glow — top only, fades before bottom edge */}
+          <span
+            aria-hidden
+            className="pointer-events-none absolute inset-x-0 top-0"
+            style={{
+              height: "68%",
+              borderTopLeftRadius: 12,
+              borderTopRightRadius: 12,
+              background:
+                "radial-gradient(ellipse 90% 70% at 50% 0%, rgba(255,205,23,0.28) 0%, rgba(255,24,170,0.18) 35%, rgba(19,125,255,0.10) 65%, transparent 100%)",
+              mixBlendMode: "screen",
+              filter: "blur(2px)",
+            }}
+          />
           <span className="relative z-10 inline-flex items-center gap-1.5">
             Book a Demo
             <span
