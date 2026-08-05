@@ -461,6 +461,10 @@ export function HalftoneHandsFooter({
 
     // Distance over which the post-roll hold consumes HOLD_FRAMES video frames.
     const holdSpan = () => frameSpan() * (HOLD_FRAMES / FRAME_COUNT);
+    // DEBUG
+    // eslint-disable-next-line no-console
+    console.log("[halftone] HOLD_FRAMES", HOLD_FRAMES, "holdSpan", holdSpan());
+
     // Seconds to close ~63% of the remaining distance.
     const SMOOTH_TAU = 0.16;
     // Per-event clamp: one huge trackpad delta can't slam the sequence forward.
