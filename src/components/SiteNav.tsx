@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import logo from "@/assets/synergy-logo-v2.png.asset.json";
+import logo from "@/assets/synergy-logo-v3.png.asset.json";
 
 export function SiteNav() {
   const [theme, setTheme] = useState<"light" | "dark">("light");
@@ -42,7 +42,6 @@ export function SiteNav() {
 
   // The whole site now sits on a light background, so the nav is always
   // rendered in its light (dark-ink) variant.
-  const isDark = false;
   void theme;
   const navItem =
     "flex cursor-pointer items-center gap-1.5 p-4 capitalize text-ink-muted transition-colors duration-200 hover:text-ink";
@@ -94,7 +93,7 @@ export function SiteNav() {
               display: "block",
               borderRadius: 888,
               objectFit: "cover",
-              filter: isDark ? "none" : "invert(1)",
+              
             }}
           />
           <span
@@ -151,16 +150,17 @@ export function SiteNav() {
 function Chevron() {
   return (
     <svg
-      width="16"
-      height="16"
-      viewBox="0 0 10 10"
+      width="14"
+      height="14"
+      viewBox="0 0 16 16"
       fill="none"
+      aria-hidden
+      style={{ display: "block", flexShrink: 0 }}
     >
-
       <path
-        d="M2 3.5L5 6.5L8 3.5"
+        d="M4 6.5L8 10.5L12 6.5"
         stroke="currentColor"
-        strokeWidth="1.3"
+        strokeWidth="1.5"
         strokeLinecap="round"
         strokeLinejoin="round"
       />
