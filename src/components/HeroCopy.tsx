@@ -68,37 +68,39 @@ export function HeroCopy() {
         </div>
 
         <button
-          className="pointer-events-auto group relative inline-flex items-center justify-center overflow-hidden font-medium text-white transition-transform hover:scale-[1.02]"
+          className="pointer-events-auto group relative inline-flex shrink-0 cursor-pointer items-center justify-center font-medium text-white transition-all"
           style={{
             height: 40,
             fontSize: 16,
             lineHeight: "24px",
             padding: "0 32px",
             borderRadius: 12,
-            border: "0 solid transparent",
-            borderBottomWidth: 2,
+            border: "0.125rem solid transparent",
             backgroundImage: [
               "linear-gradient(#0E0B22,#0E0B22)",
-              "linear-gradient(90deg, #137DFF 0%, #FF18AA 33.333%, #FFCD17 66.666%, #137DFF 100%)",
+              "linear-gradient(#0E0B22 50%, rgba(14,11,34,0.6) 80%, rgba(14,11,34,0))",
+              "linear-gradient(90deg, #137DFF, #FF18AA, #FFCD17, #137DFF)",
             ].join(","),
-            backgroundClip: "padding-box, border-box",
+            backgroundClip: "padding-box, border-box, border-box",
             backgroundOrigin: "border-box",
-            backgroundSize: "200% 100%",
-            animation: "rainbow-btn-flow 6s linear infinite",
+            backgroundSize: "200%",
+            animation: "rainbow-btn-flow var(--rainbow-speed, 2s) infinite linear",
           }}
         >
-          {/* Inner diffuse gradient glow — top only, fades before bottom edge */}
+          {/* Rainbow glow beneath the button (MagicUI ::before) */}
           <span
             aria-hidden
-            className="pointer-events-none absolute inset-x-0 top-0"
+            className="pointer-events-none absolute left-1/2 -translate-x-1/2"
             style={{
-              height: "68%",
-              borderTopLeftRadius: 12,
-              borderTopRightRadius: 12,
-              background:
-                "radial-gradient(ellipse 90% 70% at 50% 0%, rgba(255,205,23,0.28) 0%, rgba(255,24,170,0.18) 35%, rgba(19,125,255,0.10) 65%, transparent 100%)",
-              mixBlendMode: "screen",
-              filter: "blur(2px)",
+              bottom: "-20%",
+              zIndex: 0,
+              height: "20%",
+              width: "60%",
+              backgroundImage:
+                "linear-gradient(90deg, #137DFF, #FF18AA, #FFCD17, #137DFF)",
+              backgroundSize: "200%",
+              filter: "blur(0.75rem)",
+              animation: "rainbow-btn-flow var(--rainbow-speed, 2s) infinite linear",
             }}
           />
           <span className="relative z-10 inline-flex items-center gap-1.5">
@@ -110,6 +112,7 @@ export function HeroCopy() {
             </span>
           </span>
         </button>
+
 
       </div>
     </div>
