@@ -4,6 +4,8 @@ import { IntroVideo, type IntroProgressInfo } from "./IntroVideo";
 import { useHeroLayout, type HeroLayout } from "@/hooks/useHeroLayout";
 import { GlitchGrainOverlay } from "@/components/GlitchGrainOverlay";
 import { AuroraIntro } from "@/components/AuroraIntro";
+import { INTRO_ENABLED } from "@/components/intro/introConfig";
+
 
 /**
  * Halftone dot-matrix hands, scrubbed by scroll.
