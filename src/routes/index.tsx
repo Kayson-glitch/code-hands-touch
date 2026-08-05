@@ -4,6 +4,8 @@ import { HalftoneHandsFooter } from "@/components/HalftoneHandsFooter";
 import { SiteNav } from "@/components/SiteNav";
 import { HeroCopy } from "@/components/HeroCopy";
 import { FinChatDock } from "@/components/FinChatDock";
+import { ScrollHint } from "@/components/ScrollHint";
+
 import { IntroPreloader } from "@/components/IntroPreloader";
 import { INTRO_ENABLED } from "@/components/intro/introConfig";
 
