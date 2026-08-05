@@ -138,10 +138,13 @@ export function SiteNav() {
 function Chevron() {
   return (
     <svg
-      width="10"
-      height="10"
+    <svg
+      width="16"
+      height="16"
       viewBox="0 0 10 10"
       fill="none"
+    >
+
     >
       <path
         d="M2 3.5L5 6.5L8 3.5"
