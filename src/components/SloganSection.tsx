@@ -208,7 +208,7 @@ export function SloganSection() {
       <div
         style={{
           position: "absolute",
-          top: "7vh",
+          top: 96,
           left: 0,
           right: 0,
           overflow: "hidden",
