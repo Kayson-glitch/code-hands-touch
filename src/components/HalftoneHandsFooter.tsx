@@ -860,6 +860,8 @@ export function HalftoneHandsFooter({
       window.clearTimeout(resizeTimer);
       ro.disconnect();
       window.removeEventListener("wheel", onWheel);
+      if (snapState.raf) cancelAnimationFrame(snapState.raf);
+
       window.removeEventListener("touchstart", onTouchStart);
       window.removeEventListener("touchmove", onTouchMove);
       window.removeEventListener("keydown", onKeyIntent);
