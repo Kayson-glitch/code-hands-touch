@@ -456,13 +456,7 @@ export function HalftoneHandsFooter({
     };
 
     const frameSpan = () => Math.max(420, window.innerHeight * 1.15);
-    // DEBUG: expose scroll phase state for verification
-    if (typeof window !== "undefined") {
-      (window as unknown as Record<string, unknown>).HALFTONE_DEBUG = {
-        get progress: () => progressRef,
-        get hold: () => holdRef,
-      };
-    }
+
 
     // Distance over which the post-roll hold consumes HOLD_FRAMES video frames.
     const holdSpan = () => frameSpan() * (HOLD_FRAMES / FRAME_COUNT);
