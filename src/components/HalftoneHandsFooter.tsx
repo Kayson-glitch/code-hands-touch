@@ -81,6 +81,10 @@ type Dot = {
   d: number; // 0..1 density (1 = darkest)
   /** 0 = frame edge, 1 = centre of the composition — drives parallax weight. */
   cx: number;
+  /** Independent transparency breathing phase (radians). */
+  alphaPhase: number;
+  /** Independent transparency breathing speed multiplier. */
+  alphaSpeed: number;
 };
 
 // ------------------------------------------------------------- ink fluid
