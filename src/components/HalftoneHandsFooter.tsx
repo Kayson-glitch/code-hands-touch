@@ -247,6 +247,16 @@ function smoothstep(t: number) {
   return x * x * (3 - 2 * x);
 }
 
+/** Smooth ease-in-out breathing wave: 0→1→0 over one period.
+ *  Replaces a raw sine wave so the fade feels like a gentle swell,
+ *  not a sharp flash.
+ */
+function breathWave(phase: number) {
+  const t = phase % 1;
+  const tri = t < 0.5 ? t * 2 : 2 - t * 2; // triangle 0..1..0
+  return smoothstep(tri); // ease-in-out at both ends
+}
+
 function resolveViewportLength(value: string, viewportW: number, viewportH: number) {
   const raw = value.trim();
   const calc = raw.match(/^calc\(([-\d.]+)vh\s*([+-])\s*([-\d.]+)px\)$/);
@@ -325,7 +335,7 @@ function sampleDots(
         d: density,
         cx: Math.min(1, Math.min(u, 1 - u) * 2.2),
         alphaPhase: Math.random() * Math.PI * 2,
-        alphaSpeed: 0.15 + Math.random() * 0.25,
+        alphaSpeed: 0.08 + Math.random() * 0.17,
       });
     }
   }
@@ -619,12 +629,13 @@ export function HalftoneHandsFooter({
         if (r < 0.16) continue;
 
         // Each dot breathes opacity on its own random phase/speed.
+        // Use a smooth ease-in-out wave so the fade feels like a gentle swell.
         const dotAlpha = prefersReduce
           ? 1
           : 1 -
-            Math.sin(
-              (now / DOT_ALPHA_PERIOD) * Math.PI * 2 * dot.alphaSpeed +
-                dot.alphaPhase,
+            breathWave(
+              (now / DOT_ALPHA_PERIOD) * dot.alphaSpeed +
+                dot.alphaPhase / (Math.PI * 2),
             ) *
               DOT_ALPHA_AMP;
         ctx.globalAlpha = dotAlpha;
