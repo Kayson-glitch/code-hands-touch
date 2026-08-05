@@ -214,42 +214,75 @@ export function SloganSection() {
         }}
       >
         <div
-          className="testimonial-track"
           style={{
-            display: "flex",
-            width: "max-content",
-            animation: "testimonial-marquee 60s linear infinite",
+            position: "relative",
+            width: "min(100%, 1200px)",
+            margin: "0 auto",
+            overflow: "hidden",
           }}
         >
-          {[...REVIEWS, ...REVIEWS].map((text, i) => (
-            <div
-              key={i}
-              style={{
-            width: 520,
-                padding: "0 48px",
-                borderRight: "1px solid rgba(255,255,255,0.12)",
-                flexShrink: 0,
-              }}
-            >
-              <p
+          <div
+            className="testimonial-track"
+            style={{
+              display: "flex",
+              width: "max-content",
+              animation: "testimonial-marquee 60s linear infinite",
+            }}
+          >
+            {[...REVIEWS, ...REVIEWS].map((text, i) => (
+              <div
+                key={i}
                 style={{
-                  margin: 0,
-                  fontFamily: '"Montserrat", sans-serif',
-                  fontStyle: "italic",
-                  fontWeight: 400,
-                  fontSize: 14,
-                  lineHeight: "22px",
-                  color: "rgba(255,255,255,0.72)",
-                  display: "-webkit-box",
-                  WebkitLineClamp: 3,
-                  WebkitBoxOrient: "vertical",
-                  overflow: "hidden",
+                  width: 520,
+                  padding: "0 48px",
+                  borderRight: "1px solid rgba(255,255,255,0.12)",
+                  flexShrink: 0,
                 }}
               >
-                “{text}”
-              </p>
-            </div>
-          ))}
+                <p
+                  style={{
+                    margin: 0,
+                    fontFamily: '"Montserrat", sans-serif',
+                    fontStyle: "italic",
+                    fontWeight: 400,
+                    fontSize: 14,
+                    lineHeight: "22px",
+                    color: "rgba(255,255,255,0.72)",
+                    display: "-webkit-box",
+                    WebkitLineClamp: 3,
+                    WebkitBoxOrient: "vertical",
+                    overflow: "hidden",
+                  }}
+                >
+                  “{text}”
+                </p>
+              </div>
+            ))}
+          </div>
+
+          {/* Left / right edge fades */}
+          <div
+            aria-hidden
+            style={{
+              position: "absolute",
+              inset: "0 auto 0 0",
+              width: 80,
+              pointerEvents: "none",
+              background:
+                "linear-gradient(to right, #0A0A0A 0%, rgba(10,10,10,0) 100%)",
+            }}
+          />
+          <div
+            aria-hidden
+            style={{
+              position: "absolute",
+              inset: "0 0 0 auto",
+              width: 80,
+              pointerEvents: "none",
+              background:
+                "linear-gradient(to left, #0A0A0A 0%, rgba(10,10,10,0) 100%)",
+            }}
+          />
         </div>
       </div>
       </div>
