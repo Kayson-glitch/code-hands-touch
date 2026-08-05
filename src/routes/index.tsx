@@ -82,9 +82,10 @@ function Index() {
 
   return (
     <div className="relative min-h-screen">
-      {videoSrc === null && (
+      {INTRO_ENABLED && videoSrc === null && (
         <IntroPreloader src={videoAsset.url} onReady={handleReady} onFail={handleFail} />
       )}
+
       {videoSrc !== null && (
         <div
           style={{
