@@ -18,6 +18,7 @@ export function FinChatDock() {
   const [hintIndex, setHintIndex] = useState(0);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const wrapperRef = useRef<HTMLDivElement>(null);
+  const inverted = useInverted();
 
   useEffect(() => {
     const onBg = (e: Event) => {
@@ -153,7 +154,6 @@ export function FinChatDock() {
               : "0 12px 20px rgba(0,0,0,0.05)",
             transition: "box-shadow 300ms ease, background-color 300ms ease",
             cursor: expanded ? "text" : "pointer",
-            transition: "box-shadow 300ms ease",
           }}
         >
 
