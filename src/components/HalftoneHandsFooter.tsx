@@ -60,10 +60,9 @@ const PARALLAX_X = 4;
 const PARALLAX_Y = 2.5;
 const BREATH_AMP = 0.035;
 const BREATH_PERIOD = 5200;
-// Subtle transparency breathing on static dots — separate period so it doesn't
-// lock in phase with the tonal breathing.
-const ALPHA_BREATH_AMP = 0.2;
-const ALPHA_BREATH_PERIOD = 5000;
+// Per-dot transparency breathing: each dot pulses independently.
+const DOT_ALPHA_AMP = 0.4;
+const DOT_ALPHA_PERIOD = 5000;
 
 
 
@@ -81,6 +80,10 @@ type Dot = {
   d: number; // 0..1 density (1 = darkest)
   /** 0 = frame edge, 1 = centre of the composition — drives parallax weight. */
   cx: number;
+  /** Independent transparency breathing phase (radians). */
+  alphaPhase: number;
+  /** Independent transparency breathing speed multiplier. */
+  alphaSpeed: number;
 };
 
 // ------------------------------------------------------------- ink fluid
@@ -321,6 +324,8 @@ function sampleDots(
         y: rect.y + (j + 0.5) * pitch,
         d: density,
         cx: Math.min(1, Math.min(u, 1 - u) * 2.2),
+        alphaPhase: Math.random() * Math.PI * 2,
+        alphaSpeed: 0.7 + Math.random() * 0.6,
       });
     }
   }
@@ -584,10 +589,6 @@ export function HalftoneHandsFooter({
       const breath = prefersReduce
         ? 1
         : 1 + Math.sin((now / BREATH_PERIOD) * Math.PI * 2) * BREATH_AMP;
-      // Gentle opacity breathing on the whole dot field when static.
-      const alphaBreath = prefersReduce
-        ? 1
-        : 1 - Math.sin((now / ALPHA_BREATH_PERIOD) * Math.PI * 2) * ALPHA_BREATH_AMP;
 
       const dots = dotsForFrame(Math.round(ph.current));
 
@@ -596,7 +597,6 @@ export function HalftoneHandsFooter({
       const fluid = fluidRef.current;
       if (fluid && !prefersReduce) fluid.step(dt);
 
-      ctx.globalAlpha = alphaBreath;
       for (let k = 0; k < dots.length; k++) {
         const dot = dots[k];
         // Centre dots drift more than edge dots → a shallow depth read.
@@ -617,6 +617,17 @@ export function HalftoneHandsFooter({
         // Area ∝ coverage — the physically correct halftone response.
         const r = maxR * Math.sqrt(d) * radiusScale;
         if (r < 0.16) continue;
+
+        // Each dot breathes opacity on its own random phase/speed.
+        const dotAlpha = prefersReduce
+          ? 1
+          : 1 -
+            Math.sin(
+              (now / DOT_ALPHA_PERIOD) * Math.PI * 2 * dot.alphaSpeed +
+                dot.alphaPhase,
+            ) *
+              DOT_ALPHA_AMP;
+        ctx.globalAlpha = dotAlpha;
 
         // Value carries volume alongside area: light grey on the paper-facing
         // planes, deeper grey in the shadows. Where the ink-fluid has been
