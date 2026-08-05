@@ -150,16 +150,17 @@ export function SiteNav() {
 function Chevron() {
   return (
     <svg
-      width="16"
-      height="16"
-      viewBox="0 0 10 10"
+      width="14"
+      height="14"
+      viewBox="0 0 16 16"
       fill="none"
+      aria-hidden
+      style={{ display: "block", flexShrink: 0 }}
     >
-
       <path
-        d="M2 3.5L5 6.5L8 3.5"
+        d="M4 6.5L8 10.5L12 6.5"
         stroke="currentColor"
-        strokeWidth="1.3"
+        strokeWidth="1.5"
         strokeLinecap="round"
         strokeLinejoin="round"
       />
