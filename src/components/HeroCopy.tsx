@@ -71,20 +71,21 @@ export function HeroCopy() {
           className="pointer-events-auto group relative inline-flex shrink-0 cursor-pointer items-center justify-center font-medium text-white transition-all"
           style={{
             height: 40,
-            fontSize: 16,
-            lineHeight: "24px",
+            fontSize: 14,
+            lineHeight: "22px",
+            fontWeight: 500,
             padding: "0 32px",
             borderRadius: 12,
             border: "0.125rem solid transparent",
             backgroundImage: [
               "linear-gradient(#0E0B22,#0E0B22)",
               "linear-gradient(#0E0B22 50%, rgba(14,11,34,0.6) 80%, rgba(14,11,34,0))",
-              "linear-gradient(90deg, #137DFF, #FF18AA, #FFCD17, #137DFF)",
+              "linear-gradient(90deg, #137DFF 0%, #FF18AA 33.333%, #FFCD17 66.666%, #137DFF 100%)",
             ].join(","),
             backgroundClip: "padding-box, border-box, border-box",
             backgroundOrigin: "border-box",
             backgroundSize: "200%",
-            animation: "rainbow-btn-flow var(--rainbow-speed, 2s) infinite linear",
+            animation: "rainbow-btn-flow var(--rainbow-speed, 9s) infinite linear",
           }}
         >
           {/* Rainbow glow beneath the button (MagicUI ::before) */}
@@ -97,12 +98,13 @@ export function HeroCopy() {
               height: "20%",
               width: "60%",
               backgroundImage:
-                "linear-gradient(90deg, #137DFF, #FF18AA, #FFCD17, #137DFF)",
+                "linear-gradient(90deg, #137DFF 0%, #FF18AA 33.333%, #FFCD17 66.666%, #137DFF 100%)",
               backgroundSize: "200%",
               filter: "blur(0.75rem)",
-              animation: "rainbow-btn-flow var(--rainbow-speed, 2s) infinite linear",
+              animation: "rainbow-btn-flow var(--rainbow-speed, 9s) infinite linear",
             }}
           />
+
           <span className="relative z-10 inline-flex items-center gap-1.5">
             Book a Demo
             <span
