@@ -60,11 +60,23 @@ export function SiteNav() {
         opacity: hidden ? 0 : 1,
         background: scrolled ? glassBg : "transparent",
         backdropFilter: scrolled ? "blur(18px) saturate(140%)" : "none",
-        borderBottom: "2px solid var(--accent-blue)",
         transition:
           "opacity 260ms ease-out, background 260ms ease-out, backdrop-filter 260ms ease-out",
       }}
     >
+      {/* Flowing gradient bottom border */}
+      <span
+        aria-hidden
+        className="pointer-events-none absolute inset-x-0 bottom-0"
+        style={{
+          height: 2,
+          backgroundImage:
+            "linear-gradient(90deg, #137DFF 0%, #FF18AA 33%, #FFCD17 55%, #FF18AA 78%, #137DFF 100%)",
+          backgroundSize: "200% 100%",
+          animation: "nav-border-flow 7s linear infinite",
+        }}
+      />
+
       <div className="flex h-full w-full max-w-[1200px] items-center justify-between">
         {/* Logo */}
         <a
