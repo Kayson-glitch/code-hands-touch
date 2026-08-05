@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { GlitchGrainOverlay } from "./GlitchGrainOverlay";
+import { setInvertedTheme } from "@/hooks/useInvertTheme";
 
 const LINES: string[][] = [
   ["We", "craft", "intelligent", "support", "experiences"],
@@ -32,6 +33,7 @@ export function SloganSection() {
       setProgress(1);
       setInstant(true);
       setDark(true);
+      setInvertedTheme(true);
       return;
     }
 
@@ -58,9 +60,9 @@ export function SloganSection() {
       setDark((prev) => {
         const enter = rect.top <= vh * 0.8;
         const exit = rect.top > vh * 0.84;
-        if (!prev && enter) return true;
-        if (prev && exit) return false;
-        return prev;
+        const next = !prev && enter ? true : prev && exit ? false : prev;
+        setInvertedTheme(next);
+        return next;
       });
     };
 
@@ -86,6 +88,7 @@ export function SloganSection() {
     if (sectionRef.current) io.observe(sectionRef.current);
 
     return () => {
+      setInvertedTheme(false);
       io.disconnect();
       window.removeEventListener("scroll", schedule);
       window.removeEventListener("resize", schedule);
