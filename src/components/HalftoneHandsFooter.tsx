@@ -247,6 +247,16 @@ function smoothstep(t: number) {
   return x * x * (3 - 2 * x);
 }
 
+/** Smooth ease-in-out breathing wave: 0→1→0 over one period.
+ *  Replaces a raw sine wave so the fade feels like a gentle swell,
+ *  not a sharp flash.
+ */
+function breathWave(phase: number) {
+  const t = phase % 1;
+  const tri = t < 0.5 ? t * 2 : 2 - t * 2; // triangle 0..1..0
+  return smoothstep(tri); // ease-in-out at both ends
+}
+
 function resolveViewportLength(value: string, viewportW: number, viewportH: number) {
   const raw = value.trim();
   const calc = raw.match(/^calc\(([-\d.]+)vh\s*([+-])\s*([-\d.]+)px\)$/);
