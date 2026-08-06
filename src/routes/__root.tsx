@@ -139,6 +139,12 @@ function RootShell({ children }: { children: ReactNode }) {
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
 
+  // Page-wide inertial smooth scroll (kore.ai-like feel).
+  useEffect(() => {
+    initSmoothScroll();
+    return () => destroySmoothScroll();
+  }, []);
+
   return (
     <QueryClientProvider client={queryClient}>
       {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
