@@ -552,8 +552,9 @@ html.lenis body {
 }
 
 .artemis-closing__wrapper {
-  height: 260vh;
+  height: 820vh;
 }
+
 
 .artemis-closing__sticky {
   position: sticky;
