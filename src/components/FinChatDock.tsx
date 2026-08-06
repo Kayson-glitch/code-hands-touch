@@ -120,19 +120,19 @@ export function FinChatDock() {
     expanded && messages.filter((m) => m.role === "user").length === 0;
 
   const onDark = theme === "dark" && darkSurface;
-  const dockBg = onDark ? "rgba(255,255,255,0.22)" : "#FFFFFF";
+  const dockBg = onDark ? "rgba(255,255,255,0.50)" : "#FFFFFF";
   const dockBorder = onDark
-    ? "1px solid rgba(255,255,255,0.32)"
-    : "1px solid rgba(0,0,0,0.06)";
+    ? "1px solid rgba(255,255,255,0.22)"
+    : "1px solid transparent";
   const dockShadow = onDark
-    ? "0 10px 28px rgba(0,0,0,0.30), inset 0 1px 0 rgba(255,255,255,0.35)"
+    ? "0 12px 24px rgba(0,0,0,0.35)"
     : "0 12px 20px rgba(0,0,0,0.05)";
-  const textMain = onDark ? "#1A1A1A" : "#0E0B22";
-  const textPlaceholder = onDark ? "rgba(0,0,0,0.45)" : "#A1A0A9";
-  const textMuted = onDark ? "rgba(0,0,0,0.55)" : "#7A7885";
-  const suggestionBg = onDark ? "rgba(255,255,255,0.18)" : "rgba(0,0,0,0.06)";
-  const sendBg = onDark ? "transparent" : "#C7C6CD";
-  const sendIcon = onDark ? "#1A1A1A" : "#FFFFFF";
+  const textMain = onDark ? "#FFFFFF" : "#0E0B22";
+  const textPlaceholder = onDark ? "rgba(255,255,255,0.50)" : "#A1A0A9";
+  const textMuted = onDark ? "rgba(255,255,255,0.70)" : "#7A7885";
+  const suggestionBg = onDark ? "rgba(255,255,255,0.10)" : "rgba(0,0,0,0.06)";
+  const sendBg = onDark ? "#FFFFFF" : "#C7C6CD";
+  const sendIcon = onDark ? "#0E0B22" : "#FFFFFF";
 
   return (
     <div
@@ -177,18 +177,17 @@ export function FinChatDock() {
           className="pointer-events-auto flex items-center justify-between"
           onClick={() => !expanded && expand()}
           style={{
-            minHeight: 44,
-            borderRadius: 999,
-            paddingLeft: 18,
-            paddingRight: 8,
+            minHeight: 48,
+            borderRadius: 666,
+            paddingLeft: 20,
+            paddingRight: 6,
             paddingTop: 6,
             paddingBottom: 6,
             gap: 8,
             alignItems: expanded ? "flex-end" : "center",
             backgroundColor: dockBg,
             border: dockBorder,
-            backdropFilter: onDark ? "blur(24px) saturate(180%)" : "none",
-            WebkitBackdropFilter: onDark ? "blur(24px) saturate(180%)" : "none",
+            backdropFilter: onDark ? "blur(18px) saturate(140%)" : "none",
             boxShadow: dockShadow,
             transition:
               "box-shadow 300ms ease, background-color 300ms ease, border-color 300ms ease",
@@ -234,7 +233,7 @@ export function FinChatDock() {
           <button
             aria-label="语音输入"
             className={`grid h-9 w-9 place-items-center rounded-full ${
-              onDark ? "hover:bg-black/[0.06]" : "hover:bg-black/[0.04]"
+              onDark ? "hover:bg-white/[0.08]" : "hover:bg-black/[0.04]"
             }`}
             style={{
               width: expanded ? 36 : 0,
@@ -250,7 +249,7 @@ export function FinChatDock() {
           <button
             aria-label="附件"
             className={`grid h-9 w-9 place-items-center rounded-full ${
-              onDark ? "hover:bg-black/[0.06]" : "hover:bg-black/[0.04]"
+              onDark ? "hover:bg-white/[0.08]" : "hover:bg-black/[0.04]"
             }`}
             style={{
               width: expanded ? 36 : 0,
@@ -266,17 +265,16 @@ export function FinChatDock() {
           <button
             aria-label="发送"
             onClick={send}
-            className={`grid shrink-0 place-items-center rounded-full ${
-              onDark ? "hover:bg-black/[0.06]" : "hover:opacity-80"
-            }`}
+            className="grid shrink-0 place-items-center transition-opacity hover:opacity-80"
             style={{
               width: 36,
               height: 36,
+              borderRadius: 20,
               backgroundColor: sendBg,
               color: sendIcon,
             }}
           >
-            <ArrowUp size={22} />
+            <ArrowUp size={24} />
           </button>
         </div>
 
