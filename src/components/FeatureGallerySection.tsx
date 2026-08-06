@@ -114,7 +114,7 @@ export function FeaturePanels({
         const eased = easeOutQuint(enter);
         const lift = pinned && viewportH > 0 ? (1 - eased) * viewportH : 0;
         // Delay the text reveal so the panel shell is already in view first.
-        const textEnter = clamp((enter - 0.45) / 0.55);
+        const textEnter = clamp((enter - 0.65) / 0.35);
         return (
           <article
             key={panel.id}
