@@ -31,6 +31,8 @@ export function ClosingSection() {
   const [viewportH, setViewportH] = useState(900);
   const [travel, setTravel] = useState(0);
   const [titleW, setTitleW] = useState(0);
+  const [offsets, setOffsets] = useState<number[]>([]);
+  const [viewportW, setViewportW] = useState(1440);
 
   useEffect(() => {
     const media = window.matchMedia("(prefers-reduced-motion: reduce)");
@@ -47,6 +49,12 @@ export function ClosingSection() {
       const track = trackRef.current;
       if (!isDesktop || !track) return;
       if (titleRef.current) setTitleW(titleRef.current.offsetWidth);
+      setViewportW(window.innerWidth);
+      setOffsets(
+        Array.from(track.querySelectorAll<HTMLElement>(".artemis-gallery__panel")).map(
+          (el) => el.offsetLeft,
+        ),
+      );
       setTravel(Math.max(0, track.scrollWidth - window.innerWidth));
     };
     measure();
@@ -102,7 +110,7 @@ export function ClosingSection() {
   const slide = pinned ? clamp((p - SHRINK_END) / (1 - SHRINK_END)) : 1;
 
   const scale = pinned ? 1 - (1 - TITLE_SCALE) * shrink : TITLE_SCALE;
-  const x = pinned ? travel * easeOutCubic(slide) : 0;
+  const x = pinned ? travel * slide : 0;
 
   return (
     <section className="artemis-closing" aria-label="Artemis delivers certainty">
@@ -160,7 +168,7 @@ export function ClosingSection() {
               >
                 <Words />
               </div>
-              <FeaturePanels progress={slide} pinned={pinned} />
+              <FeaturePanels offsets={offsets} x={x} viewportW={viewportW} pinned={pinned} />
             </div>
           </div>
         </div>

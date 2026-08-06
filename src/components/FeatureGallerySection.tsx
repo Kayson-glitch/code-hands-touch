@@ -71,30 +71,35 @@ export const PANELS: Panel[] = [
 
 /**
  * Feature panels for the closing screen's horizontal track.
- * `progress` is the 0→1 progress of the horizontal (third) phase; `pinned` is
- * false on mobile / reduced motion, where the panels simply stack.
+ * Reveal is geometric, not index-based: each panel fades and lifts in as its
+ * own left edge crosses into the viewport, so it always matches the travel.
  */
 export function FeaturePanels({
-  progress,
+  offsets,
+  x,
+  viewportW,
   pinned,
 }: {
-  progress: number;
+  offsets: number[];
+  x: number;
+  viewportW: number;
   pinned: boolean;
 }) {
-  const p = clamp(progress);
-
   return (
     <>
       {PANELS.map((panel, index) => {
-        const columnProgress = pinned ? clamp(p * PANELS.length - index * 0.85) : 1;
-        const eased = easeOutCubic(columnProgress);
-        const opacity = pinned ? easeOutCubic(clamp(columnProgress * 3)) : 1;
-        const lift = pinned ? (1 - eased) * 40 : 0;
+        const left = (offsets[index] ?? 0) - x;
+        const enter = pinned && viewportW > 0 ? clamp((viewportW - left) / (viewportW * 0.35)) : 1;
+        const eased = easeOutCubic(enter);
         return (
           <article
             key={panel.id}
             className="artemis-gallery__panel"
-            style={pinned ? { opacity, transform: `translate3d(0, ${lift}px, 0)` } : undefined}
+            style={
+              pinned
+                ? { opacity: eased, transform: `translate3d(0, ${(1 - eased) * 40}px, 0)` }
+                : undefined
+            }
           >
             <div className="artemis-gallery__figure">
               <p className="artemis-gallery__index">[{panel.id}]</p>
