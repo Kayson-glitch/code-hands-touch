@@ -466,7 +466,9 @@ body {
 
   .kore-outcomes__card {
     margin-bottom: 1rem;
+    border-right: 1px solid var(--hairline);
   }
+
 
   .kore-outcomes__number {
     display: none;
