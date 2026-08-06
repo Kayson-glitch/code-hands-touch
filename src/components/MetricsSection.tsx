@@ -33,13 +33,16 @@ export function MetricsSection() {
     const measure = () => {
       const isDesktop = window.innerWidth >= 991;
       setDesktop(isDesktop);
-      setViewportH(window.innerHeight);
       if (!isDesktop) return;
       const item = firstItemRef.current;
       const copy = firstCopyRef.current;
       const cards = cardsRef.current;
-      if (item) setCardHeight(item.offsetHeight);
-      if (copy && cards) setCopyTop(copy.offsetTop - cards.offsetTop);
+      if (item) setCardHeight(item.getBoundingClientRect().height);
+      // Source site measures the copy offset against the card box (rect-based).
+      const box = copy?.closest(".kore-outcomes__card") as HTMLElement | null;
+      if (copy && box) {
+        setCopyTop(copy.getBoundingClientRect().top - box.getBoundingClientRect().top);
+      }
       const num = firstNumberRef.current;
       if (num && cards) setNumberTop(Math.max(0, num.offsetTop - cards.offsetTop - 32));
     };
