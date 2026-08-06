@@ -186,17 +186,23 @@ export function FinChatDock() {
             rows={1}
             placeholder="Ask anything…"
             aria-label="Ask Fin"
-            className="flex-1 resize-none border-0 bg-transparent py-2 text-ink placeholder:text-ink-faint focus:outline-none"
-            style={{ fontSize: 14, lineHeight: "20px", maxHeight: 96 }}
+            className="fin-dock-input flex-1 resize-none border-0 bg-transparent py-2 placeholder:text-ink-faint focus:outline-none"
+            style={{
+              fontSize: 14,
+              lineHeight: "20px",
+              maxHeight: 96,
+              color: textMain,
+            }}
           />
           ) : (
             <div
               key={hintIndex}
-              className="flex-1 truncate text-ink-faint"
+              className="flex-1 truncate"
               style={{
                 fontSize: 14,
                 lineHeight: "20px",
                 animation: "finHintFade 500ms ease-out",
+                color: textPlaceholder,
               }}
               aria-hidden
             >
@@ -205,26 +211,32 @@ export function FinChatDock() {
           )}
           <button
             aria-label="语音输入"
-            className="grid h-9 w-9 place-items-center rounded-full text-ink-muted hover:bg-black/[0.04]"
+            className={`grid h-9 w-9 place-items-center rounded-full ${
+              onDark ? "hover:bg-white/[0.08]" : "hover:bg-black/[0.04]"
+            }`}
             style={{
               width: expanded ? 36 : 0,
               opacity: expanded ? 1 : 0,
               overflow: "hidden",
               pointerEvents: expanded ? "auto" : "none",
               transition: "width 320ms ease, opacity 240ms ease",
+              color: textMuted,
             }}
           >
             <Mic size={18} />
           </button>
           <button
             aria-label="附件"
-            className="grid h-9 w-9 place-items-center rounded-full text-ink-muted hover:bg-black/[0.04]"
+            className={`grid h-9 w-9 place-items-center rounded-full ${
+              onDark ? "hover:bg-white/[0.08]" : "hover:bg-black/[0.04]"
+            }`}
             style={{
               width: expanded ? 36 : 0,
               opacity: expanded ? 1 : 0,
               overflow: "hidden",
               pointerEvents: expanded ? "auto" : "none",
               transition: "width 320ms ease 40ms, opacity 240ms ease 40ms",
+              color: textMuted,
             }}
           >
             <Paperclip size={18} />
@@ -232,8 +244,14 @@ export function FinChatDock() {
           <button
             aria-label="发送"
             onClick={send}
-            className="grid shrink-0 place-items-center bg-ink-ghost text-white transition-opacity hover:opacity-80"
-            style={{ width: 36, height: 36, borderRadius: 20 }}
+            className="grid shrink-0 place-items-center transition-opacity hover:opacity-80"
+            style={{
+              width: 36,
+              height: 36,
+              borderRadius: 20,
+              backgroundColor: sendBg,
+              color: sendIcon,
+            }}
           >
             <ArrowUp size={24} />
           </button>
@@ -250,6 +268,10 @@ export function FinChatDock() {
         @keyframes finHintFade {
           from { opacity: 0; transform: translateY(6px); }
           to { opacity: 1; transform: translateY(0); }
+        }
+        .fin-dock-input::placeholder {
+          color: ${textPlaceholder};
+          opacity: 1;
         }
       `}</style>
     </div>
