@@ -790,6 +790,10 @@ html.lenis body {
     transform: none !important;
   }
 
+  .artemis-gallery__panel:not(:last-child)::after {
+    display: none;
+  }
+
   .artemis-gallery__media {
     width: min(100%, 480px);
     height: auto;
