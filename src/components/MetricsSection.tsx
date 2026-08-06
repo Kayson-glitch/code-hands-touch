@@ -86,9 +86,14 @@ export function MetricsSection() {
       if (!frame) frame = requestAnimationFrame(update);
     };
     update();
+    // Lenis drives the page; read progress on its tick so the reveal never
+    // trails the smoothed scroll position by a frame.
+    const lenis = getLenis();
+    lenis?.on("scroll", update);
     window.addEventListener("scroll", request, { passive: true });
     window.addEventListener("resize", request);
     return () => {
+      lenis?.off("scroll", update);
       window.removeEventListener("scroll", request);
       window.removeEventListener("resize", request);
       if (frame) cancelAnimationFrame(frame);
