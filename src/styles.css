@@ -671,7 +671,7 @@ html.lenis body {
   right: calc(-1 * (14rem / 2));
   transform: translateY(-50%);
   width: 1px;
-  height: 320px;
+  height: 480px;
   background: linear-gradient(
     180deg,
     rgba(255, 255, 255, 0) 0%,
