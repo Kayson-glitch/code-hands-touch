@@ -135,13 +135,14 @@ export function FinChatDock() {
               <button
                 key={s}
                 onClick={() => pickSuggestion(s)}
-                className="pointer-events-auto rounded-[20px] px-4 py-2.5 text-left text-ink backdrop-blur-md transition-colors"
+                className="pointer-events-auto rounded-[20px] px-4 py-2.5 text-left backdrop-blur-md transition-colors"
                 style={{
                   fontSize: 14,
                   lineHeight: "22px",
                   marginLeft: i === 1 ? 32 : i === 2 ? 12 : 0,
                   animation: `finRise 500ms ${i * 80}ms both ease-out`,
-                  backgroundColor: "rgba(0,0,0,0.06)",
+                  backgroundColor: suggestionBg,
+                  color: textMain,
                 }}
               >
                 {s}
