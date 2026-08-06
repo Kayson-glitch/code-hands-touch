@@ -270,7 +270,7 @@ export function SloganSection() {
                     fontWeight: 400,
                     fontSize: 14,
                     lineHeight: "22px",
-                    color: "rgba(255,255,255,0.72)",
+                    color: "rgba(255,255,255,0.6)",
                     display: "-webkit-box",
                     WebkitLineClamp: 3,
                     WebkitBoxOrient: "vertical",
