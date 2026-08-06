@@ -344,6 +344,12 @@ body {
   border-right: none;
 }
 
+/* Last column: draw the right hairline inside so overflow/subpixel never clips it. */
+.kore-outcomes__item:last-child .kore-outcomes__card {
+  border-right: none;
+  box-shadow: inset -1px 0 0 var(--hairline);
+}
+
 
 .kore-outcomes__media {
   padding: clamp(1rem, 0.8571rem + 0.7143vw, 1.5rem) clamp(1rem, 0.8571rem + 0.7143vw, 1.5rem) 0;
