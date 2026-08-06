@@ -246,7 +246,9 @@ body {
 }
 
 .kore-outcomes__header {
-  padding: clamp(1rem, 0.7143rem + 1.4286vw, 2rem);
+  padding-inline: clamp(1rem, 0.7143rem + 1.4286vw, 2rem);
+  padding-top: clamp(1.5rem, 1.1rem + 2vw, 2.5rem);
+  padding-bottom: clamp(2rem, 1.4rem + 3vw, 3.5rem);
 }
 
 .kore-outcomes__header-inner {
