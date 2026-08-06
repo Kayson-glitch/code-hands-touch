@@ -1,5 +1,9 @@
 const clamp = (v: number) => Math.max(0, Math.min(1, v));
 const easeOutQuint = (x: number) => 1 - Math.pow(1 - x, 5);
+const smoothstep = (a: number, b: number, x: number) => {
+  const t = clamp((x - a) / (b - a));
+  return t * t * (3 - 2 * t);
+};
 
 type Point = { label: string; text: string };
 
@@ -73,6 +77,21 @@ export const PANELS: Panel[] = [
  * Reveal is geometric, not index-based: each panel fades and lifts in as its
  * own left edge crosses into the viewport, so it always matches the travel.
  */
+const fieldReveal = (
+  enter: number,
+  start: number,
+  end: number,
+  distance = 16,
+  blur = 8
+) => {
+  const a = smoothstep(start, end, enter);
+  return {
+    opacity: a,
+    filter: `blur(${(1 - a) * blur}px)`,
+    transform: `translateY(${(1 - a) * distance}px)`,
+  };
+};
+
 export function FeaturePanels({
   lefts,
   viewportW,
@@ -106,14 +125,27 @@ export function FeaturePanels({
           >
             <div className="artemis-gallery__media" aria-hidden />
             <div className="artemis-gallery__copy">
-              <h3 className="artemis-gallery__title">{panel.title}</h3>
+              <h3
+                className="artemis-gallery__title"
+                style={pinned ? fieldReveal(enter, 0.0, 0.25, 18, 10) : undefined}
+              >
+                {panel.title}
+              </h3>
               <ul className="artemis-gallery__list">
-                {panel.points.map((point) => (
-                  <li key={point.label} className="artemis-gallery__item">
-                    <p className="artemis-gallery__label">{point.label}</p>
-                    <p className="artemis-gallery__body">{point.text}</p>
-                  </li>
-                ))}
+                {panel.points.map((point, pi) => {
+                  const rowStart = 0.12 + pi * 0.14;
+                  const rowEnd = rowStart + 0.25;
+                  return (
+                    <li
+                      key={point.label}
+                      className="artemis-gallery__item"
+                      style={pinned ? fieldReveal(enter, rowStart, rowEnd, 14, 6) : undefined}
+                    >
+                      <p className="artemis-gallery__label">{point.label}</p>
+                      <p className="artemis-gallery__body">{point.text}</p>
+                    </li>
+                  );
+                })}
               </ul>
             </div>
           </article>
