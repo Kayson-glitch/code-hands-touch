@@ -67,16 +67,16 @@ export function ClosingSection() {
 
   return (
     <section className="artemis-closing" aria-label="Artemis delivers certainty">
-      {/* Surface probes: the light wipe travels bottom-up, so the dock flips to
-          its light variant well before the nav does. */}
-      {inView && (1 - p) * viewportH > 80 && (
+      {/* Surface probes: the dark wipe travels bottom-up, so the dock flips to
+          its dark variant well before the nav does. */}
+      {inView && p * viewportH > 80 && (
         <div
           aria-hidden
           data-dark-section=""
           style={{ position: "fixed", top: 0, left: 0, right: 0, height: 80, pointerEvents: "none", zIndex: -1 }}
         />
       )}
-      {inView && (1 - p) * viewportH > viewportH - 80 && (
+      {inView && p * viewportH > viewportH - 80 && (
         <div
           aria-hidden
           data-dark-section=""
