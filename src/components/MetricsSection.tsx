@@ -102,6 +102,12 @@ export function MetricsSection() {
             </div>
           </header>
           <div className="kore-outcomes__cards-container">
+            <div className="kore-outcomes__progress" aria-hidden="true">
+              <div
+                className="kore-outcomes__progress-fill"
+                style={{ "--p": !desktop || reducedMotion ? 1 : clamp(progress) } as React.CSSProperties}
+              />
+            </div>
             <div ref={cardsRef} className="kore-outcomes__cards">
               {CARDS.map((card, index) => {
                 const columnProgress = reducedMotion ? 1 : clamp(progress * CARDS.length - index);
