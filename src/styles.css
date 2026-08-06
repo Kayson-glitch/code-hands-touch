@@ -552,8 +552,9 @@ html.lenis body {
 }
 
 .artemis-closing__wrapper {
-  height: 260vh;
+  height: 820vh;
 }
+
 
 .artemis-closing__sticky {
   position: sticky;
@@ -599,6 +600,29 @@ html.lenis body {
   font-weight: 400;
 }
 
+/* Horizontal track inside the dark layer: headline first, then the panels. */
+.artemis-closing__track {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  gap: 8rem;
+  width: max-content;
+  padding-inline: max(5.5rem, calc((100% - 95.5rem) / 2));
+  will-change: transform;
+}
+
+.artemis-closing__title-slot {
+  flex: 0 0 auto;
+  transform-origin: left center;
+  will-change: transform;
+}
+
+.artemis-closing__title-slot .artemis-closing__text {
+  color: #fafafa;
+  white-space: nowrap;
+}
+
 @media (max-width: 990px) {
   .artemis-closing__stage {
     width: calc(100% - 2rem);
@@ -607,30 +631,16 @@ html.lenis body {
   .artemis-closing__text {
     font-size: clamp(3rem, 15vw, 4.5rem);
   }
+
+  .artemis-closing__title-slot .artemis-closing__text {
+    white-space: normal;
+  }
 }
 
-/* Dot-grid texture inside the dark reveal layer (matches the second screen) */
+/* Dot-grid texture inside the dark reveal layer (matches the second screen).
+   It lives inside the pinned stage, so it stays locked once the screen is
+   fully dark — the headline and panels move, the dots do not. */
 .artemis-closing__dots {
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  left: 100px;
-  right: 100px;
-  pointer-events: none;
-  background-image: radial-gradient(rgba(255, 255, 255, 0.08) 2px, transparent 2.4px);
-  background-size: 40px 40px;
-}
-
-/* -------------------------------- Fifth screen: horizontal feature gallery */
-.artemis-gallery {
-  position: relative;
-  z-index: 10;
-  width: 100%;
-  background-color: #0a0a0a;
-  color: #fafafa;
-}
-
-.artemis-gallery__dots {
   position: absolute;
   top: 0;
   bottom: 0;
@@ -642,31 +652,8 @@ html.lenis body {
   z-index: 0;
 }
 
-.artemis-gallery__sticky {
-  position: sticky;
-  top: 0;
-  height: 100dvh;
-  display: flex;
-  align-items: center;
-  overflow: hidden;
-  z-index: 1;
-}
+/* ------------------------------------- Feature panels on the closing screen */
 
-.artemis-gallery__track {
-  display: flex;
-  align-items: center;
-  gap: 8rem;
-  padding-inline: 6vw;
-  width: max-content;
-  will-change: transform;
-}
-
-.artemis-gallery__intro {
-  max-width: 32rem;
-  padding-right: 4rem;
-}
-
-.artemis-gallery__kicker,
 .artemis-gallery__index,
 .artemis-gallery__label,
 .artemis-gallery__name {
@@ -679,15 +666,6 @@ html.lenis body {
   color: rgba(250, 250, 250, 0.6);
 }
 
-.artemis-gallery__title {
-  margin: 0.75rem 0 0;
-  font-family: "Clash Display Variable", "Clash Display", "Montserrat", sans-serif;
-  font-size: clamp(3rem, 6vw, 5.5rem);
-  font-weight: 500;
-  line-height: 0.95;
-  letter-spacing: -0.01em;
-  color: #fafafa;
-}
 
 .artemis-gallery__panel {
   display: flex;
@@ -746,30 +724,46 @@ html.lenis body {
   color: #5749ff;
 }
 
+/* Stacked fallback: no pinning, no horizontal travel. */
 @media (max-width: 990px) {
-  .artemis-gallery__dots {
+  .artemis-closing__dots {
     left: 1rem;
     right: 1rem;
   }
 
-  .artemis-gallery__wrapper {
+  .artemis-closing__wrapper {
     height: auto !important;
   }
 
-  .artemis-gallery__sticky {
+  .artemis-closing__sticky {
     position: static;
     height: auto;
-    padding-block: 4rem;
     overflow: visible;
   }
 
-  .artemis-gallery__track {
+  /* The headline lives in the dark track on small screens. */
+  .artemis-closing__sticky > .artemis-closing__stage {
+    display: none;
+  }
+
+  .artemis-closing__invert {
+    position: static;
+    clip-path: none !important;
+    padding-block: 4rem;
+  }
+
+  .artemis-closing__track {
     flex-direction: column;
     align-items: flex-start;
     gap: 3.5rem;
     width: 100%;
     padding-inline: 1rem;
     transform: none !important;
+  }
+
+  .artemis-closing__title-slot {
+    transform: none !important;
+    margin-right: 0 !important;
   }
 
   .artemis-gallery__panel {
@@ -790,19 +784,34 @@ html.lenis body {
 }
 
 @media (prefers-reduced-motion: reduce) and (min-width: 991px) {
-  .artemis-gallery__wrapper {
+  .artemis-closing__wrapper {
     height: auto !important;
   }
 
-  .artemis-gallery__sticky {
+  .artemis-closing__sticky {
     position: static;
     height: auto;
+    overflow: visible;
+  }
+
+  .artemis-closing__sticky > .artemis-closing__stage {
+    display: none;
+  }
+
+  .artemis-closing__invert {
+    position: static;
+    clip-path: none !important;
     padding-block: 6rem;
     overflow-x: auto;
   }
 
-  .artemis-gallery__track {
+  .artemis-closing__track {
     transform: none !important;
+  }
+
+  .artemis-closing__title-slot {
+    transform: none !important;
+    margin-right: 0 !important;
   }
 
   .artemis-gallery__panel {
@@ -810,3 +819,4 @@ html.lenis body {
     transform: none !important;
   }
 }
+
