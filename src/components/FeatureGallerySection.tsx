@@ -1,5 +1,9 @@
 const clamp = (v: number) => Math.max(0, Math.min(1, v));
 const easeOutQuint = (x: number) => 1 - Math.pow(1 - x, 5);
+const smoothstep = (a: number, b: number, x: number) => {
+  const t = clamp((x - a) / (b - a));
+  return t * t * (3 - 2 * t);
+};
 
 type Point = { label: string; text: string };
 
