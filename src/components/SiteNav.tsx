@@ -38,10 +38,17 @@ export function SiteNav() {
   useEffect(() => {
     const onScroll = () => {
       setScrolled(window.scrollY > 8);
-      // The second screen (black) starts one viewport down; once its top
-      // slides under the nav bar, the nav flips to its dark variant.
-      setOnDark(window.scrollY > window.innerHeight - 69);
+      // The nav flips to its dark variant only while the black section is the
+      // surface sitting under the bar — the light third screen flips it back.
+      const dark = document.querySelector("[data-dark-section]");
+      if (dark) {
+        const r = dark.getBoundingClientRect();
+        setOnDark(r.top <= 69 && r.bottom > 69);
+      } else {
+        setOnDark(window.scrollY > window.innerHeight - 69);
+      }
     };
+
     onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
     window.addEventListener("resize", onScroll);
