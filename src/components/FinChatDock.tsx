@@ -11,6 +11,7 @@ type Msg = { role: "user" | "assistant"; text: string };
 
 export function FinChatDock() {
   const [visible, setVisible] = useState(false);
+  const [theme, setTheme] = useState<"light" | "dark">("light");
   const [value, setValue] = useState("");
   const [messages, setMessages] = useState<Msg[]>([]);
   const [expanded, setExpanded] = useState(false);
@@ -21,6 +22,7 @@ export function FinChatDock() {
   useEffect(() => {
     const onBg = (e: Event) => {
       const detail = (e as CustomEvent<"light" | "dark">).detail;
+      setTheme(detail === "dark" ? "dark" : "light");
       if (detail === "dark") setVisible(true);
       else setVisible(false);
     };
