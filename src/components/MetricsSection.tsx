@@ -123,9 +123,10 @@ export function MetricsSection() {
             <div ref={cardsRef} className="kore-outcomes__cards">
               {CARDS.map((card, index) => {
                 const columnProgress = reducedMotion ? 1 : clamp(progress * CARDS.length - index);
-                const opacity = reducedMotion ? 1 : clamp(columnProgress * 3);
+                const eased = reducedMotion ? 1 : easeOutCubic(columnProgress);
+                const opacity = reducedMotion ? 1 : easeOutCubic(clamp(columnProgress * 3));
                 const restY = -copyTop;
-                const translateY = START_Y + (restY - START_Y) * columnProgress;
+                const translateY = START_Y + (restY - START_Y) * eased;
                 return (
                   <div ref={index === 0 ? firstItemRef : undefined} key={card.title} className="kore-outcomes__item" style={desktop ? { opacity, transform: `translate3d(0, ${translateY}px, 0)` } : undefined}>
                     <article className="kore-outcomes__card">
