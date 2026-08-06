@@ -120,18 +120,16 @@ export function FinChatDock() {
     expanded && messages.filter((m) => m.role === "user").length === 0;
 
   const onDark = theme === "dark" && darkSurface;
-  const dockBg = onDark ? "rgba(255,255,255,0.30)" : "#FFFFFF";
-  const dockBorder = onDark
-    ? "1px solid rgba(255,255,255,0.22)"
-    : "1px solid transparent";
+  const dockBg = onDark ? "rgba(255,255,255,0.20)" : "#FFFFFF";
+  const dockBorder = "1px solid transparent";
   const dockShadow = onDark
-    ? "0 12px 24px rgba(0,0,0,0.35)"
+    ? "0 12px 40px rgba(0,0,0,0.05)"
     : "0 12px 20px rgba(0,0,0,0.05)";
   const textMain = onDark ? "#FFFFFF" : "#0E0B22";
-  const textPlaceholder = onDark ? "rgba(255,255,255,0.50)" : "#A1A0A9";
+  const textPlaceholder = onDark ? "#A1A0A9" : "#A1A0A9";
   const textMuted = onDark ? "rgba(255,255,255,0.70)" : "#7A7885";
   const suggestionBg = onDark ? "rgba(255,255,255,0.10)" : "rgba(0,0,0,0.06)";
-  const sendBg = onDark ? "#FFFFFF" : "#C7C6CD";
+  const sendBg = onDark ? "#C7C6CD" : "#C7C6CD";
   const sendIcon = onDark ? "#0E0B22" : "#FFFFFF";
 
   return (
