@@ -35,13 +35,10 @@ export function MetricsSection() {
       const item = firstItemRef.current;
       const copy = firstCopyRef.current;
       const cards = cardsRef.current;
-      if (item) setCardHeight(item.getBoundingClientRect().height);
-      if (copy && cards) setCopyTop(copy.getBoundingClientRect().top - cards.getBoundingClientRect().top);
+      if (item) setCardHeight(item.offsetHeight);
+      if (copy && cards) setCopyTop(copy.offsetTop - cards.offsetTop);
       const num = firstNumberRef.current;
-      if (num && cards) {
-        const top = num.getBoundingClientRect().top - cards.getBoundingClientRect().top;
-        setNumberTop(Math.max(0, top - 32));
-      }
+      if (num && cards) setNumberTop(Math.max(0, num.offsetTop - cards.offsetTop - 32));
     };
     measure();
     const observer = new ResizeObserver(measure);
