@@ -72,7 +72,8 @@ export function MetricsSection() {
       const wrapper = wrapperRef.current;
       if (!wrapper) return;
       const rect = wrapper.getBoundingClientRect();
-      const distance = Math.max(1, wrapper.offsetHeight - window.innerHeight * 0.8);
+      const hold = window.innerHeight * HOLD_VH;
+      const distance = Math.max(1, wrapper.offsetHeight - hold - window.innerHeight * 0.8);
       setProgress(clamp(-rect.top / distance));
     };
     const request = () => {
