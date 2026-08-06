@@ -75,9 +75,10 @@ export function MetricsSection() {
       const wrapper = wrapperRef.current;
       if (!wrapper) return;
       const rect = wrapper.getBoundingClientRect();
-      const hold = window.innerHeight * HOLD_VH;
-      const distance = Math.max(1, wrapper.offsetHeight - hold - window.innerHeight * 0.8);
-      setProgress(clamp(-rect.top / distance));
+      const wh = window.innerHeight;
+      // Source-site mapping: p = (wh - top - wh*0.25) / (height - wh*0.8)
+      const distance = Math.max(1, rect.height - wh * END_OFFSET_RATIO);
+      setProgress(clamp((wh - rect.top - wh * START_OFFSET_RATIO) / distance));
     };
     const request = () => {
       if (!frame) frame = requestAnimationFrame(update);
