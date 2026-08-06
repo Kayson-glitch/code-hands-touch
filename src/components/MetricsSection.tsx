@@ -27,7 +27,6 @@ export function MetricsSection() {
   const [copyTop, setCopyTop] = useState(520);
   const [numberTop, setNumberTop] = useState(600);
   const [desktop, setDesktop] = useState(true);
-  const [viewportH, setViewportH] = useState(900);
   const [reducedMotion, setReducedMotion] = useState(false);
 
   useLayoutEffect(() => {
