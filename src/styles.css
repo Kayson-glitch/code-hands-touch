@@ -606,7 +606,7 @@ html.lenis body {
   z-index: 1;
   display: flex;
   align-items: center;
-  gap: 8rem;
+  gap: 14rem;
   width: max-content;
   padding-inline: max(5.5rem, calc((100% - 95.5rem) / 2));
   will-change: transform;
@@ -655,10 +655,30 @@ html.lenis body {
 /* ------------------------------------- Feature panels on the closing screen */
 
 .artemis-gallery__panel {
+  position: relative;
   display: flex;
   align-items: center;
   gap: 60px;
   will-change: transform, opacity;
+}
+
+/* Gradient-transparent vertical divider between panels.
+   Sits in the middle of the track gap and fades at both ends. */
+.artemis-gallery__panel:not(:last-child)::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  right: calc(-1 * (14rem / 2));
+  transform: translateY(-50%);
+  width: 1px;
+  height: 320px;
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.22) 50%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  pointer-events: none;
 }
 
 /* Placeholder media block (Figma: 480×320, radius 20). */
@@ -768,6 +788,10 @@ html.lenis body {
     gap: 1.5rem;
     opacity: 1 !important;
     transform: none !important;
+  }
+
+  .artemis-gallery__panel:not(:last-child)::after {
+    display: none;
   }
 
   .artemis-gallery__media {
