@@ -19,9 +19,11 @@ export function MetricsSection() {
   const cardsRef = useRef<HTMLDivElement | null>(null);
   const firstItemRef = useRef<HTMLDivElement | null>(null);
   const firstCopyRef = useRef<HTMLDivElement | null>(null);
+  const firstNumberRef = useRef<HTMLDivElement | null>(null);
   const [progress, setProgress] = useState(0);
   const [cardHeight, setCardHeight] = useState(856);
   const [copyTop, setCopyTop] = useState(520);
+  const [numberTop, setNumberTop] = useState(600);
   const [desktop, setDesktop] = useState(true);
   const [reducedMotion, setReducedMotion] = useState(false);
 
@@ -35,6 +37,8 @@ export function MetricsSection() {
       const cards = cardsRef.current;
       if (item) setCardHeight(item.getBoundingClientRect().height);
       if (copy && cards) setCopyTop(copy.getBoundingClientRect().top - cards.getBoundingClientRect().top);
+      const num = firstNumberRef.current;
+      if (num && cards) setNumberTop(num.getBoundingClientRect().top - cards.getBoundingClientRect().top);
     };
     measure();
     const observer = new ResizeObserver(measure);
@@ -98,7 +102,8 @@ export function MetricsSection() {
               {CARDS.map((card, index) => {
                 const columnProgress = reducedMotion ? 1 : clamp(progress * CARDS.length - index);
                 const opacity = reducedMotion ? 1 : clamp(columnProgress * 3);
-                const translateY = START_Y + (-copyTop - START_Y) * columnProgress;
+                const restY = -Math.min(copyTop, numberTop);
+                const translateY = START_Y + (restY - START_Y) * columnProgress;
                 return (
                   <div ref={index === 0 ? firstItemRef : undefined} key={card.title} className="kore-outcomes__item" style={desktop ? { opacity, transform: `translate3d(0, ${translateY}px, 0)` } : undefined}>
                     <article className="kore-outcomes__card">
@@ -107,7 +112,7 @@ export function MetricsSection() {
                         <h3>{card.title}</h3><p>{card.body}</p>
                       </div>
                     </article>
-                    <div className="kore-outcomes__number">
+                    <div ref={index === 0 ? firstNumberRef : undefined} className="kore-outcomes__number">
                       <p className="kore-outcomes__value">{card.value}</p>
                       <p className="kore-outcomes__label">{card.outcome}</p>
                     </div>
@@ -118,7 +123,7 @@ export function MetricsSection() {
           </div>
         </div>
       </div>
-      <footer className="kore-outcomes__footer" style={desktop ? { marginTop: -cardHeight / 3 } : undefined}>
+      <footer className="kore-outcomes__footer" >
         <p><span>{"{"}</span>Artemis<span>{"}"}</span><br />delivers<br /><em>certainty</em></p>
       </footer>
     </section>
