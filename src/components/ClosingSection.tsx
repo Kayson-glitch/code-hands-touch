@@ -17,6 +17,8 @@ export function ClosingSection() {
   const wrapperRef = useRef<HTMLDivElement | null>(null);
   const [progress, setProgress] = useState(0);
   const [reduced, setReduced] = useState(false);
+  const [inView, setInView] = useState(false);
+  const [viewportH, setViewportH] = useState(900);
 
   useEffect(() => {
     const media = window.matchMedia("(prefers-reduced-motion: reduce)");
@@ -42,6 +44,8 @@ export function ClosingSection() {
       // section releases, mirroring the reference site's wipe.
       const travel = Math.max(1, rect.height - wh);
       setProgress(clamp((-rect.top - wh * 0.15) / (travel * 0.55)));
+      setInView(rect.top < wh && rect.bottom > 0);
+      setViewportH(wh);
     };
     const request = () => {
       if (!frame) frame = requestAnimationFrame(update);
@@ -62,11 +66,23 @@ export function ClosingSection() {
   const p = clamp(progress);
 
   return (
-    <section
-      className="artemis-closing"
-      {...(p < 0.5 ? { "data-dark-section": "" } : {})}
-      aria-label="Artemis delivers certainty"
-    >
+    <section className="artemis-closing" aria-label="Artemis delivers certainty">
+      {/* Surface probes: the light wipe travels bottom-up, so the dock flips to
+          its light variant well before the nav does. */}
+      {inView && (1 - p) * viewportH > 80 && (
+        <div
+          aria-hidden
+          data-dark-section=""
+          style={{ position: "fixed", top: 0, left: 0, right: 0, height: 80, pointerEvents: "none", zIndex: -1 }}
+        />
+      )}
+      {inView && (1 - p) * viewportH > viewportH - 80 && (
+        <div
+          aria-hidden
+          data-dark-section=""
+          style={{ position: "fixed", bottom: 0, left: 0, right: 0, height: 80, pointerEvents: "none", zIndex: -1 }}
+        />
+      )}
       <div ref={wrapperRef} className="artemis-closing__wrapper">
         <div className="artemis-closing__sticky">
           <div className="artemis-closing__stage">
