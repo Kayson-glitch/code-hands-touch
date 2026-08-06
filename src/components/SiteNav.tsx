@@ -45,12 +45,7 @@ export function SiteNav() {
         const b = el.getBoundingClientRect();
         return b.top <= 69 && b.bottom > 69;
       }) ?? null;
-      if (dark) {
-        const r = dark.getBoundingClientRect();
-        setOnDark(r.top <= 69 && r.bottom > 69);
-      } else {
-        setOnDark(window.scrollY > window.innerHeight - 69);
-      }
+      setOnDark(Boolean(dark));
     };
 
     onScroll();

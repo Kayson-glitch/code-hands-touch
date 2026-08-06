@@ -35,18 +35,14 @@ export function FinChatDock() {
   const [darkSurface, setDarkSurface] = useState(false);
   useEffect(() => {
     const onScroll = () => {
-      const darks = Array.from(document.querySelectorAll("[data-dark-section]"));
-      const dark = darks.find((el) => {
-        const b = el.getBoundingClientRect();
-        return b.top <= 69 && b.bottom > 69;
-      }) ?? null;
-      if (!dark) {
-        setDarkSurface(false);
-        return;
-      }
-      const r = dark.getBoundingClientRect();
       const probe = window.innerHeight - 40;
-      setDarkSurface(r.top <= probe && r.bottom > probe);
+      const dark = Array.from(
+        document.querySelectorAll("[data-dark-section]")
+      ).some((el) => {
+        const r = el.getBoundingClientRect();
+        return r.top <= probe && r.bottom > probe;
+      });
+      setDarkSurface(dark);
     };
     onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
