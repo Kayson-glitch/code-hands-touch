@@ -12,6 +12,8 @@ import { INTRO_ENABLED } from "@/components/intro/introConfig";
 import { SloganSection } from "@/components/SloganSection";
 import { MetricsSection } from "@/components/MetricsSection";
 import { ClosingSection } from "@/components/ClosingSection";
+import { FeatureGallerySection } from "@/components/FeatureGallerySection";
+
 
 import videoAsset from "@/assets/intro-hands.mp4.asset.json";
 
