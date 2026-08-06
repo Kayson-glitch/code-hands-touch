@@ -110,7 +110,7 @@ export function MetricsSection() {
             </div>
             <div ref={cardsRef} className="kore-outcomes__cards">
               {CARDS.map((card, index) => {
-                const columnProgress = reducedMotion ? 1 : clamp(progress * CARDS.length - index);
+                const columnProgress = reducedMotion ? 1 : clamp((progress / 0.92) * CARDS.length - index);
                 const opacity = reducedMotion ? 1 : clamp(columnProgress * 3);
                 const restY = -copyTop;
                 const translateY = START_Y + (restY - START_Y) * columnProgress;

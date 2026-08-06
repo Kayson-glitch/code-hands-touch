@@ -327,7 +327,7 @@ body {
   display: grid;
   grid-row: span 2;
   grid-template-rows: subgrid;
-  grid-template-columns: 1fr;
+  grid-template-columns: minmax(0, 1fr);
   gap: 3rem;
   will-change: transform;
 }
@@ -342,6 +342,12 @@ body {
 /* Drop the shared edge so column joins stay a single hairline, not 2px. */
 .kore-outcomes__item:not(:last-child) .kore-outcomes__card {
   border-right: none;
+}
+
+/* Last column: draw the right hairline inside so overflow/subpixel never clips it. */
+.kore-outcomes__item:last-child .kore-outcomes__card {
+  border-right: none;
+  box-shadow: inset -1px 0 0 var(--hairline);
 }
 
 
