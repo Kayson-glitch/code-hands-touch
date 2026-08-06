@@ -604,7 +604,10 @@ export function HalftoneHandsFooter({
 
 
     const onWheel = (e: WheelEvent) => {
-      if (stageRef.current !== "hands") return;
+      if (stageRef.current !== "hands") {
+        setHijack(false);
+        return;
+      }
       markScrollIntent();
       if (consume(e.deltaY, e.deltaMode)) e.preventDefault();
     };
