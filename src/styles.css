@@ -268,7 +268,7 @@ body {
 
 .kore-outcomes__header h2 {
   margin: 0;
-  font-family: "Clash Display", "Montserrat", sans-serif;
+  font-family: "Clash Display Variable", "Clash Display", "Montserrat", sans-serif;
   font-size: clamp(2.25rem, 2.74vw + 0.2rem, 3.75rem);
   font-weight: 500;
   line-height: 1.1;
@@ -277,7 +277,7 @@ body {
 
 
 .kore-outcomes__header strong {
-  color: #006dad;
+  color: #5749FF;
   font-weight: 500;
 }
 
@@ -404,7 +404,7 @@ body {
 }
 
 .kore-outcomes__value {
-  font-family: "Clash Display", "Montserrat", sans-serif;
+  font-family: "Clash Display Variable", "Clash Display", "Montserrat", sans-serif;
   font-size: clamp(3.75rem, 6.0vw, 5.875rem);
   font-weight: 500;
   line-height: 1;
@@ -425,7 +425,7 @@ body {
 }
 
 .kore-outcomes__footer p {
-  font-family: "Montserrat", sans-serif;
+  font-family: "Clash Display Variable", "Clash Display", "Montserrat", sans-serif;
   font-size: clamp(5rem, 12.5vw, 12rem);
   font-weight: 500;
   line-height: 0.86;
@@ -433,7 +433,7 @@ body {
 }
 
 .kore-outcomes__footer span {
-  color: #006dad;
+  color: #5749FF;
 }
 
 .kore-outcomes__footer em {
