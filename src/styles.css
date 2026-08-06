@@ -681,11 +681,11 @@ html.lenis body {
   pointer-events: none;
 }
 
-/* Placeholder media block (Figma: 480×320, radius 20). */
+/* Placeholder media block (Figma: 360×480, radius 20). */
 .artemis-gallery__media {
   flex: 0 0 auto;
-  width: 480px;
-  height: 320px;
+  width: 360px;
+  height: 480px;
   border-radius: 20px;
   background: #d9d9d9;
 }
