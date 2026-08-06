@@ -12,7 +12,6 @@ import { INTRO_ENABLED } from "@/components/intro/introConfig";
 import { SloganSection } from "@/components/SloganSection";
 import { MetricsSection } from "@/components/MetricsSection";
 import { ClosingSection } from "@/components/ClosingSection";
-import { FeatureGallerySection } from "@/components/FeatureGallerySection";
 
 
 import videoAsset from "@/assets/intro-hands.mp4.asset.json";
@@ -123,8 +122,6 @@ function Index() {
           <MetricsSection />
           {/* Fourth screen: dark closing statement with scroll-driven invert */}
           <ClosingSection />
-          {/* Fifth screen: pinned horizontal feature gallery */}
-          <FeatureGallerySection />
 
 
           {/* Always pinned to bottom, unaffected by parallax */}

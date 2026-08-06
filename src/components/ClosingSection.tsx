@@ -23,12 +23,14 @@ const Words = () => (
 export function ClosingSection() {
   const wrapperRef = useRef<HTMLDivElement | null>(null);
   const trackRef = useRef<HTMLDivElement | null>(null);
+  const titleRef = useRef<HTMLDivElement | null>(null);
   const [progress, setProgress] = useState(0);
   const [reduced, setReduced] = useState(false);
   const [desktop, setDesktop] = useState(true);
   const [inView, setInView] = useState(false);
   const [viewportH, setViewportH] = useState(900);
   const [travel, setTravel] = useState(0);
+  const [titleW, setTitleW] = useState(0);
 
   useEffect(() => {
     const media = window.matchMedia("(prefers-reduced-motion: reduce)");
@@ -44,6 +46,7 @@ export function ClosingSection() {
       setDesktop(isDesktop);
       const track = trackRef.current;
       if (!isDesktop || !track) return;
+      if (titleRef.current) setTitleW(titleRef.current.offsetWidth);
       setTravel(Math.max(0, track.scrollWidth - window.innerWidth));
     };
     measure();
@@ -144,12 +147,13 @@ export function ClosingSection() {
               style={pinned ? { transform: `translate3d(${-x}px, 0, 0)` } : undefined}
             >
               <div
+                ref={titleRef}
                 className="artemis-closing__title-slot"
                 style={
                   pinned
                     ? {
                         transform: `scale(${scale})`,
-                        marginRight: `calc(${(scale - 1).toFixed(4)} * var(--title-w, 0px))`,
+                        marginRight: `${((scale - 1) * titleW).toFixed(2)}px`,
                       }
                     : undefined
                 }
