@@ -1,4 +1,5 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { getLenis } from "@/lib/smoothScroll";
 import cometAsset from "@/assets/kore-comet.svg.asset.json";
 import valueAsset from "@/assets/kore-value.svg.asset.json";
 import scaleAsset from "@/assets/kore-scale.svg.asset.json";
