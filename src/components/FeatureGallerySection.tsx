@@ -97,7 +97,7 @@ export function FeaturePanels({
             className="artemis-gallery__panel"
             style={
               pinned
-                ? { opacity: eased, transform: `translate3d(0, ${(1 - eased) * 40}px, 0)` }
+                ? { opacity: eased, transform: `translate3d(0, ${(1 - eased) * 140}px, 0)` }
                 : undefined
             }
           >
