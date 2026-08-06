@@ -177,17 +177,18 @@ export function FinChatDock() {
           className="pointer-events-auto flex items-center justify-between"
           onClick={() => !expanded && expand()}
           style={{
-            minHeight: 48,
-            borderRadius: 666,
-            paddingLeft: 20,
-            paddingRight: 6,
+            minHeight: 44,
+            borderRadius: 999,
+            paddingLeft: 18,
+            paddingRight: 8,
             paddingTop: 6,
             paddingBottom: 6,
             gap: 8,
             alignItems: expanded ? "flex-end" : "center",
             backgroundColor: dockBg,
             border: dockBorder,
-            backdropFilter: onDark ? "blur(18px) saturate(140%)" : "none",
+            backdropFilter: onDark ? "blur(24px) saturate(180%)" : "none",
+            WebkitBackdropFilter: onDark ? "blur(24px) saturate(180%)" : "none",
             boxShadow: dockShadow,
             transition:
               "box-shadow 300ms ease, background-color 300ms ease, border-color 300ms ease",
