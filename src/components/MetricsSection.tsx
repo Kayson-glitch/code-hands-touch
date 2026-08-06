@@ -1,269 +1,126 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import cometAsset from "@/assets/kore-comet.svg.asset.json";
+import valueAsset from "@/assets/kore-value.svg.asset.json";
+import scaleAsset from "@/assets/kore-scale.svg.asset.json";
+import securityAsset from "@/assets/kore-security.svg.asset.json";
 
-/**
- * Third screen — "Numbers our customers trust us with."
- *
- * 1:1 with the kore.ai `.k2-cards` interaction: the section is pinned under the
- * nav while a fixed-height, overflow-hidden window holds three columns. Each
- * column ([card] + [big number]) travels straight up through that window on a
- * linear, staggered slice of the section progress — the card rises from below,
- * gets pushed out of the top, and the big number comes to rest. Fully
- * reversible; once the last column lands the pin releases.
- */
-
-const COLUMNS = [
-  {
-    title: "Accuracy Improvement",
-    body: "Tickets resolved on first contact without human handoff.",
-    value: "+85",
-    unit: "%",
-    label: "Accuracy Improvement",
-  },
-  {
-    title: "Faster Resolutions",
-    body: "Average handling time cut across every support channel.",
-    value: "13",
-    unit: "k",
-    label: "Accuracy Improvement",
-  },
-  {
-    title: "Always-On Coverage",
-    body: "Conversations answered instantly, in every timezone.",
-    value: "+90",
-    unit: "%",
-    label: "Accuracy Improvement",
-  },
+const CARDS = [
+  { image: valueAsset.url, title: "{ Outcomes in days }", body: "{ Artemis } handles the infrastructure; your team starts at the business logic. Team focuses on outcomes. Agents ship faster.", value: "5x", outcome: "faster time to value" },
+  { image: scaleAsset.url, title: "{ Predictability at Scale }", body: "Every agent is clearly defined, tested, and validated before deployment, so what works in design does not break in production.", value: "No", outcome: "surprises in production" },
+  { image: securityAsset.url, title: "{ Security + Governance }", body: "Every action stays within approved policies and boundaries, with full visibility into what happened and why.", value: "Zero", outcome: "unauthorized agent actions" },
 ];
 
-const NAV_H = 69;
-const GAP = 48;
-const BOTTOM_SAFE = 140; // clear the fixed Fin dock
+const START_Y = 320;
+const clamp = (value: number) => Math.max(0, Math.min(1, value));
 
 export function MetricsSection() {
-  const sectionRef = useRef<HTMLElement | null>(null);
-  const headerRef = useRef<HTMLDivElement | null>(null);
-  const numberRef = useRef<HTMLDivElement | null>(null);
-
+  const wrapperRef = useRef<HTMLDivElement | null>(null);
+  const stickyRef = useRef<HTMLDivElement | null>(null);
+  const cardsRef = useRef<HTMLDivElement | null>(null);
+  const firstItemRef = useRef<HTMLDivElement | null>(null);
+  const firstCopyRef = useRef<HTMLDivElement | null>(null);
   const [progress, setProgress] = useState(0);
-  const [reduced, setReduced] = useState(false);
-  const [windowH, setWindowH] = useState(560);
-  const [numberH, setNumberH] = useState(200);
+  const [cardHeight, setCardHeight] = useState(856);
+  const [copyTop, setCopyTop] = useState(520);
+  const [desktop, setDesktop] = useState(true);
+  const [reducedMotion, setReducedMotion] = useState(false);
 
-  // Measure the clipping window (viewport minus sticky header and dock safety)
-  // and the height of the big-number block, which sets the resting offset.
   useLayoutEffect(() => {
     const measure = () => {
-      const headerH = headerRef.current?.offsetHeight ?? 0;
-      const avail = window.innerHeight - NAV_H - headerH - BOTTOM_SAFE;
-      setWindowH(Math.max(320, avail));
-      setNumberH(numberRef.current?.offsetHeight ?? 200);
+      const isDesktop = window.innerWidth >= 991;
+      setDesktop(isDesktop);
+      if (!isDesktop) return;
+      const item = firstItemRef.current;
+      const copy = firstCopyRef.current;
+      const cards = cardsRef.current;
+      if (item) setCardHeight(item.getBoundingClientRect().height);
+      if (copy && cards) setCopyTop(copy.getBoundingClientRect().top - cards.getBoundingClientRect().top);
     };
     measure();
+    const observer = new ResizeObserver(measure);
+    if (stickyRef.current) observer.observe(stickyRef.current);
     window.addEventListener("resize", measure);
-    return () => window.removeEventListener("resize", measure);
+    return () => {
+      observer.disconnect();
+      window.removeEventListener("resize", measure);
+    };
   }, []);
 
   useEffect(() => {
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-      setReduced(true);
-      setProgress(1);
-      return;
-    }
-
-    let raf = 0;
-    const compute = () => {
-      raf = 0;
-      const el = sectionRef.current;
-      if (!el) return;
-      const rect = el.getBoundingClientRect();
-      const travel = Math.max(1, el.offsetHeight - window.innerHeight);
-      setProgress(Math.max(0, Math.min(1, -rect.top / travel)));
-    };
-    const schedule = () => {
-      if (raf) return;
-      raf = requestAnimationFrame(compute);
-    };
-    compute();
-    window.addEventListener("scroll", schedule, { passive: true });
-    window.addEventListener("resize", schedule);
-    return () => {
-      window.removeEventListener("scroll", schedule);
-      window.removeEventListener("resize", schedule);
-      if (raf) cancelAnimationFrame(raf);
-    };
+    const media = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const update = () => setReducedMotion(media.matches);
+    update();
+    media.addEventListener("change", update);
+    return () => media.removeEventListener("change", update);
   }, []);
 
-  const n = COLUMNS.length;
-  // Linear, three-way staggered slices — exactly the reference mapping.
-  const colT = (i: number) =>
-    reduced ? 1 : Math.max(0, Math.min(1, progress * n - i));
-
-  const startY = windowH; // fully below the window, clipped away
-  const endY = -(windowH - numberH); // card pushed out, number resting
+  useEffect(() => {
+    if (!desktop || reducedMotion) {
+      setProgress(reducedMotion ? 1 : 0);
+      return;
+    }
+    let frame = 0;
+    const update = () => {
+      frame = 0;
+      const wrapper = wrapperRef.current;
+      if (!wrapper) return;
+      const rect = wrapper.getBoundingClientRect();
+      const distance = Math.max(1, wrapper.offsetHeight - window.innerHeight * 0.8);
+      setProgress(clamp(-rect.top / distance));
+    };
+    const request = () => {
+      if (!frame) frame = requestAnimationFrame(update);
+    };
+    update();
+    window.addEventListener("scroll", request, { passive: true });
+    window.addEventListener("resize", request);
+    return () => {
+      window.removeEventListener("scroll", request);
+      window.removeEventListener("resize", request);
+      if (frame) cancelAnimationFrame(frame);
+    };
+  }, [desktop, reducedMotion]);
 
   return (
-    <section
-      ref={sectionRef}
-      className="relative w-full"
-      style={{
-        backgroundColor: "#FAFAFA",
-        height: `calc(100dvh + ${n * 90}vh)`,
-        zIndex: 11,
-      }}
-    >
-      <div
-        style={{
-          position: "sticky",
-          top: NAV_H,
-          height: `calc(100dvh - ${NAV_H}px)`,
-          overflow: "hidden",
-        }}
-      >
-        <div
-          style={{
-            width: "min(100% - 48px, 1200px)",
-            margin: "0 auto",
-          }}
-        >
-          {/* Header — always visible while the section is pinned */}
-          <div ref={headerRef} style={{ paddingTop: 48, paddingBottom: 40 }}>
-            <h2
-              className="font-display capitalize"
-              style={{
-                margin: 0,
-                fontSize: "clamp(30px, 3.4vw, 48px)",
-                lineHeight: 1.17,
-                fontWeight: 500,
-                color: "var(--ink)",
-              }}
-            >
-              Numbers our customers
-              <br />
-              trust us with.
-            </h2>
-            <div
-              aria-hidden
-              style={{
-                marginTop: 40,
-                width: 460,
-                maxWidth: "100%",
-                height: 1,
-                background:
-                  "linear-gradient(90deg, #137DFF 0%, #FF18AA 50%, #FFCD17 100%)",
-              }}
-            />
-          </div>
-
-          {/* Clipping window */}
-          <div
-            style={{
-              height: windowH,
-              overflow: "hidden",
-              display: "grid",
-              gridTemplateColumns: `repeat(${n}, minmax(0, 1fr))`,
-            }}
-          >
-            {COLUMNS.map((col, i) => {
-              const t = colT(i);
-              const y = startY + (endY - startY) * t;
-              return (
-                <div
-                  key={col.title}
-                  style={{
-                    height: windowH,
-                    display: "flex",
-                    flexDirection: "column",
-                    gap: GAP,
-                    marginLeft: i === 0 ? 0 : -1,
-                    opacity: t > 0 ? 1 : 0,
-                    transform: `translate3d(0, ${y.toFixed(2)}px, 0)`,
-                    willChange: "transform",
-                  }}
-                >
-                  {/* Card */}
-                  <div
-                    style={{
-                      flex: "1 1 auto",
-                      minHeight: 0,
-                      border: "1px solid var(--hairline)",
-                      padding: 24,
-                      display: "flex",
-                      flexDirection: "column",
-                    }}
-                  >
-                    <div
-                      aria-hidden
-                      style={{
-                        flex: "1 1 auto",
-                        minHeight: 0,
-                        backgroundColor: "#D9D9D9",
-                      }}
-                    />
-                    <p
-                      style={{
-                        margin: "24px 0 0",
-                        fontFamily: "Montserrat, sans-serif",
-                        fontWeight: 600,
-                        fontSize: 16,
-                        lineHeight: "24px",
-                        color: "var(--ink)",
-                      }}
-                    >
-                      {col.title}
-                    </p>
-                    <p
-                      style={{
-                        margin: "10px 0 0",
-                        fontFamily: "Montserrat, sans-serif",
-                        fontWeight: 400,
-                        fontSize: 14,
-                        lineHeight: "24px",
-                        color: "var(--ink-muted)",
-                      }}
-                    >
-                      {col.body}
-                    </p>
-                  </div>
-
-                  {/* Big number */}
-                  <div
-                    ref={i === 0 ? numberRef : undefined}
-                    style={{ flex: "0 0 auto", paddingLeft: 24 }}
-                  >
-                    <div
-                      className="font-display capitalize"
-                      style={{
-                        fontWeight: 500,
-                        color: "#000000",
-                        lineHeight: 1,
-                      }}
-                    >
-                      <span style={{ fontSize: "clamp(48px, 6.9vw, 100px)" }}>
-                        {col.value}
-                      </span>
-                      <span style={{ fontSize: "clamp(33px, 4.7vw, 68px)" }}>
-                        {col.unit}
-                      </span>
+    <section className="kore-outcomes" aria-labelledby="outcomes-heading">
+      <div ref={wrapperRef} className="kore-outcomes__wrapper" style={desktop ? { height: cardHeight * CARDS.length } : undefined}>
+        <div ref={stickyRef} className="kore-outcomes__sticky">
+          <header className="kore-outcomes__header">
+            <div className="kore-outcomes__header-inner">
+              <img src={cometAsset.url} alt="" className="kore-outcomes__comet" />
+              <h2 id="outcomes-heading">
+                What {"{ "}<strong>Artemis</strong>{" } "}<em>changes</em><br />for enterprise AI
+              </h2>
+            </div>
+          </header>
+          <div className="kore-outcomes__cards-container">
+            <div ref={cardsRef} className="kore-outcomes__cards">
+              {CARDS.map((card, index) => {
+                const columnProgress = reducedMotion ? 1 : clamp(progress * CARDS.length - index);
+                const opacity = reducedMotion ? 1 : clamp(columnProgress * 3);
+                const translateY = START_Y + (-copyTop - START_Y) * columnProgress;
+                return (
+                  <div ref={index === 0 ? firstItemRef : undefined} key={card.title} className="kore-outcomes__item" style={desktop ? { opacity, transform: `translate3d(0, ${translateY}px, 0)` } : undefined}>
+                    <article className="kore-outcomes__card">
+                      <div className="kore-outcomes__media"><img src={card.image} alt="" /></div>
+                      <div ref={index === 0 ? firstCopyRef : undefined} className="kore-outcomes__copy">
+                        <h3>{card.title}</h3><p>{card.body}</p>
+                      </div>
+                    </article>
+                    <div className="kore-outcomes__number">
+                      <p className="kore-outcomes__value">{card.value}</p>
+                      <p className="kore-outcomes__label">{card.outcome}</p>
                     </div>
-                    <p
-                      style={{
-                        margin: "20px 0 0",
-                        fontFamily: "Montserrat, sans-serif",
-                        fontWeight: 500,
-                        fontSize: 18,
-                        lineHeight: "26px",
-                        color: "var(--ink)",
-                      }}
-                    >
-                      {col.label}
-                    </p>
                   </div>
-                </div>
-              );
-            })}
+                );
+              })}
+            </div>
           </div>
         </div>
       </div>
+      <footer className="kore-outcomes__footer" style={desktop ? { marginTop: -cardHeight / 3 } : undefined}>
+        <p><span>{"{"}</span>Artemis<span>{"}"}</span><br />delivers<br /><em>certainty</em></p>
+      </footer>
     </section>
   );
 }
