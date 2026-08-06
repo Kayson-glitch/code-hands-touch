@@ -76,10 +76,12 @@ export const PANELS: Panel[] = [
 export function FeaturePanels({
   lefts,
   viewportW,
+  viewportH,
   pinned,
 }: {
   lefts: number[];
   viewportW: number;
+  viewportH: number;
   pinned: boolean;
 }) {
   return (
@@ -91,13 +93,14 @@ export function FeaturePanels({
             ? clamp((viewportW - left) / (viewportW * 0.35))
             : 1;
         const eased = easeOutCubic(enter);
+        const lift = pinned && viewportH > 0 ? (1 - eased) * viewportH : 0;
         return (
           <article
             key={panel.id}
             className="artemis-gallery__panel"
             style={
               pinned
-                ? { opacity: eased, transform: `translate3d(0, ${(1 - eased) * 140}px, 0)` }
+                ? { opacity: eased, transform: `translate3d(0, ${lift.toFixed(2)}px, 0)` }
                 : undefined
             }
           >
