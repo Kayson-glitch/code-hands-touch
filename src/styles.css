@@ -724,30 +724,46 @@ html.lenis body {
   color: #5749ff;
 }
 
+/* Stacked fallback: no pinning, no horizontal travel. */
 @media (max-width: 990px) {
-  .artemis-gallery__dots {
+  .artemis-closing__dots {
     left: 1rem;
     right: 1rem;
   }
 
-  .artemis-gallery__wrapper {
+  .artemis-closing__wrapper {
     height: auto !important;
   }
 
-  .artemis-gallery__sticky {
+  .artemis-closing__sticky {
     position: static;
     height: auto;
-    padding-block: 4rem;
     overflow: visible;
   }
 
-  .artemis-gallery__track {
+  /* The headline lives in the dark track on small screens. */
+  .artemis-closing__sticky > .artemis-closing__stage {
+    display: none;
+  }
+
+  .artemis-closing__invert {
+    position: static;
+    clip-path: none !important;
+    padding-block: 4rem;
+  }
+
+  .artemis-closing__track {
     flex-direction: column;
     align-items: flex-start;
     gap: 3.5rem;
     width: 100%;
     padding-inline: 1rem;
     transform: none !important;
+  }
+
+  .artemis-closing__title-slot {
+    transform: none !important;
+    margin-right: 0 !important;
   }
 
   .artemis-gallery__panel {
@@ -768,19 +784,34 @@ html.lenis body {
 }
 
 @media (prefers-reduced-motion: reduce) and (min-width: 991px) {
-  .artemis-gallery__wrapper {
+  .artemis-closing__wrapper {
     height: auto !important;
   }
 
-  .artemis-gallery__sticky {
+  .artemis-closing__sticky {
     position: static;
     height: auto;
+    overflow: visible;
+  }
+
+  .artemis-closing__sticky > .artemis-closing__stage {
+    display: none;
+  }
+
+  .artemis-closing__invert {
+    position: static;
+    clip-path: none !important;
     padding-block: 6rem;
     overflow-x: auto;
   }
 
-  .artemis-gallery__track {
+  .artemis-closing__track {
     transform: none !important;
+  }
+
+  .artemis-closing__title-slot {
+    transform: none !important;
+    margin-right: 0 !important;
   }
 
   .artemis-gallery__panel {
@@ -788,3 +819,4 @@ html.lenis body {
     transform: none !important;
   }
 }
+
