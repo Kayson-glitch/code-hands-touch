@@ -286,24 +286,7 @@ body {
 
 .kore-outcomes__cards-container {
   position: relative;
-  border: 1px solid var(--hairline);
 }
-
-/* Vertical dividers drawn on the static frame so they stay 1px and unbroken. */
-.kore-outcomes__cards-container::before,
-.kore-outcomes__cards-container::after {
-  content: "";
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  width: 1px;
-  background: var(--hairline);
-  pointer-events: none;
-  z-index: 2;
-}
-
-.kore-outcomes__cards-container::before { left: 33.3333%; }
-.kore-outcomes__cards-container::after { left: 66.6666%; }
 
 .kore-outcomes__progress {
   position: absolute;
@@ -343,8 +326,15 @@ body {
 .kore-outcomes__card {
   min-width: 0;
   overflow: hidden;
+  border: 1px solid var(--hairline);
   background: var(--paper);
 }
+
+/* Drop the shared edge so column joins stay a single hairline, not 2px. */
+.kore-outcomes__item:not(:last-child) .kore-outcomes__card {
+  border-right: none;
+}
+
 
 .kore-outcomes__media {
   padding: clamp(1rem, 0.8571rem + 0.7143vw, 1.5rem) clamp(1rem, 0.8571rem + 0.7143vw, 1.5rem) 0;
