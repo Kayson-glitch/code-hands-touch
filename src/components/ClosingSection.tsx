@@ -71,11 +71,13 @@ export function ClosingSection() {
         <div className="artemis-closing__sticky">
           <div className="artemis-closing__stage">
             <Words />
-            <div
-              className="artemis-closing__invert"
-              aria-hidden="true"
-              style={{ clipPath: `inset(${((1 - p) * 100).toFixed(3)}% 0 0 0)` }}
-            >
+          </div>
+          <div
+            className="artemis-closing__invert"
+            aria-hidden="true"
+            style={{ clipPath: `inset(${((1 - p) * 100).toFixed(3)}% 0 0 0)` }}
+          >
+            <div className="artemis-closing__stage">
               <Words />
             </div>
           </div>

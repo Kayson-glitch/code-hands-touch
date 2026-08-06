@@ -581,11 +581,6 @@ html.lenis body {
   will-change: clip-path;
 }
 
-.artemis-closing__invert .artemis-closing__text {
-  position: absolute;
-  inset: 0;
-}
-
 .artemis-closing__text {
   margin: 0;
   font-family: "Clash Display Variable", "Clash Display", "Montserrat", sans-serif;
