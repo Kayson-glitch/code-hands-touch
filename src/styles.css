@@ -320,8 +320,8 @@ body {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   overflow: hidden;
-  border-right: 1px solid var(--hairline);
 }
+
 
 .kore-outcomes__item {
   display: grid;
@@ -456,7 +456,6 @@ body {
     grid-template-columns: 1fr;
     gap: 1rem;
     overflow: visible;
-    border-right: none;
   }
 
   .kore-outcomes__item {
@@ -467,7 +466,9 @@ body {
 
   .kore-outcomes__card {
     margin-bottom: 1rem;
+    border-right: 1px solid var(--hairline);
   }
+
 
   .kore-outcomes__number {
     display: none;
