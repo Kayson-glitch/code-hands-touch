@@ -194,7 +194,7 @@ export function ClosingSection() {
                   first card is dragged in from off-screen instead of sitting
                   next to the shrunken headline. */}
               <div className="artemis-closing__lead" style={{ flex: `0 0 ${lead}px` }} aria-hidden />
-              <FeaturePanels lefts={offsets.map((o) => o - x)} viewportW={viewportW} pinned={pinned} />
+              <FeaturePanels lefts={offsets.map((o) => o - x)} viewportW={viewportW} viewportH={viewportH} pinned={pinned} />
             </div>
           </div>
         </div>
