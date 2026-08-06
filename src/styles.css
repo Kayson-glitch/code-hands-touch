@@ -542,3 +542,69 @@ html.lenis body {
 .lenis.lenis-smooth iframe {
   pointer-events: none;
 }
+
+/* ---------------------------------------- Closing screen: Artemis certainty */
+.artemis-closing {
+  position: relative;
+  z-index: 10;
+  width: 100%;
+  background-color: #0A0A0A;
+}
+
+.artemis-closing__wrapper {
+  height: 260vh;
+}
+
+.artemis-closing__sticky {
+  position: sticky;
+  top: 0;
+  height: 100dvh;
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+}
+
+.artemis-closing__stage {
+  position: relative;
+  width: calc(100% - 11rem);
+  max-width: 95.5rem;
+  margin-inline: auto;
+}
+
+.artemis-closing__invert {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  background-color: #FAFAFA;
+  color: #0A0A0A;
+  will-change: clip-path;
+}
+
+.artemis-closing__text {
+  margin: 0;
+  font-family: "Clash Display Variable", "Clash Display", "Montserrat", sans-serif;
+  font-size: clamp(5rem, 12.5vw, 11.75rem);
+  font-weight: 500;
+  line-height: 0.86;
+  letter-spacing: 0;
+  color: #FAFAFA;
+}
+
+.artemis-closing__invert .artemis-closing__text {
+  color: #0A0A0A;
+}
+
+.artemis-closing__text em {
+  font-weight: 400;
+}
+
+@media (max-width: 990px) {
+  .artemis-closing__stage {
+    width: calc(100% - 2rem);
+  }
+
+  .artemis-closing__text {
+    font-size: clamp(3rem, 15vw, 4.5rem);
+  }
+}

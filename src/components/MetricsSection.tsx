@@ -147,9 +147,6 @@ export function MetricsSection() {
           </div>
         </div>
       </div>
-      <footer className="kore-outcomes__footer" >
-        <p><span>{"{"}</span>Artemis<span>{"}"}</span><br />delivers<br /><em>certainty</em></p>
-      </footer>
     </section>
   );
 }
