@@ -93,10 +93,12 @@ export function ClosingSection() {
             aria-hidden="true"
             style={{ clipPath: `inset(${((1 - p) * 100).toFixed(3)}% 0 0 0)` }}
           >
+            <div className="artemis-closing__dots" />
             <div className="artemis-closing__stage">
               <Words />
             </div>
           </div>
+
         </div>
       </div>
     </section>
