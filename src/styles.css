@@ -606,7 +606,7 @@ html.lenis body {
   z-index: 1;
   display: flex;
   align-items: center;
-  gap: 8rem;
+  gap: 14rem;
   width: max-content;
   padding-inline: max(5.5rem, calc((100% - 95.5rem) / 2));
   will-change: transform;
