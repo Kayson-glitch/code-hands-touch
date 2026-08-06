@@ -40,7 +40,11 @@ export function SiteNav() {
       setScrolled(window.scrollY > 8);
       // The nav flips to its dark variant only while the black section is the
       // surface sitting under the bar — the light third screen flips it back.
-      const dark = document.querySelector("[data-dark-section]");
+      const darks = Array.from(document.querySelectorAll("[data-dark-section]"));
+      const dark = darks.find((el) => {
+        const b = el.getBoundingClientRect();
+        return b.top <= 69 && b.bottom > 69;
+      }) ?? null;
       if (dark) {
         const r = dark.getBoundingClientRect();
         setOnDark(r.top <= 69 && r.bottom > 69);

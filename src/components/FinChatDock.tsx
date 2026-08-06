@@ -35,7 +35,11 @@ export function FinChatDock() {
   const [darkSurface, setDarkSurface] = useState(false);
   useEffect(() => {
     const onScroll = () => {
-      const dark = document.querySelector("[data-dark-section]");
+      const darks = Array.from(document.querySelectorAll("[data-dark-section]"));
+      const dark = darks.find((el) => {
+        const b = el.getBoundingClientRect();
+        return b.top <= 69 && b.bottom > 69;
+      }) ?? null;
       if (!dark) {
         setDarkSurface(false);
         return;
