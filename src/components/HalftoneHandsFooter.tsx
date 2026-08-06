@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import handsFramesAsset from "@/assets/hands-frames.webp.asset.json";
 import { IntroVideo, type IntroProgressInfo } from "./IntroVideo";
 import { useHeroLayout, type HeroLayout } from "@/hooks/useHeroLayout";
+import { getLenis } from "@/lib/smoothScroll";
 
 import { INTRO_ENABLED } from "@/components/intro/introConfig";
 
@@ -473,6 +474,18 @@ export function HalftoneHandsFooter({
     // Per-event clamp: one huge trackpad delta can't slam the sequence forward.
     const MAX_STEP = 0.06;
 
+    // While the hands own the wheel, Lenis must not also move the page —
+    // otherwise both drivers fight and the gesture feels notchy.
+    let hijacking = false;
+    const setHijack = (on: boolean) => {
+      if (hijacking === on) return;
+      hijacking = on;
+      const lenis = getLenis();
+      if (!lenis) return;
+      if (on) lenis.stop();
+      else lenis.start();
+    };
+
     /** Advance/rewind the playhead. Returns true when the wheel was consumed. */
     const consume = (rawDy: number, deltaMode = 0) => {
       if (prefersReduce) return false;
@@ -481,7 +494,9 @@ export function HalftoneHandsFooter({
       if (dy === 0) return false;
 
       const goingDown = dy > 0;
-      const atTop = window.scrollY <= 0;
+      const atTop = window.scrollY <= 1;
+      const sequenceDone = progressRef.target >= 1 && holdRef.target >= 1;
+      setHijack(atTop && !sequenceDone);
 
       // Use the same physical clamp for both phases so the feel stays consistent.
       const maxPx = frameSpan() * MAX_STEP;
@@ -545,6 +560,22 @@ export function HalftoneHandsFooter({
 
     const snapTo = (to: number) => {
       if (snapState.active) return;
+      const lenis = getLenis();
+      if (lenis) {
+        // Hand the snap to Lenis so the page keeps one single scroll driver.
+        snapState.active = true;
+        setHijack(false);
+        lenis.scrollTo(to, {
+          duration: SNAP_MS / 1000,
+          easing: easeInOut,
+          force: true,
+          lock: true,
+          onComplete: () => {
+            snapState.active = false;
+          },
+        });
+        return;
+      }
       snapState.active = true;
       snapState.from = window.scrollY;
       snapState.to = to;
@@ -573,7 +604,10 @@ export function HalftoneHandsFooter({
 
 
     const onWheel = (e: WheelEvent) => {
-      if (stageRef.current !== "hands") return;
+      if (stageRef.current !== "hands") {
+        setHijack(false);
+        return;
+      }
       markScrollIntent();
       if (consume(e.deltaY, e.deltaMode)) e.preventDefault();
     };
@@ -860,6 +894,7 @@ export function HalftoneHandsFooter({
       window.clearTimeout(resizeTimer);
       ro.disconnect();
       window.removeEventListener("wheel", onWheel);
+      setHijack(false);
       if (snapState.raf) cancelAnimationFrame(snapState.raf);
 
       window.removeEventListener("touchstart", onTouchStart);

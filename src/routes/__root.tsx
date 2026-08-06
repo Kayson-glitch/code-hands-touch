@@ -11,6 +11,7 @@ import { useEffect, type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
+import { destroySmoothScroll, initSmoothScroll } from "../lib/smoothScroll";
 
 function NotFoundComponent() {
   return (
@@ -138,6 +139,12 @@ function RootShell({ children }: { children: ReactNode }) {
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
+
+  // Page-wide inertial smooth scroll (kore.ai-like feel).
+  useEffect(() => {
+    initSmoothScroll();
+    return () => destroySmoothScroll();
+  }, []);
 
   return (
     <QueryClientProvider client={queryClient}>

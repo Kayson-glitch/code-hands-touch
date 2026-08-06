@@ -1,4 +1,5 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { getLenis } from "@/lib/smoothScroll";
 import cometAsset from "@/assets/kore-comet.svg.asset.json";
 import valueAsset from "@/assets/kore-value.svg.asset.json";
 import scaleAsset from "@/assets/kore-scale.svg.asset.json";
@@ -14,6 +15,8 @@ const START_Y = 320;
 const START_OFFSET_RATIO = 0.25;
 const END_OFFSET_RATIO = 0.8;
 const clamp = (value: number) => Math.max(0, Math.min(1, value));
+// Reference site eases each column's reveal instead of translating linearly.
+const easeOutCubic = (x: number) => 1 - Math.pow(1 - x, 3);
 
 export function MetricsSection() {
   const wrapperRef = useRef<HTMLDivElement | null>(null);
@@ -84,9 +87,14 @@ export function MetricsSection() {
       if (!frame) frame = requestAnimationFrame(update);
     };
     update();
+    // Lenis drives the page; read progress on its tick so the reveal never
+    // trails the smoothed scroll position by a frame.
+    const lenis = getLenis();
+    lenis?.on("scroll", update);
     window.addEventListener("scroll", request, { passive: true });
     window.addEventListener("resize", request);
     return () => {
+      lenis?.off("scroll", update);
       window.removeEventListener("scroll", request);
       window.removeEventListener("resize", request);
       if (frame) cancelAnimationFrame(frame);
@@ -115,9 +123,10 @@ export function MetricsSection() {
             <div ref={cardsRef} className="kore-outcomes__cards">
               {CARDS.map((card, index) => {
                 const columnProgress = reducedMotion ? 1 : clamp(progress * CARDS.length - index);
-                const opacity = reducedMotion ? 1 : clamp(columnProgress * 3);
+                const eased = reducedMotion ? 1 : easeOutCubic(columnProgress);
+                const opacity = reducedMotion ? 1 : easeOutCubic(clamp(columnProgress * 3));
                 const restY = -copyTop;
-                const translateY = START_Y + (restY - START_Y) * columnProgress;
+                const translateY = START_Y + (restY - START_Y) * eased;
                 return (
                   <div ref={index === 0 ? firstItemRef : undefined} key={card.title} className="kore-outcomes__item" style={desktop ? { opacity, transform: `translate3d(0, ${translateY}px, 0)` } : undefined}>
                     <article className="kore-outcomes__card">
