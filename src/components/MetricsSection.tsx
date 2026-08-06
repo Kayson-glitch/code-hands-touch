@@ -137,7 +137,7 @@ export function MetricsSection() {
                       </div>
                     </article>
                     <div ref={index === 0 ? firstNumberRef : undefined} className="kore-outcomes__number">
-                      <p className="kore-outcomes__value">{card.value}</p>
+                      <p className="kore-outcomes__value">{card.value}<span className="kore-outcomes__value-unit">{card.unit}</span></p>
                       <p className="kore-outcomes__label">{card.outcome}</p>
                     </div>
                   </div>
