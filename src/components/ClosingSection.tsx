@@ -31,6 +31,7 @@ export function ClosingSection() {
   const [viewportH, setViewportH] = useState(900);
   const [travel, setTravel] = useState(0);
   const [titleW, setTitleW] = useState(0);
+  const [titleLeft, setTitleLeft] = useState(0);
   const [offsets, setOffsets] = useState<number[]>([]);
   const [viewportW, setViewportW] = useState(1440);
 
@@ -48,7 +49,10 @@ export function ClosingSection() {
       setDesktop(isDesktop);
       const track = trackRef.current;
       if (!isDesktop || !track) return;
-      if (titleRef.current) setTitleW(titleRef.current.offsetWidth);
+      if (titleRef.current) {
+        setTitleW(titleRef.current.offsetWidth);
+        setTitleLeft(titleRef.current.offsetLeft);
+      }
       setViewportW(window.innerWidth);
       setTravel(Math.max(0, track.scrollWidth - window.innerWidth));
     };
@@ -106,6 +110,11 @@ export function ClosingSection() {
 
   const scale = pinned ? 1 - (1 - TITLE_SCALE) * shrink : TITLE_SCALE;
   const x = pinned ? travel * slide : 0;
+  // Static: measured against the final headline scale so the offset never
+  // shifts mid-slide.
+  const lead = pinned
+    ? Math.max(0, viewportW - (titleLeft + titleW * TITLE_SCALE) - 2 * 128)
+    : 0;
 
   // Panel offsets shift while the headline shrinks (its layout width is
   // compensated with a negative margin), so re-measure whenever scale changes.
@@ -117,7 +126,7 @@ export function ClosingSection() {
         (el) => el.offsetLeft,
       ),
     );
-  }, [scale, travel, titleW, desktop]);
+  }, [scale, travel, titleW, lead, desktop]);
 
 
 
@@ -177,6 +186,10 @@ export function ClosingSection() {
               >
                 <Words />
               </div>
+              {/* Pushes the panel group past the right viewport edge, so the
+                  first card is dragged in from off-screen instead of sitting
+                  next to the shrunken headline. */}
+              <div className="artemis-closing__lead" style={{ flex: `0 0 ${lead}px` }} aria-hidden />
               <FeaturePanels lefts={offsets.map((o) => o - x)} viewportW={viewportW} pinned={pinned} />
             </div>
           </div>
