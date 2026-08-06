@@ -405,7 +405,7 @@ body {
 
 .kore-outcomes__value {
   font-family: "Clash Display Variable", "Clash Display", "Montserrat", sans-serif;
-  font-size: clamp(3.75rem, 6.0vw, 5.875rem);
+  font-size: clamp(3.75rem, 6.0vw, 6.25rem);
   font-weight: 500;
   line-height: 1;
   letter-spacing: -0.01em;
