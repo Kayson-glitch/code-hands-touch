@@ -234,7 +234,7 @@ export function FinChatDock() {
           <button
             aria-label="语音输入"
             className={`grid h-9 w-9 place-items-center rounded-full ${
-              onDark ? "hover:bg-white/[0.08]" : "hover:bg-black/[0.04]"
+              onDark ? "hover:bg-black/[0.06]" : "hover:bg-black/[0.04]"
             }`}
             style={{
               width: expanded ? 36 : 0,
@@ -250,7 +250,7 @@ export function FinChatDock() {
           <button
             aria-label="附件"
             className={`grid h-9 w-9 place-items-center rounded-full ${
-              onDark ? "hover:bg-white/[0.08]" : "hover:bg-black/[0.04]"
+              onDark ? "hover:bg-black/[0.06]" : "hover:bg-black/[0.04]"
             }`}
             style={{
               width: expanded ? 36 : 0,
