@@ -11,6 +11,7 @@ const CARDS = [
 ];
 
 const START_Y = 320;
+const HOLD_VH = 0.8;
 const clamp = (value: number) => Math.max(0, Math.min(1, value));
 
 export function MetricsSection() {
@@ -25,12 +26,14 @@ export function MetricsSection() {
   const [copyTop, setCopyTop] = useState(520);
   const [numberTop, setNumberTop] = useState(600);
   const [desktop, setDesktop] = useState(true);
+  const [viewportH, setViewportH] = useState(900);
   const [reducedMotion, setReducedMotion] = useState(false);
 
   useLayoutEffect(() => {
     const measure = () => {
       const isDesktop = window.innerWidth >= 991;
       setDesktop(isDesktop);
+      setViewportH(window.innerHeight);
       if (!isDesktop) return;
       const item = firstItemRef.current;
       const copy = firstCopyRef.current;
@@ -69,7 +72,8 @@ export function MetricsSection() {
       const wrapper = wrapperRef.current;
       if (!wrapper) return;
       const rect = wrapper.getBoundingClientRect();
-      const distance = Math.max(1, wrapper.offsetHeight - window.innerHeight * 0.8);
+      const hold = window.innerHeight * HOLD_VH;
+      const distance = Math.max(1, wrapper.offsetHeight - hold - window.innerHeight * 0.8);
       setProgress(clamp(-rect.top / distance));
     };
     const request = () => {
@@ -87,7 +91,7 @@ export function MetricsSection() {
 
   return (
     <section className="kore-outcomes" aria-labelledby="outcomes-heading">
-      <div ref={wrapperRef} className="kore-outcomes__wrapper" style={desktop ? { height: cardHeight * CARDS.length } : undefined}>
+      <div ref={wrapperRef} className="kore-outcomes__wrapper" style={desktop ? { height: cardHeight * CARDS.length + viewportH * HOLD_VH } : undefined}>
         <div ref={stickyRef} className="kore-outcomes__sticky">
           <header className="kore-outcomes__header">
             <div className="kore-outcomes__header-inner">
