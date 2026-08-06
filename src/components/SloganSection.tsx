@@ -96,11 +96,25 @@ export function SloganSection() {
   }, []);
 
   // Distribute progress across characters with a small overlap window.
+  // When entering the second screen, hold the reveal at the first word ("We")
+  // before continuing to reveal the remaining lines.
   const reveal = (idx: number) => {
     const span = 1 / (totalChars + 6);
     const overlap = span * 8;
     const start = idx * span;
-    return smoothstep(start, start + overlap, progress);
+
+    const FIRST_WORD_CHARS = 2; // "We"
+    const HOLD = 0.18;
+
+    if (idx < FIRST_WORD_CHARS) {
+      const firstWordEndProgress = (FIRST_WORD_CHARS - 1) * span + overlap;
+      const effectiveProgress = Math.min(1, progress + firstWordEndProgress);
+      return smoothstep(start, start + overlap, effectiveProgress);
+    }
+
+    if (progress <= HOLD) return 0;
+    const restProgress = (progress - HOLD) / (1 - HOLD);
+    return smoothstep(start, start + overlap, restProgress);
   };
 
   let ci = 0;
