@@ -654,32 +654,6 @@ html.lenis body {
 
 /* ------------------------------------- Feature panels on the closing screen */
 
-
-.artemis-gallery__sticky {
-  position: sticky;
-  top: 0;
-  height: 100dvh;
-  display: flex;
-  align-items: center;
-  overflow: hidden;
-  z-index: 1;
-}
-
-.artemis-gallery__track {
-  display: flex;
-  align-items: center;
-  gap: 8rem;
-  padding-inline: 6vw;
-  width: max-content;
-  will-change: transform;
-}
-
-.artemis-gallery__intro {
-  max-width: 32rem;
-  padding-right: 4rem;
-}
-
-.artemis-gallery__kicker,
 .artemis-gallery__index,
 .artemis-gallery__label,
 .artemis-gallery__name {
@@ -692,15 +666,6 @@ html.lenis body {
   color: rgba(250, 250, 250, 0.6);
 }
 
-.artemis-gallery__title {
-  margin: 0.75rem 0 0;
-  font-family: "Clash Display Variable", "Clash Display", "Montserrat", sans-serif;
-  font-size: clamp(3rem, 6vw, 5.5rem);
-  font-weight: 500;
-  line-height: 0.95;
-  letter-spacing: -0.01em;
-  color: #fafafa;
-}
 
 .artemis-gallery__panel {
   display: flex;
