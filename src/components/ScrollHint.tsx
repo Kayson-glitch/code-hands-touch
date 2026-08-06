@@ -52,7 +52,7 @@ export function ScrollHint({ visible = true }: { visible?: boolean }) {
           display: "flex",
           flexDirection: "row",
           alignItems: "center",
-          gap: 8,
+          gap: "clamp(6px, 0.5556vw, 10px)",
           animation: "scroll-hint-breathe 2.8s ease-in-out infinite",
           willChange: "opacity",
         }}
@@ -60,8 +60,8 @@ export function ScrollHint({ visible = true }: { visible?: boolean }) {
       <span
         style={{
           fontFamily: "'Montserrat', system-ui, sans-serif",
-          fontSize: 14,
-          lineHeight: "20px",
+          fontSize: "clamp(12px, 0.9722vw, 18px)",
+          lineHeight: "clamp(18px, 1.3889vw, 26px)",
           fontWeight: 400,
           textTransform: "capitalize",
           color: "#000000",
@@ -72,11 +72,12 @@ export function ScrollHint({ visible = true }: { visible?: boolean }) {
       </span>
       <span
         style={{
-          width: 24,
-          height: 24,
+          width: "clamp(20px, 1.6667vw, 30px)",
+          height: "clamp(20px, 1.6667vw, 30px)",
           padding: 2,
           border: "1px solid #E1E0E4",
-          borderRadius: 12,
+          borderRadius: 999,
+          flexShrink: 0,
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
@@ -85,8 +86,8 @@ export function ScrollHint({ visible = true }: { visible?: boolean }) {
       >
         {/* Figma vuesax/linear/arrow-down (node 1415:20941) — icon 20x20 */}
         <svg
-          width="20"
-          height="20"
+          width="100%"
+          height="100%"
           viewBox="0 0 20 20"
           fill="none"
           style={{ animation: "scroll-hint-arrow 2.8s ease-in-out infinite" }}

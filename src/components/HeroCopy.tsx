@@ -39,7 +39,7 @@ export function HeroCopy() {
         willChange: "opacity, filter, transform",
       }}
     >
-      <div className="flex w-full max-w-[800px] flex-col items-center gap-10">
+      <div className="flex w-full max-w-[min(800px,55.5556vw)] flex-col items-center gap-10">
         <div className="flex w-full flex-col items-center gap-2.5">
           <h1
             className="font-display capitalize text-ink-ghost"
@@ -61,7 +61,7 @@ export function HeroCopy() {
               fontSize: layout.subtitleFontSize,
               lineHeight: layout.subtitleLineHeight,
               fontWeight: 400,
-              maxWidth: 380,
+              maxWidth: "clamp(280px, 26.3889vw, 500px)",
               margin: 0,
             }}
           >
@@ -72,11 +72,11 @@ export function HeroCopy() {
         <button
           className="pointer-events-auto group relative inline-flex shrink-0 cursor-pointer items-center justify-center font-medium transition-all"
           style={{
-            height: 40,
-            fontSize: 14,
-            lineHeight: "22px",
+            height: "clamp(34px, 2.7778vw, 52px)",
+            fontSize: layout.bodyFontSize,
+            lineHeight: layout.bodyLineHeight,
             fontWeight: 500,
-            padding: "0 32px",
+            padding: "0 clamp(20px, 2.2222vw, 42px)",
             borderRadius: 12,
             border: "0.125rem solid transparent",
             color: "#FFFFFF",
