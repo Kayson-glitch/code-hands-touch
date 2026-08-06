@@ -155,7 +155,7 @@ export function ClosingSection() {
       <div
         ref={wrapperRef}
         className="artemis-closing__wrapper"
-        style={pinned ? { height: `${260 + 60 + PANELS.length * 100}vh` } : undefined}
+        style={pinned ? { height: `${300 + 80 + PANELS.length * 115}vh` } : undefined}
       >
         <div className="artemis-closing__sticky">
           {/* Light state: only visible while the dark layer wipes up. */}
