@@ -1,13 +1,14 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 
 /**
  * Third screen — "Numbers our customers trust us with."
  *
- * Normal-flow section (kore.ai style): the heading block sticks under the nav
- * while the three columns fill in left to right as the user scrolls — card
- * first, then the big number under it. Columns stay visible once revealed and
- * fade back out when scrolling up. When the section ends the heading unsticks
- * and the page scrolls on normally.
+ * 1:1 with the kore.ai `.k2-cards` interaction: the section is pinned under the
+ * nav while a fixed-height, overflow-hidden window holds three columns. Each
+ * column ([card] + [big number]) travels straight up through that window on a
+ * linear, staggered slice of the section progress — the card rises from below,
+ * gets pushed out of the top, and the big number comes to rest. Fully
+ * reversible; once the last column lands the pin releases.
  */
 
 const COLUMNS = [
@@ -34,18 +35,33 @@ const COLUMNS = [
   },
 ];
 
-const EASE = "cubic-bezier(0.22,1,0.36,1)";
-const TRANSITION = `opacity 520ms ${EASE}, transform 520ms ${EASE}`;
-
-function smoothstep(a: number, b: number, x: number) {
-  const t = Math.max(0, Math.min(1, (x - a) / (b - a)));
-  return t * t * (3 - 2 * t);
-}
+const NAV_H = 69;
+const GAP = 48;
+const BOTTOM_SAFE = 140; // clear the fixed Fin dock
 
 export function MetricsSection() {
   const sectionRef = useRef<HTMLElement | null>(null);
+  const headerRef = useRef<HTMLDivElement | null>(null);
+  const numberRef = useRef<HTMLDivElement | null>(null);
+
   const [progress, setProgress] = useState(0);
   const [reduced, setReduced] = useState(false);
+  const [windowH, setWindowH] = useState(560);
+  const [numberH, setNumberH] = useState(200);
+
+  // Measure the clipping window (viewport minus sticky header and dock safety)
+  // and the height of the big-number block, which sets the resting offset.
+  useLayoutEffect(() => {
+    const measure = () => {
+      const headerH = headerRef.current?.offsetHeight ?? 0;
+      const avail = window.innerHeight - NAV_H - headerH - BOTTOM_SAFE;
+      setWindowH(Math.max(320, avail));
+      setNumberH(numberRef.current?.offsetHeight ?? 200);
+    };
+    measure();
+    window.addEventListener("resize", measure);
+    return () => window.removeEventListener("resize", measure);
+  }, []);
 
   useEffect(() => {
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
@@ -60,8 +76,7 @@ export function MetricsSection() {
       const el = sectionRef.current;
       if (!el) return;
       const rect = el.getBoundingClientRect();
-      const vh = window.innerHeight;
-      const travel = Math.max(1, el.offsetHeight - vh);
+      const travel = Math.max(1, el.offsetHeight - window.innerHeight);
       setProgress(Math.max(0, Math.min(1, -rect.top / travel)));
     };
     const schedule = () => {
@@ -78,159 +93,175 @@ export function MetricsSection() {
     };
   }, []);
 
-  // Column i: card reveals first, its number trails 0.10 behind.
-  const cardAlpha = (i: number) =>
-    reduced ? 1 : smoothstep(i * 0.22, i * 0.22 + 0.26, progress);
-  const statAlpha = (i: number) =>
-    reduced ? 1 : smoothstep(i * 0.22 + 0.1, i * 0.22 + 0.36, progress);
+  const n = COLUMNS.length;
+  // Linear, three-way staggered slices — exactly the reference mapping.
+  const colT = (i: number) =>
+    reduced ? 1 : Math.max(0, Math.min(1, progress * n - i));
 
-  const rise = (a: number) =>
-    `translate3d(0, ${((1 - a) * 24).toFixed(2)}px, 0)`;
+  const startY = windowH; // fully below the window, clipped away
+  const endY = -(windowH - numberH); // card pushed out, number resting
 
   return (
     <section
       ref={sectionRef}
       className="relative w-full"
-      style={{ backgroundColor: "#FAFAFA", zIndex: 11 }}
+      style={{
+        backgroundColor: "#FAFAFA",
+        height: `calc(100dvh + ${n * 90}vh)`,
+        zIndex: 11,
+      }}
     >
       <div
         style={{
-          width: "min(100% - 48px, 1200px)",
-          margin: "0 auto",
-          paddingTop: 120,
-          paddingBottom: "80vh",
+          position: "sticky",
+          top: NAV_H,
+          height: `calc(100dvh - ${NAV_H}px)`,
+          overflow: "hidden",
         }}
       >
-        {/* Sticky heading */}
         <div
           style={{
-            position: "sticky",
-            top: 69,
-            zIndex: 2,
-            backgroundColor: "#FAFAFA",
-            paddingBottom: 40,
+            width: "min(100% - 48px, 1200px)",
+            margin: "0 auto",
           }}
         >
-          <h2
-            className="font-display capitalize"
+          {/* Header — always visible while the section is pinned */}
+          <div ref={headerRef} style={{ paddingTop: 48, paddingBottom: 40 }}>
+            <h2
+              className="font-display capitalize"
+              style={{
+                margin: 0,
+                fontSize: "clamp(30px, 3.4vw, 48px)",
+                lineHeight: 1.17,
+                fontWeight: 500,
+                color: "var(--ink)",
+              }}
+            >
+              Numbers our customers
+              <br />
+              trust us with.
+            </h2>
+            <div
+              aria-hidden
+              style={{
+                marginTop: 40,
+                width: 460,
+                maxWidth: "100%",
+                height: 1,
+                background:
+                  "linear-gradient(90deg, #137DFF 0%, #FF18AA 50%, #FFCD17 100%)",
+              }}
+            />
+          </div>
+
+          {/* Clipping window */}
+          <div
             style={{
-              margin: 0,
-              fontSize: "clamp(30px, 3.4vw, 48px)",
-              lineHeight: 1.17,
-              fontWeight: 500,
-              color: "var(--ink)",
+              height: windowH,
+              overflow: "hidden",
+              display: "grid",
+              gridTemplateColumns: `repeat(${n}, minmax(0, 1fr))`,
             }}
           >
-            Numbers our customers
-            <br />
-            trust us with.
-          </h2>
-
-          <div
-            aria-hidden
-            style={{
-              marginTop: 40,
-              width: 460,
-              maxWidth: "100%",
-              height: 1,
-              background:
-                "linear-gradient(90deg, #137DFF 0%, #FF18AA 50%, #FFCD17 100%)",
-            }}
-          />
-        </div>
-
-        {/* Three columns: card + big number */}
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
-          }}
-        >
-          {COLUMNS.map((col, i) => {
-            const ca = cardAlpha(i);
-            const sa = statAlpha(i);
-            return (
-              <div key={col.title}>
+            {COLUMNS.map((col, i) => {
+              const t = colT(i);
+              const y = startY + (endY - startY) * t;
+              return (
                 <div
+                  key={col.title}
                   style={{
-                    border: "1px solid var(--hairline)",
+                    height: windowH,
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: GAP,
                     marginLeft: i === 0 ? 0 : -1,
-                    padding: 24,
-                    opacity: ca,
-                    transform: rise(ca),
-                    transition: TRANSITION,
+                    opacity: t > 0 ? 1 : 0,
+                    transform: `translate3d(0, ${y.toFixed(2)}px, 0)`,
+                    willChange: "transform",
                   }}
                 >
+                  {/* Card */}
                   <div
-                    aria-hidden
                     style={{
-                      width: "100%",
-                      aspectRatio: "352 / 300",
-                      backgroundColor: "#D9D9D9",
-                    }}
-                  />
-                  <p
-                    style={{
-                      margin: "24px 0 0",
-                      fontFamily: "Montserrat, sans-serif",
-                      fontWeight: 600,
-                      fontSize: 16,
-                      lineHeight: "24px",
-                      color: "var(--ink)",
+                      flex: "1 1 auto",
+                      minHeight: 0,
+                      border: "1px solid var(--hairline)",
+                      padding: 24,
+                      display: "flex",
+                      flexDirection: "column",
                     }}
                   >
-                    {col.title}
-                  </p>
-                  <p
-                    style={{
-                      margin: "10px 0 0",
-                      fontFamily: "Montserrat, sans-serif",
-                      fontWeight: 400,
-                      fontSize: 14,
-                      lineHeight: "24px",
-                      color: "var(--ink-muted)",
-                    }}
-                  >
-                    {col.body}
-                  </p>
-                </div>
-
-                <div
-                  style={{
-                    marginTop: 56,
-                    paddingLeft: 24,
-                    opacity: sa,
-                    transform: rise(sa),
-                    transition: TRANSITION,
-                  }}
-                >
-                  <div
-                    className="font-display capitalize"
-                    style={{ fontWeight: 500, color: "#000000", lineHeight: 1 }}
-                  >
-                    <span style={{ fontSize: "clamp(48px, 6.9vw, 100px)" }}>
-                      {col.value}
-                    </span>
-                    <span style={{ fontSize: "clamp(33px, 4.7vw, 68px)" }}>
-                      {col.unit}
-                    </span>
+                    <div
+                      aria-hidden
+                      style={{
+                        flex: "1 1 auto",
+                        minHeight: 0,
+                        backgroundColor: "#D9D9D9",
+                      }}
+                    />
+                    <p
+                      style={{
+                        margin: "24px 0 0",
+                        fontFamily: "Montserrat, sans-serif",
+                        fontWeight: 600,
+                        fontSize: 16,
+                        lineHeight: "24px",
+                        color: "var(--ink)",
+                      }}
+                    >
+                      {col.title}
+                    </p>
+                    <p
+                      style={{
+                        margin: "10px 0 0",
+                        fontFamily: "Montserrat, sans-serif",
+                        fontWeight: 400,
+                        fontSize: 14,
+                        lineHeight: "24px",
+                        color: "var(--ink-muted)",
+                      }}
+                    >
+                      {col.body}
+                    </p>
                   </div>
-                  <p
-                    style={{
-                      margin: "20px 0 0",
-                      fontFamily: "Montserrat, sans-serif",
-                      fontWeight: 500,
-                      fontSize: 18,
-                      lineHeight: "26px",
-                      color: "var(--ink)",
-                    }}
+
+                  {/* Big number */}
+                  <div
+                    ref={i === 0 ? numberRef : undefined}
+                    style={{ flex: "0 0 auto", paddingLeft: 24 }}
                   >
-                    {col.label}
-                  </p>
+                    <div
+                      className="font-display capitalize"
+                      style={{
+                        fontWeight: 500,
+                        color: "#000000",
+                        lineHeight: 1,
+                      }}
+                    >
+                      <span style={{ fontSize: "clamp(48px, 6.9vw, 100px)" }}>
+                        {col.value}
+                      </span>
+                      <span style={{ fontSize: "clamp(33px, 4.7vw, 68px)" }}>
+                        {col.unit}
+                      </span>
+                    </div>
+                    <p
+                      style={{
+                        margin: "20px 0 0",
+                        fontFamily: "Montserrat, sans-serif",
+                        fontWeight: 500,
+                        fontSize: 18,
+                        lineHeight: "26px",
+                        color: "var(--ink)",
+                      }}
+                    >
+                      {col.label}
+                    </p>
+                  </div>
                 </div>
-              </div>
-            );
-          })}
+              );
+            })}
+          </div>
         </div>
       </div>
     </section>
