@@ -185,7 +185,7 @@ export function FinChatDock() {
             alignItems: expanded ? "flex-end" : "center",
             backgroundColor: dockBg,
             border: dockBorder,
-            backdropFilter: onDark ? "blur(18px) saturate(140%)" : "none",
+            backdropFilter: onDark ? "blur(6px)" : "none",
             boxShadow: dockShadow,
             transition:
               "box-shadow 300ms ease, background-color 300ms ease, border-color 300ms ease",
