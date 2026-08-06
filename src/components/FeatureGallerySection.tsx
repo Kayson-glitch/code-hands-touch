@@ -95,17 +95,17 @@ export function FeaturePanels({
         const left = lefts[index];
         const enter =
           pinned && viewportW > 0 && left !== undefined
-            ? clamp((viewportW - left) / (viewportW * 0.35))
+            ? clamp((viewportW - left) / (viewportW * 0.6))
             : 1;
-        const eased = easeOutCubic(enter);
-        const lift = pinned && viewportH > 0 ? (1 - eased) * viewportH : 0;
+        const eased = easeOutBack(enter);
+        const lift = pinned && viewportH > 0 ? (1 - Math.min(1, eased)) * viewportH : 0;
         return (
           <article
             key={panel.id}
             className="artemis-gallery__panel"
             style={
               pinned
-                ? { opacity: eased, transform: `translate3d(0, ${lift.toFixed(2)}px, 0)` }
+                ? { opacity: clamp(eased), transform: `translate3d(0, ${lift.toFixed(2)}px, 0)` }
                 : undefined
             }
           >
