@@ -545,6 +545,22 @@ export function HalftoneHandsFooter({
 
     const snapTo = (to: number) => {
       if (snapState.active) return;
+      const lenis = getLenis();
+      if (lenis) {
+        // Hand the snap to Lenis so the page keeps one single scroll driver.
+        snapState.active = true;
+        setHijack(false);
+        lenis.scrollTo(to, {
+          duration: SNAP_MS / 1000,
+          easing: easeInOut,
+          force: true,
+          lock: true,
+          onComplete: () => {
+            snapState.active = false;
+          },
+        });
+        return;
+      }
       snapState.active = true;
       snapState.from = window.scrollY;
       snapState.to = to;
