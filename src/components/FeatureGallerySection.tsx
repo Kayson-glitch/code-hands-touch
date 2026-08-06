@@ -1,71 +1,70 @@
-import type { ReactNode } from "react";
-
-import f01 from "@/assets/feature-01.jpg";
-import f02 from "@/assets/feature-02.jpg";
-import f03 from "@/assets/feature-03.jpg";
-import f04 from "@/assets/feature-04.jpg";
-import f05 from "@/assets/feature-05.jpg";
-
 const clamp = (v: number) => Math.max(0, Math.min(1, v));
 const easeOutCubic = (x: number) => 1 - Math.pow(1 - x, 3);
 
+type Point = { label: string; text: string };
+
 type Panel = {
   id: string;
-  image: string;
-  name: string;
-  body: ReactNode;
+  title: string;
+  points: Point[];
 };
 
 export const PANELS: Panel[] = [
   {
     id: "001",
-    image: f01,
-    name: "INSTANT ANSWERS",
-    body: (
-      <>
-        Sub-second first response, <span>24/7</span>, with no queue and no night shift.
-      </>
-    ),
+    title: "Resolve 93% of Customer Issues Instantly",
+    points: [
+      { label: "Rapid Response", text: "Answers in under 3 seconds—always fast, always ready." },
+      {
+        label: "Smart Assistance",
+        text: "Guides new agents with AI-suggested answers that stay on brand.",
+      },
+      {
+        label: "Complex Workflow Handling",
+        text: "Handles complex workflows—not just questions—end to end.",
+      },
+      { label: "Seamless Human Handoff", text: "Instant context summaries for smooth agent takeover." },
+    ],
   },
   {
     id: "002",
-    image: f02,
-    name: "BRAND VOICE",
-    body: (
-      <>
-        Learns your knowledge base and tone, so every reply sounds like <span>your best rep</span>.
-      </>
-    ),
+    title: "Speak in Your Brand Voice, Every Time",
+    points: [
+      { label: "Tone Control", text: "Tuned to your style guide, from playful to strictly formal." },
+      { label: "Grounded Answers", text: "Replies cite your help center, docs and policy pages." },
+      { label: "Multilingual by Default", text: "Answers in 30+ languages without separate content sets." },
+      { label: "Guardrails", text: "Blocks off-topic promises, refunds and claims you never approved." },
+    ],
   },
   {
     id: "003",
-    image: f03,
-    name: "SMART ROUTING",
-    body: (
-      <>
-        Detects intent and risk, then hands complex tickets to a human <span>instantly</span>.
-      </>
-    ),
+    title: "Route Every Conversation to the Right Place",
+    points: [
+      { label: "Intent Detection", text: "Reads urgency, sentiment and account value in real time." },
+      { label: "Priority Queues", text: "VIP and at-risk customers reach a human before they churn." },
+      { label: "Skill Matching", text: "Billing, shipping or technical—each ticket finds its expert." },
+      { label: "Zero Repetition", text: "Full history travels with the customer, no retelling required." },
+    ],
   },
   {
     id: "004",
-    image: f04,
-    name: "OMNICHANNEL",
-    body: (
-      <>
-        Web, app, email and social share <span>one conversation context</span> across every touchpoint.
-      </>
-    ),
+    title: "One Conversation Across Every Channel",
+    points: [
+      { label: "Unified Inbox", text: "Web chat, email, app and social threads live in one timeline." },
+      { label: "Shared Context", text: "Start on mobile, finish on desktop—nothing gets lost." },
+      { label: "Proactive Nudges", text: "Reaches out on order delays before the customer asks." },
+      { label: "Native Integrations", text: "Connects to your CRM, order system and ticketing in minutes." },
+    ],
   },
   {
     id: "005",
-    image: f05,
-    name: "INSIGHT LOOP",
-    body: (
-      <>
-        Clusters recurring questions automatically and feeds them back into <span>product and scripts</span>.
-      </>
-    ),
+    title: "Turn Support Data Into Product Insight",
+    points: [
+      { label: "Auto Clustering", text: "Groups recurring questions into themes you can act on." },
+      { label: "Deflection Analytics", text: "Shows exactly which answers save the most agent hours." },
+      { label: "Quality Scoring", text: "Reviews every conversation, not a 2% random sample." },
+      { label: "Continuous Learning", text: "Feeds gaps straight back into your knowledge base." },
+    ],
   },
 ];
 
@@ -102,17 +101,17 @@ export function FeaturePanels({
                 : undefined
             }
           >
-            <div className="artemis-gallery__figure">
-              <p className="artemis-gallery__index">[{panel.id}]</p>
-              <div className="artemis-gallery__frame">
-                <img src={panel.image} alt="" loading="lazy" width={768} height={1024} />
-              </div>
-            </div>
+            <div className="artemis-gallery__media" aria-hidden />
             <div className="artemis-gallery__copy">
-              <p className="artemis-gallery__label">[COLLECTION NAME] {"{"}</p>
-              <p className="artemis-gallery__name">/&nbsp;&nbsp;{panel.name}</p>
-              <p className="artemis-gallery__label">[DESCRIPTION] {"{"}</p>
-              <p className="artemis-gallery__body">{panel.body}</p>
+              <h3 className="artemis-gallery__title">{panel.title}</h3>
+              <ul className="artemis-gallery__list">
+                {panel.points.map((point) => (
+                  <li key={point.label} className="artemis-gallery__item">
+                    <p className="artemis-gallery__label">{point.label}</p>
+                    <p className="artemis-gallery__body">{point.text}</p>
+                  </li>
+                ))}
+              </ul>
             </div>
           </article>
         );
