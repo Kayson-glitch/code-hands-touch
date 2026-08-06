@@ -113,6 +113,8 @@ export function FeaturePanels({
             : 1;
         const eased = easeOutQuint(enter);
         const lift = pinned && viewportH > 0 ? (1 - eased) * viewportH : 0;
+        // Delay the text reveal so the panel shell is already in view first.
+        const textEnter = clamp((enter - 0.45) / 0.55);
         return (
           <article
             key={panel.id}
@@ -127,19 +129,19 @@ export function FeaturePanels({
             <div className="artemis-gallery__copy">
               <h3
                 className="artemis-gallery__title"
-                style={pinned ? fieldReveal(enter, 0.0, 0.25, 18, 10) : undefined}
+                style={pinned ? fieldReveal(textEnter, 0.0, 0.35, 18, 10) : undefined}
               >
                 {panel.title}
               </h3>
               <ul className="artemis-gallery__list">
                 {panel.points.map((point, pi) => {
-                  const rowStart = 0.12 + pi * 0.14;
-                  const rowEnd = rowStart + 0.25;
+                  const rowStart = 0.12 + pi * 0.16;
+                  const rowEnd = rowStart + 0.35;
                   return (
                     <li
                       key={point.label}
                       className="artemis-gallery__item"
-                      style={pinned ? fieldReveal(enter, rowStart, rowEnd, 14, 6) : undefined}
+                      style={pinned ? fieldReveal(textEnter, rowStart, rowEnd, 14, 6) : undefined}
                     >
                       <p className="artemis-gallery__label">{point.label}</p>
                       <p className="artemis-gallery__body">{point.text}</p>
