@@ -770,8 +770,10 @@ html.lenis body {
     transform: none !important;
   }
 
-  .artemis-gallery__frame {
-    width: min(100%, 340px);
+  .artemis-gallery__media {
+    width: min(100%, 480px);
+    height: auto;
+    aspect-ratio: 3 / 2;
   }
 
   .artemis-gallery__copy {
