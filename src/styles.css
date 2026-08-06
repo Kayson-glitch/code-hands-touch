@@ -548,7 +548,7 @@ html.lenis body {
   position: relative;
   z-index: 10;
   width: 100%;
-  background-color: #0A0A0A;
+  background-color: #FAFAFA;
 }
 
 .artemis-closing__wrapper {
@@ -576,8 +576,8 @@ html.lenis body {
   inset: 0;
   display: flex;
   align-items: center;
-  background-color: #FAFAFA;
-  color: #0A0A0A;
+  background-color: #0A0A0A;
+  color: #FAFAFA;
   will-change: clip-path;
 }
 
@@ -588,11 +588,11 @@ html.lenis body {
   font-weight: 500;
   line-height: 0.86;
   letter-spacing: 0;
-  color: #FAFAFA;
+  color: #0A0A0A;
 }
 
 .artemis-closing__invert .artemis-closing__text {
-  color: #0A0A0A;
+  color: #FAFAFA;
 }
 
 .artemis-closing__text em {
