@@ -120,19 +120,19 @@ export function FinChatDock() {
     expanded && messages.filter((m) => m.role === "user").length === 0;
 
   const onDark = theme === "dark" && darkSurface;
-  const dockBg = onDark ? "rgba(255,255,255,0.50)" : "#FFFFFF";
+  const dockBg = onDark ? "rgba(255,255,255,0.22)" : "#FFFFFF";
   const dockBorder = onDark
-    ? "1px solid rgba(255,255,255,0.22)"
-    : "1px solid transparent";
+    ? "1px solid rgba(255,255,255,0.32)"
+    : "1px solid rgba(0,0,0,0.06)";
   const dockShadow = onDark
-    ? "0 12px 24px rgba(0,0,0,0.35)"
+    ? "0 10px 28px rgba(0,0,0,0.30), inset 0 1px 0 rgba(255,255,255,0.35)"
     : "0 12px 20px rgba(0,0,0,0.05)";
-  const textMain = onDark ? "#FFFFFF" : "#0E0B22";
-  const textPlaceholder = onDark ? "rgba(255,255,255,0.50)" : "#A1A0A9";
-  const textMuted = onDark ? "rgba(255,255,255,0.70)" : "#7A7885";
-  const suggestionBg = onDark ? "rgba(255,255,255,0.10)" : "rgba(0,0,0,0.06)";
-  const sendBg = onDark ? "#FFFFFF" : "#C7C6CD";
-  const sendIcon = onDark ? "#0E0B22" : "#FFFFFF";
+  const textMain = onDark ? "#1A1A1A" : "#0E0B22";
+  const textPlaceholder = onDark ? "rgba(0,0,0,0.45)" : "#A1A0A9";
+  const textMuted = onDark ? "rgba(0,0,0,0.55)" : "#7A7885";
+  const suggestionBg = onDark ? "rgba(255,255,255,0.18)" : "rgba(0,0,0,0.06)";
+  const sendBg = onDark ? "transparent" : "#C7C6CD";
+  const sendIcon = onDark ? "#1A1A1A" : "#FFFFFF";
 
   return (
     <div
