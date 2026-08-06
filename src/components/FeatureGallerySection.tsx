@@ -1,5 +1,10 @@
 const clamp = (v: number) => Math.max(0, Math.min(1, v));
 const easeOutCubic = (x: number) => 1 - Math.pow(1 - x, 3);
+const easeOutBack = (x: number) => {
+  const c1 = 1.70158;
+  const c3 = c1 + 1;
+  return 1 + c3 * Math.pow(x - 1, 3) + c1 * Math.pow(x - 1, 2);
+};
 
 type Point = { label: string; text: string };
 
@@ -90,9 +95,9 @@ export function FeaturePanels({
         const left = lefts[index];
         const enter =
           pinned && viewportW > 0 && left !== undefined
-            ? clamp((viewportW - left) / (viewportW * 0.35))
+            ? clamp((viewportW - left) / (viewportW * 0.6))
             : 1;
-        const eased = easeOutCubic(enter);
+        const eased = easeOutBack(enter);
         const lift = pinned && viewportH > 0 ? (1 - eased) * viewportH : 0;
         return (
           <article
@@ -100,7 +105,7 @@ export function FeaturePanels({
             className="artemis-gallery__panel"
             style={
               pinned
-                ? { opacity: eased, transform: `translate3d(0, ${lift.toFixed(2)}px, 0)` }
+                ? { opacity: clamp(eased), transform: `translate3d(0, ${lift.toFixed(2)}px, 0)` }
                 : undefined
             }
           >
