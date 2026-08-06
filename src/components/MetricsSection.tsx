@@ -109,7 +109,8 @@ export function MetricsSection() {
           style={{
             width: "min(100% - 48px, 1200px)",
             margin: "0 auto",
-            paddingTop: 64,
+            paddingTop: 48,
+            paddingBottom: 96,
           }}
         >
           {/* Heading */}
