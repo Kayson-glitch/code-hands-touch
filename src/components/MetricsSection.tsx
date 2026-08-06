@@ -215,7 +215,7 @@ export function MetricsSection() {
               display: "grid",
               gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
               gap: 24,
-              marginTop: 56,
+              marginTop: 40,
               paddingLeft: 24,
             }}
           >
