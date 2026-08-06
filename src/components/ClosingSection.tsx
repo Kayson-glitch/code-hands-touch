@@ -107,6 +107,20 @@ export function ClosingSection() {
   const scale = pinned ? 1 - (1 - TITLE_SCALE) * shrink : TITLE_SCALE;
   const x = pinned ? travel * slide : 0;
 
+  // Panel offsets shift while the headline shrinks (its layout width is
+  // compensated with a negative margin), so re-measure whenever scale changes.
+  useLayoutEffect(() => {
+    const track = trackRef.current;
+    if (!track) return;
+    setOffsets(
+      Array.from(track.querySelectorAll<HTMLElement>(".artemis-gallery__panel")).map(
+        (el) => el.offsetLeft,
+      ),
+    );
+  }, [scale, travel, titleW, desktop]);
+
+
+
   return (
     <section className="artemis-closing" aria-label="Artemis delivers certainty">
       {/* Surface probes: the dark wipe travels bottom-up, so the dock flips to
