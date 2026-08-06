@@ -11,7 +11,8 @@ const CARDS = [
 ];
 
 const START_Y = 320;
-const HOLD_VH = 0.8;
+const START_OFFSET_RATIO = 0.25;
+const END_OFFSET_RATIO = 0.8;
 const clamp = (value: number) => Math.max(0, Math.min(1, value));
 
 export function MetricsSection() {
@@ -26,20 +27,22 @@ export function MetricsSection() {
   const [copyTop, setCopyTop] = useState(520);
   const [numberTop, setNumberTop] = useState(600);
   const [desktop, setDesktop] = useState(true);
-  const [viewportH, setViewportH] = useState(900);
   const [reducedMotion, setReducedMotion] = useState(false);
 
   useLayoutEffect(() => {
     const measure = () => {
       const isDesktop = window.innerWidth >= 991;
       setDesktop(isDesktop);
-      setViewportH(window.innerHeight);
       if (!isDesktop) return;
       const item = firstItemRef.current;
       const copy = firstCopyRef.current;
       const cards = cardsRef.current;
-      if (item) setCardHeight(item.offsetHeight);
-      if (copy && cards) setCopyTop(copy.offsetTop - cards.offsetTop);
+      if (item) setCardHeight(item.getBoundingClientRect().height);
+      // Source site measures the copy offset against the card box (rect-based).
+      const box = copy?.closest(".kore-outcomes__card") as HTMLElement | null;
+      if (copy && box) {
+        setCopyTop(copy.getBoundingClientRect().top - box.getBoundingClientRect().top);
+      }
       const num = firstNumberRef.current;
       if (num && cards) setNumberTop(Math.max(0, num.offsetTop - cards.offsetTop - 32));
     };
@@ -72,9 +75,10 @@ export function MetricsSection() {
       const wrapper = wrapperRef.current;
       if (!wrapper) return;
       const rect = wrapper.getBoundingClientRect();
-      const hold = window.innerHeight * HOLD_VH;
-      const distance = Math.max(1, wrapper.offsetHeight - hold - window.innerHeight * 0.8);
-      setProgress(clamp(-rect.top / distance));
+      const wh = window.innerHeight;
+      // Source-site mapping: p = (wh - top - wh*0.25) / (height - wh*0.8)
+      const distance = Math.max(1, rect.height - wh * END_OFFSET_RATIO);
+      setProgress(clamp((wh - rect.top - wh * START_OFFSET_RATIO) / distance));
     };
     const request = () => {
       if (!frame) frame = requestAnimationFrame(update);
@@ -91,7 +95,7 @@ export function MetricsSection() {
 
   return (
     <section className="kore-outcomes" aria-labelledby="outcomes-heading">
-      <div ref={wrapperRef} className="kore-outcomes__wrapper" style={desktop ? { height: cardHeight * CARDS.length + viewportH * HOLD_VH } : undefined}>
+      <div ref={wrapperRef} className="kore-outcomes__wrapper" style={desktop ? { height: cardHeight * CARDS.length } : undefined}>
         <div ref={stickyRef} className="kore-outcomes__sticky">
           <header className="kore-outcomes__header">
             <div className="kore-outcomes__header-inner">
@@ -110,7 +114,7 @@ export function MetricsSection() {
             </div>
             <div ref={cardsRef} className="kore-outcomes__cards">
               {CARDS.map((card, index) => {
-                const columnProgress = reducedMotion ? 1 : clamp((progress / 0.92) * CARDS.length - index);
+                const columnProgress = reducedMotion ? 1 : clamp(progress * CARDS.length - index);
                 const opacity = reducedMotion ? 1 : clamp(columnProgress * 3);
                 const restY = -copyTop;
                 const translateY = START_Y + (restY - START_Y) * columnProgress;
