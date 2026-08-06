@@ -176,7 +176,7 @@ export function MetricsSection() {
                     aria-hidden
                     style={{
                       width: "100%",
-                      aspectRatio: "352 / 300",
+                      aspectRatio: "352 / 220",
                       backgroundColor: "#D9D9D9",
                     }}
                   />
