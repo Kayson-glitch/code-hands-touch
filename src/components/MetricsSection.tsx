@@ -14,6 +14,8 @@ const START_Y = 320;
 const START_OFFSET_RATIO = 0.25;
 const END_OFFSET_RATIO = 0.8;
 const clamp = (value: number) => Math.max(0, Math.min(1, value));
+// Reference site eases each column's reveal instead of translating linearly.
+const easeOutCubic = (x: number) => 1 - Math.pow(1 - x, 3);
 
 export function MetricsSection() {
   const wrapperRef = useRef<HTMLDivElement | null>(null);
