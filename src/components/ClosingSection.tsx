@@ -31,7 +31,7 @@ export function ClosingSection() {
   const [viewportH, setViewportH] = useState(900);
   const [travel, setTravel] = useState(0);
   const [titleW, setTitleW] = useState(0);
-  const [offsets, setOffsets] = useState<number[]>([]);
+  const [lefts, setLefts] = useState<number[]>([]);
   const [viewportW, setViewportW] = useState(1440);
 
   useEffect(() => {
@@ -50,11 +50,6 @@ export function ClosingSection() {
       if (!isDesktop || !track) return;
       if (titleRef.current) setTitleW(titleRef.current.offsetWidth);
       setViewportW(window.innerWidth);
-      setOffsets(
-        Array.from(track.querySelectorAll<HTMLElement>(".artemis-gallery__panel")).map(
-          (el) => el.offsetLeft,
-        ),
-      );
       setTravel(Math.max(0, track.scrollWidth - window.innerWidth));
     };
     measure();
@@ -83,6 +78,15 @@ export function ClosingSection() {
       const wh = window.innerHeight;
       const distance = Math.max(1, rect.height - wh);
       setProgress(clamp(-rect.top / distance));
+      const track = trackRef.current;
+      if (track) {
+        setLefts(
+          Array.from(track.querySelectorAll<HTMLElement>(".artemis-gallery__panel")).map(
+            (el) => el.getBoundingClientRect().left,
+          ),
+        );
+      }
+      setViewportW(window.innerWidth);
       setInView(rect.top < wh && rect.bottom > 0);
       setViewportH(wh);
     };
@@ -168,7 +172,7 @@ export function ClosingSection() {
               >
                 <Words />
               </div>
-              <FeaturePanels offsets={offsets} x={x} viewportW={viewportW} pinned={pinned} />
+              <FeaturePanels lefts={lefts} viewportW={viewportW} pinned={pinned} />
             </div>
           </div>
         </div>

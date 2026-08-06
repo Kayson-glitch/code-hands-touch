@@ -75,21 +75,22 @@ export const PANELS: Panel[] = [
  * own left edge crosses into the viewport, so it always matches the travel.
  */
 export function FeaturePanels({
-  offsets,
-  x,
+  lefts,
   viewportW,
   pinned,
 }: {
-  offsets: number[];
-  x: number;
+  lefts: number[];
   viewportW: number;
   pinned: boolean;
 }) {
   return (
     <>
       {PANELS.map((panel, index) => {
-        const left = (offsets[index] ?? 0) - x;
-        const enter = pinned && viewportW > 0 ? clamp((viewportW - left) / (viewportW * 0.35)) : 1;
+        const left = lefts[index];
+        const enter =
+          pinned && viewportW > 0 && left !== undefined
+            ? clamp((viewportW - left) / (viewportW * 0.35))
+            : 1;
         const eased = easeOutCubic(enter);
         return (
           <article
