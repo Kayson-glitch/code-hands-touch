@@ -123,6 +123,9 @@ function Index() {
           <MetricsSection />
           {/* Fourth screen: dark closing statement with scroll-driven invert */}
           <ClosingSection />
+          {/* Fifth screen: pinned horizontal feature gallery */}
+          <FeatureGallerySection />
+
 
           {/* Always pinned to bottom, unaffected by parallax */}
           <FinChatDock />
