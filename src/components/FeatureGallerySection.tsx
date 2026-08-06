@@ -129,14 +129,14 @@ export function FeaturePanels({
             <div className="artemis-gallery__copy">
               <h3
                 className="artemis-gallery__title"
-                style={pinned ? fieldReveal(textEnter, 0.0, 0.35, 18, 10) : undefined}
+                style={pinned ? fieldReveal(textEnter, 0.0, 0.65, 18, 10) : undefined}
               >
                 {panel.title}
               </h3>
               <ul className="artemis-gallery__list">
                 {panel.points.map((point, pi) => {
-                  const rowStart = 0.12 + pi * 0.16;
-                  const rowEnd = rowStart + 0.35;
+                  const rowStart = 0.08 + pi * 0.12;
+                  const rowEnd = rowStart + 0.65;
                   return (
                     <li
                       key={point.label}
