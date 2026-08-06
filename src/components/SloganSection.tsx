@@ -241,7 +241,7 @@ export function SloganSection() {
               <div
                 key={i}
                 style={{
-                  width: 520,
+                  width: 480,
                   padding: "0 48px",
                   borderRight: "1px solid rgba(255,255,255,0.12)",
                   flexShrink: 0,
