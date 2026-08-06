@@ -113,8 +113,9 @@ export function ClosingSection() {
   // Static: measured against the final headline scale so the offset never
   // shifts mid-slide.
   const lead = pinned
-    ? Math.max(0, viewportW - (titleLeft + titleW * TITLE_SCALE) - 2 * 128)
+    ? Math.max(0, viewportW - (titleLeft + titleW * TITLE_SCALE) - 2 * 128 - 200)
     : 0;
+
 
   // Panel offsets shift while the headline shrinks (its layout width is
   // compensated with a negative margin), so re-measure whenever scale changes.
