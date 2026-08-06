@@ -10,6 +10,8 @@ import { IntroPreloader } from "@/components/IntroPreloader";
 import { INTRO_ENABLED } from "@/components/intro/introConfig";
 
 import { SloganSection } from "@/components/SloganSection";
+import { MetricsSection } from "@/components/MetricsSection";
+
 import videoAsset from "@/assets/intro-hands.mp4.asset.json";
 
 
