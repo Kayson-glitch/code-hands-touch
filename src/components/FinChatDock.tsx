@@ -166,7 +166,6 @@ export function FinChatDock() {
             backgroundColor: dockBg,
             border: dockBorder,
             backdropFilter: onDark ? "blur(18px) saturate(140%)" : "none",
-            WebkitBackdropFilter: onDark ? "blur(18px) saturate(140%)" : "none",
             boxShadow: dockShadow,
             transition:
               "box-shadow 300ms ease, background-color 300ms ease, border-color 300ms ease",
