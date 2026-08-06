@@ -440,7 +440,7 @@ body {
   }
 
   .kore-outcomes__footer p {
-    font-size: clamp(3.25rem, 17vw, 5rem);
+    font-size: clamp(3rem, 15vw, 4.5rem);
   }
 }
 
