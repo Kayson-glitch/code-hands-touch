@@ -6,10 +6,11 @@ import scaleAsset from "@/assets/kore-scale.svg.asset.json";
 import securityAsset from "@/assets/kore-security.svg.asset.json";
 
 const CARDS = [
-  { image: valueAsset.url, title: "{ Outcomes in days }", body: "{ Artemis } handles the infrastructure; your team starts at the business logic. Team focuses on outcomes. Agents ship faster.", value: "5x", outcome: "faster time to value" },
-  { image: scaleAsset.url, title: "{ Predictability at Scale }", body: "Every agent is clearly defined, tested, and validated before deployment, so what works in design does not break in production.", value: "No", outcome: "surprises in production" },
-  { image: securityAsset.url, title: "{ Security + Governance }", body: "Every action stays within approved policies and boundaries, with full visibility into what happened and why.", value: "Zero", outcome: "unauthorized agent actions" },
+  { image: valueAsset.url, title: "{ Outcomes in days }", body: "{ Artemis } handles the infrastructure; your team starts at the business logic. Team focuses on outcomes. Agents ship faster.", value: "+85", unit: "%", outcome: "faster time to value" },
+  { image: scaleAsset.url, title: "{ Predictability at Scale }", body: "Every agent is clearly defined, tested, and validated before deployment, so what works in design does not break in production.", value: "13", unit: "k", outcome: "surprises in production" },
+  { image: securityAsset.url, title: "{ Security + Governance }", body: "Every action stays within approved policies and boundaries, with full visibility into what happened and why.", value: "+90", unit: "%", outcome: "unauthorized agent actions" },
 ];
+
 
 const START_Y = 320;
 const START_OFFSET_RATIO = 0.25;
@@ -136,7 +137,7 @@ export function MetricsSection() {
                       </div>
                     </article>
                     <div ref={index === 0 ? firstNumberRef : undefined} className="kore-outcomes__number">
-                      <p className="kore-outcomes__value">{card.value}</p>
+                      <p className="kore-outcomes__value">{card.value}<span className="kore-outcomes__value-unit">{card.unit}</span></p>
                       <p className="kore-outcomes__label">{card.outcome}</p>
                     </div>
                   </div>
