@@ -38,7 +38,12 @@ export function MetricsSection() {
       if (item) setCardHeight(item.getBoundingClientRect().height);
       if (copy && cards) setCopyTop(copy.getBoundingClientRect().top - cards.getBoundingClientRect().top);
       const num = firstNumberRef.current;
-      if (num && cards) setNumberTop(num.getBoundingClientRect().top - cards.getBoundingClientRect().top);
+      const container = cards?.parentElement;
+      if (num && cards && container) {
+        const top = num.getBoundingClientRect().top - cards.getBoundingClientRect().top;
+        const centered = top + (num.getBoundingClientRect().height - container.getBoundingClientRect().height) / 2;
+        setNumberTop(Math.max(0, centered));
+      }
     };
     measure();
     const observer = new ResizeObserver(measure);
@@ -102,7 +107,7 @@ export function MetricsSection() {
               {CARDS.map((card, index) => {
                 const columnProgress = reducedMotion ? 1 : clamp(progress * CARDS.length - index);
                 const opacity = reducedMotion ? 1 : clamp(columnProgress * 3);
-                const restY = -Math.min(copyTop, numberTop);
+                const restY = -numberTop;
                 const translateY = START_Y + (restY - START_Y) * columnProgress;
                 return (
                   <div ref={index === 0 ? firstItemRef : undefined} key={card.title} className="kore-outcomes__item" style={desktop ? { opacity, transform: `translate3d(0, ${translateY}px, 0)` } : undefined}>
