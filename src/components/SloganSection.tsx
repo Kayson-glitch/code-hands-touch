@@ -122,6 +122,7 @@ export function SloganSection() {
   return (
     <section
       ref={sectionRef}
+      data-dark-section=""
       className="relative w-full"
       style={{
         backgroundColor: "#0A0A0A",
