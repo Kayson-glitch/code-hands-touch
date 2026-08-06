@@ -600,6 +600,29 @@ html.lenis body {
   font-weight: 400;
 }
 
+/* Horizontal track inside the dark layer: headline first, then the panels. */
+.artemis-closing__track {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  gap: 8rem;
+  width: max-content;
+  padding-inline: max(5.5rem, calc((100% - 95.5rem) / 2));
+  will-change: transform;
+}
+
+.artemis-closing__title-slot {
+  flex: 0 0 auto;
+  transform-origin: left center;
+  will-change: transform;
+}
+
+.artemis-closing__title-slot .artemis-closing__text {
+  color: #fafafa;
+  white-space: nowrap;
+}
+
 @media (max-width: 990px) {
   .artemis-closing__stage {
     width: calc(100% - 2rem);
@@ -608,30 +631,16 @@ html.lenis body {
   .artemis-closing__text {
     font-size: clamp(3rem, 15vw, 4.5rem);
   }
+
+  .artemis-closing__title-slot .artemis-closing__text {
+    white-space: normal;
+  }
 }
 
-/* Dot-grid texture inside the dark reveal layer (matches the second screen) */
+/* Dot-grid texture inside the dark reveal layer (matches the second screen).
+   It lives inside the pinned stage, so it stays locked once the screen is
+   fully dark — the headline and panels move, the dots do not. */
 .artemis-closing__dots {
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  left: 100px;
-  right: 100px;
-  pointer-events: none;
-  background-image: radial-gradient(rgba(255, 255, 255, 0.08) 2px, transparent 2.4px);
-  background-size: 40px 40px;
-}
-
-/* -------------------------------- Fifth screen: horizontal feature gallery */
-.artemis-gallery {
-  position: relative;
-  z-index: 10;
-  width: 100%;
-  background-color: #0a0a0a;
-  color: #fafafa;
-}
-
-.artemis-gallery__dots {
   position: absolute;
   top: 0;
   bottom: 0;
@@ -642,6 +651,9 @@ html.lenis body {
   background-size: 40px 40px;
   z-index: 0;
 }
+
+/* ------------------------------------- Feature panels on the closing screen */
+
 
 .artemis-gallery__sticky {
   position: sticky;
