@@ -30,6 +30,29 @@ export function FinChatDock() {
     return () => window.removeEventListener("app-bg-change", onBg);
   }, []);
 
+  // Dark glass only while the black section is the surface behind the dock;
+  // the light third screen flips it back to the white pill.
+  const [darkSurface, setDarkSurface] = useState(false);
+  useEffect(() => {
+    const onScroll = () => {
+      const dark = document.querySelector("[data-dark-section]");
+      if (!dark) {
+        setDarkSurface(false);
+        return;
+      }
+      const r = dark.getBoundingClientRect();
+      const probe = window.innerHeight - 40;
+      setDarkSurface(r.top <= probe && r.bottom > probe);
+    };
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", onScroll);
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", onScroll);
+    };
+  }, []);
+
   // Rotate collapsed placeholder hint every 3s while collapsed & empty
   useEffect(() => {
     if (expanded || value) return;
