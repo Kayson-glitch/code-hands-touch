@@ -38,11 +38,9 @@ export function MetricsSection() {
       if (item) setCardHeight(item.getBoundingClientRect().height);
       if (copy && cards) setCopyTop(copy.getBoundingClientRect().top - cards.getBoundingClientRect().top);
       const num = firstNumberRef.current;
-      const container = cards?.parentElement;
-      if (num && cards && container) {
+      if (num && cards) {
         const top = num.getBoundingClientRect().top - cards.getBoundingClientRect().top;
-        const centered = top + (num.getBoundingClientRect().height - container.getBoundingClientRect().height) / 2;
-        setNumberTop(Math.max(0, centered));
+        setNumberTop(Math.max(0, top - 32));
       }
     };
     measure();
