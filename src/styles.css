@@ -293,9 +293,9 @@ body {
   top: 0;
   left: 0;
   right: 0;
-  height: 2px;
+  height: 3px;
   overflow: hidden;
-  background: color-mix(in oklab, var(--hairline) 60%, transparent);
+  background: transparent;
   z-index: 3;
   pointer-events: none;
 }
@@ -305,13 +305,22 @@ body {
   height: 100%;
   transform-origin: left center;
   transform: scaleX(var(--p, 0));
-  background: linear-gradient(90deg, #137DFF 0%, #FF18AA 50%, #FFCD17 100%);
+  background: linear-gradient(90deg, #137DFF, #FF18AA, #FFCD17, #137DFF);
+  background-size: 300% 100%;
+  animation: nav-border-flow 9s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .kore-outcomes__progress-fill {
+    animation: none;
+  }
 }
 
 .kore-outcomes__cards {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   overflow: hidden;
+  border-right: 1px solid var(--hairline);
 }
 
 .kore-outcomes__item {
