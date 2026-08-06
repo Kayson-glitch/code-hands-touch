@@ -11,7 +11,8 @@ const CARDS = [
 ];
 
 const START_Y = 320;
-const HOLD_VH = 0.8;
+const START_OFFSET_RATIO = 0.25;
+const END_OFFSET_RATIO = 0.8;
 const clamp = (value: number) => Math.max(0, Math.min(1, value));
 
 export function MetricsSection() {
