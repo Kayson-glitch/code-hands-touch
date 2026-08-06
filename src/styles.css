@@ -246,7 +246,9 @@ body {
 }
 
 .kore-outcomes__header {
-  padding: clamp(1rem, 0.7143rem + 1.4286vw, 2rem);
+  padding-inline: clamp(1rem, 0.7143rem + 1.4286vw, 2rem);
+  padding-top: clamp(1.5rem, 1.1rem + 2vw, 2.5rem);
+  padding-bottom: clamp(2rem, 1.4rem + 3vw, 3.5rem);
 }
 
 .kore-outcomes__header-inner {
@@ -282,6 +284,30 @@ body {
   font-weight: 400;
 }
 
+.kore-outcomes__cards-container {
+  position: relative;
+}
+
+.kore-outcomes__progress {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  overflow: hidden;
+  background: color-mix(in oklab, var(--hairline) 60%, transparent);
+  z-index: 3;
+  pointer-events: none;
+}
+
+.kore-outcomes__progress-fill {
+  width: 100%;
+  height: 100%;
+  transform-origin: left center;
+  transform: scaleX(var(--p, 0));
+  background: linear-gradient(90deg, #137DFF 0%, #FF18AA 50%, #FFCD17 100%);
+}
+
 .kore-outcomes__cards {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -303,6 +329,12 @@ body {
   border: 1px solid var(--hairline);
   background: var(--paper);
 }
+
+/* Drop the shared edge so column joins stay a single hairline, not 2px. */
+.kore-outcomes__item:not(:last-child) .kore-outcomes__card {
+  border-right: none;
+}
+
 
 .kore-outcomes__media {
   padding: clamp(1rem, 0.8571rem + 0.7143vw, 1.5rem) clamp(1rem, 0.8571rem + 0.7143vw, 1.5rem) 0;

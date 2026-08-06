@@ -102,11 +102,17 @@ export function MetricsSection() {
             </div>
           </header>
           <div className="kore-outcomes__cards-container">
+            <div className="kore-outcomes__progress" aria-hidden="true">
+              <div
+                className="kore-outcomes__progress-fill"
+                style={{ "--p": !desktop || reducedMotion ? 1 : clamp(progress) } as React.CSSProperties}
+              />
+            </div>
             <div ref={cardsRef} className="kore-outcomes__cards">
               {CARDS.map((card, index) => {
                 const columnProgress = reducedMotion ? 1 : clamp(progress * CARDS.length - index);
                 const opacity = reducedMotion ? 1 : clamp(columnProgress * 3);
-                const restY = -numberTop;
+                const restY = -copyTop;
                 const translateY = START_Y + (restY - START_Y) * columnProgress;
                 return (
                   <div ref={index === 0 ? firstItemRef : undefined} key={card.title} className="kore-outcomes__item" style={desktop ? { opacity, transform: `translate3d(0, ${translateY}px, 0)` } : undefined}>
