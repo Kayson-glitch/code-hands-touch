@@ -11,6 +11,7 @@ type Msg = { role: "user" | "assistant"; text: string };
 
 export function FinChatDock() {
   const [visible, setVisible] = useState(false);
+  const [theme, setTheme] = useState<"light" | "dark">("light");
   const [value, setValue] = useState("");
   const [messages, setMessages] = useState<Msg[]>([]);
   const [expanded, setExpanded] = useState(false);
@@ -21,6 +22,7 @@ export function FinChatDock() {
   useEffect(() => {
     const onBg = (e: Event) => {
       const detail = (e as CustomEvent<"light" | "dark">).detail;
+      setTheme(detail === "dark" ? "dark" : "light");
       if (detail === "dark") setVisible(true);
       else setVisible(false);
     };
@@ -94,6 +96,21 @@ export function FinChatDock() {
   const showSuggestions =
     expanded && messages.filter((m) => m.role === "user").length === 0;
 
+  const onDark = theme === "dark";
+  const dockBg = onDark ? "rgba(10,10,10,0.72)" : "#FFFFFF";
+  const dockBorder = onDark
+    ? "1px solid rgba(255,255,255,0.15)"
+    : "1px solid transparent";
+  const dockShadow = onDark
+    ? "0 12px 20px rgba(0,0,0,0.25)"
+    : "0 12px 20px rgba(0,0,0,0.05)";
+  const textMain = onDark ? "#FFFFFF" : "#0E0B22";
+  const textPlaceholder = onDark ? "rgba(255,255,255,0.45)" : "#A1A0A9";
+  const textMuted = onDark ? "rgba(255,255,255,0.65)" : "#7A7885";
+  const suggestionBg = onDark ? "rgba(255,255,255,0.10)" : "rgba(0,0,0,0.06)";
+  const sendBg = onDark ? "#FFFFFF" : "#C7C6CD";
+  const sendIcon = onDark ? "#0E0B22" : "#FFFFFF";
+
   return (
     <div
       className="pointer-events-none fixed inset-x-0 bottom-6 z-30 flex flex-col items-center px-4"
@@ -117,13 +134,14 @@ export function FinChatDock() {
               <button
                 key={s}
                 onClick={() => pickSuggestion(s)}
-                className="pointer-events-auto rounded-[20px] px-4 py-2.5 text-left text-ink backdrop-blur-md transition-colors"
+                className="pointer-events-auto rounded-[20px] px-4 py-2.5 text-left backdrop-blur-md transition-colors"
                 style={{
                   fontSize: 14,
                   lineHeight: "22px",
                   marginLeft: i === 1 ? 32 : i === 2 ? 12 : 0,
                   animation: `finRise 500ms ${i * 80}ms both ease-out`,
-                  backgroundColor: "rgba(0,0,0,0.06)",
+                  backgroundColor: suggestionBg,
+                  color: textMain,
                 }}
               >
                 {s}
@@ -144,9 +162,12 @@ export function FinChatDock() {
             paddingBottom: 6,
             gap: 8,
             alignItems: expanded ? "flex-end" : "center",
-            backgroundColor: "#FFFFFF",
-            boxShadow: "0 12px 20px rgba(0,0,0,0.05)",
-            transition: "box-shadow 300ms ease",
+            backgroundColor: dockBg,
+            border: dockBorder,
+            backdropFilter: onDark ? "blur(18px) saturate(140%)" : "none",
+            boxShadow: dockShadow,
+            transition:
+              "box-shadow 300ms ease, background-color 300ms ease, border-color 300ms ease",
             cursor: expanded ? "text" : "pointer",
           }}
         >
@@ -163,17 +184,23 @@ export function FinChatDock() {
             rows={1}
             placeholder="Ask anything…"
             aria-label="Ask Fin"
-            className="flex-1 resize-none border-0 bg-transparent py-2 text-ink placeholder:text-ink-faint focus:outline-none"
-            style={{ fontSize: 14, lineHeight: "20px", maxHeight: 96 }}
+            className="fin-dock-input flex-1 resize-none border-0 bg-transparent py-2 placeholder:text-ink-faint focus:outline-none"
+            style={{
+              fontSize: 14,
+              lineHeight: "20px",
+              maxHeight: 96,
+              color: textMain,
+            }}
           />
           ) : (
             <div
               key={hintIndex}
-              className="flex-1 truncate text-ink-faint"
+              className="flex-1 truncate"
               style={{
                 fontSize: 14,
                 lineHeight: "20px",
                 animation: "finHintFade 500ms ease-out",
+                color: textPlaceholder,
               }}
               aria-hidden
             >
@@ -182,26 +209,32 @@ export function FinChatDock() {
           )}
           <button
             aria-label="语音输入"
-            className="grid h-9 w-9 place-items-center rounded-full text-ink-muted hover:bg-black/[0.04]"
+            className={`grid h-9 w-9 place-items-center rounded-full ${
+              onDark ? "hover:bg-white/[0.08]" : "hover:bg-black/[0.04]"
+            }`}
             style={{
               width: expanded ? 36 : 0,
               opacity: expanded ? 1 : 0,
               overflow: "hidden",
               pointerEvents: expanded ? "auto" : "none",
               transition: "width 320ms ease, opacity 240ms ease",
+              color: textMuted,
             }}
           >
             <Mic size={18} />
           </button>
           <button
             aria-label="附件"
-            className="grid h-9 w-9 place-items-center rounded-full text-ink-muted hover:bg-black/[0.04]"
+            className={`grid h-9 w-9 place-items-center rounded-full ${
+              onDark ? "hover:bg-white/[0.08]" : "hover:bg-black/[0.04]"
+            }`}
             style={{
               width: expanded ? 36 : 0,
               opacity: expanded ? 1 : 0,
               overflow: "hidden",
               pointerEvents: expanded ? "auto" : "none",
               transition: "width 320ms ease 40ms, opacity 240ms ease 40ms",
+              color: textMuted,
             }}
           >
             <Paperclip size={18} />
@@ -209,8 +242,14 @@ export function FinChatDock() {
           <button
             aria-label="发送"
             onClick={send}
-            className="grid shrink-0 place-items-center bg-ink-ghost text-white transition-opacity hover:opacity-80"
-            style={{ width: 36, height: 36, borderRadius: 20 }}
+            className="grid shrink-0 place-items-center transition-opacity hover:opacity-80"
+            style={{
+              width: 36,
+              height: 36,
+              borderRadius: 20,
+              backgroundColor: sendBg,
+              color: sendIcon,
+            }}
           >
             <ArrowUp size={24} />
           </button>
@@ -227,6 +266,10 @@ export function FinChatDock() {
         @keyframes finHintFade {
           from { opacity: 0; transform: translateY(6px); }
           to { opacity: 1; transform: translateY(0); }
+        }
+        .fin-dock-input::placeholder {
+          color: ${textPlaceholder};
+          opacity: 1;
         }
       `}</style>
     </div>
