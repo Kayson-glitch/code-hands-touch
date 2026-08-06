@@ -3,35 +3,39 @@ import { useEffect, useRef, useState } from "react";
 /**
  * Third screen — "Numbers our customers trust us with."
  *
- * Pinned section (kore.ai style): the whole block sticks for one viewport while
- * its content blocks stack in, one after another, as the user scrolls. Blocks
- * stay visible once revealed and fade back out when scrolling up. Once the last
- * block has landed the sticky track ends and the page scrolls on normally.
+ * Normal-flow section (kore.ai style): the heading block sticks under the nav
+ * while the three columns fill in left to right as the user scrolls — card
+ * first, then the big number under it. Columns stay visible once revealed and
+ * fade back out when scrolling up. When the section ends the heading unsticks
+ * and the page scrolls on normally.
  */
 
-const CARDS = [
+const COLUMNS = [
   {
     title: "Accuracy Improvement",
     body: "Tickets resolved on first contact without human handoff.",
+    value: "+85",
+    unit: "%",
+    label: "Accuracy Improvement",
   },
   {
     title: "Faster Resolutions",
     body: "Average handling time cut across every support channel.",
+    value: "13",
+    unit: "k",
+    label: "Accuracy Improvement",
   },
   {
     title: "Always-On Coverage",
     body: "Conversations answered instantly, in every timezone.",
+    value: "+90",
+    unit: "%",
+    label: "Accuracy Improvement",
   },
 ];
 
-const STATS = [
-  { value: "+85", unit: "%", label: "Accuracy Improvement" },
-  { value: "13", unit: "k", label: "Accuracy Improvement" },
-  { value: "+90", unit: "%", label: "Accuracy Improvement" },
-];
-
-// Reveal order: heading, hairline, card 1-3, stat 1-3.
-const BLOCK_COUNT = 8;
+const EASE = "cubic-bezier(0.22,1,0.36,1)";
+const TRANSITION = `opacity 520ms ${EASE}, transform 520ms ${EASE}`;
 
 function smoothstep(a: number, b: number, x: number) {
   const t = Math.max(0, Math.min(1, (x - a) / (b - a)));
@@ -74,46 +78,39 @@ export function MetricsSection() {
     };
   }, []);
 
-  // Each block owns a slice of the track; slices overlap by ~30% so the stack
-  // reads as a continuous cascade instead of discrete steps.
-  const blockAlpha = (index: number) => {
-    if (reduced) return 1;
-    const span = 1 / (BLOCK_COUNT + 1);
-    const start = index * span * 0.7;
-    return smoothstep(start, start + span, progress);
-  };
+  // Column i: card reveals first, its number trails 0.10 behind.
+  const cardAlpha = (i: number) =>
+    reduced ? 1 : smoothstep(i * 0.22, i * 0.22 + 0.26, progress);
+  const statAlpha = (i: number) =>
+    reduced ? 1 : smoothstep(i * 0.22 + 0.1, i * 0.22 + 0.36, progress);
 
-  const rise = (a: number) => `translate3d(0, ${((1 - a) * 24).toFixed(2)}px, 0)`;
+  const rise = (a: number) =>
+    `translate3d(0, ${((1 - a) * 24).toFixed(2)}px, 0)`;
 
   return (
     <section
       ref={sectionRef}
       className="relative w-full"
-      style={{
-        backgroundColor: "#FAFAFA",
-        height: "320vh",
-        zIndex: 11,
-      }}
+      style={{ backgroundColor: "#FAFAFA", zIndex: 11 }}
     >
       <div
         style={{
-          position: "sticky",
-          top: 0,
-          height: "100dvh",
-          display: "flex",
-          alignItems: "center",
-          overflow: "hidden",
+          width: "min(100% - 48px, 1200px)",
+          margin: "0 auto",
+          paddingTop: 120,
+          paddingBottom: "80vh",
         }}
       >
+        {/* Sticky heading */}
         <div
           style={{
-            width: "min(100% - 48px, 1200px)",
-            margin: "0 auto",
-            paddingTop: 48,
-            paddingBottom: 96,
+            position: "sticky",
+            top: 69,
+            zIndex: 2,
+            backgroundColor: "#FAFAFA",
+            paddingBottom: 40,
           }}
         >
-          {/* Heading */}
           <h2
             className="font-display capitalize"
             style={{
@@ -122,9 +119,6 @@ export function MetricsSection() {
               lineHeight: 1.17,
               fontWeight: 500,
               color: "var(--ink)",
-              opacity: blockAlpha(0),
-              transform: rise(blockAlpha(0)),
-              transition: "opacity 520ms cubic-bezier(0.22,1,0.36,1), transform 520ms cubic-bezier(0.22,1,0.36,1)",
             }}
           >
             Numbers our customers
@@ -132,7 +126,6 @@ export function MetricsSection() {
             trust us with.
           </h2>
 
-          {/* Gradient hairline */}
           <div
             aria-hidden
             style={{
@@ -142,41 +135,37 @@ export function MetricsSection() {
               height: 1,
               background:
                 "linear-gradient(90deg, #137DFF 0%, #FF18AA 50%, #FFCD17 100%)",
-              opacity: blockAlpha(1),
-              transform: rise(blockAlpha(1)),
-              transition: "opacity 520ms cubic-bezier(0.22,1,0.36,1), transform 520ms cubic-bezier(0.22,1,0.36,1)",
             }}
           />
+        </div>
 
-          {/* Cards */}
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
-              borderTop: "1px solid var(--hairline)",
-            }}
-          >
-            {CARDS.map((card, i) => {
-              const a = blockAlpha(2 + i);
-              return (
+        {/* Three columns: card + big number */}
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
+          }}
+        >
+          {COLUMNS.map((col, i) => {
+            const ca = cardAlpha(i);
+            const sa = statAlpha(i);
+            return (
+              <div key={col.title}>
                 <div
-                  key={card.title}
                   style={{
                     border: "1px solid var(--hairline)",
-                    borderTop: "none",
                     marginLeft: i === 0 ? 0 : -1,
                     padding: 24,
-                    opacity: a,
-                    transform: rise(a),
-                    transition:
-                      "opacity 520ms cubic-bezier(0.22,1,0.36,1), transform 520ms cubic-bezier(0.22,1,0.36,1)",
+                    opacity: ca,
+                    transform: rise(ca),
+                    transition: TRANSITION,
                   }}
                 >
                   <div
                     aria-hidden
                     style={{
                       width: "100%",
-                      aspectRatio: "352 / 220",
+                      aspectRatio: "352 / 300",
                       backgroundColor: "#D9D9D9",
                     }}
                   />
@@ -190,7 +179,7 @@ export function MetricsSection() {
                       color: "var(--ink)",
                     }}
                   >
-                    {card.title}
+                    {col.title}
                   </p>
                   <p
                     style={{
@@ -202,33 +191,17 @@ export function MetricsSection() {
                       color: "var(--ink-muted)",
                     }}
                   >
-                    {card.body}
+                    {col.body}
                   </p>
                 </div>
-              );
-            })}
-          </div>
 
-          {/* Big stats */}
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
-              gap: 24,
-              marginTop: 40,
-              paddingLeft: 24,
-            }}
-          >
-            {STATS.map((stat, i) => {
-              const a = blockAlpha(5 + i);
-              return (
                 <div
-                  key={`${stat.value}${stat.unit}`}
                   style={{
-                    opacity: a,
-                    transform: rise(a),
-                    transition:
-                      "opacity 520ms cubic-bezier(0.22,1,0.36,1), transform 520ms cubic-bezier(0.22,1,0.36,1)",
+                    marginTop: 56,
+                    paddingLeft: 24,
+                    opacity: sa,
+                    transform: rise(sa),
+                    transition: TRANSITION,
                   }}
                 >
                   <div
@@ -236,10 +209,10 @@ export function MetricsSection() {
                     style={{ fontWeight: 500, color: "#000000", lineHeight: 1 }}
                   >
                     <span style={{ fontSize: "clamp(48px, 6.9vw, 100px)" }}>
-                      {stat.value}
+                      {col.value}
                     </span>
                     <span style={{ fontSize: "clamp(33px, 4.7vw, 68px)" }}>
-                      {stat.unit}
+                      {col.unit}
                     </span>
                   </div>
                   <p
@@ -252,12 +225,12 @@ export function MetricsSection() {
                       color: "var(--ink)",
                     }}
                   >
-                    {stat.label}
+                    {col.label}
                   </p>
                 </div>
-              );
-            })}
-          </div>
+              </div>
+            );
+          })}
         </div>
       </div>
     </section>
