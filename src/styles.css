@@ -456,7 +456,6 @@ body {
     grid-template-columns: 1fr;
     gap: 1rem;
     overflow: visible;
-    border-right: none;
   }
 
   .kore-outcomes__item {
