@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import handsFramesAsset from "@/assets/hands-frames.webp.asset.json";
 import { IntroVideo, type IntroProgressInfo } from "./IntroVideo";
 import { useHeroLayout, type HeroLayout } from "@/hooks/useHeroLayout";
+import { getLenis } from "@/lib/smoothScroll";
 
 import { INTRO_ENABLED } from "@/components/intro/introConfig";
 
