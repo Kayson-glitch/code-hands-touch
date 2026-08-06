@@ -163,9 +163,13 @@ export function FinChatDock() {
             paddingBottom: 6,
             gap: 8,
             alignItems: expanded ? "flex-end" : "center",
-            backgroundColor: "#FFFFFF",
-            boxShadow: "0 12px 20px rgba(0,0,0,0.05)",
-            transition: "box-shadow 300ms ease",
+            backgroundColor: dockBg,
+            border: dockBorder,
+            backdropFilter: onDark ? "blur(18px) saturate(140%)" : "none",
+            WebkitBackdropFilter: onDark ? "blur(18px) saturate(140%)" : "none",
+            boxShadow: dockShadow,
+            transition:
+              "box-shadow 300ms ease, background-color 300ms ease, border-color 300ms ease",
             cursor: expanded ? "text" : "pointer",
           }}
         >
