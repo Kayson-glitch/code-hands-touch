@@ -76,12 +76,12 @@ export function SiteNav() {
         transition: "opacity 260ms ease-out",
       }}
     >
-      {/* Flowing gradient top bar — 5px per Figma */}
+      {/* Flowing gradient top bar — 3px per Figma */}
       <span
         aria-hidden
         className="pointer-events-none block w-full shrink-0"
         style={{
-          height: 5,
+          height: 3,
           backgroundImage:
             "linear-gradient(90deg, #137DFF 0%, #FF18AA 33.333%, #FFCD17 66.666%, #137DFF 100%)",
           backgroundSize: "120vw 100%",
