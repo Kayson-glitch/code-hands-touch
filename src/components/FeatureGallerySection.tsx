@@ -98,7 +98,7 @@ export function FeaturePanels({
             ? clamp((viewportW - left) / (viewportW * 0.6))
             : 1;
         const eased = easeOutBack(enter);
-        const lift = pinned && viewportH > 0 ? (1 - Math.min(1, eased)) * viewportH : 0;
+        const lift = pinned && viewportH > 0 ? (1 - eased) * viewportH : 0;
         return (
           <article
             key={panel.id}
