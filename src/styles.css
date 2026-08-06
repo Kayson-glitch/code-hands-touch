@@ -426,7 +426,7 @@ body {
 
 .kore-outcomes__footer p {
   font-family: "Clash Display Variable", "Clash Display", "Montserrat", sans-serif;
-  font-size: clamp(5rem, 12.5vw, 12rem);
+  font-size: clamp(5rem, 12.5vw, 11.75rem);
   font-weight: 500;
   line-height: 0.86;
   letter-spacing: 0;
