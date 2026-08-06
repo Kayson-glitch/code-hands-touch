@@ -96,7 +96,7 @@ export function FinChatDock() {
   const showSuggestions =
     expanded && messages.filter((m) => m.role === "user").length === 0;
 
-  const onDark = theme === "dark";
+  const onDark = theme === "dark" && darkSurface;
   const dockBg = onDark ? "rgba(10,10,10,0.72)" : "#FFFFFF";
   const dockBorder = onDark
     ? "1px solid rgba(255,255,255,0.15)"
