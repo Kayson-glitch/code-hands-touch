@@ -1,10 +1,5 @@
 const clamp = (v: number) => Math.max(0, Math.min(1, v));
-const easeOutCubic = (x: number) => 1 - Math.pow(1 - x, 3);
-const easeOutBack = (x: number) => {
-  const c1 = 1.70158;
-  const c3 = c1 + 1;
-  return 1 + c3 * Math.pow(x - 1, 3) + c1 * Math.pow(x - 1, 2);
-};
+const easeOutQuint = (x: number) => 1 - Math.pow(1 - x, 5);
 
 type Point = { label: string; text: string };
 
@@ -97,7 +92,7 @@ export function FeaturePanels({
           pinned && viewportW > 0 && left !== undefined
             ? clamp((viewportW - left) / (viewportW * 0.6))
             : 1;
-        const eased = easeOutBack(enter);
+        const eased = easeOutQuint(enter);
         const lift = pinned && viewportH > 0 ? (1 - eased) * viewportH : 0;
         return (
           <article
