@@ -204,6 +204,14 @@ export function FinChatDock() {
               autoResize();
             }}
             onKeyDown={onKeyDown}
+            onFocus={() => {
+              if (focusTimeoutRef.current) window.clearTimeout(focusTimeoutRef.current);
+              setFocused(true);
+            }}
+            onBlur={() => {
+              if (focusTimeoutRef.current) window.clearTimeout(focusTimeoutRef.current);
+              focusTimeoutRef.current = window.setTimeout(() => setFocused(false), 120);
+            }}
             rows={1}
             placeholder="Ask anything…"
             aria-label="Ask Fin"
