@@ -16,8 +16,10 @@ export function FinChatDock() {
   const [messages, setMessages] = useState<Msg[]>([]);
   const [expanded, setExpanded] = useState(false);
   const [hintIndex, setHintIndex] = useState(0);
+  const [focused, setFocused] = useState(false);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const wrapperRef = useRef<HTMLDivElement>(null);
+  const focusTimeoutRef = useRef<number | null>(null);
 
   useEffect(() => {
     const onBg = (e: Event) => {
