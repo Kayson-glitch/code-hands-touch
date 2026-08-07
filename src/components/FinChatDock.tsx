@@ -273,13 +273,14 @@ export function FinChatDock() {
           <button
             aria-label="发送"
             onClick={send}
-            className="grid shrink-0 place-items-center transition-opacity hover:opacity-80"
+            className="grid shrink-0 place-items-center transition-colors hover:opacity-80"
             style={{
               width: 36,
               height: 36,
               borderRadius: 20,
               backgroundColor: sendBg,
               color: sendIcon,
+              transition: "background-color 200ms ease, color 200ms ease, opacity 200ms ease",
             }}
           >
             <ArrowUp size={24} />
