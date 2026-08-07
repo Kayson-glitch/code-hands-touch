@@ -131,8 +131,8 @@ export function FinChatDock() {
   const textPlaceholder = onDark ? "#A1A0A9" : "#A1A0A9";
   const textMuted = onDark ? "rgba(255,255,255,0.70)" : "#7A7885";
   const suggestionBg = onDark ? "rgba(255,255,255,0.10)" : "rgba(0,0,0,0.06)";
-  const sendBg = onDark ? "#C7C6CD" : "#C7C6CD";
-  const sendIcon = onDark ? "#0E0B22" : "#FFFFFF";
+  const sendBg = focused ? "#FFFFFF" : "#C7C6CD";
+  const sendIcon = focused ? "#0E0B22" : "#FFFFFF";
 
   return (
     <div
