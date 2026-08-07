@@ -16,8 +16,10 @@ export function FinChatDock() {
   const [messages, setMessages] = useState<Msg[]>([]);
   const [expanded, setExpanded] = useState(false);
   const [hintIndex, setHintIndex] = useState(0);
+  const [focused, setFocused] = useState(false);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const wrapperRef = useRef<HTMLDivElement>(null);
+  const focusTimeoutRef = useRef<number | null>(null);
 
   useEffect(() => {
     const onBg = (e: Event) => {
@@ -129,8 +131,8 @@ export function FinChatDock() {
   const textPlaceholder = onDark ? "#A1A0A9" : "#A1A0A9";
   const textMuted = onDark ? "rgba(255,255,255,0.70)" : "#7A7885";
   const suggestionBg = onDark ? "rgba(255,255,255,0.10)" : "rgba(0,0,0,0.06)";
-  const sendBg = onDark ? "#C7C6CD" : "#C7C6CD";
-  const sendIcon = onDark ? "#0E0B22" : "#FFFFFF";
+  const sendBg = focused ? "#FFFFFF" : "#C7C6CD";
+  const sendIcon = focused ? "#0E0B22" : "#FFFFFF";
 
   return (
     <div
@@ -202,6 +204,14 @@ export function FinChatDock() {
               autoResize();
             }}
             onKeyDown={onKeyDown}
+            onFocus={() => {
+              if (focusTimeoutRef.current) window.clearTimeout(focusTimeoutRef.current);
+              setFocused(true);
+            }}
+            onBlur={() => {
+              if (focusTimeoutRef.current) window.clearTimeout(focusTimeoutRef.current);
+              focusTimeoutRef.current = window.setTimeout(() => setFocused(false), 120);
+            }}
             rows={1}
             placeholder="Ask anything…"
             aria-label="Ask Fin"
@@ -263,13 +273,14 @@ export function FinChatDock() {
           <button
             aria-label="发送"
             onClick={send}
-            className="grid shrink-0 place-items-center transition-opacity hover:opacity-80"
+            className="grid shrink-0 place-items-center transition-colors hover:opacity-80"
             style={{
               width: 36,
               height: 36,
               borderRadius: 20,
               backgroundColor: sendBg,
               color: sendIcon,
+              transition: "background-color 200ms ease, color 200ms ease, opacity 200ms ease",
             }}
           >
             <ArrowUp size={24} />
