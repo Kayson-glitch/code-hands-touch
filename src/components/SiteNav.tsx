@@ -93,7 +93,7 @@ export function SiteNav() {
       <div
         className="flex items-center justify-center px-6"
         style={{
-          height: 64,
+          height: 62,
           borderBottom: `1px solid ${hairline}`,
           background: scrolled ? glassBg : "transparent",
           backdropFilter: scrolled ? "blur(18px) saturate(140%)" : "none",
