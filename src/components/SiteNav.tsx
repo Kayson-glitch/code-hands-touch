@@ -130,7 +130,7 @@ export function SiteNav() {
           {/* Center menu */}
           <ul
             className="pointer-events-auto hidden flex-1 items-center justify-center gap-2.5 md:flex"
-            style={{ fontSize: 14, lineHeight: "22px" }}
+            style={{ fontSize: 13, lineHeight: "22px" }}
           >
             <li className={navItem} style={{ color: inkStrong }}>
               Platform <Chevron />
@@ -150,7 +150,7 @@ export function SiteNav() {
           <div className="pointer-events-auto flex shrink-0 items-center gap-2.5">
             <button
               className="px-4 py-[7px] capitalize"
-              style={{ fontSize: 14, lineHeight: "22px", color: inkStrong }}
+              style={{ fontSize: 13, lineHeight: "22px", color: inkStrong }}
             >
               Log in
             </button>
