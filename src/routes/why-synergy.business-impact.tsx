@@ -378,6 +378,8 @@ function ArticleBlock({
 
 function BusinessImpactPage() {
   const pad = `0 ${fluid(120, 24)}`;
+  const [tab, setTab] = useState<"roi" | "impact">("roi");
+  const article = ARTICLES[tab];
 
   return (
     <div className="relative min-h-screen bg-paper">
