@@ -170,20 +170,28 @@ const ARTICLES: Record<"roi" | "impact", ArticleSet> = {
   roi: {
     eyebrow: "Business Value · ROI",
     titleAccent: "Scaling Support Smarter:",
-    titleRest: "Cost Analysis From 150 To 50 Agents",
+    titleRest: "Cost Analysis from 150 to 50 Agents",
     intro:
       "This article quantifies the impact of integrating an AI Customer Service system on operational costs, using the current CS workforce structure as the subject. The current global CS team consists of 150 agents, with a comprehensive per-capita cost.",
     light: [
       {
         icon: MessageSquareCode,
         title: "Analysis of Current Cost Structure",
-        body: "Within the existing agent structure, the vast majority of labor hours are consumed by high-repetition, low-decision-density inquiries, such as order tracking, payment status checks, promotional rule explanations, and withdrawal verifications. These tasks dominate the inbound volume but require minimal human judgment. During promotional cycles, inbound volume spikes exponentially, and the team typically relies on temporary hiring to cope. This leads to rising marginal labor costs, extended training cycles, and widening variances in service quality. The marginal efficiency between labor input and service output continues to diminish.",
+        body: [
+          { text: "Within the existing agent structure, the vast majority of labor hours are consumed by high-repetition, low-decision-density inquiries, such as order tracking, payment status checks, promotional rule explanations, and withdrawal verifications. These tasks dominate the inbound volume but require minimal human judgment. " },
+          { text: "During promotional cycles", highlight: true },
+          { text: ", inbound volume spikes exponentially, and the team typically relies on temporary hiring to cope. This leads to rising marginal labor costs, extended training cycles, and widening variances in service quality. The marginal efficiency between labor input and service output continues to diminish." },
+        ],
         divider: true,
       },
       {
         icon: MapIcon,
         title: "Target Structure: Reallocating Agent Functions",
-        body: "Post-integration, based on business data from the current observation cycle, the CS team is well-positioned to be optimized down to approximately 50 agents. The target structure consists of 20 VIP agents (supervisor-level, dedicated to high-value client services) and 30 general agents. Crucially, the function of the 30 general agents will shift from frontline Q&A to online data monitoring, anomaly handling, and human fallback support. This 30-agent headcount is a conservative configuration, retaining redundancy to handle sudden load surges. Under this structure, the AI system absorbs standardized tasks, while human resources are concentrated on high-decision-density and high-value workflows.",
+        body: [
+          { text: "Post-integration, based on business data from the current observation cycle, the CS team is well-positioned to be optimized down to approximately 50 agents. The target structure consists of 20 VIP agents (supervisor-level, dedicated to high-value client services) and 30 general agents. Crucially, the function of the 30 general agents will shift from frontline Q&A to online data monitoring, anomaly handling, and human fallback support. " },
+          { text: "This 30-agent headcount is a conservative configuration,", highlight: true },
+          { text: " retaining redundancy to handle sudden load surges. Under this structure, the AI system absorbs standardized tasks, while human resources are concentrated on high-decision-density and high-value workflows." },
+        ],
         divider: false,
       },
     ],
