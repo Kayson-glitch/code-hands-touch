@@ -524,7 +524,7 @@ function StoryArticle({ story, first }: { story: Story; first?: boolean }) {
       </div>
 
       {/* closing block */}
-      <div style={{ padding: `${fluid(80, 44)} ${fluid(60, 24)} 0` }}>
+      <div style={{ padding: `${fluid(80, 44)} ${fluid(60, 24)} ${fluid(60, 36)}` }}>
         <ArticleBlock {...story.tail} />
       </div>
     </article>
