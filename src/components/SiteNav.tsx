@@ -269,8 +269,12 @@ function WhySynergyMenu({ open }: { open: boolean }) {
             <div
               key={it.title}
               className="flex cursor-pointer flex-col items-start"
+              onClick={() => {
+                if (it.to) navigate({ to: it.to });
+              }}
               onMouseEnter={() => setHover(i)}
               onMouseLeave={() => setHover(null)}
+
               style={{
                 padding: 30,
                 gap: 8,
