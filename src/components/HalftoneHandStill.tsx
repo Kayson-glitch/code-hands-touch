@@ -200,7 +200,7 @@ export function HalftoneHandStill({
       alive = false;
       window.removeEventListener("resize", onResize);
     };
-  }, [frame, cropX, cropW, pitch]);
+  }, [frame, cropX, cropW, cropY, cropH, pitch]);
 
   return (
     <div ref={hostRef} className={className} style={style} aria-hidden>
