@@ -756,7 +756,7 @@ function BusinessImpactPage() {
       <FinChatDock alwaysVisible />
 
       <ProgressiveBlur
-        className="fixed"
+        className="fixed !z-20"
         position="bottom"
         height="140px"
         blurAmount="1.5px"
