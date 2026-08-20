@@ -92,10 +92,10 @@ function Bullet({ diamond }: { diamond: boolean }) {
   return (
     <span
       aria-hidden
-      className="mt-[6px] inline-block shrink-0"
+      className="mt-[8px] inline-block shrink-0"
       style={{
-        width: 5,
-        height: 5,
+        width: 6,
+        height: 6,
         background: diamond ? ACCENT : "#0E0B22",
         transform: diamond ? "rotate(45deg)" : undefined,
       }}
@@ -271,11 +271,10 @@ function KpiColumn({
       }}
     >
       <p
-        className="uppercase"
         style={{
-          fontSize: 12,
-          lineHeight: "18px",
-          letterSpacing: "0.08em",
+          fontSize: 14,
+          lineHeight: "22px",
+          letterSpacing: "0.01em",
           margin: 0,
           color: "var(--ink-faint, #A1A0A9)",
         }}
@@ -285,9 +284,9 @@ function KpiColumn({
       <p
         className="font-display text-ink"
         style={{
-          margin: `${fluid(40, 24)} 0 0`,
+          margin: "20px 0 0",
           fontSize: fluid(100, 48),
-          lineHeight: 1,
+          lineHeight: 1.2,
           fontWeight: 500,
           letterSpacing: "-0.01em",
         }}
@@ -301,24 +300,24 @@ function KpiColumn({
       </p>
       <p
         style={{
-          margin: `${fluid(30, 18)} 0 0`,
+          margin: "8px 0 0",
           fontSize: 14,
-          lineHeight: "22px",
+          lineHeight: "24px",
           color: "var(--ink-muted, #7A7885)",
         }}
       >
         {data.caption}
       </p>
 
-      <div style={{ margin: `${fluid(40, 28)} 0 ${fluid(44, 30)}` }}>
+      <div style={{ margin: `${fluid(40, 28)} 0 ${fluid(40, 28)}` }}>
         <Hairline dashed />
       </div>
 
       <ul className="flex flex-col gap-6">
         {data.bullets.map((b, i) => (
-          <li key={b} className="flex items-start gap-[10px]">
+          <li key={b} className="flex items-start gap-2">
             <Bullet diamond={i % 2 === 0} />
-            <span className="text-ink" style={{ fontSize: 13, lineHeight: "22px" }}>
+            <span className="text-ink" style={{ fontSize: 14, lineHeight: "22px" }}>
               {b}
             </span>
           </li>
@@ -343,13 +342,13 @@ function ArticleBlock({
 }) {
   return (
     <div>
-      <Icon size={20} strokeWidth={1.5} color={dark ? "#FFFFFF" : "#0E0B22"} />
+      <Icon size={24} strokeWidth={1.5} color={dark ? "#FFFFFF" : "#0E0B22"} />
       <h3
         className="font-display"
         style={{
-          margin: "22px 0 0",
-          fontSize: 16,
-          lineHeight: "24px",
+          margin: "10px 0 0",
+          fontSize: 18,
+          lineHeight: "26px",
           fontWeight: 500,
           color: dark ? "#FFFFFF" : "var(--ink, #0E0B22)",
         }}
@@ -358,17 +357,17 @@ function ArticleBlock({
       </h3>
       <p
         style={{
-          margin: "18px 0 0",
-          maxWidth: 1010,
+          margin: "20px 0 0",
+          maxWidth: 1000,
           fontSize: 13,
-          lineHeight: "21px",
+          lineHeight: "22px",
           color: dark ? "rgba(255,255,255,0.58)" : "var(--ink-muted, #7A7885)",
         }}
       >
         {body}
       </p>
       {divider ? (
-        <div style={{ marginTop: fluid(56, 34) }}>
+        <div style={{ marginTop: fluid(60, 36) }}>
           <Hairline dark={dark} dashed />
         </div>
       ) : null}
@@ -394,11 +393,12 @@ function BusinessImpactPage() {
           cropY={0.32}
           cropH={0.52}
           pitch={6}
-          className="pointer-events-none absolute right-0 select-none"
+          className="pointer-events-none absolute select-none"
           style={{
-            top: fluid(112, 64),
-            width: fluid(640, 320),
-            height: fluid(356, 178),
+            top: fluid(115, 66),
+            left: fluid(780, 420),
+            width: fluid(741, 400),
+            height: fluid(425, 230),
           }}
         />
 
@@ -406,16 +406,15 @@ function BusinessImpactPage() {
           <div className="relative mx-auto w-full max-w-[1200px]">
             <div
               className="relative z-10"
-              style={{ maxWidth: 620, paddingTop: fluid(162, 104), paddingBottom: fluid(112, 64) }}
+              style={{ maxWidth: 680, paddingTop: fluid(162, 104), paddingBottom: fluid(102, 60) }}
             >
               <div className="flex items-center gap-2">
-                <span aria-hidden style={{ width: 5, height: 5, background: ACCENT }} />
+                <span aria-hidden style={{ width: 8, height: 8, background: ACCENT }} />
                 <span
-                  className="uppercase"
                   style={{
-                    fontSize: 12,
-                    lineHeight: "18px",
-                    letterSpacing: "0.08em",
+                    fontSize: 14,
+                    lineHeight: "22px",
+                    letterSpacing: "0.01em",
                     color: "var(--ink-faint, #A1A0A9)",
                   }}
                 >
@@ -426,9 +425,9 @@ function BusinessImpactPage() {
               <h1
                 className="font-display text-ink"
                 style={{
-                  margin: `${fluid(34, 22)} 0 0`,
+                  margin: "10px 0 0",
                   fontSize: fluid(48, 30),
-                  lineHeight: 1.17,
+                  lineHeight: 1.1667,
                   fontWeight: 500,
                   letterSpacing: "-0.01em",
                 }}
@@ -440,10 +439,10 @@ function BusinessImpactPage() {
 
               <p
                 style={{
-                  margin: `${fluid(20, 14)} 0 0`,
-                  maxWidth: 470,
+                  margin: "10px 0 0",
+                  maxWidth: 563,
                   fontSize: 14,
-                  lineHeight: "22px",
+                  lineHeight: "24px",
                   color: "var(--ink-muted, #7A7885)",
                 }}
               >
@@ -451,7 +450,7 @@ function BusinessImpactPage() {
                 lower operating costs.
               </p>
 
-              <div style={{ marginTop: fluid(26, 20) }}>
+              <div style={{ marginTop: fluid(40, 28) }}>
                 <RainbowButton label="Book a Demo" />
               </div>
             </div>
@@ -490,9 +489,9 @@ function BusinessImpactPage() {
               onSelect={() => setTab("roi")}
               style={{
                 paddingRight: fluid(60, 0),
-                paddingLeft: fluid(40, 0),
-                paddingTop: fluid(70, 40),
-                paddingBottom: fluid(70, 40),
+                paddingLeft: fluid(60, 0),
+                paddingTop: fluid(62, 36),
+                paddingBottom: fluid(61, 36),
               }}
             />
             <KpiColumn
@@ -501,9 +500,9 @@ function BusinessImpactPage() {
               onSelect={() => setTab("impact")}
               style={{
                 paddingLeft: fluid(52, 0),
-                paddingRight: fluid(40, 0),
-                paddingTop: fluid(70, 40),
-                paddingBottom: fluid(70, 40),
+                paddingRight: fluid(52, 0),
+                paddingTop: fluid(61, 36),
+                paddingBottom: fluid(61, 36),
                 borderLeft: "1px solid var(--hairline, #E1E0E4)",
               }}
               className="md:border-l"
@@ -514,14 +513,14 @@ function BusinessImpactPage() {
 
 
       {/* -------------------------------------------------------- article */}
-      <section style={{ padding: pad, marginTop: fluid(72, 40) }}>
+      <section style={{ padding: pad, marginTop: fluid(60, 36) }}>
         <div key={tab} className="mx-auto w-full max-w-[1200px] overflow-hidden bg-white">
-          <div style={{ padding: `${fluid(40, 24)} ${fluid(64, 24)} 0` }}>
+          <div style={{ padding: `${fluid(60, 32)} ${fluid(60, 24)} 0` }}>
             {/* card header */}
             <p
               style={{
-                fontSize: 11,
-                lineHeight: "18px",
+                fontSize: 14,
+                lineHeight: "20px",
                 margin: 0,
                 color: "var(--ink-muted, #7A7885)",
               }}
@@ -534,15 +533,15 @@ function BusinessImpactPage() {
 
             <div
               className="flex flex-col gap-8 md:flex-row md:items-start md:justify-between"
-              style={{ marginTop: fluid(40, 24) }}
+              style={{ marginTop: fluid(24, 18) }}
             >
-              <div style={{ maxWidth: 780 }}>
+              <div style={{ maxWidth: 800 }}>
                 <h2
                   className="font-display"
                   style={{
                     margin: 0,
                     fontSize: fluid(40, 26),
-                    lineHeight: 1.25,
+                    lineHeight: 1.4,
                     fontWeight: 500,
                     letterSpacing: "-0.01em",
                   }}
@@ -552,10 +551,10 @@ function BusinessImpactPage() {
                 </h2>
                 <p
                   style={{
-                    margin: `${fluid(24, 18)} 0 0`,
-                    maxWidth: 700,
+                    margin: "20px 0 0",
+                    maxWidth: 800,
                     fontSize: 13,
-                    lineHeight: "21px",
+                    lineHeight: "20px",
                     color: "var(--ink-muted, #7A7885)",
                   }}
                 >
@@ -571,7 +570,7 @@ function BusinessImpactPage() {
             {/* light blocks */}
             <div
               className="flex flex-col"
-              style={{ gap: fluid(60, 36), marginTop: fluid(96, 52), paddingBottom: fluid(96, 52) }}
+              style={{ gap: fluid(60, 36), marginTop: fluid(80, 44), paddingBottom: fluid(80, 44) }}
             >
               {article.light.map((b) => (
                 <ArticleBlock key={b.title} {...b} />
@@ -584,7 +583,7 @@ function BusinessImpactPage() {
             data-dark-section
             style={{
               background: "#050505",
-              padding: `${fluid(48, 28)} ${fluid(64, 24)}`,
+              padding: `${fluid(60, 32)} ${fluid(60, 24)}`,
               display: "flex",
               flexDirection: "column",
               gap: fluid(60, 36),
