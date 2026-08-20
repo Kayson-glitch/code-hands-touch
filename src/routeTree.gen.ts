@@ -10,33 +10,44 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as WhySynergyBusinessImpactRouteImport } from './routes/why-synergy.business-impact'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const WhySynergyBusinessImpactRoute =
+  WhySynergyBusinessImpactRouteImport.update({
+    id: '/why-synergy/business-impact',
+    path: '/why-synergy/business-impact',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/why-synergy/business-impact': typeof WhySynergyBusinessImpactRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/why-synergy/business-impact': typeof WhySynergyBusinessImpactRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/why-synergy/business-impact': typeof WhySynergyBusinessImpactRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths: '/' | '/why-synergy/business-impact'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to: '/' | '/why-synergy/business-impact'
+  id: '__root__' | '/' | '/why-synergy/business-impact'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  WhySynergyBusinessImpactRoute: typeof WhySynergyBusinessImpactRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -48,11 +59,19 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/why-synergy/business-impact': {
+      id: '/why-synergy/business-impact'
+      path: '/why-synergy/business-impact'
+      fullPath: '/why-synergy/business-impact'
+      preLoaderRoute: typeof WhySynergyBusinessImpactRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  WhySynergyBusinessImpactRoute: WhySynergyBusinessImpactRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

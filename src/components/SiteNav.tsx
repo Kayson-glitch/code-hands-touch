@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "@tanstack/react-router";
 import logo from "@/assets/synergy-logo-v3.png.asset.json";
 
-export function SiteNav() {
+export function SiteNav({ revealDelay = 4000 }: { revealDelay?: number } = {}) {
   const [theme, setTheme] = useState<"light" | "dark">("light");
-  const [hidden, setHidden] = useState(true);
+  const [hidden, setHidden] = useState(revealDelay > 0);
   const [scrolled, setScrolled] = useState(false);
 
   useEffect(() => {
@@ -11,9 +12,14 @@ export function SiteNav() {
     // once we've received an explicit "visible" signal (after the black
     // handoff). Fallback: if no burst is ever dispatched (e.g. reduced
     // motion path), reveal after a short delay so the site is usable.
-    const t = window.setTimeout(() => setHidden(false), 4000);
+    if (revealDelay <= 0) {
+      setHidden(false);
+      return;
+    }
+    const t = window.setTimeout(() => setHidden(false), revealDelay);
     return () => window.clearTimeout(t);
-  }, []);
+  }, [revealDelay]);
+
 
   useEffect(() => {
     const onBg = (e: Event) => {
@@ -195,11 +201,18 @@ export function SiteNav() {
 
 
 
-const WHY_SYNERGY_ITEMS = [
+const WHY_SYNERGY_ITEMS: Array<{
+  dot: string;
+  kicker: string;
+  title: string;
+  desc: string;
+  to?: string;
+}> = [
   {
     dot: "#9E8CFF",
     kicker: "Impact",
     title: "Business Impact",
+    to: "/why-synergy/business-impact",
     desc: "55% of conversations resolved, with a clear path to lower costs.",
   },
   {
@@ -224,6 +237,7 @@ const WHY_SYNERGY_ITEMS = [
 
 function WhySynergyMenu({ open }: { open: boolean }) {
   const [hover, setHover] = useState<number | null>(null);
+  const navigate = useNavigate();
 
   return (
     <div
@@ -264,8 +278,12 @@ function WhySynergyMenu({ open }: { open: boolean }) {
             <div
               key={it.title}
               className="flex cursor-pointer flex-col items-start"
+              onClick={() => {
+                if (it.to) navigate({ to: it.to });
+              }}
               onMouseEnter={() => setHover(i)}
               onMouseLeave={() => setHover(null)}
+
               style={{
                 padding: 30,
                 gap: 8,
