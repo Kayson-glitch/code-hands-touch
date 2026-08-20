@@ -324,8 +324,9 @@ function KpiColumn({
           margin: "8px 0 0",
           fontSize: 14,
           lineHeight: "24px",
-          color: "var(--ink-muted, #7A7885)",
+          color: "var(--ink-faint, #A1A0A9)",
         }}
+
       >
         {data.caption}
       </p>
