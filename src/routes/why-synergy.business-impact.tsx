@@ -150,33 +150,48 @@ const KPI_RIGHT = {
   ],
 };
 
+type BodySegment = { text: string; highlight?: boolean };
+type ArticleBlockData = {
+  icon: typeof MapIcon;
+  title: string;
+  body: string | BodySegment[];
+  divider: boolean;
+};
 type ArticleSet = {
   eyebrow: string;
   titleAccent: string;
   titleRest: string;
   intro: string;
-  light: Array<{ icon: typeof MapIcon; title: string; body: string; divider: boolean }>;
-  dark: Array<{ icon: typeof MapIcon; title: string; body: string; divider: boolean }>;
+  light: ArticleBlockData[];
+  dark: ArticleBlockData[];
 };
 
 const ARTICLES: Record<"roi" | "impact", ArticleSet> = {
   roi: {
     eyebrow: "Business Value · ROI",
     titleAccent: "Scaling Support Smarter:",
-    titleRest: "Cost Analysis From 150 To 50 Agents",
+    titleRest: "Cost Analysis from 150 to 50 Agents",
     intro:
       "This article quantifies the impact of integrating an AI Customer Service system on operational costs, using the current CS workforce structure as the subject. The current global CS team consists of 150 agents, with a comprehensive per-capita cost.",
     light: [
       {
         icon: MessageSquareCode,
         title: "Analysis of Current Cost Structure",
-        body: "Within the existing agent structure, the vast majority of labor hours are consumed by high-repetition, low-decision-density inquiries, such as order tracking, payment status checks, promotional rule explanations, and withdrawal verifications. These tasks dominate the inbound volume but require minimal human judgment. During promotional cycles, inbound volume spikes exponentially, and the team typically relies on temporary hiring to cope. This leads to rising marginal labor costs, extended training cycles, and widening variances in service quality. The marginal efficiency between labor input and service output continues to diminish.",
+        body: [
+          { text: "Within the existing agent structure, the vast majority of labor hours are consumed by high-repetition, low-decision-density inquiries, such as order tracking, payment status checks, promotional rule explanations, and withdrawal verifications. These tasks dominate the inbound volume but require minimal human judgment. " },
+          { text: "During promotional cycles", highlight: true },
+          { text: ", inbound volume spikes exponentially, and the team typically relies on temporary hiring to cope. This leads to rising marginal labor costs, extended training cycles, and widening variances in service quality. The marginal efficiency between labor input and service output continues to diminish." },
+        ],
         divider: true,
       },
       {
         icon: MapIcon,
         title: "Target Structure: Reallocating Agent Functions",
-        body: "Post-integration, based on business data from the current observation cycle, the CS team is well-positioned to be optimized down to approximately 50 agents. The target structure consists of 20 VIP agents (supervisor-level, dedicated to high-value client services) and 30 general agents. Crucially, the function of the 30 general agents will shift from frontline Q&A to online data monitoring, anomaly handling, and human fallback support. This 30-agent headcount is a conservative configuration, retaining redundancy to handle sudden load surges. Under this structure, the AI system absorbs standardized tasks, while human resources are concentrated on high-decision-density and high-value workflows.",
+        body: [
+          { text: "Post-integration, based on business data from the current observation cycle, the CS team is well-positioned to be optimized down to approximately 50 agents. The target structure consists of 20 VIP agents (supervisor-level, dedicated to high-value client services) and 30 general agents. Crucially, the function of the 30 general agents will shift from frontline Q&A to online data monitoring, anomaly handling, and human fallback support. " },
+          { text: "This 30-agent headcount is a conservative configuration,", highlight: true },
+          { text: " retaining redundancy to handle sudden load surges. Under this structure, the AI system absorbs standardized tasks, while human resources are concentrated on high-decision-density and high-value workflows." },
+        ],
         divider: false,
       },
     ],
@@ -341,12 +356,24 @@ function ArticleBlock({
 }: {
   icon: typeof MapIcon;
   title: string;
-  body: string;
+  body: string | BodySegment[];
   divider: boolean;
   dark?: boolean;
   delay?: number;
   duration?: number;
 }) {
+  const bodyEl = Array.isArray(body) ? (
+    body.map((seg, i) => (
+      <span
+        key={i}
+        style={seg.highlight ? { color: "var(--ink, #0E0B22)" } : undefined}
+      >
+        {seg.text}
+      </span>
+    ))
+  ) : (
+    body
+  );
   return (
     <Reveal delay={delay} y={20} duration={duration}>
       <Icon size={24} strokeWidth={1.5} color={dark ? "#FFFFFF" : "#0E0B22"} />
@@ -366,12 +393,12 @@ function ArticleBlock({
         style={{
           margin: "20px 0 0",
           maxWidth: 1000,
-          fontSize: 13,
+          fontSize: 14,
           lineHeight: "22px",
-          color: dark ? "rgba(255,255,255,0.58)" : "var(--ink-muted, #7A7885)",
+          color: dark ? "rgba(255,255,255,0.5)" : "var(--ink-muted, #7A7885)",
         }}
       >
-        {body}
+        {bodyEl}
       </p>
       {divider ? (
         <div style={{ marginTop: fluid(60, 36) }}>
@@ -529,14 +556,14 @@ function BusinessImpactPage() {
       {/* -------------------------------------------------------- article */}
       <section style={{ padding: pad, marginTop: 0 }}>
         <Reveal key={tab} y={32} duration={1600} className="mx-auto w-full max-w-[1200px] overflow-hidden bg-white">
+          {/* card header */}
           <div style={{ padding: `${fluid(60, 32)} ${fluid(60, 24)} 0` }}>
-            {/* card header */}
             <p
               style={{
-                fontSize: 14,
+                fontSize: 12,
                 lineHeight: "20px",
                 margin: 0,
-                color: "var(--ink-muted, #7A7885)",
+                color: "var(--ink, #0E0B22)",
               }}
             >
               {article.eyebrow}
@@ -554,8 +581,8 @@ function BusinessImpactPage() {
                   className="font-display"
                   style={{
                     margin: 0,
-                    fontSize: fluid(40, 26),
-                    lineHeight: 1.4,
+                    fontSize: fluid(48, 30),
+                    lineHeight: "56px",
                     fontWeight: 500,
                     letterSpacing: "-0.01em",
                   }}
@@ -577,35 +604,56 @@ function BusinessImpactPage() {
               </div>
 
               <div className="shrink-0">
-                <RainbowButton label="Book a Demo" size="sm" />
+                <button
+                  className="font-display"
+                  style={{
+                    background: "#0E0B22",
+                    borderBottom: "1.5px solid #137DFF",
+                    borderRadius: 2,
+                    height: 36,
+                    padding: "0 24px",
+                    fontSize: 12,
+                    lineHeight: "20px",
+                    fontWeight: 500,
+                    color: "#FFFFFF",
+                    cursor: "pointer",
+                    transition: "opacity 0.2s",
+                  }}
+                >
+                  Book a Demo
+                </button>
               </div>
-            </div>
-
-            {/* light blocks */}
-            <div
-              className="flex flex-col"
-              style={{ gap: fluid(60, 36), marginTop: fluid(80, 44), paddingBottom: fluid(80, 44) }}
-            >
-              {article.light.map((b, i) => (
-                <ArticleBlock key={b.title} {...b} delay={i * 260} duration={1600} />
-              ))}
             </div>
           </div>
 
-          {/* dark inner block — full-bleed inside the card */}
+          {/* dark block — full-bleed inside the card */}
           <div
             data-dark-section
             style={{
-              background: "#050505",
-              padding: `${fluid(60, 32)} ${fluid(60, 24)}`,
+              background: "#000000",
+              padding: `${fluid(80, 44)} ${fluid(60, 24)}`,
               display: "flex",
               flexDirection: "column",
               gap: fluid(60, 36),
+              marginTop: fluid(80, 44),
             }}
           >
             {article.dark.map((b, i) => (
               <ArticleBlock key={b.title} {...b} dark delay={i * 260} duration={1600} />
             ))}
+          </div>
+
+          {/* light blocks */}
+          <div
+            style={{
+              padding: `${fluid(80, 44)} ${fluid(60, 24)} ${fluid(80, 44)}`,
+            }}
+          >
+            <div className="flex flex-col" style={{ gap: fluid(60, 36) }}>
+              {article.light.map((b, i) => (
+                <ArticleBlock key={b.title} {...b} delay={i * 260} duration={1600} />
+              ))}
+            </div>
           </div>
 
         </Reveal>
