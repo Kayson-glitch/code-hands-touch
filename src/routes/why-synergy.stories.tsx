@@ -883,12 +883,12 @@ function StoriesPage() {
 
         <div style={{ borderTop: "1px solid rgba(255,255,255,0.1)", boxSizing: "border-box" }} className="md:h-[68px]">
           <div style={{ padding: pad }}>
-            <div className="mx-auto flex w-full max-w-[1200px] flex-col items-start justify-between gap-4 py-7 md:h-full md:flex-row md:items-center md:py-0">
-              <span style={{ color: "rgba(255,255,255,0.65)", fontSize: 12, lineHeight: "20px" }}>
+            <div className="mx-auto grid w-full max-w-[1200px] grid-cols-2 items-center gap-9 py-7 md:h-full md:grid-cols-4 md:py-0">
+              <span className="flex justify-center" style={{ color: "rgba(255,255,255,0.65)", fontSize: 12, lineHeight: "20px" }}>
 
                 © {new Date().getFullYear()} Synergy.AI. All rights reserved.
               </span>
-              <div className="flex items-center gap-4">
+              <div className="hidden md:col-span-3 md:flex md:items-center md:justify-end md:gap-4">
                 {[Linkedin, Twitter, Youtube].map((Icon, i) => (
                   <span
                     key={i}
