@@ -393,11 +393,12 @@ function BusinessImpactPage() {
           cropY={0.32}
           cropH={0.52}
           pitch={6}
-          className="pointer-events-none absolute right-0 select-none"
+          className="pointer-events-none absolute select-none"
           style={{
-            top: fluid(112, 64),
-            width: fluid(640, 320),
-            height: fluid(356, 178),
+            top: fluid(115, 66),
+            left: fluid(780, 420),
+            width: fluid(741, 400),
+            height: fluid(425, 230),
           }}
         />
 
@@ -405,16 +406,15 @@ function BusinessImpactPage() {
           <div className="relative mx-auto w-full max-w-[1200px]">
             <div
               className="relative z-10"
-              style={{ maxWidth: 620, paddingTop: fluid(162, 104), paddingBottom: fluid(112, 64) }}
+              style={{ maxWidth: 680, paddingTop: fluid(162, 104), paddingBottom: fluid(102, 60) }}
             >
               <div className="flex items-center gap-2">
-                <span aria-hidden style={{ width: 5, height: 5, background: ACCENT }} />
+                <span aria-hidden style={{ width: 8, height: 8, background: ACCENT }} />
                 <span
-                  className="uppercase"
                   style={{
-                    fontSize: 12,
-                    lineHeight: "18px",
-                    letterSpacing: "0.08em",
+                    fontSize: 14,
+                    lineHeight: "22px",
+                    letterSpacing: "0.01em",
                     color: "var(--ink-faint, #A1A0A9)",
                   }}
                 >
@@ -425,9 +425,9 @@ function BusinessImpactPage() {
               <h1
                 className="font-display text-ink"
                 style={{
-                  margin: `${fluid(34, 22)} 0 0`,
+                  margin: "10px 0 0",
                   fontSize: fluid(48, 30),
-                  lineHeight: 1.17,
+                  lineHeight: 1.1667,
                   fontWeight: 500,
                   letterSpacing: "-0.01em",
                 }}
@@ -439,10 +439,10 @@ function BusinessImpactPage() {
 
               <p
                 style={{
-                  margin: `${fluid(20, 14)} 0 0`,
-                  maxWidth: 470,
+                  margin: "10px 0 0",
+                  maxWidth: 563,
                   fontSize: 14,
-                  lineHeight: "22px",
+                  lineHeight: "24px",
                   color: "var(--ink-muted, #7A7885)",
                 }}
               >
@@ -450,7 +450,7 @@ function BusinessImpactPage() {
                 lower operating costs.
               </p>
 
-              <div style={{ marginTop: fluid(26, 20) }}>
+              <div style={{ marginTop: fluid(40, 28) }}>
                 <RainbowButton label="Book a Demo" />
               </div>
             </div>
