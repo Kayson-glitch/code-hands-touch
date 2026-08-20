@@ -136,7 +136,7 @@ export function FinChatDock({ alwaysVisible = false }: { alwaysVisible?: boolean
 
   return (
     <div
-      className="pointer-events-none fixed inset-x-0 bottom-10 z-30 flex flex-col items-center px-4"
+      className="pointer-events-none fixed inset-x-0 bottom-10 z-50 flex flex-col items-center px-4"
       style={{
         opacity: visible ? 1 : 0,
         transform: visible ? "translateY(0)" : "translateY(16px)",
