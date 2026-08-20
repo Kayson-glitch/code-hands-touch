@@ -739,54 +739,56 @@ function BusinessImpactPage() {
           </div>
         </div>
 
-        {/* link columns */}
-        <div style={{ padding: pad }}>
-          <div className="mx-auto w-full max-w-[1200px]">
-            <div
-              className="grid grid-cols-2 gap-9 md:grid-cols-4"
-              style={{ paddingTop: fluid(44, 24), paddingBottom: fluid(60, 32) }}
-            >
-              {FOOTER_COLUMNS.map((col, i) => (
-                <Reveal key={col.title} delay={i * 90} y={18} className="flex flex-col">
-                  <p
-                    className="capitalize"
-                    style={{
-                      margin: 0,
-                      color: "rgba(255,255,255,0.65)",
-                      fontSize: 12,
-                      lineHeight: "20px",
-                      fontWeight: 400,
-                      whiteSpace: "pre-wrap",
-                    }}
-                  >
-                    {col.title}
-                  </p>
-                  <ul className="mt-6 flex flex-col gap-[18px]">
-                    {col.links.map((l) => (
-                      <li key={l}>
-                        <span
-                          className="cursor-pointer transition-opacity hover:opacity-70"
-                          style={{ color: "#FFFFFF", fontSize: 14, lineHeight: "22px" }}
-                        >
-                          {l}
-                        </span>
-                      </li>
-                    ))}
-                  </ul>
-                </Reveal>
-              ))}
+        {/* footer body — Figma 1553:20553: fixed 400px, wordmark absolutely placed */}
+        <div className="relative overflow-hidden" style={{ height: 400 }}>
+          <div className="flex h-full items-center" style={{ padding: pad }}>
+            <div className="mx-auto w-full max-w-[1200px]">
+              <div className="grid grid-cols-2 gap-9 md:grid-cols-4">
+                {FOOTER_COLUMNS.map((col, i) => (
+                  <Reveal key={col.title} delay={i * 90} y={18} className="flex flex-col">
+                    <p
+                      className="capitalize"
+                      style={{
+                        margin: 0,
+                        color: "rgba(255,255,255,0.65)",
+                        fontSize: 12,
+                        lineHeight: "20px",
+                        fontWeight: 400,
+                        whiteSpace: "pre-wrap",
+                      }}
+                    >
+                      {col.title}
+                    </p>
+                    <ul className="mt-6 flex flex-col gap-[18px]">
+                      {col.links.map((l) => (
+                        <li key={l}>
+                          <span
+                            className="cursor-pointer transition-opacity hover:opacity-70"
+                            style={{ color: "#FFFFFF", fontSize: 14, lineHeight: "22px" }}
+                          >
+                            {l}
+                          </span>
+                        </li>
+                      ))}
+                    </ul>
+                  </Reveal>
+                ))}
+              </div>
             </div>
           </div>
-        </div>
 
-        {/* oversized wordmark watermark — uniform scale, never stretched */}
-        <FitWordmark text="Synergy.AI" />
+          {/* oversized wordmark watermark — uniform scale, never stretched */}
+          <div className="absolute left-0 w-full" style={{ top: 254 }}>
+            <FitWordmark text="Synergy.AI" />
+          </div>
+        </div>
 
         {/* bottom bar — 68px, top hairline spans full width (Figma 1553:20582) */}
         <div style={{ borderTop: "1px solid rgba(255,255,255,0.1)" }}>
           <div style={{ padding: pad }}>
             <div className="mx-auto flex w-full max-w-[1200px] flex-col items-start justify-between gap-4 py-7 md:h-[68px] md:flex-row md:items-center md:py-0">
-              <span style={{ color: "rgba(255,255,255,0.65)", fontSize: 12, lineHeight: "20px", fontWeight: 500, marginTop: 20 }}>
+              <span style={{ color: "rgba(255,255,255,0.65)", fontSize: 12, lineHeight: "20px", fontWeight: 500 }}>
+
                 © {new Date().getFullYear()} Synergy.AI. All right reserved.
               </span>
               <div className="flex items-center gap-4">
