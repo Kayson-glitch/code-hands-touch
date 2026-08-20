@@ -608,7 +608,6 @@ function BusinessImpactPage() {
 
               <div className="shrink-0">
                 <button
-                  className="font-display"
                   style={{
                     background: "#0E0B22",
                     borderBottom: "1.5px solid #137DFF",
