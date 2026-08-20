@@ -109,7 +109,7 @@ export function HalftoneHandStill({
       ctx.clearRect(0, 0, w, h);
 
       // Contain-fit the cropped source so the hand keeps its aspect ratio.
-      const srcAr = (cropW * FRAME_W) / FRAME_H;
+      const srcAr = (cropW * FRAME_W) / (cropH * FRAME_H);
       let drawW = w;
       let drawH = drawW / srcAr;
       if (drawH > h) {
