@@ -81,7 +81,7 @@ export function SiteNav() {
         aria-hidden
         className="pointer-events-none block w-full shrink-0"
         style={{
-          height: 3,
+          height: 5,
           backgroundImage:
             "linear-gradient(90deg, #137DFF 0%, #FF18AA 33.333%, #FFCD17 66.666%, #137DFF 100%)",
           backgroundSize: "120vw 100%",
