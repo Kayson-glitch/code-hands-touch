@@ -132,14 +132,14 @@ export function HalftoneHandStill({
       octx.imageSmoothingEnabled = true;
       const idx = Math.min(FRAME_COUNT - 1, Math.max(0, frame));
       const sx = (idx % ATLAS_COLS) * FRAME_W + cropX * FRAME_W;
-      const sy = Math.floor(idx / ATLAS_COLS) * FRAME_H;
+      const sy = Math.floor(idx / ATLAS_COLS) * FRAME_H + cropY * FRAME_H;
       (octx as unknown as { filter: string }).filter = "blur(0.5px)";
       octx.drawImage(
         atlas,
         sx,
         sy,
         cropW * FRAME_W,
-        FRAME_H,
+        cropH * FRAME_H,
         0,
         0,
         cols,
