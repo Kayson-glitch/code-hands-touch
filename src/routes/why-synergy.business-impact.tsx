@@ -473,13 +473,13 @@ function BusinessImpactPage() {
       <section style={{ padding: pad }} role="tablist" aria-label="Business impact metrics">
         <Reveal className="mx-auto w-full max-w-[1200px]">
           {/* section rule: brand gradient over the selected half, hairline after */}
-          <div aria-hidden className="flex" style={{ height: 1 }}>
+          <div aria-hidden className="flex" style={{ height: 1.5 }}>
             <div className="relative" style={{ width: "50%", background: "#ECEBEF" }}>
               {tab === "roi" && (
                 <span
                   key="rule-roi"
                   className="kpi-rule-active absolute left-0 top-0"
-                  style={{ height: 1, maxWidth: "100%", width: 120 }}
+                  style={{ height: 1.5, maxWidth: "100%", width: 120 }}
                 />
               )}
             </div>
@@ -488,7 +488,7 @@ function BusinessImpactPage() {
                 <span
                   key="rule-impact"
                   className="kpi-rule-active absolute left-0 top-0"
-                  style={{ height: 1, maxWidth: "100%", width: 120 }}
+                  style={{ height: 1.5, maxWidth: "100%", width: 120 }}
                 />
               )}
             </div>
