@@ -696,6 +696,28 @@ function StoriesPage() {
                 <a
                   key={s.id}
                   href={`#${s.id}`}
+                  onClick={(event) => {
+                    const target = document.getElementById(s.id);
+                    if (!target) return;
+                    event.preventDefault();
+                    const lenis = getLenis();
+                    if (lenis) {
+                      // real animated scroll through the page, matching the
+                      // reference site's inertial anchor jump
+                      lenis.scrollTo(target, {
+                        offset: -ANCHOR_OFFSET,
+                        duration: 1.2,
+                      });
+                    } else {
+                      window.scrollTo({
+                        top:
+                          target.getBoundingClientRect().top +
+                          window.scrollY -
+                          ANCHOR_OFFSET,
+                        behavior: "smooth",
+                      });
+                    }
+                  }}
                   className="relative flex items-center transition-colors duration-300"
                   style={{
                     height: 54,
