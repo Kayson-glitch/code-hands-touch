@@ -81,7 +81,7 @@ export function SiteNav() {
         aria-hidden
         className="pointer-events-none block w-full shrink-0"
         style={{
-          height: 5,
+          height: 3,
           backgroundImage:
             "linear-gradient(90deg, #137DFF 0%, #FF18AA 33.333%, #FFCD17 66.666%, #137DFF 100%)",
           backgroundSize: "120vw 100%",
@@ -93,7 +93,7 @@ export function SiteNav() {
       <div
         className="flex items-center justify-center px-6"
         style={{
-          height: 64,
+          height: 60,
           borderBottom: `1px solid ${hairline}`,
           background: scrolled ? glassBg : "transparent",
           backdropFilter: scrolled ? "blur(18px) saturate(140%)" : "none",
