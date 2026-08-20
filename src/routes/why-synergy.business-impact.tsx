@@ -556,14 +556,14 @@ function BusinessImpactPage() {
       {/* -------------------------------------------------------- article */}
       <section style={{ padding: pad, marginTop: 0 }}>
         <Reveal key={tab} y={32} duration={1600} className="mx-auto w-full max-w-[1200px] overflow-hidden bg-white">
+          {/* card header */}
           <div style={{ padding: `${fluid(60, 32)} ${fluid(60, 24)} 0` }}>
-            {/* card header */}
             <p
               style={{
-                fontSize: 14,
+                fontSize: 12,
                 lineHeight: "20px",
                 margin: 0,
-                color: "var(--ink-muted, #7A7885)",
+                color: "var(--ink, #0E0B22)",
               }}
             >
               {article.eyebrow}
@@ -581,8 +581,8 @@ function BusinessImpactPage() {
                   className="font-display"
                   style={{
                     margin: 0,
-                    fontSize: fluid(40, 26),
-                    lineHeight: 1.4,
+                    fontSize: fluid(48, 30),
+                    lineHeight: "56px",
                     fontWeight: 500,
                     letterSpacing: "-0.01em",
                   }}
@@ -604,35 +604,56 @@ function BusinessImpactPage() {
               </div>
 
               <div className="shrink-0">
-                <RainbowButton label="Book a Demo" size="sm" />
+                <button
+                  className="font-display"
+                  style={{
+                    background: "#0E0B22",
+                    borderBottom: "1.5px solid #137DFF",
+                    borderRadius: 2,
+                    height: 36,
+                    padding: "0 24px",
+                    fontSize: 12,
+                    lineHeight: "20px",
+                    fontWeight: 500,
+                    color: "#FFFFFF",
+                    cursor: "pointer",
+                    transition: "opacity 0.2s",
+                  }}
+                >
+                  Book a Demo
+                </button>
               </div>
-            </div>
-
-            {/* light blocks */}
-            <div
-              className="flex flex-col"
-              style={{ gap: fluid(60, 36), marginTop: fluid(80, 44), paddingBottom: fluid(80, 44) }}
-            >
-              {article.light.map((b, i) => (
-                <ArticleBlock key={b.title} {...b} delay={i * 260} duration={1600} />
-              ))}
             </div>
           </div>
 
-          {/* dark inner block — full-bleed inside the card */}
+          {/* dark block — full-bleed inside the card */}
           <div
             data-dark-section
             style={{
-              background: "#050505",
-              padding: `${fluid(60, 32)} ${fluid(60, 24)}`,
+              background: "#000000",
+              padding: `${fluid(80, 44)} ${fluid(60, 24)}`,
               display: "flex",
               flexDirection: "column",
               gap: fluid(60, 36),
+              marginTop: fluid(80, 44),
             }}
           >
             {article.dark.map((b, i) => (
               <ArticleBlock key={b.title} {...b} dark delay={i * 260} duration={1600} />
             ))}
+          </div>
+
+          {/* light blocks */}
+          <div
+            style={{
+              padding: `${fluid(80, 44)} ${fluid(60, 24)} ${fluid(80, 44)}`,
+            }}
+          >
+            <div className="flex flex-col" style={{ gap: fluid(60, 36) }}>
+              {article.light.map((b, i) => (
+                <ArticleBlock key={b.title} {...b} delay={i * 260} duration={1600} />
+              ))}
+            </div>
           </div>
 
         </Reveal>
