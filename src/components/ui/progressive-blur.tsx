@@ -11,6 +11,12 @@ type ProgressiveBlurProps = {
    * (e.g. a footer) is visible in the viewport.
    */
   hiddenWhen?: React.RefObject<HTMLElement | null>;
+  /**
+   * CSS selector for element(s) that should hide the blur while visible
+   * (e.g. a footer). Useful from a shared layout where the target lives
+   * in a child route. All matching elements are observed.
+   */
+  hiddenWhenSelector?: string;
 };
 
 /**
@@ -24,21 +30,33 @@ const ProgressiveBlur = ({
   height = "150px",
   blurAmount = "4px",
   hiddenWhen,
+  hiddenWhenSelector,
 }: ProgressiveBlurProps) => {
   const isTop = position === "top";
   const layers = [0, 1, 2, 3, 4, 5];
   const [hidden, setHidden] = useState(false);
 
   useEffect(() => {
-    const el = hiddenWhen?.current;
-    if (!el) return;
+    const targets: HTMLElement[] = [];
+    if (hiddenWhen?.current) targets.push(hiddenWhen.current);
+    if (hiddenWhenSelector) {
+      targets.push(...Array.from(document.querySelectorAll<HTMLElement>(hiddenWhenSelector)));
+    }
+    if (targets.length === 0) return;
+    const visible = new Set<Element>();
     const io = new IntersectionObserver(
-      ([entry]) => setHidden(entry.isIntersecting),
+      (entries) => {
+        for (const e of entries) {
+          if (e.isIntersecting) visible.add(e.target);
+          else visible.delete(e.target);
+        }
+        setHidden(visible.size > 0);
+      },
       { threshold: 0.01 },
     );
-    io.observe(el);
+    targets.forEach((el) => io.observe(el));
     return () => io.disconnect();
-  }, [hiddenWhen]);
+  }, [hiddenWhen, hiddenWhenSelector]);
 
   if (hidden) return null;
 
