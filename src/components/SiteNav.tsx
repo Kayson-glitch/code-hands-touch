@@ -93,7 +93,7 @@ export function SiteNav() {
       <div
         className="flex items-center justify-center px-6"
         style={{
-          height: 60,
+          height: 64,
           borderBottom: `1px solid ${hairline}`,
           background: scrolled ? glassBg : "transparent",
           backdropFilter: scrolled ? "blur(18px) saturate(140%)" : "none",
@@ -130,7 +130,7 @@ export function SiteNav() {
           {/* Center menu */}
           <ul
             className="pointer-events-auto hidden flex-1 items-center justify-center gap-2.5 md:flex"
-            style={{ fontSize: 13, lineHeight: "22px" }}
+            style={{ fontSize: 14, lineHeight: "22px" }}
           >
             <li className={navItem} style={{ color: inkStrong }}>
               Platform <Chevron />
@@ -150,7 +150,7 @@ export function SiteNav() {
           <div className="pointer-events-auto flex shrink-0 items-center gap-2.5">
             <button
               className="px-4 py-[7px] capitalize"
-              style={{ fontSize: 13, lineHeight: "22px", color: inkStrong }}
+              style={{ fontSize: 14, lineHeight: "22px", color: inkStrong }}
             >
               Log in
             </button>
@@ -161,7 +161,7 @@ export function SiteNav() {
                 fontSize: 12,
                 lineHeight: "20px",
                 padding: "0 14px",
-                borderRadius: onDark ? 12 : 10,
+                borderRadius: onDark ? 12 : 6,
                 color: onDark ? "#0E0B22" : "#FFFFFF",
                 background: onDark ? "#FFFFFF" : "#0E0B22",
                 border: `1px solid ${onDark ? "#FFFFFF" : "#0E0B22"}`,
@@ -183,8 +183,8 @@ export function SiteNav() {
 function Chevron() {
   return (
     <svg
-      width="14"
-      height="14"
+      width="16"
+      height="16"
       viewBox="0 0 16 16"
       fill="none"
       aria-hidden
