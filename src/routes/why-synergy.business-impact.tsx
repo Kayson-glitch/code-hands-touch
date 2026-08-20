@@ -502,7 +502,7 @@ function BusinessImpactPage() {
                 paddingRight: fluid(60, 0),
                 paddingLeft: fluid(60, 0),
                 paddingTop: fluid(48, 32),
-                paddingBottom: fluid(30, 22),
+                paddingBottom: fluid(60, 36),
               }}
             />
             <KpiColumn
@@ -513,7 +513,7 @@ function BusinessImpactPage() {
                 paddingLeft: fluid(52, 0),
                 paddingRight: fluid(52, 0),
                 paddingTop: fluid(48, 32),
-                paddingBottom: fluid(30, 22),
+                paddingBottom: fluid(60, 36),
                 borderLeft: "1px solid var(--hairline, #E1E0E4)",
               }}
               className="md:border-l"
