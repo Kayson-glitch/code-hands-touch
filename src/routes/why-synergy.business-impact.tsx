@@ -411,7 +411,7 @@ function BusinessImpactPage() {
               className="relative z-10"
               style={{ maxWidth: 680, paddingTop: fluid(162, 104), paddingBottom: fluid(102, 60) }}
             >
-              <div className="flex items-center gap-2">
+              <Reveal immediate className="flex items-center gap-2">
                 <span aria-hidden style={{ width: 8, height: 8, background: ACCENT }} />
                 <span
                   style={{
@@ -423,39 +423,43 @@ function BusinessImpactPage() {
                 >
                   Impact
                 </span>
-              </div>
+              </Reveal>
 
-              <h1
-                className="font-display text-ink"
-                style={{
-                  margin: "10px 0 0",
-                  fontSize: fluid(48, 30),
-                  lineHeight: 1.1667,
-                  fontWeight: 500,
-                  letterSpacing: "-0.01em",
-                }}
-              >
-                From AI Support To
-                <br />
-                Measurable Business Value
-              </h1>
+              <Reveal immediate delay={120}>
+                <h1
+                  className="font-display text-ink"
+                  style={{
+                    margin: "10px 0 0",
+                    fontSize: fluid(48, 30),
+                    lineHeight: 1.1667,
+                    fontWeight: 500,
+                    letterSpacing: "-0.01em",
+                  }}
+                >
+                  From AI Support To
+                  <br />
+                  Measurable Business Value
+                </h1>
+              </Reveal>
 
-              <p
-                style={{
-                  margin: "10px 0 0",
-                  maxWidth: 563,
-                  fontSize: 14,
-                  lineHeight: "24px",
-                  color: "var(--ink-muted, #7A7885)",
-                }}
-              >
-                Resolving 55% of conversations across 200K monthly inquiries, with a clear path to
-                lower operating costs.
-              </p>
+              <Reveal immediate delay={240}>
+                <p
+                  style={{
+                    margin: "10px 0 0",
+                    maxWidth: 563,
+                    fontSize: 14,
+                    lineHeight: "24px",
+                    color: "var(--ink-muted, #7A7885)",
+                  }}
+                >
+                  Resolving 55% of conversations across 200K monthly inquiries, with a clear path to
+                  lower operating costs.
+                </p>
+              </Reveal>
 
-              <div style={{ marginTop: fluid(40, 28) }}>
+              <Reveal immediate delay={360} style={{ marginTop: fluid(40, 28) }}>
                 <RainbowButton label="Book a Demo" />
-              </div>
+              </Reveal>
             </div>
           </div>
         </div>
