@@ -410,78 +410,80 @@ function BusinessImpactPage() {
       </section>
 
       {/* -------------------------------------------------------- article */}
-      <section style={{ padding: pad, marginTop: fluid(120, 64) }}>
-        <div
-          className="mx-auto w-full max-w-[1200px] bg-white"
-          style={{
-            border: "1px solid var(--hairline, #E1E0E4)",
-            borderRadius: 8,
-            padding: fluid(60, 24),
-          }}
-        >
-          {/* card header */}
-          <p
-            className="uppercase text-ink-faint"
-            style={{ fontSize: 13, lineHeight: "20px", letterSpacing: "0.06em", margin: 0 }}
-          >
-            Business Value · ROI
-          </p>
-          <div style={{ marginTop: 10 }}>
-            <Hairline />
-          </div>
+      <section style={{ padding: pad, marginTop: fluid(72, 40) }}>
+        <div className="mx-auto w-full max-w-[1200px] overflow-hidden bg-white">
+          <div style={{ padding: `${fluid(40, 24)} ${fluid(64, 24)} 0` }}>
+            {/* card header */}
+            <p
+              style={{
+                fontSize: 11,
+                lineHeight: "18px",
+                margin: 0,
+                color: "var(--ink-muted, #7A7885)",
+              }}
+            >
+              Business Value · ROI
+            </p>
+            <div style={{ marginTop: 10 }}>
+              <Hairline />
+            </div>
 
-          <div
-            className="flex flex-col gap-8 md:flex-row md:items-start md:justify-between"
-            style={{ marginTop: fluid(54, 28) }}
-          >
-            <div style={{ maxWidth: 800 }}>
-              <h2
-                className="font-display"
-                style={{ margin: 0, fontSize: fluid(40, 26), lineHeight: 1.4, fontWeight: 500 }}
-              >
-                <span
+            <div
+              className="flex flex-col gap-8 md:flex-row md:items-start md:justify-between"
+              style={{ marginTop: fluid(40, 24) }}
+            >
+              <div style={{ maxWidth: 780 }}>
+                <h2
+                  className="font-display"
                   style={{
-                    backgroundImage:
-                      "linear-gradient(90deg, #137DFF 0%, #7B3BFF 45%, #B37BFF 100%)",
-                    WebkitBackgroundClip: "text",
-                    backgroundClip: "text",
-                    color: "transparent",
+                    margin: 0,
+                    fontSize: fluid(40, 26),
+                    lineHeight: 1.25,
+                    fontWeight: 500,
+                    letterSpacing: "-0.01em",
                   }}
                 >
-                  Scaling Support Smarter:
-                </span>{" "}
-                <span className="text-ink">Cost Analysis From 150 To 50 Agents</span>
-              </h2>
-              <p
-                className="text-ink-muted"
-                style={{ margin: "32px 0 0", fontSize: 14, lineHeight: "22px" }}
-              >
-                This is a projection based on the actual absorption capacity of the AI system in the
-                current observation cycle, using RMB 1.5M/month as the human cost baseline for 150
-                agents and 200K conversations/month as the volume baseline.
-              </p>
+                  <span style={{ color: "#9E8CFF" }}>Scaling Support Smarter:</span>{" "}
+                  <span className="text-ink">Cost Analysis From 150 To 50 Agents</span>
+                </h2>
+                <p
+                  style={{
+                    margin: `${fluid(24, 18)} 0 0`,
+                    maxWidth: 700,
+                    fontSize: 13,
+                    lineHeight: "21px",
+                    color: "var(--ink-muted, #7A7885)",
+                  }}
+                >
+                  This article quantifies the impact of integrating an AI Customer Service system on
+                  operational costs, using the current CS workforce structure as the subject. The
+                  current global CS team consists of 150 agents, with a comprehensive per-capita
+                  cost.
+                </p>
+              </div>
+
+              <div className="shrink-0">
+                <RainbowButton label="Book a Demo" size="sm" />
+              </div>
             </div>
 
-            <div className="shrink-0">
-              <RainbowButton label="Book a Demo" size="sm" />
+            {/* light blocks */}
+            <div
+              className="flex flex-col"
+              style={{ gap: fluid(60, 36), marginTop: fluid(96, 52), paddingBottom: fluid(96, 52) }}
+            >
+              {ARTICLE_LIGHT.map((b) => (
+                <ArticleBlock key={b.title} {...b} />
+              ))}
             </div>
           </div>
 
-          {/* light blocks */}
-          <div className="flex flex-col" style={{ gap: fluid(60, 36), marginTop: fluid(102, 56) }}>
-            {ARTICLE_LIGHT.map((b) => (
-              <ArticleBlock key={b.title} {...b} />
-            ))}
-          </div>
-
-          {/* dark inner block */}
+          {/* dark inner block — full-bleed inside the card */}
           <div
             data-dark-section
             style={{
-              marginTop: fluid(80, 48),
-              background: "#0A0A0A",
-              borderRadius: 8,
-              padding: fluid(60, 24),
+              background: "#050505",
+              padding: `${fluid(48, 28)} ${fluid(64, 24)}`,
               display: "flex",
               flexDirection: "column",
               gap: fluid(60, 36),
