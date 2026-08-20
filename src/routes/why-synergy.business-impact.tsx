@@ -693,7 +693,7 @@ function BusinessImpactPage() {
 
       {/* ---------------------------------------------------------- footer */}
       <footer data-dark-section className="relative overflow-hidden" style={{ background: "#0A0A0A" }}>
-        <div aria-hidden style={{ height: 1.5, backgroundImage: GRADIENT, backgroundSize: "200%" }} />
+        <div aria-hidden style={{ height: 3, backgroundImage: GRADIENT, backgroundSize: "200%" }} />
 
         {/* header row */}
         <div style={{ padding: pad }}>
