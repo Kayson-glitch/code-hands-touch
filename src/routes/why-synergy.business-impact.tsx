@@ -147,35 +147,87 @@ const KPI_RIGHT = {
   ],
 };
 
-const ARTICLE_LIGHT = [
-  {
-    icon: MessageSquareCode,
-    title: "Analysis of Current Cost Structure",
-    body: "Within the existing agent structure, the vast majority of labor hours are consumed by high-repetition, low-decision-density inquiries, such as order tracking, payment status checks, promotional rule explanations, and withdrawal verifications. These tasks dominate the inbound volume but require minimal human judgment. During promotional cycles, inbound volume spikes exponentially, and the team typically relies on temporary hiring to cope. This leads to rising marginal labor costs, extended training cycles, and widening variances in service quality. The marginal efficiency between labor input and service output continues to diminish.",
-    divider: true,
-  },
-  {
-    icon: MapIcon,
-    title: "Target Structure: Reallocating Agent Functions",
-    body: "Post-integration, based on business data from the current observation cycle, the CS team is well-positioned to be optimized down to approximately 50 agents. The target structure consists of 20 VIP agents (supervisor-level, dedicated to high-value client services) and 30 general agents. Crucially, the function of the 30 general agents will shift from frontline Q&A to online data monitoring, anomaly handling, and human fallback support. This 30-agent headcount is a conservative configuration, retaining redundancy to handle sudden load surges. Under this structure, the AI system absorbs standardized tasks, while human resources are concentrated on high-decision-density and high-value workflows.",
-    divider: false,
-  },
-];
+type ArticleSet = {
+  eyebrow: string;
+  titleAccent: string;
+  titleRest: string;
+  intro: string;
+  light: Array<{ icon: typeof MapIcon; title: string; body: string; divider: boolean }>;
+  dark: Array<{ icon: typeof MapIcon; title: string; body: string; divider: boolean }>;
+};
 
-const ARTICLE_DARK = [
-  {
-    icon: MessageSquareCode,
-    title: "Cost Impact Projection",
-    body: "Under the target structure, the team size is optimized by roughly 50%, translating to a monthly labor cost savings of about 1 million RMB, and an annual savings of roughly 12 million RMB. It is important to emphasize that this structure does not achieve cost reduction at the expense of service quality: VIP clients are served by dedicated agents, reinforcing service continuity and response quality; meanwhile, as general agents pivot to monitoring roles, the entire team shifts from a scale-driven model to an efficiency-driven one.",
-    divider: true,
+const ARTICLES: Record<"roi" | "impact", ArticleSet> = {
+  roi: {
+    eyebrow: "Business Value · ROI",
+    titleAccent: "Scaling Support Smarter:",
+    titleRest: "Cost Analysis From 150 To 50 Agents",
+    intro:
+      "This article quantifies the impact of integrating an AI Customer Service system on operational costs, using the current CS workforce structure as the subject. The current global CS team consists of 150 agents, with a comprehensive per-capita cost.",
+    light: [
+      {
+        icon: MessageSquareCode,
+        title: "Analysis of Current Cost Structure",
+        body: "Within the existing agent structure, the vast majority of labor hours are consumed by high-repetition, low-decision-density inquiries, such as order tracking, payment status checks, promotional rule explanations, and withdrawal verifications. These tasks dominate the inbound volume but require minimal human judgment. During promotional cycles, inbound volume spikes exponentially, and the team typically relies on temporary hiring to cope. This leads to rising marginal labor costs, extended training cycles, and widening variances in service quality. The marginal efficiency between labor input and service output continues to diminish.",
+        divider: true,
+      },
+      {
+        icon: MapIcon,
+        title: "Target Structure: Reallocating Agent Functions",
+        body: "Post-integration, based on business data from the current observation cycle, the CS team is well-positioned to be optimized down to approximately 50 agents. The target structure consists of 20 VIP agents (supervisor-level, dedicated to high-value client services) and 30 general agents. Crucially, the function of the 30 general agents will shift from frontline Q&A to online data monitoring, anomaly handling, and human fallback support. This 30-agent headcount is a conservative configuration, retaining redundancy to handle sudden load surges. Under this structure, the AI system absorbs standardized tasks, while human resources are concentrated on high-decision-density and high-value workflows.",
+        divider: false,
+      },
+    ],
+    dark: [
+      {
+        icon: MessageSquareCode,
+        title: "Cost Impact Projection",
+        body: "Under the target structure, the team size is optimized by roughly 50%, translating to a monthly labor cost savings of about 1 million RMB, and an annual savings of roughly 12 million RMB. It is important to emphasize that this structure does not achieve cost reduction at the expense of service quality: VIP clients are served by dedicated agents, reinforcing service continuity and response quality; meanwhile, as general agents pivot to monitoring roles, the entire team shifts from a scale-driven model to an efficiency-driven one.",
+        divider: true,
+      },
+      {
+        icon: MapIcon,
+        title: "Conclusion and Clarifications",
+        body: "This projection is based on the actual absorption capacity of the AI system during the current observation cycle, reflecting the achievable optimization space supported by data; the organizational labor adjustments have not yet been executed. The system's capacity has already reached the level required to support the aforementioned structure. The actual implementation of workforce adjustments falls under the client's operational decision-making, and the timing is at their discretion. Capabilities are met; implementation is merely a matter of pacing.",
+        divider: false,
+      },
+    ],
   },
-  {
-    icon: MapIcon,
-    title: "Conclusion and Clarifications",
-    body: "This projection is based on the actual absorption capacity of the AI system during the current observation cycle, reflecting the achievable optimization space supported by data; the organizational labor adjustments have not yet been executed. The system's capacity has already reached the level required to support the aforementioned structure. The actual implementation of workforce adjustments falls under the client's operational decision-making, and the timing is at their discretion. Capabilities are met; implementation is merely a matter of pacing.",
-    divider: false,
+  impact: {
+    eyebrow: "Overall Impact · Resolution",
+    titleAccent: "Resolution At Scale:",
+    titleRest: "How AI Absorbs 200K Conversations A Month",
+    intro:
+      "This article breaks down where the 75% figure comes from, separating conversation-level resolution from message-level handling, and explains how the system decides when a human agent should take over.",
+    light: [
+      {
+        icon: MessageSquareCode,
+        title: "How Resolution Is Measured",
+        body: "Resolution is counted at two independent levels. At the conversation level, a session is marked resolved only when the AI closes the request end-to-end with no human agent message in the thread and no reopen within the following 48 hours; this currently covers 55% of all sessions. At the message level, the system handles roughly 70% of inbound messages, about 110K per month, including the turns inside conversations that later escalate. Neither number is smoothed or weighted: sessions that end in silence are treated as unresolved rather than assumed successful.",
+        divider: true,
+      },
+      {
+        icon: MapIcon,
+        title: "Traffic Composition Across 200K Conversations",
+        body: "Monthly inbound volume sits at approximately 200K conversations, dominated by order tracking, payment and withdrawal status, promotional rule questions, and account verification. These intents are highly repetitive and have stable resolution paths, which is why they absorb first. The remaining volume — disputes, risk review, VIP negotiation, and anything requiring a policy exception — is intentionally routed to humans, and is excluded from the AI resolution target rather than counted as a failure.",
+        divider: false,
+      },
+    ],
+    dark: [
+      {
+        icon: MessageSquareCode,
+        title: "Escalation And Fallback Behaviour",
+        body: "The system escalates on low confidence, repeated user rephrasing, detected frustration, or any request that would change a balance or account state without an existing rule. Handover carries the full conversation context, so the human agent does not restart the exchange. Median first response stays under a few seconds for AI-handled turns, and escalated sessions inherit the queue priority of the original intent, which keeps the perceived service level intact even when the AI steps back.",
+        divider: true,
+      },
+      {
+        icon: MapIcon,
+        title: "Baseline And Clarifications",
+        body: "Both metrics were zero before launch: there was no automated coverage of any kind, so the current figures represent net new absorption rather than a migration of existing automation. The numbers reflect the current observation cycle and will shift as intent coverage expands. No metric here is inflated by counting deflected or abandoned sessions as resolved; a human agent intervenes whenever the request exceeds the system's authority.",
+        divider: false,
+      },
+    ],
   },
-];
+};
 
 const FOOTER_COLUMNS = [
   { title: "Why Synergy", links: ["Platform", "Pricing", "Book a Demo"] },
