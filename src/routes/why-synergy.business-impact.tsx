@@ -1,6 +1,6 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowRight, MessageSquareCode, Map as MapIcon } from "lucide-react";
+import { ArrowRight, MessageSquareCode, Map as MapIcon, Linkedin, Twitter, Youtube } from "lucide-react";
 import { SiteNav } from "@/components/SiteNav";
 import { HalftoneHandStill } from "@/components/HalftoneHandStill";
 import { Reveal } from "@/components/Reveal";
@@ -248,11 +248,12 @@ const ARTICLES: Record<"roi" | "impact", ArticleSet> = {
 };
 
 const FOOTER_COLUMNS = [
-  { title: "Why Synergy", links: ["Platform", "Pricing", "Book a Demo"] },
-  { title: "Platform", links: ["Features", "Pricing", "Integrations"] },
-  { title: "Section", links: ["Events", "Blog"] },
+  { title: "why  synergy", links: ["Features", "Pricing", "Book a demo"] },
+  { title: "platform", links: ["Features", "Pricing", "Book a demo"] },
+  { title: "solution", links: ["Events", "Blog"] },
   { title: "Company", links: ["About us", "Contact us"] },
 ];
+
 
 /* ------------------------------------------------------------------ page */
 
@@ -703,32 +704,39 @@ function BusinessImpactPage() {
       <footer ref={footerRef} data-dark-section className="relative overflow-hidden" style={{ background: "#0A0A0A" }}>
         <div aria-hidden style={{ height: 3, backgroundImage: GRADIENT, backgroundSize: "200%" }} />
 
-        {/* header row */}
-        <div style={{ padding: pad }}>
-          <div className="mx-auto flex h-20 w-full max-w-[1200px] items-center justify-between gap-6">
-            <div className="flex items-center gap-3">
+        {/* header row — 80px, bottom hairline spans full width (Figma 1553:20545) */}
+        <div style={{ borderBottom: "1px solid rgba(255,255,255,0.1)" }}>
+          <div style={{ padding: pad }}>
+            <div className="mx-auto flex h-20 w-full max-w-[1200px] items-center justify-between gap-6">
+              <div className="flex items-center gap-2">
+                <span
+                  aria-hidden
+                  style={{
+                    width: 28,
+                    height: 28,
+                    borderRadius: 999,
+                    backgroundImage: GRADIENT,
+                    backgroundSize: "200%",
+                  }}
+                />
+                <span
+                  style={{ color: "#FFFFFF", fontSize: 18, lineHeight: "24px", fontWeight: 500 }}
+                >
+                  Synergy.AI
+                </span>
+              </div>
               <span
-                aria-hidden
+                className="hidden md:block"
                 style={{
-                  width: 24,
-                  height: 24,
-                  borderRadius: 6,
-                  backgroundImage: GRADIENT,
-                  backgroundSize: "200%",
+                  color: "rgba(255,255,255,0.5)",
+                  fontSize: 12,
+                  lineHeight: "20px",
+                  textAlign: "right",
                 }}
-              />
-              <span
-                style={{ color: "#FFFFFF", fontSize: 16, lineHeight: "24px", fontWeight: 500 }}
               >
-                Synergy.AI
+                Revenue-Driven AI Support. Engineered on Synergy. Scale Securely.
               </span>
             </div>
-            <span
-              className="hidden md:block"
-              style={{ color: "rgba(255,255,255,0.5)", fontSize: 12, lineHeight: "20px" }}
-            >
-              Empowering financial institutions with intelligent, secure AI support.
-            </span>
           </div>
         </div>
 
@@ -736,7 +744,7 @@ function BusinessImpactPage() {
         <div style={{ padding: pad }}>
           <div className="mx-auto w-full max-w-[1200px]">
             <div
-              className="grid grid-cols-2 gap-10 md:grid-cols-4"
+              className="grid grid-cols-2 gap-9 md:grid-cols-4"
               style={{ paddingTop: fluid(44, 24), paddingBottom: fluid(60, 32) }}
             >
               {FOOTER_COLUMNS.map((col, i) => (
@@ -749,6 +757,7 @@ function BusinessImpactPage() {
                       fontSize: 12,
                       lineHeight: "20px",
                       fontWeight: 400,
+                      whiteSpace: "pre-wrap",
                     }}
                   >
                     {col.title}
@@ -774,24 +783,29 @@ function BusinessImpactPage() {
         {/* oversized wordmark watermark — uniform scale, never stretched */}
         <FitWordmark text="Synergy.AI" />
 
-
-
-        {/* bottom bar */}
-        <div style={{ padding: pad }}>
-          <div
-            className="mx-auto flex w-full max-w-[1200px] flex-col items-start justify-between gap-4 py-6 md:flex-row md:items-center"
-            style={{ borderTop: "1px solid rgba(255,255,255,0.18)" }}
-          >
-            <span style={{ color: "rgba(255,255,255,0.45)", fontSize: 13, lineHeight: "20px" }}>
-              © {new Date().getFullYear()} Synergy.AI. All rights reserved.
-            </span>
-            <div className="flex items-center gap-4">
-              <Link to="/" style={{ color: "rgba(255,255,255,0.55)", fontSize: 13 }}>
-                Back to home
-              </Link>
+        {/* bottom bar — 68px, top hairline spans full width (Figma 1553:20582) */}
+        <div style={{ borderTop: "1px solid rgba(255,255,255,0.1)" }}>
+          <div style={{ padding: pad }}>
+            <div className="mx-auto flex w-full max-w-[1200px] flex-col items-start justify-between gap-4 py-7 md:h-[68px] md:flex-row md:items-center md:py-0">
+              <span style={{ color: "rgba(255,255,255,0.65)", fontSize: 12, lineHeight: "20px" }}>
+                © {new Date().getFullYear()} Synergy.AI. All right reserved.
+              </span>
+              <div className="flex items-center gap-4">
+                {[Linkedin, Twitter, Youtube].map((Icon, i) => (
+                  <span
+                    key={i}
+                    className="cursor-pointer transition-opacity hover:opacity-70"
+                    style={{ color: "#FFFFFF", display: "inline-flex" }}
+                  >
+                    <Icon size={20} strokeWidth={1.5} />
+                  </span>
+                ))}
+              </div>
             </div>
           </div>
         </div>
+
+
       </footer>
 
       <FinChatDock alwaysVisible />
