@@ -378,7 +378,6 @@ function ArticleBlock({
     <Reveal delay={delay} y={20} duration={duration}>
       <Icon size={24} strokeWidth={1.5} color={dark ? "#FFFFFF" : "#0E0B22"} />
       <h3
-        className="font-display"
         style={{
           margin: "10px 0 0",
           fontSize: 18,
@@ -449,7 +448,7 @@ function BusinessImpactPage() {
                     fontSize: 14,
                     lineHeight: "22px",
                     letterSpacing: "0.01em",
-                    color: "var(--ink-faint, #A1A0A9)",
+                    color: "#7A7885",
                   }}
                 >
                   Impact
@@ -478,7 +477,7 @@ function BusinessImpactPage() {
                   style={{
                     margin: "10px 0 0",
                     maxWidth: 563,
-                    fontSize: 14,
+                    fontSize: 16,
                     lineHeight: "24px",
                     color: "var(--ink-muted, #7A7885)",
                   }}
@@ -587,7 +586,7 @@ function BusinessImpactPage() {
                     margin: 0,
                     fontSize: fluid(48, 30),
                     lineHeight: "56px",
-                    fontWeight: 500,
+                    fontWeight: 400,
                     letterSpacing: "-0.01em",
                   }}
                 >
@@ -609,7 +608,6 @@ function BusinessImpactPage() {
 
               <div className="shrink-0">
                 <button
-                  className="font-display"
                   style={{
                     background: "#0E0B22",
                     borderBottom: "1.5px solid #137DFF",
@@ -682,7 +680,7 @@ function BusinessImpactPage() {
           <Reveal>
             <h2
               className="font-display"
-              style={{ margin: 0, fontSize: fluid(40, 26), lineHeight: 1.4, fontWeight: 500 }}
+              style={{ margin: 0, fontSize: fluid(48, 28), lineHeight: 1.1667, fontWeight: 500 }}
             >
               <span className="text-ink-ghost">Get started with the</span>
               <br />
