@@ -489,9 +489,9 @@ function BusinessImpactPage() {
               onSelect={() => setTab("roi")}
               style={{
                 paddingRight: fluid(60, 0),
-                paddingLeft: fluid(40, 0),
-                paddingTop: fluid(70, 40),
-                paddingBottom: fluid(70, 40),
+                paddingLeft: fluid(60, 0),
+                paddingTop: fluid(62, 36),
+                paddingBottom: fluid(61, 36),
               }}
             />
             <KpiColumn
@@ -500,9 +500,9 @@ function BusinessImpactPage() {
               onSelect={() => setTab("impact")}
               style={{
                 paddingLeft: fluid(52, 0),
-                paddingRight: fluid(40, 0),
-                paddingTop: fluid(70, 40),
-                paddingBottom: fluid(70, 40),
+                paddingRight: fluid(52, 0),
+                paddingTop: fluid(61, 36),
+                paddingBottom: fluid(61, 36),
                 borderLeft: "1px solid var(--hairline, #E1E0E4)",
               }}
               className="md:border-l"
@@ -513,14 +513,14 @@ function BusinessImpactPage() {
 
 
       {/* -------------------------------------------------------- article */}
-      <section style={{ padding: pad, marginTop: fluid(72, 40) }}>
+      <section style={{ padding: pad, marginTop: fluid(60, 36) }}>
         <div key={tab} className="mx-auto w-full max-w-[1200px] overflow-hidden bg-white">
-          <div style={{ padding: `${fluid(40, 24)} ${fluid(64, 24)} 0` }}>
+          <div style={{ padding: `${fluid(60, 32)} ${fluid(60, 24)} 0` }}>
             {/* card header */}
             <p
               style={{
-                fontSize: 11,
-                lineHeight: "18px",
+                fontSize: 14,
+                lineHeight: "20px",
                 margin: 0,
                 color: "var(--ink-muted, #7A7885)",
               }}
@@ -533,7 +533,7 @@ function BusinessImpactPage() {
 
             <div
               className="flex flex-col gap-8 md:flex-row md:items-start md:justify-between"
-              style={{ marginTop: fluid(40, 24) }}
+              style={{ marginTop: fluid(24, 18) }}
             >
               <div style={{ maxWidth: 780 }}>
                 <h2
