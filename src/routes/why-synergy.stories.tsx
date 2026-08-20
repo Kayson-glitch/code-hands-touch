@@ -537,21 +537,41 @@ function StoriesPage() {
   const pad = `0 ${fluid(120, 24)}`;
   const footerRef = useRef<HTMLElement>(null);
   const [active, setActive] = useState(STORIES[0].id);
+  // Per-module scroll progress (0..1) driving the gradient rails — fin.ai/train style.
+  const [progress, setProgress] = useState<Record<string, number>>({});
 
   // Sidebar follows whichever story currently owns the upper viewport.
   useEffect(() => {
-    const onScroll = () => {
+    let raf = 0;
+    const measure = () => {
+      raf = 0;
       let current = STORIES[0].id;
+      const next: Record<string, number> = {};
       for (const s of STORIES) {
         const el = document.getElementById(s.id);
-        if (el && el.getBoundingClientRect().top <= window.innerHeight * 0.35) current = s.id;
+        if (!el) continue;
+        const r = el.getBoundingClientRect();
+        if (r.top <= window.innerHeight * 0.35) current = s.id;
+        const anchor = window.innerHeight * 0.35;
+        const p = (anchor - r.top) / Math.max(r.height - anchor * 0.5, 1);
+        next[s.id] = Math.min(1, Math.max(0, p));
       }
+      setProgress(next);
       setActive(current);
     };
-    onScroll();
+    const onScroll = () => {
+      if (!raf) raf = requestAnimationFrame(measure);
+    };
+    measure();
     window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
+    window.addEventListener("resize", onScroll);
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", onScroll);
+      if (raf) cancelAnimationFrame(raf);
+    };
   }, []);
+
 
   return (
     <div className="relative min-h-screen bg-paper">
