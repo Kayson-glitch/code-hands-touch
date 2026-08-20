@@ -808,8 +808,8 @@ function StoriesPage() {
 
         <div style={{ borderBottom: "1px solid rgba(255,255,255,0.1)", height: 80, boxSizing: "border-box" }}>
           <div style={{ padding: pad }}>
-            <div className="mx-auto flex h-full w-full max-w-[1200px] items-center justify-between gap-6">
-              <div className="flex items-center gap-2">
+            <div className="mx-auto grid h-full w-full max-w-[1200px] grid-cols-2 items-center gap-9 md:grid-cols-4">
+              <div className="flex items-center justify-center gap-2">
                 <span
                   aria-hidden
                   style={{
@@ -824,17 +824,17 @@ function StoriesPage() {
                   Synergy.AI
                 </span>
               </div>
-              <span
-                className="hidden md:block"
-                style={{
-                  color: "rgba(255,255,255,0.5)",
-                  fontSize: 12,
-                  lineHeight: "20px",
-                  textAlign: "right",
-                }}
-              >
-                Revenue-Driven AI Support. Engineered on Synergy. Scale Securely.
-              </span>
+              <div className="hidden md:block md:col-span-3 md:text-right">
+                <span
+                  style={{
+                    color: "rgba(255,255,255,0.5)",
+                    fontSize: 12,
+                    lineHeight: "20px",
+                  }}
+                >
+                  Revenue-Driven AI Support. Engineered on Synergy. Scale Securely.
+                </span>
+              </div>
             </div>
           </div>
         </div>
