@@ -889,7 +889,7 @@ function StoriesPage() {
                 © {new Date().getFullYear()} Synergy.AI. All rights reserved.
               </span>
               <div className="hidden md:col-span-3 md:flex md:items-center md:justify-end md:gap-4">
-                {[Linkedin, Twitter, Youtube].map((Icon, i) => (
+                {[Youtube, Twitter, Linkedin].map((Icon, i) => (
                   <span
                     key={i}
                     className="cursor-pointer transition-opacity hover:opacity-70"
