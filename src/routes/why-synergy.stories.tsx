@@ -340,7 +340,7 @@ function ArticleBlock({
   delay = 0,
 }: Block & { dark?: boolean; delay?: number }) {
   return (
-    <Reveal delay={delay} y={20} duration={1400}>
+    <Reveal delay={delay} y={20} duration={1600}>
       <Icon size={24} strokeWidth={1.5} color={dark ? "#FFFFFF" : "#0E0B22"} />
       <h3
         style={{
@@ -375,7 +375,7 @@ function ArticleBlock({
 /** Stats card — Figma 1569:103640 (880×440, #FAFAFA). */
 function StatsCard({ story }: { story: Story }) {
   return (
-    <Reveal y={24} duration={1400} style={{ background: "#FAFAFA" }}>
+    <Reveal y={32} duration={1600} style={{ background: "#FAFAFA" }}>
       <div style={{ padding: `${fluid(40, 28)} ${fluid(68, 24)}` }}>
         <div className="flex items-center" style={{ gap: fluid(74, 24) }}>
           <StatValue value={story.stats[0]} />
@@ -441,7 +441,7 @@ function StoryArticle({ story, first }: { story: Story; first?: boolean }) {
 
       {/* header — eyebrow, rule, 48px title, intro, CTA */}
       <div style={{ padding: `${fluid(80, 40)} ${fluid(60, 24)} 0` }}>
-        <Reveal y={24} duration={1400}>
+        <Reveal y={32} duration={1600}>
           <p
             className="capitalize"
             style={{ margin: 0, fontSize: 12, lineHeight: "20px", color: "var(--ink, #0E0B22)" }}
@@ -500,7 +500,7 @@ function StoryArticle({ story, first }: { story: Story; first?: boolean }) {
         }}
       >
         {story.light.map((b, i) => (
-          <ArticleBlock key={b.title} {...b} delay={i * 220} />
+          <ArticleBlock key={b.title} {...b} delay={i * 260} />
         ))}
       </div>
 
@@ -516,7 +516,7 @@ function StoryArticle({ story, first }: { story: Story; first?: boolean }) {
         }}
       >
         {story.dark.map((b, i) => (
-          <ArticleBlock key={b.title} {...b} dark delay={i * 220} />
+          <ArticleBlock key={b.title} {...b} dark delay={i * 260} />
         ))}
       </div>
 
