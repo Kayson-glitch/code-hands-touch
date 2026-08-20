@@ -536,17 +536,16 @@ function StoryArticle({ story }: { story: Story }) {
 function StoriesPage() {
   const pad = `0 ${fluid(120, 24)}`;
   const footerRef = useRef<HTMLElement>(null);
+  const railRefs = useRef<Record<string, HTMLSpanElement | null>>({});
   const [active, setActive] = useState(STORIES[0].id);
-  // Per-module scroll progress (0..1) driving the gradient rails — fin.ai/train style.
-  const [progress, setProgress] = useState<Record<string, number>>({});
 
   // Sidebar follows whichever story currently owns the upper viewport.
   useEffect(() => {
     let raf = 0;
+    let currentActive = STORIES[0].id;
     const measure = () => {
       raf = 0;
       let current = STORIES[0].id;
-      const next: Record<string, number> = {};
       for (const s of STORIES) {
         const el = document.getElementById(s.id);
         if (!el) continue;
@@ -554,10 +553,14 @@ function StoriesPage() {
         if (r.top <= window.innerHeight * 0.35) current = s.id;
         const anchor = window.innerHeight * 0.35;
         const p = (anchor - r.top) / Math.max(r.height - anchor * 0.5, 1);
-        next[s.id] = Math.min(1, Math.max(0, p));
+        const clamped = Math.min(1, Math.max(0.06, p));
+        const rail = railRefs.current[s.id];
+        if (rail) rail.style.transform = `scaleX(${clamped})`;
       }
-      setProgress(next);
-      setActive(current);
+      if (current !== currentActive) {
+        currentActive = current;
+        setActive(current);
+      }
     };
     const onScroll = () => {
       if (!raf) raf = requestAnimationFrame(measure);
@@ -659,7 +662,6 @@ function StoriesPage() {
           >
             {STORIES.map((s) => {
               const on = active === s.id;
-              const p = progress[s.id] ?? 0;
               return (
                 <a
                   key={s.id}
@@ -681,17 +683,21 @@ function StoriesPage() {
                     className="pointer-events-none absolute inset-x-0 top-0"
                     style={{ height: 1, background: "#E1E0E4" }}
                   />
-                  {on ? (
-                    <span
-                      aria-hidden
-                      className="stories-rail-flow pointer-events-none absolute left-0 top-0"
-                      style={{
-                        height: 1.5,
-                        width: `${Math.max(p, 0.06) * 100}%`,
-                        transition: "width 120ms linear",
-                      }}
-                    />
-                  ) : null}
+                  <span
+                    ref={(node) => {
+                      railRefs.current[s.id] = node;
+                    }}
+                    aria-hidden
+                    className="stories-rail-flow pointer-events-none absolute left-0 top-0"
+                    style={{
+                      height: 1.5,
+                      width: "100%",
+                      opacity: on ? 1 : 0,
+                      transform: "scaleX(0.06)",
+                      transformOrigin: "left center",
+                      willChange: "transform",
+                    }}
+                  />
 
                   <span style={{ width: 24 }}>{s.index}</span>
                   <span className="whitespace-nowrap">{s.tab}</span>
