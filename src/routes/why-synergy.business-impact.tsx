@@ -712,7 +712,6 @@ function BusinessImpactPage() {
                 }}
               />
               <span
-                className="font-display"
                 style={{ color: "#FFFFFF", fontSize: 16, lineHeight: "24px", fontWeight: 500 }}
               >
                 Synergy.AI
