@@ -269,13 +269,13 @@ function ArticleBlock({
 }) {
   return (
     <div>
-      <Icon size={24} strokeWidth={1.5} color={dark ? "#FFFFFF" : "#0E0B22"} />
+      <Icon size={20} strokeWidth={1.5} color={dark ? "#FFFFFF" : "#0E0B22"} />
       <h3
         className="font-display"
         style={{
-          margin: "34px 0 0",
-          fontSize: 20,
-          lineHeight: "26px",
+          margin: "22px 0 0",
+          fontSize: 16,
+          lineHeight: "24px",
           fontWeight: 500,
           color: dark ? "#FFFFFF" : "var(--ink, #0E0B22)",
         }}
@@ -284,18 +284,18 @@ function ArticleBlock({
       </h3>
       <p
         style={{
-          margin: "20px 0 0",
-          maxWidth: 1000,
-          fontSize: 14,
-          lineHeight: "22px",
-          color: dark ? "rgba(255,255,255,0.62)" : "var(--ink-muted, #7A7885)",
+          margin: "18px 0 0",
+          maxWidth: 1010,
+          fontSize: 13,
+          lineHeight: "21px",
+          color: dark ? "rgba(255,255,255,0.58)" : "var(--ink-muted, #7A7885)",
         }}
       >
         {body}
       </p>
       {divider ? (
-        <div style={{ marginTop: fluid(60, 36) }}>
-          <Hairline dark={dark} />
+        <div style={{ marginTop: fluid(56, 34) }}>
+          <Hairline dark={dark} dashed />
         </div>
       ) : null}
     </div>
