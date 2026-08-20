@@ -820,8 +820,11 @@ function FitWordmark({ text }: { text: string }) {
     const probe = 200;
     el.style.fontSize = `${probe}px`;
     const w = el.scrollWidth;
-    if (w > 0) setSize((probe * box.clientWidth) / w);
+    const next = w > 0 ? (probe * box.clientWidth) / w : probe;
+    el.style.fontSize = `${next}px`;
+    setSize(next);
   };
+
 
   useLayoutEffect(fit);
   useEffect(() => {
