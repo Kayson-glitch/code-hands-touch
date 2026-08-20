@@ -601,7 +601,7 @@ function BusinessImpactPage() {
             }}
           >
             {article.dark.map((b, i) => (
-              <ArticleBlock key={b.title} {...b} dark delay={i * 110} />
+              <ArticleBlock key={b.title} {...b} dark delay={i * 160} duration={1100} />
             ))}
           </div>
 
