@@ -614,17 +614,19 @@ function BusinessImpactPage() {
           }}
         />
         <div className="relative mx-auto flex w-full max-w-[800px] flex-col items-center px-6 text-center">
-          <h2
-            className="font-display"
-            style={{ margin: 0, fontSize: fluid(40, 26), lineHeight: 1.4, fontWeight: 500 }}
-          >
-            <span className="text-ink-ghost">Get started with the</span>
-            <br />
-            <span className="text-ink">Synergy.AI today</span>
-          </h2>
-          <div style={{ marginTop: fluid(40, 28) }}>
+          <Reveal>
+            <h2
+              className="font-display"
+              style={{ margin: 0, fontSize: fluid(40, 26), lineHeight: 1.4, fontWeight: 500 }}
+            >
+              <span className="text-ink-ghost">Get started with the</span>
+              <br />
+              <span className="text-ink">Synergy.AI today</span>
+            </h2>
+          </Reveal>
+          <Reveal delay={150} style={{ marginTop: fluid(40, 28) }}>
             <RainbowButton label="Book a Demo" />
-          </div>
+          </Reveal>
         </div>
       </section>
 
