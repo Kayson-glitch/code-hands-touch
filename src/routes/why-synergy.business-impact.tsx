@@ -293,14 +293,14 @@ function KpiColumn({
         style={{
           fontSize: 14,
           lineHeight: "22px",
-          letterSpacing: "0.08em",
-          textTransform: "uppercase",
-          fontWeight: 500,
+          letterSpacing: "0.01em",
+          fontWeight: 400,
           margin: 0,
         }}
       >
         {data.kicker}
       </p>
+
 
       <p
         className="font-display text-ink"
