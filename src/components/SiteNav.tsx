@@ -147,15 +147,18 @@ export function SiteNav() {
             ].map((item, i) => (
               <li
                 key={item.label}
-                className={navItem}
-                style={itemStyle(i)}
+                className="relative"
                 onMouseEnter={() => setHovered(i)}
                 onMouseLeave={() => setHovered(null)}
               >
-                {item.label}
-                {item.chevron && <Chevron />}
+                <div className={navItem} style={itemStyle(i)}>
+                  {item.label}
+                  {item.chevron && <Chevron />}
+                </div>
+                {i === 0 && <WhySynergyMenu open={hovered === 0} />}
               </li>
             ))}
+
           </ul>
 
           {/* Right actions */}
