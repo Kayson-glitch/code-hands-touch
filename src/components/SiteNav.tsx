@@ -97,7 +97,7 @@ export function SiteNav({ revealDelay = 4000 }: { revealDelay?: number } = {}) {
         transition: "opacity 260ms ease-out",
       }}
     >
-      {/* Flowing gradient top bar — 3px per Figma */}
+      {/* Flowing gradient top bar — 3px per Figma. Slides up to hide, down to show. */}
       <span
         aria-hidden
         className="pointer-events-none block w-full shrink-0"
@@ -108,8 +108,7 @@ export function SiteNav({ revealDelay = 4000 }: { revealDelay?: number } = {}) {
           backgroundSize: "120vw 100%",
           backgroundRepeat: "repeat-x",
           animation: "nav-border-flow 9s linear infinite",
-          transformOrigin: "top",
-          transform: barVisible ? "scaleY(1)" : "scaleY(0)",
+          transform: barVisible ? "translateY(0)" : "translateY(-3px)",
           opacity: barVisible ? 1 : 0,
           transition: "transform 320ms cubic-bezier(0.22,1,0.36,1), opacity 240ms ease",
         }}
@@ -122,11 +121,8 @@ export function SiteNav({ revealDelay = 4000 }: { revealDelay?: number } = {}) {
           borderBottom: `1px solid ${hairline}`,
           background: scrolled ? glassBg : "transparent",
           backdropFilter: scrolled ? "blur(18px) saturate(140%)" : "none",
-          // The nav bar hides independently of the gradient bar: it slides
-          // UP off-screen on scroll-down and slides DOWN back on scroll-up.
-          transform: barVisible ? "translateY(0)" : "translateY(-60px)",
           transition:
-            "transform 320ms cubic-bezier(0.22,1,0.36,1), background 260ms ease-out, backdrop-filter 260ms ease-out",
+            "background 260ms ease-out, backdrop-filter 260ms ease-out",
         }}
       >
         <div className="flex h-full w-full max-w-[1200px] items-center justify-between">
