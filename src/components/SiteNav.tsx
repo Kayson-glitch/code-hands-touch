@@ -40,10 +40,19 @@ export function SiteNav({ revealDelay = 4000 }: { revealDelay?: number } = {}) {
   }, []);
 
   const [onDark, setOnDark] = useState(false);
+  // Gradient bar: visible by default, hides on scroll-down, returns on scroll-up.
+  const [barVisible, setBarVisible] = useState(true);
 
   useEffect(() => {
+    let lastY = window.scrollY;
     const onScroll = () => {
-      setScrolled(window.scrollY > 8);
+      const y = window.scrollY;
+      const dy = y - lastY;
+      if (Math.abs(dy) > 4) {
+        setBarVisible(y <= 8 ? true : dy < 0);
+        lastY = y;
+      }
+      setScrolled(y > 8);
       // The nav flips to its dark variant only while the black section is the
       // surface sitting under the bar — the light third screen flips it back.
       const darks = Array.from(document.querySelectorAll("[data-dark-section]"));
@@ -99,6 +108,10 @@ export function SiteNav({ revealDelay = 4000 }: { revealDelay?: number } = {}) {
           backgroundSize: "120vw 100%",
           backgroundRepeat: "repeat-x",
           animation: "nav-border-flow 9s linear infinite",
+          transformOrigin: "top",
+          transform: barVisible ? "scaleY(1)" : "scaleY(0)",
+          opacity: barVisible ? 1 : 0,
+          transition: "transform 320ms cubic-bezier(0.22,1,0.36,1), opacity 240ms ease",
         }}
       />
 
