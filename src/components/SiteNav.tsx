@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
 import logo from "@/assets/synergy-logo-v3.png.asset.json";
 
-export function SiteNav() {
+export function SiteNav({ revealDelay = 4000 }: { revealDelay?: number } = {}) {
   const [theme, setTheme] = useState<"light" | "dark">("light");
-  const [hidden, setHidden] = useState(true);
+  const [hidden, setHidden] = useState(revealDelay > 0);
   const [scrolled, setScrolled] = useState(false);
 
   useEffect(() => {
@@ -11,9 +11,14 @@ export function SiteNav() {
     // once we've received an explicit "visible" signal (after the black
     // handoff). Fallback: if no burst is ever dispatched (e.g. reduced
     // motion path), reveal after a short delay so the site is usable.
-    const t = window.setTimeout(() => setHidden(false), 4000);
+    if (revealDelay <= 0) {
+      setHidden(false);
+      return;
+    }
+    const t = window.setTimeout(() => setHidden(false), revealDelay);
     return () => window.clearTimeout(t);
-  }, []);
+  }, [revealDelay]);
+
 
   useEffect(() => {
     const onBg = (e: Event) => {
