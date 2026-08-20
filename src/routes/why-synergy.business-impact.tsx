@@ -248,11 +248,12 @@ const ARTICLES: Record<"roi" | "impact", ArticleSet> = {
 };
 
 const FOOTER_COLUMNS = [
-  { title: "Why Synergy", links: ["Platform", "Pricing", "Book a Demo"] },
-  { title: "Platform", links: ["Features", "Pricing", "Integrations"] },
-  { title: "Section", links: ["Events", "Blog"] },
+  { title: "why  synergy", links: ["Features", "Pricing", "Book a demo"] },
+  { title: "platform", links: ["Features", "Pricing", "Book a demo"] },
+  { title: "solution", links: ["Events", "Blog"] },
   { title: "Company", links: ["About us", "Contact us"] },
 ];
+
 
 /* ------------------------------------------------------------------ page */
 
