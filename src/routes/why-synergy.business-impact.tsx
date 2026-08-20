@@ -462,23 +462,17 @@ function BusinessImpactPage() {
       <section style={{ padding: pad }} role="tablist" aria-label="Business impact metrics">
         <div className="mx-auto w-full max-w-[1200px]">
           {/* section rule: brand gradient over the selected half, hairline after */}
-          <div aria-hidden className="flex" style={{ height: 2 }}>
+          <div aria-hidden className="flex" style={{ height: 3 }}>
             <div
-              className="transition-all duration-300"
+              className={tab === "roi" ? "kpi-rule-active" : undefined}
               style={{
                 width: "49%",
-                backgroundImage: tab === "roi" ? GRADIENT : undefined,
                 background: tab === "roi" ? undefined : "#ECEBEF",
-                opacity: tab === "roi" ? 0.55 : 1,
               }}
             />
             <div
-              className="flex-1 transition-all duration-300"
-              style={{
-                backgroundImage: tab === "impact" ? GRADIENT : undefined,
-                background: tab === "impact" ? undefined : "#ECEBEF",
-                opacity: tab === "impact" ? 0.55 : 1,
-              }}
+              className={`flex-1 ${tab === "impact" ? "kpi-rule-active" : ""}`}
+              style={{ background: tab === "impact" ? undefined : "#ECEBEF" }}
             />
           </div>
 
@@ -490,8 +484,8 @@ function BusinessImpactPage() {
               style={{
                 paddingRight: fluid(60, 0),
                 paddingLeft: fluid(60, 0),
-                paddingTop: fluid(62, 36),
-                paddingBottom: fluid(61, 36),
+                paddingTop: fluid(48, 32),
+                paddingBottom: fluid(44, 30),
               }}
             />
             <KpiColumn
@@ -501,8 +495,8 @@ function BusinessImpactPage() {
               style={{
                 paddingLeft: fluid(52, 0),
                 paddingRight: fluid(52, 0),
-                paddingTop: fluid(61, 36),
-                paddingBottom: fluid(61, 36),
+                paddingTop: fluid(48, 32),
+                paddingBottom: fluid(44, 30),
                 borderLeft: "1px solid var(--hairline, #E1E0E4)",
               }}
               className="md:border-l"
@@ -513,7 +507,7 @@ function BusinessImpactPage() {
 
 
       {/* -------------------------------------------------------- article */}
-      <section style={{ padding: pad, marginTop: fluid(60, 36) }}>
+      <section style={{ padding: pad, marginTop: fluid(24, 16) }}>
         <div key={tab} className="mx-auto w-full max-w-[1200px] overflow-hidden bg-white">
           <div style={{ padding: `${fluid(60, 32)} ${fluid(60, 24)} 0` }}>
             {/* card header */}
