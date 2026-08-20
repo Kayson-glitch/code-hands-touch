@@ -416,6 +416,7 @@ function BusinessImpactPage() {
   const pad = `0 ${fluid(120, 24)}`;
   const [tab, setTab] = useState<"roi" | "impact">("roi");
   const article = ARTICLES[tab];
+  const footerRef = useRef<HTMLElement>(null);
 
   return (
     <div className="relative min-h-screen bg-paper">
@@ -699,7 +700,7 @@ function BusinessImpactPage() {
       </section>
 
       {/* ---------------------------------------------------------- footer */}
-      <footer data-dark-section className="relative overflow-hidden" style={{ background: "#0A0A0A" }}>
+      <footer ref={footerRef} data-dark-section className="relative overflow-hidden" style={{ background: "#0A0A0A" }}>
         <div aria-hidden style={{ height: 3, backgroundImage: GRADIENT, backgroundSize: "200%" }} />
 
         {/* header row */}
@@ -800,6 +801,7 @@ function BusinessImpactPage() {
         position="bottom"
         height="140px"
         blurAmount="1.5px"
+        hiddenWhen={footerRef}
       />
     </div>
   );

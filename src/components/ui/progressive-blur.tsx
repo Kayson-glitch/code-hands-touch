@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 
 type ProgressiveBlurProps = {
   className?: string;
@@ -6,6 +6,11 @@ type ProgressiveBlurProps = {
   position?: "top" | "bottom";
   height?: string;
   blurAmount?: string;
+  /**
+   * When provided, the blur is hidden while the referenced element
+   * (e.g. a footer) is visible in the viewport.
+   */
+  hiddenWhen?: React.RefObject<HTMLElement | null>;
 };
 
 /**
@@ -18,9 +23,24 @@ const ProgressiveBlur = ({
   position = "bottom",
   height = "150px",
   blurAmount = "4px",
+  hiddenWhen,
 }: ProgressiveBlurProps) => {
   const isTop = position === "top";
   const layers = [0, 1, 2, 3, 4, 5];
+  const [hidden, setHidden] = useState(false);
+
+  useEffect(() => {
+    const el = hiddenWhen?.current;
+    if (!el) return;
+    const io = new IntersectionObserver(
+      ([entry]) => setHidden(entry.isIntersecting),
+      { threshold: 0.01 },
+    );
+    io.observe(el);
+    return () => io.disconnect();
+  }, [hiddenWhen]);
+
+  if (hidden) return null;
 
   return (
     <div
