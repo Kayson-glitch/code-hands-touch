@@ -804,7 +804,7 @@ function StoriesPage() {
         className="relative overflow-hidden"
         style={{ background: "#0A0A0A" }}
       >
-        <div aria-hidden style={{ height: 3, backgroundImage: GRADIENT, backgroundSize: "200%" }} />
+        <div aria-hidden style={{ height: 2, backgroundImage: GRADIENT, backgroundSize: "200%" }} />
 
         <div style={{ borderBottom: "1px solid rgba(255,255,255,0.1)", height: 80, boxSizing: "border-box" }}>
           <div style={{ padding: pad }}>
