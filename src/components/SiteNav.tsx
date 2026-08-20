@@ -66,13 +66,10 @@ export function SiteNav() {
   const inkStrong = onDark ? "#FFFFFF" : "#0E0B22";
   const inkSoft = "#7A7885";
   const hairline = onDark ? "rgba(255,255,255,0.15)" : "#F1F1F3";
-  // Hover/selected pill: light gray fill on light surfaces, white-translucent on dark.
-  const hoverBg = onDark ? "rgba(255,255,255,0.10)" : "#F3F4F6";
+  // Hover: color change only, no background fill.
   const itemStyle = (i: number) => ({
     color: hovered === i ? inkStrong : inkSoft,
-    background: hovered === i ? hoverBg : "transparent",
-    borderRadius: 6,
-    transition: "color 200ms ease, background 200ms ease",
+    transition: "color 200ms ease",
   });
 
 
@@ -142,7 +139,7 @@ export function SiteNav() {
             style={{ fontSize: 13, lineHeight: "20px" }}
           >
             {[
-              { label: "Why Synergy", chevron: false },
+              { label: "Why Synergy", chevron: true },
               { label: "Platform", chevron: true },
               { label: "Solution", chevron: true },
               { label: "Pricing", chevron: false },
