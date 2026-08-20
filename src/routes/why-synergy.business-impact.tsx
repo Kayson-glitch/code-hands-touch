@@ -335,6 +335,7 @@ function ArticleBlock({
   divider,
   dark,
   delay = 0,
+  duration,
 }: {
   icon: typeof MapIcon;
   title: string;
@@ -342,9 +343,10 @@ function ArticleBlock({
   divider: boolean;
   dark?: boolean;
   delay?: number;
+  duration?: number;
 }) {
   return (
-    <Reveal delay={delay} y={20}>
+    <Reveal delay={delay} y={20} duration={duration}>
       <Icon size={24} strokeWidth={1.5} color={dark ? "#FFFFFF" : "#0E0B22"} />
       <h3
         className="font-display"
