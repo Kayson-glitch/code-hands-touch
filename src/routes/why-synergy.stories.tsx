@@ -431,7 +431,7 @@ function StatValue({ value }: { value: string }) {
   );
 }
 
-function StoryArticle({ story, first }: { story: Story; first?: boolean }) {
+function StoryArticle({ story }: { story: Story }) {
   return (
     <article id={story.id} className="bg-white">
       {/* module top hairline — Figma: full-width rule opening every story module */}
@@ -666,7 +666,7 @@ function StoriesPage() {
           {/* content column */}
           <div className="flex min-w-0 flex-1 flex-col overflow-hidden" style={{ gap: 80 }}>
             {STORIES.map((s, i) => (
-              <StoryArticle key={s.id} story={s} first={i === 0} />
+              <StoryArticle key={s.id} story={s} />
             ))}
 
           </div>
