@@ -289,16 +289,19 @@ function KpiColumn({
       }}
     >
       <p
+        className="text-ink"
         style={{
           fontSize: 14,
           lineHeight: "22px",
-          letterSpacing: "0.01em",
+          letterSpacing: "0.08em",
+          textTransform: "uppercase",
+          fontWeight: 500,
           margin: 0,
-          color: "var(--ink-faint, #A1A0A9)",
         }}
       >
         {data.kicker}
       </p>
+
       <p
         className="font-display text-ink"
         style={{
@@ -321,8 +324,9 @@ function KpiColumn({
           margin: "8px 0 0",
           fontSize: 14,
           lineHeight: "24px",
-          color: "var(--ink-muted, #7A7885)",
+          color: "var(--ink-faint, #A1A0A9)",
         }}
+
       >
         {data.caption}
       </p>
