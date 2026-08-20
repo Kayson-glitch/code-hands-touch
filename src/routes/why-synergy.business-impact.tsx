@@ -448,7 +448,7 @@ function BusinessImpactPage() {
                     fontSize: 14,
                     lineHeight: "22px",
                     letterSpacing: "0.01em",
-                    color: "var(--ink-faint, #A1A0A9)",
+                    color: "#7A7885",
                   }}
                 >
                   Impact
