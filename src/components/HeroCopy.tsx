@@ -77,7 +77,7 @@ export function HeroCopy() {
             lineHeight: layout.bodyLineHeight,
             fontWeight: 500,
             padding: "0 clamp(20px, 2.2222vw, 42px)",
-            borderRadius: 0,
+            borderRadius: 2,
             border: "0.125rem solid transparent",
             color: "#FFFFFF",
             backgroundImage: [

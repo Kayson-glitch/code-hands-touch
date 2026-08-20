@@ -50,7 +50,7 @@ function RainbowButton({ label, size = "lg" }: { label: string; size?: "lg" | "s
         lineHeight: "20px",
         fontWeight: 500,
         padding: lg ? "0 24px" : "0 22px",
-        borderRadius: 0,
+        borderRadius: 2,
         border: "0.125rem solid transparent",
         color: "#FFFFFF",
         backgroundImage: [
