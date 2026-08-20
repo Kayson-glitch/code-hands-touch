@@ -525,7 +525,7 @@ function BusinessImpactPage() {
 
       {/* -------------------------------------------------------- article */}
       <section style={{ padding: pad, marginTop: fluid(12, 10) }}>
-        <Reveal key={tab} y={32} className="mx-auto w-full max-w-[1200px] overflow-hidden bg-white">
+        <Reveal key={tab} y={32} duration={1600} className="mx-auto w-full max-w-[1200px] overflow-hidden bg-white">
           <div style={{ padding: `${fluid(60, 32)} ${fluid(60, 24)} 0` }}>
             {/* card header */}
             <p
@@ -584,7 +584,7 @@ function BusinessImpactPage() {
               style={{ gap: fluid(60, 36), marginTop: fluid(80, 44), paddingBottom: fluid(80, 44) }}
             >
               {article.light.map((b, i) => (
-                <ArticleBlock key={b.title} {...b} delay={i * 160} duration={1100} />
+                <ArticleBlock key={b.title} {...b} delay={i * 260} duration={1600} />
               ))}
             </div>
           </div>
@@ -601,7 +601,7 @@ function BusinessImpactPage() {
             }}
           >
             {article.dark.map((b, i) => (
-              <ArticleBlock key={b.title} {...b} dark delay={i * 160} duration={1100} />
+              <ArticleBlock key={b.title} {...b} dark delay={i * 260} duration={1600} />
             ))}
           </div>
 
