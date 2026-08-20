@@ -150,13 +150,20 @@ const KPI_RIGHT = {
   ],
 };
 
+type BodySegment = { text: string; highlight?: boolean };
+type ArticleBlockData = {
+  icon: typeof MapIcon;
+  title: string;
+  body: string | BodySegment[];
+  divider: boolean;
+};
 type ArticleSet = {
   eyebrow: string;
   titleAccent: string;
   titleRest: string;
   intro: string;
-  light: Array<{ icon: typeof MapIcon; title: string; body: string; divider: boolean }>;
-  dark: Array<{ icon: typeof MapIcon; title: string; body: string; divider: boolean }>;
+  light: ArticleBlockData[];
+  dark: ArticleBlockData[];
 };
 
 const ARTICLES: Record<"roi" | "impact", ArticleSet> = {
