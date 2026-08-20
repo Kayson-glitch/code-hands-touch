@@ -30,21 +30,30 @@ const ProgressiveBlur = ({
   height = "150px",
   blurAmount = "4px",
   hiddenWhen,
+  hiddenWhenSelector,
 }: ProgressiveBlurProps) => {
   const isTop = position === "top";
   const layers = [0, 1, 2, 3, 4, 5];
   const [hidden, setHidden] = useState(false);
 
   useEffect(() => {
-    const el = hiddenWhen?.current;
-    if (!el) return;
+    const targets: HTMLElement[] = [];
+    if (hiddenWhen?.current) targets.push(hiddenWhen.current);
+    if (hiddenWhenSelector) {
+      targets.push(...Array.from(document.querySelectorAll<HTMLElement>(hiddenWhenSelector)));
+    }
+    if (targets.length === 0) return;
     const io = new IntersectionObserver(
-      ([entry]) => setHidden(entry.isIntersecting),
+      (entries) => {
+        // Hide if any observed target is currently intersecting.
+        const anyVisible = entries.some((e) => e.isIntersecting);
+        setHidden(anyVisible);
+      },
       { threshold: 0.01 },
     );
-    io.observe(el);
+    targets.forEach((el) => io.observe(el));
     return () => io.disconnect();
-  }, [hiddenWhen]);
+  }, [hiddenWhen, hiddenWhenSelector]);
 
   if (hidden) return null;
 
