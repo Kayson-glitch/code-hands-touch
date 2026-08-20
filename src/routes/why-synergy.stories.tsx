@@ -845,7 +845,7 @@ function StoriesPage() {
             <div className="mx-auto w-full max-w-[1200px]">
               <div className="grid grid-cols-2 gap-9 md:grid-cols-4">
                 {FOOTER_COLUMNS.map((col, i) => (
-                  <Reveal key={col.title} delay={i * 90} y={18} className="flex flex-col">
+                  <Reveal key={col.title} delay={i * 90} y={18} className="flex flex-col items-center text-center">
                     <p
                       className="capitalize"
                       style={{
@@ -858,7 +858,7 @@ function StoriesPage() {
                     >
                       {col.title}
                     </p>
-                    <ul className="mt-6 flex flex-col gap-[18px]">
+                    <ul className="mt-6 flex flex-col items-center gap-[18px]">
                       {col.links.map((l) => (
                         <li key={l}>
                           <span
@@ -876,7 +876,7 @@ function StoriesPage() {
             </div>
           </div>
 
-          <div className="absolute left-0 w-full" style={{ top: 254 }}>
+          <div className="absolute left-0 w-full" style={{ top: 174 }}>
             <FitWordmark text="Synergy.AI" />
           </div>
         </div>
