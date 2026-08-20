@@ -13,6 +13,10 @@ import { HalftoneHandStill } from "@/components/HalftoneHandStill";
 import { Reveal } from "@/components/Reveal";
 import { FinChatDock } from "@/components/FinChatDock";
 import { ProgressiveBlur } from "@/components/ui/progressive-blur";
+import { getLenis } from "@/lib/smoothScroll";
+
+/** Nav (60) + breathing room, so a targeted module never hugs the header. */
+const ANCHOR_OFFSET = 60 + 40;
 
 export const Route = createFileRoute("/why-synergy/stories")({
   head: () => ({
