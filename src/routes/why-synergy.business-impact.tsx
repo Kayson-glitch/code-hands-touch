@@ -5,6 +5,7 @@ import { SiteNav } from "@/components/SiteNav";
 import { HalftoneHandStill } from "@/components/HalftoneHandStill";
 import { Reveal } from "@/components/Reveal";
 import { FinChatDock } from "@/components/FinChatDock";
+import { GradientHoverHeading } from "@/components/GradientHoverHeading";
 
 
 export const Route = createFileRoute("/why-synergy/business-impact")({
