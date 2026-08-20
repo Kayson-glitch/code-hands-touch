@@ -665,7 +665,7 @@ function StoriesPage() {
 
           {/* content column */}
           <div className="flex min-w-0 flex-1 flex-col overflow-hidden" style={{ gap: 80 }}>
-            {STORIES.map((s, i) => (
+            {STORIES.map((s) => (
               <StoryArticle key={s.id} story={s} />
             ))}
 
