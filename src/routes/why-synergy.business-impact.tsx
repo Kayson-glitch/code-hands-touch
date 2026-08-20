@@ -4,6 +4,7 @@ import { ArrowRight, MessageSquareCode, Map as MapIcon } from "lucide-react";
 import { SiteNav } from "@/components/SiteNav";
 import { HalftoneHandStill } from "@/components/HalftoneHandStill";
 import { Reveal } from "@/components/Reveal";
+import { FinChatDock } from "@/components/FinChatDock";
 import { ProgressiveBlur } from "@/components/ui/progressive-blur";
 
 export const Route = createFileRoute("/why-synergy/business-impact")({
@@ -752,8 +753,10 @@ function BusinessImpactPage() {
         </div>
       </footer>
 
+      <FinChatDock alwaysVisible />
+
       <ProgressiveBlur
-        className="fixed"
+        className="fixed !z-20"
         position="bottom"
         height="140px"
         blurAmount="1.5px"

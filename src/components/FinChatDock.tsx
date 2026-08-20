@@ -9,8 +9,8 @@ const SUGGESTIONS = [
 
 type Msg = { role: "user" | "assistant"; text: string };
 
-export function FinChatDock() {
-  const [visible, setVisible] = useState(false);
+export function FinChatDock({ alwaysVisible = false }: { alwaysVisible?: boolean } = {}) {
+  const [visible, setVisible] = useState(alwaysVisible);
   const [theme, setTheme] = useState<"light" | "dark">("light");
   const [value, setValue] = useState("");
   const [messages, setMessages] = useState<Msg[]>([]);
@@ -25,12 +25,12 @@ export function FinChatDock() {
     const onBg = (e: Event) => {
       const detail = (e as CustomEvent<"light" | "dark">).detail;
       setTheme(detail === "dark" ? "dark" : "light");
-      if (detail === "dark") setVisible(true);
-      else setVisible(false);
+      if (alwaysVisible) setVisible(true);
+      else setVisible(detail === "dark");
     };
     window.addEventListener("app-bg-change", onBg);
     return () => window.removeEventListener("app-bg-change", onBg);
-  }, []);
+  }, [alwaysVisible]);
 
   // Dark glass only while the black section is the surface behind the dock;
   // the light third screen flips it back to the white pill.
@@ -136,7 +136,7 @@ export function FinChatDock() {
 
   return (
     <div
-      className="pointer-events-none fixed inset-x-0 bottom-10 z-30 flex flex-col items-center px-4"
+      className="pointer-events-none fixed inset-x-0 bottom-10 z-50 flex flex-col items-center px-4"
       style={{
         opacity: visible ? 1 : 0,
         transform: visible ? "translateY(0)" : "translateY(16px)",
