@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, MessageSquareCode, Map as MapIcon } from "lucide-react";
 import { SiteNav } from "@/components/SiteNav";
 import { HalftoneHandStill } from "@/components/HalftoneHandStill";
 
@@ -25,25 +25,34 @@ export const Route = createFileRoute("/why-synergy/business-impact")({
   component: BusinessImpactPage,
 });
 
-function RainbowButton({ label }: { label: string }) {
+/* --------------------------------------------------------------- helpers */
+
+/** 1440px design width → fluid value. */
+const fluid = (px: number, min = px * 0.7) =>
+  `clamp(${Math.round(min)}px, ${((px / 1440) * 100).toFixed(4)}vw, ${px}px)`;
+
+const GRADIENT = "linear-gradient(90deg, #137DFF 0%, #FF18AA 33.333%, #FFCD17 66.666%, #137DFF 100%)";
+
+function RainbowButton({ label, size = "lg" }: { label: string; size?: "lg" | "sm" }) {
   const face = "#0E0B22";
   const faceRgb = "14,11,34";
+  const lg = size === "lg";
   return (
     <button
       className="group relative inline-flex shrink-0 cursor-pointer items-center justify-center font-medium transition-all"
       style={{
-        height: "clamp(34px, 2.7778vw, 52px)",
-        fontSize: "clamp(12px, 1.1111vw, 16px)",
-        lineHeight: "clamp(18px, 1.6667vw, 24px)",
+        height: lg ? 40 : 36,
+        fontSize: lg ? 14 : 13,
+        lineHeight: "20px",
         fontWeight: 500,
-        padding: "0 clamp(20px, 2.2222vw, 42px)",
-        borderRadius: 12,
+        padding: lg ? "0 24px" : "0 22px",
+        borderRadius: 8,
         border: "0.125rem solid transparent",
         color: "#FFFFFF",
         backgroundImage: [
           `linear-gradient(${face},${face})`,
           `linear-gradient(${face} 50%, rgba(${faceRgb},0.6) 80%, rgba(${faceRgb},0))`,
-          "linear-gradient(90deg, #137DFF 0%, #FF18AA 33.333%, #FFCD17 66.666%, #137DFF 100%)",
+          GRADIENT,
         ].join(","),
         backgroundClip: "padding-box, border-box, border-box",
         backgroundOrigin: "border-box",
@@ -59,8 +68,7 @@ function RainbowButton({ label }: { label: string }) {
           zIndex: 0,
           height: "20%",
           width: "60%",
-          backgroundImage:
-            "linear-gradient(90deg, #137DFF 0%, #FF18AA 33.333%, #FFCD17 66.666%, #137DFF 100%)",
+          backgroundImage: GRADIENT,
           backgroundSize: "200%",
           filter: "blur(0.75rem)",
           animation: "rainbow-btn-flow var(--rainbow-speed, 9s) infinite linear",
@@ -76,288 +84,512 @@ function RainbowButton({ label }: { label: string }) {
   );
 }
 
-const KPIS = [
+/** Alternating square / diamond bullet, as in the design. */
+function Bullet({ diamond }: { diamond: boolean }) {
+  return (
+    <span
+      aria-hidden
+      className="mt-[6px] inline-block shrink-0"
+      style={{
+        width: 8,
+        height: 8,
+        background: "#0E0B22",
+        transform: diamond ? "rotate(45deg)" : undefined,
+      }}
+    />
+  );
+}
+
+function Hairline({ dark = false }: { dark?: boolean }) {
+  return (
+    <div
+      aria-hidden
+      style={{ height: 1, background: dark ? "rgba(255,255,255,0.14)" : "var(--hairline, #E1E0E4)" }}
+    />
+  );
+}
+
+/* ------------------------------------------------------------------ data */
+
+const KPI_LEFT = {
+  kicker: "Business Value · ROI",
+  value: "$12M",
+  unit: "/ yr",
+  caption: "Estimated cost optimization potential",
+  bullets: [
+    "Current setup: 150 agents, costing RMB 1.5M/month",
+    "50 is sufficient: 20 VIP leads + 30 support staff",
+    "From repetitive replies to high value service",
+    "Capability precedes organizational rollout",
+  ],
+};
+
+const KPI_RIGHT = {
+  kicker: "Overall Impact",
+  value: "75",
+  unit: "%",
+  caption: "AI resolution rate across 200K conversations/month",
+  bullets: [
+    "AI resolves 55% of conversations end-to-end",
+    "AI handles 70% of messages, around 110K/month",
+    "Both metrics were zero before launch",
+    "No inflated metrics: human agent intervenes when necessary",
+  ],
+};
+
+const ARTICLE_LIGHT = [
   {
-    value: "$12M/yr",
-    label: "Estimated cost optimization",
-    desc: "Modelled annual saving once deflected conversations are removed from the human queue at current volumes.",
+    icon: MessageSquareCode,
+    title: "Analysis of Current Cost Structure",
+    body: "Within the existing agent structure, the vast majority of labor hours are consumed by high-repetition, low-decision-density inquiries, such as order tracking, payment status checks, promotional rule explanations, and withdrawal verifications. These tasks dominate the inbound volume but require minimal human judgment. During promotional cycles, inbound volume spikes exponentially, and the team typically relies on temporary hiring to cope. This leads to rising marginal labor costs, extended training cycles, and widening variances in service quality. The marginal efficiency between labor input and service output continues to diminish.",
+    divider: true,
   },
   {
-    value: "75%",
-    label: "AI resolution rate",
-    desc: "Share of inbound conversations closed end-to-end by Synergy.AI, without a human agent taking over.",
+    icon: MapIcon,
+    title: "Target Structure: Reallocating Agent Functions",
+    body: "Post-integration, based on business data from the current observation cycle, the CS team is well-positioned to be optimized down to approximately 50 agents. The target structure consists of 20 VIP agents (supervisor-level, dedicated to high-value client services) and 30 general agents. Crucially, the function of the 30 general agents will shift from frontline Q&A to online data monitoring, anomaly handling, and human fallback support. This 30-agent headcount is a conservative configuration, retaining redundancy to handle sudden load surges. Under this structure, the AI system absorbs standardized tasks, while human resources are concentrated on high-decision-density and high-value workflows.",
+    divider: false,
   },
 ];
 
-const PROJECTION_ROWS = [
-  ["Annual conversation volume", "4.8M"],
-  ["Resolved by Synergy.AI", "75%"],
-  ["Fully loaded cost per human contact", "$3.40"],
-  ["Projected annual cost avoided", "$12.2M"],
-];
-
-const CLARIFICATIONS = [
-  "Figures are a projection built from your own volume and cost inputs, not a guarantee of results.",
-  "Resolution is counted only when the conversation closes without human takeover or a follow-up reopen within 72 hours.",
-  "Cost per contact uses fully loaded agent cost, including tooling, QA and management overhead.",
-  "Savings ramp over the first two quarters as knowledge coverage and guardrails are tuned with your team.",
+const ARTICLE_DARK = [
+  {
+    icon: MessageSquareCode,
+    title: "Cost Impact Projection",
+    body: "Under the target structure, the team size is optimized by roughly 50%, translating to a monthly labor cost savings of about 1 million RMB, and an annual savings of roughly 12 million RMB. It is important to emphasize that this structure does not achieve cost reduction at the expense of service quality: VIP clients are served by dedicated agents, reinforcing service continuity and response quality; meanwhile, as general agents pivot to monitoring roles, the entire team shifts from a scale-driven model to an efficiency-driven one.",
+    divider: true,
+  },
+  {
+    icon: MapIcon,
+    title: "Conclusion and Clarifications",
+    body: "This projection is based on the actual absorption capacity of the AI system during the current observation cycle, reflecting the achievable optimization space supported by data; the organizational labor adjustments have not yet been executed. The system's capacity has already reached the level required to support the aforementioned structure. The actual implementation of workforce adjustments falls under the client's operational decision-making, and the timing is at their discretion. Capabilities are met; implementation is merely a matter of pacing.",
+    divider: false,
+  },
 ];
 
 const FOOTER_COLUMNS = [
-  {
-    title: "Why Synergy",
-    links: ["Business Impact", "Stories", "Technology & Guardrails", "Security & Partnership"],
-  },
-  { title: "Platform", links: ["Knowledge Engine", "Agent Desk", "Insights", "Integrations"] },
-  { title: "Company", links: ["About", "Careers", "Newsroom", "Contact"] },
-  { title: "Resources", links: ["Docs", "Changelog", "Trust Center", "Status"] },
+  { title: "Why Synergy", links: ["Platform", "Pricing", "Book a Demo"] },
+  { title: "Platform", links: ["Features", "Pricing", "Integrations"] },
+  { title: "Section", links: ["Events", "Blog"] },
+  { title: "Company", links: ["About us", "Contact us"] },
 ];
 
+/* ------------------------------------------------------------------ page */
+
+function KpiColumn({
+  data,
+  className,
+  style,
+}: {
+  data: typeof KPI_LEFT;
+  className?: string;
+  style?: React.CSSProperties;
+}) {
+  return (
+    <div className={className} style={style}>
+      <p
+        className="uppercase text-ink-faint"
+        style={{ fontSize: 13, lineHeight: "22px", letterSpacing: "0.06em", margin: 0 }}
+      >
+        {data.kicker}
+      </p>
+      <p
+        className="font-display text-ink"
+        style={{
+          margin: `${fluid(42, 24)} 0 0`,
+          fontSize: fluid(100, 48),
+          lineHeight: 1.05,
+          fontWeight: 500,
+        }}
+      >
+        {data.value}
+        <span className="text-ink-ghost" style={{ fontSize: fluid(48, 26) }}>
+          {data.unit}
+        </span>
+      </p>
+      <p
+        className="text-ink-muted"
+        style={{ margin: "12px 0 0", fontSize: 16, lineHeight: "24px" }}
+      >
+        {data.caption}
+      </p>
+
+      <div style={{ margin: `${fluid(40, 28)} 0` }}>
+        <Hairline />
+      </div>
+
+      <ul className="flex flex-col gap-6">
+        {data.bullets.map((b, i) => (
+          <li key={b} className="flex items-start gap-[10px]">
+            <Bullet diamond={i % 2 === 0} />
+            <span className="text-ink" style={{ fontSize: 15, lineHeight: "22px" }}>
+              {b}
+            </span>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+function ArticleBlock({
+  icon: Icon,
+  title,
+  body,
+  divider,
+  dark,
+}: {
+  icon: typeof MapIcon;
+  title: string;
+  body: string;
+  divider: boolean;
+  dark?: boolean;
+}) {
+  return (
+    <div>
+      <Icon size={24} strokeWidth={1.5} color={dark ? "#FFFFFF" : "#0E0B22"} />
+      <h3
+        className="font-display"
+        style={{
+          margin: "34px 0 0",
+          fontSize: 20,
+          lineHeight: "26px",
+          fontWeight: 500,
+          color: dark ? "#FFFFFF" : "var(--ink, #0E0B22)",
+        }}
+      >
+        {title}
+      </h3>
+      <p
+        style={{
+          margin: "20px 0 0",
+          maxWidth: 1000,
+          fontSize: 14,
+          lineHeight: "22px",
+          color: dark ? "rgba(255,255,255,0.62)" : "var(--ink-muted, #7A7885)",
+        }}
+      >
+        {body}
+      </p>
+      {divider ? (
+        <div style={{ marginTop: fluid(60, 36) }}>
+          <Hairline dark={dark} />
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
 function BusinessImpactPage() {
+  const pad = `0 ${fluid(120, 24)}`;
+
   return (
     <div className="relative min-h-screen bg-paper">
       <SiteNav revealDelay={0} />
 
-      {/* ---------------------------------------------------------- hero */}
-      <header className="relative overflow-hidden">
-        <div className="mx-auto flex w-full max-w-[1200px] flex-col items-center px-6 pb-0 pt-[clamp(120px,10.4167vw,150px)] text-center">
-          <span
-            className="uppercase text-ink-faint"
-            style={{ fontSize: "clamp(10px, 0.8333vw, 12px)", letterSpacing: "0.12em" }}
+      {/* ------------------------------------------------------------ hero */}
+      <header className="relative overflow-hidden" style={{ padding: pad }}>
+        <div className="relative mx-auto w-full max-w-[1200px]">
+          <div
+            className="relative z-10"
+            style={{ maxWidth: 680, paddingTop: fluid(162, 108), paddingBottom: fluid(172, 80) }}
           >
-            / Impact
-          </span>
-          <h1
-            className="font-display mt-4 capitalize text-ink"
+            <div className="flex items-center gap-2">
+              <span aria-hidden style={{ width: 8, height: 8, background: "#0E0B22" }} />
+              <span className="text-ink" style={{ fontSize: 14, lineHeight: "22px" }}>
+                Impact
+              </span>
+            </div>
+
+            <h1
+              className="font-display text-ink"
+              style={{
+                margin: `${fluid(32, 20)} 0 0`,
+                fontSize: fluid(40, 28),
+                lineHeight: 1.4,
+                fontWeight: 500,
+              }}
+            >
+              From AI Support to
+              <br />
+              Measurable Business Value
+            </h1>
+
+            <p
+              className="text-ink-muted"
+              style={{
+                margin: "22px 0 0",
+                maxWidth: 563,
+                fontSize: 15,
+                lineHeight: "24px",
+              }}
+            >
+              Every claim on this page is traceable to a number: resolution rate, cost per contact,
+              and the assumptions behind the model.
+            </p>
+
+            <div style={{ marginTop: fluid(40, 28) }}>
+              <RainbowButton label="Book a Demo" />
+            </div>
+          </div>
+
+          {/* single halftone hand, right side of the hero */}
+          <HalftoneHandStill
+            cropX={0.5}
+            cropW={0.5}
+            className="pointer-events-none absolute right-0 select-none"
             style={{
-              fontSize: "clamp(34px, 4.4444vw, 64px)",
-              lineHeight: "clamp(40px, 5.0000vw, 72px)",
-              fontWeight: 500,
-              maxWidth: "min(880px, 61.1111vw)",
-              margin: 0,
+              top: fluid(40, 0),
+              width: "51.4%",
+              height: fluid(425, 220),
+              maxWidth: 741,
             }}
-          >
-            From AI Support to <span className="text-ink-ghost">Measurable Business Value</span>
-          </h1>
+          />
+        </div>
+      </header>
+
+      {/* ------------------------------------------------------------ KPIs */}
+      <section style={{ padding: pad }}>
+        <div className="mx-auto w-full max-w-[1200px]">
+          <div className="grid gap-y-[clamp(48px,5vw,72px)] md:grid-cols-2">
+            <KpiColumn data={KPI_LEFT} style={{ paddingRight: fluid(60, 0) }} />
+            <KpiColumn
+              data={KPI_RIGHT}
+              style={{
+                paddingLeft: fluid(52, 0),
+                borderLeft: "1px solid var(--hairline, #E1E0E4)",
+              }}
+              className="md:border-l"
+            />
+          </div>
+        </div>
+      </section>
+
+      {/* -------------------------------------------------------- article */}
+      <section style={{ padding: pad, marginTop: fluid(120, 64) }}>
+        <div
+          className="mx-auto w-full max-w-[1200px] bg-white"
+          style={{
+            border: "1px solid var(--hairline, #E1E0E4)",
+            borderRadius: 8,
+            padding: fluid(60, 24),
+          }}
+        >
+          {/* card header */}
           <p
-            className="mt-5 text-ink-muted"
+            className="uppercase text-ink-faint"
+            style={{ fontSize: 13, lineHeight: "20px", letterSpacing: "0.06em", margin: 0 }}
+          >
+            Business Value · ROI
+          </p>
+          <div style={{ marginTop: 10 }}>
+            <Hairline />
+          </div>
+
+          <div
+            className="flex flex-col gap-8 md:flex-row md:items-start md:justify-between"
+            style={{ marginTop: fluid(54, 28) }}
+          >
+            <div style={{ maxWidth: 800 }}>
+              <h2
+                className="font-display"
+                style={{ margin: 0, fontSize: fluid(40, 26), lineHeight: 1.4, fontWeight: 500 }}
+              >
+                <span
+                  style={{
+                    backgroundImage:
+                      "linear-gradient(90deg, #137DFF 0%, #7B3BFF 45%, #B37BFF 100%)",
+                    WebkitBackgroundClip: "text",
+                    backgroundClip: "text",
+                    color: "transparent",
+                  }}
+                >
+                  Scaling Support Smarter:
+                </span>{" "}
+                <span className="text-ink">Cost Analysis From 150 To 50 Agents</span>
+              </h2>
+              <p
+                className="text-ink-muted"
+                style={{ margin: "32px 0 0", fontSize: 14, lineHeight: "22px" }}
+              >
+                This is a projection based on the actual absorption capacity of the AI system in the
+                current observation cycle, using RMB 1.5M/month as the human cost baseline for 150
+                agents and 200K conversations/month as the volume baseline.
+              </p>
+            </div>
+
+            <div className="shrink-0">
+              <RainbowButton label="Book a Demo" size="sm" />
+            </div>
+          </div>
+
+          {/* light blocks */}
+          <div className="flex flex-col" style={{ gap: fluid(60, 36), marginTop: fluid(102, 56) }}>
+            {ARTICLE_LIGHT.map((b) => (
+              <ArticleBlock key={b.title} {...b} />
+            ))}
+          </div>
+
+          {/* dark inner block */}
+          <div
+            data-dark-section
             style={{
-              fontSize: "clamp(13px, 1.1111vw, 16px)",
-              lineHeight: "clamp(20px, 1.6667vw, 24px)",
-              maxWidth: "min(560px, 38.8889vw)",
+              marginTop: fluid(80, 48),
+              background: "#0A0A0A",
+              borderRadius: 8,
+              padding: fluid(60, 24),
+              display: "flex",
+              flexDirection: "column",
+              gap: fluid(60, 36),
             }}
           >
-            Every claim on this page is traceable to a number: resolution rate, cost per contact,
-            and the assumptions we used to model them.
-          </p>
-          <div className="mt-8">
+            {ARTICLE_DARK.map((b) => (
+              <ArticleBlock key={b.title} {...b} dark />
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ------------------------------------------------------------- CTA */}
+      <section className="relative overflow-hidden" style={{ padding: `${fluid(160, 80)} 0` }}>
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-0"
+          style={{
+            backgroundImage:
+              "radial-gradient(circle, rgba(14,11,34,0.16) 1px, transparent 1px)",
+            backgroundSize: "20px 21px",
+            maskImage:
+              "radial-gradient(120% 80% at 50% 50%, #000 25%, transparent 78%)",
+            WebkitMaskImage:
+              "radial-gradient(120% 80% at 50% 50%, #000 25%, transparent 78%)",
+          }}
+        />
+        <div className="relative mx-auto flex w-full max-w-[800px] flex-col items-center px-6 text-center">
+          <h2
+            className="font-display"
+            style={{ margin: 0, fontSize: fluid(40, 26), lineHeight: 1.4, fontWeight: 500 }}
+          >
+            <span className="text-ink-ghost">Get started with the</span>
+            <br />
+            <span className="text-ink">Synergy.AI today</span>
+          </h2>
+          <div style={{ marginTop: fluid(40, 28) }}>
             <RainbowButton label="Book a Demo" />
           </div>
         </div>
-
-        {/* Single halftone hand — same atlas as the home page hero */}
-        <HalftoneHandStill
-          cropX={0.5}
-          cropW={0.5}
-          className="pointer-events-none mx-auto w-full max-w-[720px]"
-          style={{ height: "clamp(240px, 30vw, 420px)", marginTop: "clamp(16px, 2vw, 32px)" }}
-        />
-      </header>
-
-      {/* ----------------------------------------------------------- KPIs */}
-      <section className="mx-auto w-full max-w-[1200px] px-6 py-[clamp(48px,6vw,96px)]">
-        <div className="grid gap-6 md:grid-cols-2">
-          {KPIS.map((k) => (
-            <article
-              key={k.value}
-              className="flex flex-col items-start gap-4 bg-white"
-              style={{ padding: "clamp(24px,2.5vw,40px)", border: "1px solid var(--hairline, #F1F1F3)" }}
-            >
-              <p
-                className="font-display text-ink"
-                style={{
-                  fontSize: "clamp(40px, 6.9444vw, 100px)",
-                  lineHeight: 1,
-                  fontWeight: 500,
-                  margin: 0,
-                }}
-              >
-                {k.value}
-              </p>
-              <p
-                className="font-medium text-ink"
-                style={{ fontSize: "clamp(14px,1.1111vw,16px)", lineHeight: "24px", margin: 0 }}
-              >
-                {k.label}
-              </p>
-              <p
-                className="text-ink-muted"
-                style={{ fontSize: "clamp(12px,0.9722vw,14px)", lineHeight: "22px", margin: 0 }}
-              >
-                {k.desc}
-              </p>
-            </article>
-          ))}
-        </div>
       </section>
 
-      {/* --------------------------------------------- cost projection */}
-      <section className="mx-auto w-full max-w-[1200px] px-6 pb-[clamp(48px,6vw,96px)]">
-        <div className="grid gap-[clamp(24px,4vw,72px)] md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
-          <div>
-            <h2
-              className="font-display text-ink"
-              style={{
-                fontSize: "clamp(26px, 3.3333vw, 48px)",
-                lineHeight: 1.15,
-                fontWeight: 500,
-                margin: 0,
-              }}
-            >
-              Cost Impact Projection
-            </h2>
-            <p
-              className="mt-5 text-ink-muted"
-              style={{ fontSize: "clamp(13px,1.0417vw,15px)", lineHeight: "24px" }}
-            >
-              We start from your live volume, subtract what the AI resolves on its own, and price
-              the remainder at your fully loaded human cost. No blended industry averages, no
-              borrowed benchmarks — the model runs on your data and is re-scored every month after
-              go-live.
-            </p>
-          </div>
+      {/* ---------------------------------------------------------- footer */}
+      <footer data-dark-section className="relative overflow-hidden" style={{ background: "#0A0A0A" }}>
+        <div aria-hidden style={{ height: 3, backgroundImage: GRADIENT, backgroundSize: "200%" }} />
 
-          <div style={{ borderTop: "1px solid var(--hairline, #F1F1F3)" }}>
-            {PROJECTION_ROWS.map(([label, value]) => (
-              <div
-                key={label}
-                className="flex items-baseline justify-between gap-6 py-5"
-                style={{ borderBottom: "1px solid var(--hairline, #F1F1F3)" }}
-              >
-                <span
-                  className="text-ink-muted"
-                  style={{ fontSize: "clamp(12px,0.9722vw,14px)", lineHeight: "22px" }}
-                >
-                  {label}
-                </span>
-                <span
-                  className="font-display text-ink"
-                  style={{ fontSize: "clamp(18px,1.5278vw,22px)", fontWeight: 500 }}
-                >
-                  {value}
-                </span>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ------------------------------------------- clarifications */}
-      <section className="mx-auto w-full max-w-[1200px] px-6 pb-[clamp(56px,7vw,120px)]">
-        <h2
-          className="font-display text-ink"
-          style={{
-            fontSize: "clamp(26px, 3.3333vw, 48px)",
-            lineHeight: 1.15,
-            fontWeight: 500,
-            margin: 0,
-          }}
-        >
-          Conclusion and Clarifications
-        </h2>
-        <ol className="mt-8 grid gap-6 md:grid-cols-2">
-          {CLARIFICATIONS.map((c, i) => (
-            <li key={c} className="flex items-start gap-4">
+        {/* header row */}
+        <div style={{ padding: pad }}>
+          <div className="mx-auto flex h-20 w-full max-w-[1200px] items-center justify-between gap-6">
+            <div className="flex items-center gap-3">
               <span
-                className="font-display shrink-0 text-ink-ghost"
-                style={{ fontSize: 20, lineHeight: "24px" }}
+                aria-hidden
+                style={{
+                  width: 28,
+                  height: 28,
+                  borderRadius: 6,
+                  backgroundImage: GRADIENT,
+                  backgroundSize: "200%",
+                }}
+              />
+              <span
+                className="font-display"
+                style={{ color: "#FFFFFF", fontSize: 16, lineHeight: "24px", fontWeight: 500 }}
               >
-                {String(i + 1).padStart(2, "0")}
+                Synergy.AI
               </span>
-              <p
-                className="text-ink-muted"
-                style={{ fontSize: "clamp(12px,0.9722vw,14px)", lineHeight: "24px", margin: 0 }}
-              >
-                {c}
-              </p>
-            </li>
-          ))}
-        </ol>
-      </section>
-
-      {/* -------------------------------------------------------- CTA */}
-      <section data-dark-section className="relative" style={{ background: "#0A0A0A" }}>
-        <div className="mx-auto flex w-full max-w-[1200px] flex-col items-center gap-8 px-6 py-[clamp(72px,9vw,160px)] text-center">
-          <h2
-            className="font-display capitalize"
-            style={{
-              fontSize: "clamp(30px, 4.1667vw, 60px)",
-              lineHeight: 1.1,
-              fontWeight: 500,
-              color: "#FFFFFF",
-              margin: 0,
-              maxWidth: "min(760px, 52.7778vw)",
-            }}
-          >
-            Get started with the Synergy.AI today
-          </h2>
-          <p
-            style={{
-              color: "rgba(255,255,255,0.65)",
-              fontSize: "clamp(13px,1.0417vw,15px)",
-              lineHeight: "24px",
-              maxWidth: "min(520px, 36.1111vw)",
-              margin: 0,
-            }}
-          >
-            Bring your volume and cost data — we will build the projection with you in a single
-            session.
-          </p>
-          <RainbowButton label="Book a Demo" />
+            </div>
+            <span
+              className="hidden md:block"
+              style={{ color: "rgba(255,255,255,0.55)", fontSize: 13, lineHeight: "20px" }}
+            >
+              Empowering financial institutions with intelligent, secure AI support.
+            </span>
+          </div>
         </div>
 
-        {/* ---------------------------------------------------- footer */}
-        <footer
-          className="mx-auto w-full max-w-[1200px] px-6 pb-16"
-          style={{ borderTop: "1px solid rgba(255,255,255,0.12)" }}
-        >
-          <div className="grid gap-10 py-12 md:grid-cols-4">
-            {FOOTER_COLUMNS.map((col) => (
-              <div key={col.title} className="flex flex-col gap-4">
-                <p
-                  className="font-medium"
-                  style={{ color: "#FFFFFF", fontSize: 13, lineHeight: "20px", margin: 0 }}
-                >
-                  {col.title}
-                </p>
-                <ul className="flex flex-col gap-2.5">
-                  {col.links.map((l) => (
-                    <li key={l}>
-                      <span
-                        className="cursor-pointer transition-colors hover:text-white"
-                        style={{ color: "rgba(255,255,255,0.55)", fontSize: 12, lineHeight: "20px" }}
-                      >
-                        {l}
-                      </span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ))}
+        {/* link columns */}
+        <div style={{ padding: pad }}>
+          <div className="mx-auto w-full max-w-[1200px]">
+            <div
+              className="grid grid-cols-2 gap-10 md:grid-cols-4"
+              style={{ paddingTop: fluid(44, 24), paddingBottom: fluid(60, 32) }}
+            >
+              {FOOTER_COLUMNS.map((col) => (
+                <div key={col.title} className="flex flex-col">
+                  <p
+                    style={{
+                      margin: 0,
+                      color: "#FFFFFF",
+                      fontSize: 13,
+                      lineHeight: "20px",
+                      fontWeight: 500,
+                    }}
+                  >
+                    {col.title}
+                  </p>
+                  <ul className="mt-6 flex flex-col gap-[18px]">
+                    {col.links.map((l) => (
+                      <li key={l}>
+                        <span
+                          className="cursor-pointer transition-colors hover:text-white"
+                          style={{ color: "rgba(255,255,255,0.55)", fontSize: 13, lineHeight: "22px" }}
+                        >
+                          {l}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ))}
+            </div>
           </div>
+        </div>
+
+        {/* oversized wordmark watermark */}
+        <div
+          aria-hidden
+          className="pointer-events-none select-none overflow-hidden"
+          style={{ lineHeight: 0 }}
+        >
+          <span
+            className="font-display block whitespace-nowrap"
+            style={{
+              fontSize: "13.4vw",
+              lineHeight: 0.82,
+              fontWeight: 500,
+              color: "rgba(255,255,255,0.08)",
+              letterSpacing: "-0.02em",
+              transform: "translateY(18%)",
+            }}
+          >
+            Synergy.AI
+          </span>
+        </div>
+
+        {/* bottom bar */}
+        <div style={{ padding: pad }}>
           <div
-            className="flex flex-col items-start justify-between gap-3 pt-8 md:flex-row md:items-center"
+            className="mx-auto flex w-full max-w-[1200px] flex-col items-start justify-between gap-4 py-6 md:flex-row md:items-center"
             style={{ borderTop: "1px solid rgba(255,255,255,0.12)" }}
           >
-            <span style={{ color: "rgba(255,255,255,0.45)", fontSize: 12 }}>
+            <span style={{ color: "rgba(255,255,255,0.45)", fontSize: 13, lineHeight: "20px" }}>
               © {new Date().getFullYear()} Synergy.AI. All rights reserved.
             </span>
-            <Link to="/" style={{ color: "rgba(255,255,255,0.55)", fontSize: 12 }}>
-              Back to home
-            </Link>
+            <div className="flex items-center gap-4">
+              <Link to="/" style={{ color: "rgba(255,255,255,0.55)", fontSize: 13 }}>
+                Back to home
+              </Link>
+            </div>
           </div>
-        </footer>
-      </section>
+        </div>
+      </footer>
     </div>
   );
 }
