@@ -17,9 +17,9 @@ const DOT_FILL = 0.9;
 const MIN_DENSITY = 0.05;
 const SQUARE_AT = 0.88;
 const INK_STOPS: Array<[number, number, number]> = [
-  [0xe8, 0xe8, 0xe8],
-  [0xc8, 0xc8, 0xc8],
-  [0xa8, 0xa8, 0xa8],
+  [0xdc, 0xdc, 0xdc],
+  [0xb4, 0xb4, 0xb4],
+  [0x82, 0x82, 0x82],
 ];
 
 const BAYER = [0, 8, 2, 10, 12, 4, 14, 6, 3, 11, 1, 9, 15, 7, 13, 5].map(
