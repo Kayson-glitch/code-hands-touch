@@ -462,23 +462,17 @@ function BusinessImpactPage() {
       <section style={{ padding: pad }} role="tablist" aria-label="Business impact metrics">
         <div className="mx-auto w-full max-w-[1200px]">
           {/* section rule: brand gradient over the selected half, hairline after */}
-          <div aria-hidden className="flex" style={{ height: 2 }}>
+          <div aria-hidden className="flex" style={{ height: 3 }}>
             <div
-              className="transition-all duration-300"
+              className={tab === "roi" ? "kpi-rule-active" : undefined}
               style={{
                 width: "49%",
-                backgroundImage: tab === "roi" ? GRADIENT : undefined,
                 background: tab === "roi" ? undefined : "#ECEBEF",
-                opacity: tab === "roi" ? 0.55 : 1,
               }}
             />
             <div
-              className="flex-1 transition-all duration-300"
-              style={{
-                backgroundImage: tab === "impact" ? GRADIENT : undefined,
-                background: tab === "impact" ? undefined : "#ECEBEF",
-                opacity: tab === "impact" ? 0.55 : 1,
-              }}
+              className={`flex-1 ${tab === "impact" ? "kpi-rule-active" : ""}`}
+              style={{ background: tab === "impact" ? undefined : "#ECEBEF" }}
             />
           </div>
 
