@@ -153,7 +153,7 @@ export function SiteNav() {
               >
                 <div className={navItem} style={itemStyle(i)}>
                   {item.label}
-                  {item.chevron && <Chevron />}
+                  {item.chevron && <Chevron flipped={hovered === i} />}
                 </div>
                 {i === 0 && <WhySynergyMenu open={hovered === 0} />}
               </li>
@@ -306,8 +306,7 @@ function WhySynergyMenu({ open }: { open: boolean }) {
   );
 }
 
-function Chevron() {
-
+function Chevron({ flipped }: { flipped?: boolean }) {
   return (
     <svg
       width="16"
@@ -315,7 +314,12 @@ function Chevron() {
       viewBox="0 0 16 16"
       fill="none"
       aria-hidden
-      style={{ display: "block", flexShrink: 0 }}
+      style={{
+        display: "block",
+        flexShrink: 0,
+        transform: flipped ? "rotate(180deg)" : "rotate(0deg)",
+        transition: "transform 240ms cubic-bezier(0.16, 1, 0.3, 1)",
+      }}
     >
       <path
         d="M4 6.5L8 10.5L12 6.5"
