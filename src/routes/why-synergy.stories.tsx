@@ -884,7 +884,7 @@ function StoriesPage() {
         <div style={{ borderTop: "1px solid rgba(255,255,255,0.1)", boxSizing: "border-box" }} className="md:h-[68px]">
           <div style={{ padding: pad }}>
             <div className="mx-auto grid w-full max-w-[1200px] grid-cols-2 items-center gap-9 py-7 md:h-full md:grid-cols-4 md:py-0">
-              <span className="flex justify-center" style={{ color: "rgba(255,255,255,0.65)", fontSize: 12, lineHeight: "20px" }}>
+              <span className="flex justify-start" style={{ color: "rgba(255,255,255,0.65)", fontSize: 12, lineHeight: "20px" }}>
 
                 © {new Date().getFullYear()} Synergy.AI. All rights reserved.
               </span>
