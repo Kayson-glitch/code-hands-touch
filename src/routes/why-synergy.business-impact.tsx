@@ -509,7 +509,7 @@ function BusinessImpactPage() {
               className="md:border-l"
             />
           </div>
-        </div>
+        </Reveal>
       </section>
 
 
