@@ -680,7 +680,7 @@ function BusinessImpactPage() {
           <Reveal>
             <h2
               className="font-display"
-              style={{ margin: 0, fontSize: fluid(40, 26), lineHeight: 1.4, fontWeight: 500 }}
+              style={{ margin: 0, fontSize: fluid(48, 28), lineHeight: 1.1667, fontWeight: 500 }}
             >
               <span className="text-ink-ghost">Get started with the</span>
               <br />
