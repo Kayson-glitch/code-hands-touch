@@ -55,6 +55,51 @@ export function FinChatDock({ alwaysVisible = false }: { alwaysVisible?: boolean
     };
   }, []);
 
+  // Hide the dock while a footer (or any [data-progressive-blur-hide] element)
+  // is visible near the bottom of the viewport, so it never overlaps the
+  // copyright bar / social icons.
+  const [footerVisible, setFooterVisible] = useState(false);
+  useEffect(() => {
+    const visible = new Set<Element>();
+    const observed = new Set<Element>();
+    const io = new IntersectionObserver(
+      (entries) => {
+        for (const e of entries) {
+          if (e.isIntersecting) visible.add(e.target);
+          else visible.delete(e.target);
+        }
+        setFooterVisible(visible.size > 0);
+      },
+      { threshold: 0.01, rootMargin: "0px 0px -80px 0px" },
+    );
+    const scan = () => {
+      const targets = Array.from(
+        document.querySelectorAll<HTMLElement>("[data-progressive-blur-hide]"),
+      );
+      for (const el of targets) {
+        if (!observed.has(el)) {
+          observed.add(el);
+          io.observe(el);
+        }
+      }
+      for (const el of Array.from(observed)) {
+        if (!el.isConnected) {
+          observed.delete(el);
+          visible.delete(el);
+          io.unobserve(el);
+        }
+      }
+      setFooterVisible(visible.size > 0);
+    };
+    scan();
+    const mo = new MutationObserver(scan);
+    mo.observe(document.body, { childList: true, subtree: true });
+    return () => {
+      mo.disconnect();
+      io.disconnect();
+    };
+  }, []);
+
   // Rotate collapsed placeholder hint every 3s while collapsed & empty
   useEffect(() => {
     if (expanded || value) return;
@@ -134,13 +179,14 @@ export function FinChatDock({ alwaysVisible = false }: { alwaysVisible?: boolean
   const sendBg = focused ? "#FFFFFF" : "#C7C6CD";
   const sendIcon = focused ? "#0E0B22" : "#FFFFFF";
 
+  const show = visible && !footerVisible;
   return (
     <div
       className="pointer-events-none fixed inset-x-0 bottom-10 flex flex-col items-center px-4"
       style={{
         zIndex: 10000,
-        opacity: visible ? 1 : 0,
-        transform: visible ? "translateY(0)" : "translateY(16px)",
+        opacity: show ? 1 : 0,
+        transform: show ? "translateY(0)" : "translateY(16px)",
         transition: "opacity 700ms ease-out, transform 700ms ease-out",
       }}
     >
