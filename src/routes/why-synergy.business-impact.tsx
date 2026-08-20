@@ -515,7 +515,7 @@ function BusinessImpactPage() {
 
       {/* -------------------------------------------------------- article */}
       <section style={{ padding: pad, marginTop: fluid(72, 40) }}>
-        <div className="mx-auto w-full max-w-[1200px] overflow-hidden bg-white">
+        <div key={tab} className="mx-auto w-full max-w-[1200px] overflow-hidden bg-white">
           <div style={{ padding: `${fluid(40, 24)} ${fluid(64, 24)} 0` }}>
             {/* card header */}
             <p
@@ -526,7 +526,7 @@ function BusinessImpactPage() {
                 color: "var(--ink-muted, #7A7885)",
               }}
             >
-              Business Value · ROI
+              {article.eyebrow}
             </p>
             <div style={{ marginTop: 10 }}>
               <Hairline />
@@ -547,8 +547,8 @@ function BusinessImpactPage() {
                     letterSpacing: "-0.01em",
                   }}
                 >
-                  <span style={{ color: "#9E8CFF" }}>Scaling Support Smarter:</span>{" "}
-                  <span className="text-ink">Cost Analysis From 150 To 50 Agents</span>
+                  <span style={{ color: "#9E8CFF" }}>{article.titleAccent}</span>{" "}
+                  <span className="text-ink">{article.titleRest}</span>
                 </h2>
                 <p
                   style={{
@@ -559,10 +559,7 @@ function BusinessImpactPage() {
                     color: "var(--ink-muted, #7A7885)",
                   }}
                 >
-                  This article quantifies the impact of integrating an AI Customer Service system on
-                  operational costs, using the current CS workforce structure as the subject. The
-                  current global CS team consists of 150 agents, with a comprehensive per-capita
-                  cost.
+                  {article.intro}
                 </p>
               </div>
 
@@ -576,7 +573,7 @@ function BusinessImpactPage() {
               className="flex flex-col"
               style={{ gap: fluid(60, 36), marginTop: fluid(96, 52), paddingBottom: fluid(96, 52) }}
             >
-              {ARTICLE_LIGHT.map((b) => (
+              {article.light.map((b) => (
                 <ArticleBlock key={b.title} {...b} />
               ))}
             </div>
@@ -593,10 +590,11 @@ function BusinessImpactPage() {
               gap: fluid(60, 36),
             }}
           >
-            {ARTICLE_DARK.map((b) => (
+            {article.dark.map((b) => (
               <ArticleBlock key={b.title} {...b} dark />
             ))}
           </div>
+
         </div>
       </section>
 
