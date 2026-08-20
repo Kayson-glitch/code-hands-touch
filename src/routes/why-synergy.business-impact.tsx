@@ -157,8 +157,8 @@ function BusinessImpactPage() {
 
         {/* Single halftone hand — same atlas as the home page hero */}
         <HalftoneHandStill
-          cropX={0.38}
-          cropW={0.62}
+          cropX={0.5}
+          cropW={0.5}
           className="pointer-events-none mx-auto w-full max-w-[720px]"
           style={{ height: "clamp(240px, 30vw, 420px)", marginTop: "clamp(16px, 2vw, 32px)" }}
         />

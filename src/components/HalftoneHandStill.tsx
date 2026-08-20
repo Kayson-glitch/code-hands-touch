@@ -75,7 +75,7 @@ export function HalftoneHandStill({
   frame = FRAME_COUNT - 1,
   cropX = 0.44,
   cropW = 0.56,
-  pitch = 6,
+  pitch = 5,
   className,
   style,
 }: Props) {
