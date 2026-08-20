@@ -473,13 +473,13 @@ function BusinessImpactPage() {
       <section style={{ padding: pad }} role="tablist" aria-label="Business impact metrics">
         <Reveal className="mx-auto w-full max-w-[1200px]">
           {/* section rule: brand gradient over the selected half, hairline after */}
-          <div aria-hidden className="flex" style={{ height: 3 }}>
+          <div aria-hidden className="flex" style={{ height: 1 }}>
             <div className="relative" style={{ width: "50%", background: "#ECEBEF" }}>
               {tab === "roi" && (
                 <span
                   key="rule-roi"
                   className="kpi-rule-active absolute left-0 top-0"
-                  style={{ height: 3, maxWidth: "100%", width: 120 }}
+                  style={{ height: 1, maxWidth: "100%", width: 120 }}
                 />
               )}
             </div>
@@ -488,11 +488,12 @@ function BusinessImpactPage() {
                 <span
                   key="rule-impact"
                   className="kpi-rule-active absolute left-0 top-0"
-                  style={{ height: 3, maxWidth: "100%", width: 120 }}
+                  style={{ height: 1, maxWidth: "100%", width: 120 }}
                 />
               )}
             </div>
           </div>
+
 
 
           <div className="grid md:grid-cols-2">
@@ -526,7 +527,7 @@ function BusinessImpactPage() {
 
 
       {/* -------------------------------------------------------- article */}
-      <section style={{ padding: pad, marginTop: fluid(12, 10) }}>
+      <section style={{ padding: pad, marginTop: 0 }}>
         <Reveal key={tab} y={32} duration={1600} className="mx-auto w-full max-w-[1200px] overflow-hidden bg-white">
           <div style={{ padding: `${fluid(60, 32)} ${fluid(60, 24)} 0` }}>
             {/* card header */}
