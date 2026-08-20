@@ -122,8 +122,11 @@ export function SiteNav({ revealDelay = 4000 }: { revealDelay?: number } = {}) {
           borderBottom: `1px solid ${hairline}`,
           background: scrolled ? glassBg : "transparent",
           backdropFilter: scrolled ? "blur(18px) saturate(140%)" : "none",
+          // The nav bar hides independently of the gradient bar: it slides
+          // UP off-screen on scroll-down and slides DOWN back on scroll-up.
+          transform: barVisible ? "translateY(0)" : "translateY(-60px)",
           transition:
-            "background 260ms ease-out, backdrop-filter 260ms ease-out",
+            "transform 320ms cubic-bezier(0.22,1,0.36,1), background 260ms ease-out, backdrop-filter 260ms ease-out",
         }}
       >
         <div className="flex h-full w-full max-w-[1200px] items-center justify-between">
