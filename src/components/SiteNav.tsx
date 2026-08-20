@@ -279,7 +279,7 @@ function WhySynergyMenu({ open }: { open: boolean }) {
                 <span style={{ width: 8, height: 8, background: it.dot, display: "block" }} />
                 <span
                   className="uppercase whitespace-nowrap"
-                  style={{ fontSize: 10, lineHeight: "18px", color: "#7A7885" }}
+                  style={{ fontSize: 10, lineHeight: "18px", color: "#A1A0A9" }}
                 >
                   {it.kicker}
                 </span>
@@ -293,7 +293,7 @@ function WhySynergyMenu({ open }: { open: boolean }) {
                 </p>
                 <p
                   className="w-full"
-                  style={{ fontSize: 12, lineHeight: "20px", color: "#5E5C6A" }}
+                  style={{ fontSize: 12, lineHeight: "20px", color: "#7A7885" }}
                 >
                   {it.desc}
                 </p>
