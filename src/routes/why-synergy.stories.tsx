@@ -12,7 +12,7 @@ import { SiteNav } from "@/components/SiteNav";
 import { HalftoneHandStill } from "@/components/HalftoneHandStill";
 import { Reveal } from "@/components/Reveal";
 import { FinChatDock } from "@/components/FinChatDock";
-import { ProgressiveBlur } from "@/components/ui/progressive-blur";
+
 import { getLenis } from "@/lib/smoothScroll";
 
 /** Nav (60) + breathing room, so a targeted module never hugs the header. */
@@ -539,7 +539,6 @@ function StoryArticle({ story }: { story: Story }) {
 
 function StoriesPage() {
   const pad = `0 ${fluid(120, 24)}`;
-  const footerRef = useRef<HTMLElement>(null);
   const railRefs = useRef<Record<string, HTMLSpanElement | null>>({});
   const [active, setActive] = useState(STORIES[0].id);
 
@@ -800,8 +799,8 @@ function StoriesPage() {
 
       {/* ---------------------------------------------------------- footer */}
       <footer
-        ref={footerRef}
         data-dark-section
+        data-progressive-blur-hide
         className="relative overflow-hidden"
         style={{ background: "#0A0A0A" }}
       >
@@ -903,14 +902,6 @@ function StoriesPage() {
       </footer>
 
       <FinChatDock alwaysVisible />
-
-      <ProgressiveBlur
-        className="fixed !z-20"
-        position="bottom"
-        height="140px"
-        blurAmount="1.5px"
-        hiddenWhen={footerRef}
-      />
     </div>
   );
 }
