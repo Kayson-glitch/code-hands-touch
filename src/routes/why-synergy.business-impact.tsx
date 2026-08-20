@@ -107,7 +107,7 @@ function Bullet({ diamond }: { diamond: boolean }) {
 }
 
 function Hairline({ dark = false, dashed = false }: { dark?: boolean; dashed?: boolean }) {
-  const color = dark ? "rgba(255,255,255,0.18)" : "#DEDDE2";
+  const color = dark ? "rgba(255,255,255,0.18)" : "#F1F1F3";
   if (dashed) {
     return (
       <div
