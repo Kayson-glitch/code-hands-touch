@@ -590,8 +590,8 @@ function BusinessImpactPage() {
               gap: fluid(60, 36),
             }}
           >
-            {article.dark.map((b) => (
-              <ArticleBlock key={b.title} {...b} dark />
+            {article.dark.map((b, i) => (
+              <ArticleBlock key={b.title} {...b} dark delay={i * 110} />
             ))}
           </div>
 
