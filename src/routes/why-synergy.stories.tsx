@@ -537,21 +537,41 @@ function StoriesPage() {
   const pad = `0 ${fluid(120, 24)}`;
   const footerRef = useRef<HTMLElement>(null);
   const [active, setActive] = useState(STORIES[0].id);
+  // Per-module scroll progress (0..1) driving the gradient rails — fin.ai/train style.
+  const [progress, setProgress] = useState<Record<string, number>>({});
 
   // Sidebar follows whichever story currently owns the upper viewport.
   useEffect(() => {
-    const onScroll = () => {
+    let raf = 0;
+    const measure = () => {
+      raf = 0;
       let current = STORIES[0].id;
+      const next: Record<string, number> = {};
       for (const s of STORIES) {
         const el = document.getElementById(s.id);
-        if (el && el.getBoundingClientRect().top <= window.innerHeight * 0.35) current = s.id;
+        if (!el) continue;
+        const r = el.getBoundingClientRect();
+        if (r.top <= window.innerHeight * 0.35) current = s.id;
+        const anchor = window.innerHeight * 0.35;
+        const p = (anchor - r.top) / Math.max(r.height - anchor * 0.5, 1);
+        next[s.id] = Math.min(1, Math.max(0, p));
       }
+      setProgress(next);
       setActive(current);
     };
-    onScroll();
+    const onScroll = () => {
+      if (!raf) raf = requestAnimationFrame(measure);
+    };
+    measure();
     window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
+    window.addEventListener("resize", onScroll);
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", onScroll);
+      if (raf) cancelAnimationFrame(raf);
+    };
   }, []);
+
 
   return (
     <div className="relative min-h-screen bg-paper">
@@ -631,19 +651,20 @@ function StoriesPage() {
       {/* --------------------------------------------------------- stories */}
       <section style={{ padding: pad }}>
         <div className="mx-auto flex w-full max-w-[1200px] flex-col md:flex-row md:items-start">
-          {/* sticky index */}
+          {/* sticky index — white panel stays pinned, gradient rails track scroll */}
           <nav
             aria-label="Stories"
             className="shrink-0 md:sticky"
-            style={{ width: 200, top: 83 }}
+            style={{ width: 200, top: 83, background: "#FFFFFF" }}
           >
             {STORIES.map((s) => {
               const on = active === s.id;
+              const p = progress[s.id] ?? 0;
               return (
                 <a
                   key={s.id}
                   href={`#${s.id}`}
-                  className="flex items-center transition-colors duration-300"
+                  className="relative flex items-center transition-colors duration-300"
                   style={{
                     height: 54,
                     padding: 12,
@@ -651,17 +672,35 @@ function StoriesPage() {
                     fontSize: 12,
                     lineHeight: "20px",
                     color: "#0E0B22",
-                    background: on ? "#FFFFFF" : "transparent",
-                    borderTop: `1px solid ${on ? "#137DFF" : "#E1E0E4"}`,
+                    background: "#FFFFFF",
                     opacity: on ? 1 : 0.55,
                   }}
                 >
+                  {/* base rail + gradient progress fill */}
+                  <span
+                    aria-hidden
+                    className="pointer-events-none absolute inset-x-0 top-0"
+                    style={{ height: 1, background: "#E1E0E4" }}
+                  />
+                  <span
+                    aria-hidden
+                    className="pointer-events-none absolute left-0 top-0"
+                    style={{
+                      height: 1.5,
+                      width: "100%",
+                      background: GRADIENT,
+                      transform: `scaleX(${p})`,
+                      transformOrigin: "left center",
+                      transition: "transform 120ms linear",
+                    }}
+                  />
                   <span style={{ width: 24 }}>{s.index}</span>
                   <span className="whitespace-nowrap">{s.tab}</span>
                 </a>
               );
             })}
           </nav>
+
 
           {/* content column */}
           <div className="flex min-w-0 flex-1 flex-col overflow-hidden" style={{ gap: 80 }}>
