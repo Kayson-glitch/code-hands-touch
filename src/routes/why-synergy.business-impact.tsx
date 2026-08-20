@@ -84,29 +84,38 @@ function RainbowButton({ label, size = "lg" }: { label: string; size?: "lg" | "s
   );
 }
 
-/** Alternating square / diamond bullet, as in the design. */
+const ACCENT = "#5749FF";
+
+/** Alternating violet diamond / ink square bullet, as in the design. */
 function Bullet({ diamond }: { diamond: boolean }) {
   return (
     <span
       aria-hidden
       className="mt-[6px] inline-block shrink-0"
       style={{
-        width: 8,
-        height: 8,
-        background: "#0E0B22",
+        width: 5,
+        height: 5,
+        background: diamond ? ACCENT : "#0E0B22",
         transform: diamond ? "rotate(45deg)" : undefined,
       }}
     />
   );
 }
 
-function Hairline({ dark = false }: { dark?: boolean }) {
-  return (
-    <div
-      aria-hidden
-      style={{ height: 1, background: dark ? "rgba(255,255,255,0.14)" : "var(--hairline, #E1E0E4)" }}
-    />
-  );
+function Hairline({ dark = false, dashed = false }: { dark?: boolean; dashed?: boolean }) {
+  const color = dark ? "rgba(255,255,255,0.18)" : "#DEDDE2";
+  if (dashed) {
+    return (
+      <div
+        aria-hidden
+        style={{
+          height: 1,
+          backgroundImage: `repeating-linear-gradient(90deg, ${color} 0 4px, transparent 4px 8px)`,
+        }}
+      />
+    );
+  }
+  return <div aria-hidden style={{ height: 1, background: color }} />;
 }
 
 /* ------------------------------------------------------------------ data */
