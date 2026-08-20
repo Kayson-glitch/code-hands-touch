@@ -573,8 +573,8 @@ function BusinessImpactPage() {
               className="flex flex-col"
               style={{ gap: fluid(60, 36), marginTop: fluid(80, 44), paddingBottom: fluid(80, 44) }}
             >
-              {article.light.map((b) => (
-                <ArticleBlock key={b.title} {...b} />
+              {article.light.map((b, i) => (
+                <ArticleBlock key={b.title} {...b} delay={i * 110} />
               ))}
             </div>
           </div>
