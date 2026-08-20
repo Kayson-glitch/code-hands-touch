@@ -17,9 +17,9 @@ const DOT_FILL = 0.9;
 const MIN_DENSITY = 0.05;
 const SQUARE_AT = 0.88;
 const INK_STOPS: Array<[number, number, number]> = [
-  [0xe8, 0xe8, 0xe8],
-  [0xc8, 0xc8, 0xc8],
-  [0xa8, 0xa8, 0xa8],
+  [0xdc, 0xdc, 0xdc],
+  [0xb4, 0xb4, 0xb4],
+  [0x82, 0x82, 0x82],
 ];
 
 const BAYER = [0, 8, 2, 10, 12, 4, 14, 6, 3, 11, 1, 9, 15, 7, 13, 5].map(
@@ -65,6 +65,9 @@ type Props = {
   /** Horizontal crop of the source frame, 0..1. Defaults to the right hand. */
   cropX?: number;
   cropW?: number;
+  /** Vertical crop of the source frame, 0..1. */
+  cropY?: number;
+  cropH?: number;
   /** Dot pitch in CSS px. */
   pitch?: number;
   className?: string;
@@ -75,6 +78,8 @@ export function HalftoneHandStill({
   frame = FRAME_COUNT - 1,
   cropX = 0.44,
   cropW = 0.56,
+  cropY = 0,
+  cropH = 1,
   pitch = 5,
   className,
   style,
@@ -104,7 +109,7 @@ export function HalftoneHandStill({
       ctx.clearRect(0, 0, w, h);
 
       // Contain-fit the cropped source so the hand keeps its aspect ratio.
-      const srcAr = (cropW * FRAME_W) / FRAME_H;
+      const srcAr = (cropW * FRAME_W) / (cropH * FRAME_H);
       let drawW = w;
       let drawH = drawW / srcAr;
       if (drawH > h) {
@@ -127,14 +132,14 @@ export function HalftoneHandStill({
       octx.imageSmoothingEnabled = true;
       const idx = Math.min(FRAME_COUNT - 1, Math.max(0, frame));
       const sx = (idx % ATLAS_COLS) * FRAME_W + cropX * FRAME_W;
-      const sy = Math.floor(idx / ATLAS_COLS) * FRAME_H;
+      const sy = Math.floor(idx / ATLAS_COLS) * FRAME_H + cropY * FRAME_H;
       (octx as unknown as { filter: string }).filter = "blur(0.5px)";
       octx.drawImage(
         atlas,
         sx,
         sy,
         cropW * FRAME_W,
-        FRAME_H,
+        cropH * FRAME_H,
         0,
         0,
         cols,
@@ -195,7 +200,7 @@ export function HalftoneHandStill({
       alive = false;
       window.removeEventListener("resize", onResize);
     };
-  }, [frame, cropX, cropW, pitch]);
+  }, [frame, cropX, cropW, cropY, cropH, pitch]);
 
   return (
     <div ref={hostRef} className={className} style={style} aria-hidden>

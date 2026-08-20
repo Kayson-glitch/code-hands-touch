@@ -84,29 +84,38 @@ function RainbowButton({ label, size = "lg" }: { label: string; size?: "lg" | "s
   );
 }
 
-/** Alternating square / diamond bullet, as in the design. */
+const ACCENT = "#5749FF";
+
+/** Alternating violet diamond / ink square bullet, as in the design. */
 function Bullet({ diamond }: { diamond: boolean }) {
   return (
     <span
       aria-hidden
       className="mt-[6px] inline-block shrink-0"
       style={{
-        width: 8,
-        height: 8,
-        background: "#0E0B22",
+        width: 5,
+        height: 5,
+        background: diamond ? ACCENT : "#0E0B22",
         transform: diamond ? "rotate(45deg)" : undefined,
       }}
     />
   );
 }
 
-function Hairline({ dark = false }: { dark?: boolean }) {
-  return (
-    <div
-      aria-hidden
-      style={{ height: 1, background: dark ? "rgba(255,255,255,0.14)" : "var(--hairline, #E1E0E4)" }}
-    />
-  );
+function Hairline({ dark = false, dashed = false }: { dark?: boolean; dashed?: boolean }) {
+  const color = dark ? "rgba(255,255,255,0.18)" : "#DEDDE2";
+  if (dashed) {
+    return (
+      <div
+        aria-hidden
+        style={{
+          height: 1,
+          backgroundImage: `repeating-linear-gradient(90deg, ${color} 0 4px, transparent 4px 8px)`,
+        }}
+      />
+    );
+  }
+  return <div aria-hidden style={{ height: 1, background: color }} />;
 }
 
 /* ------------------------------------------------------------------ data */
@@ -188,41 +197,54 @@ function KpiColumn({
   return (
     <div className={className} style={style}>
       <p
-        className="uppercase text-ink-faint"
-        style={{ fontSize: 13, lineHeight: "22px", letterSpacing: "0.06em", margin: 0 }}
+        className="uppercase"
+        style={{
+          fontSize: 12,
+          lineHeight: "18px",
+          letterSpacing: "0.08em",
+          margin: 0,
+          color: "var(--ink-faint, #A1A0A9)",
+        }}
       >
         {data.kicker}
       </p>
       <p
         className="font-display text-ink"
         style={{
-          margin: `${fluid(42, 24)} 0 0`,
+          margin: `${fluid(40, 24)} 0 0`,
           fontSize: fluid(100, 48),
-          lineHeight: 1.05,
+          lineHeight: 1,
           fontWeight: 500,
+          letterSpacing: "-0.01em",
         }}
       >
         {data.value}
-        <span className="text-ink-ghost" style={{ fontSize: fluid(48, 26) }}>
+        <span
+          style={{ fontSize: fluid(40, 22), color: "var(--ink-ghost, #C7C6CD)", marginLeft: 6 }}
+        >
           {data.unit}
         </span>
       </p>
       <p
-        className="text-ink-muted"
-        style={{ margin: "12px 0 0", fontSize: 16, lineHeight: "24px" }}
+        style={{
+          margin: `${fluid(30, 18)} 0 0`,
+          fontSize: 14,
+          lineHeight: "22px",
+          color: "var(--ink-muted, #7A7885)",
+        }}
       >
         {data.caption}
       </p>
 
-      <div style={{ margin: `${fluid(40, 28)} 0` }}>
-        <Hairline />
+      <div style={{ margin: `${fluid(40, 28)} 0 ${fluid(44, 30)}` }}>
+        <Hairline dashed />
       </div>
 
       <ul className="flex flex-col gap-6">
         {data.bullets.map((b, i) => (
           <li key={b} className="flex items-start gap-[10px]">
             <Bullet diamond={i % 2 === 0} />
-            <span className="text-ink" style={{ fontSize: 15, lineHeight: "22px" }}>
+            <span className="text-ink" style={{ fontSize: 13, lineHeight: "22px" }}>
               {b}
             </span>
           </li>
@@ -247,13 +269,13 @@ function ArticleBlock({
 }) {
   return (
     <div>
-      <Icon size={24} strokeWidth={1.5} color={dark ? "#FFFFFF" : "#0E0B22"} />
+      <Icon size={20} strokeWidth={1.5} color={dark ? "#FFFFFF" : "#0E0B22"} />
       <h3
         className="font-display"
         style={{
-          margin: "34px 0 0",
-          fontSize: 20,
-          lineHeight: "26px",
+          margin: "22px 0 0",
+          fontSize: 16,
+          lineHeight: "24px",
           fontWeight: 500,
           color: dark ? "#FFFFFF" : "var(--ink, #0E0B22)",
         }}
@@ -262,18 +284,18 @@ function ArticleBlock({
       </h3>
       <p
         style={{
-          margin: "20px 0 0",
-          maxWidth: 1000,
-          fontSize: 14,
-          lineHeight: "22px",
-          color: dark ? "rgba(255,255,255,0.62)" : "var(--ink-muted, #7A7885)",
+          margin: "18px 0 0",
+          maxWidth: 1010,
+          fontSize: 13,
+          lineHeight: "21px",
+          color: dark ? "rgba(255,255,255,0.58)" : "var(--ink-muted, #7A7885)",
         }}
       >
         {body}
       </p>
       {divider ? (
-        <div style={{ marginTop: fluid(60, 36) }}>
-          <Hairline dark={dark} />
+        <div style={{ marginTop: fluid(56, 34) }}>
+          <Hairline dark={dark} dashed />
         </div>
       ) : null}
     </div>
@@ -288,70 +310,92 @@ function BusinessImpactPage() {
       <SiteNav revealDelay={0} />
 
       {/* ------------------------------------------------------------ hero */}
-      <header className="relative overflow-hidden" style={{ padding: pad }}>
-        <div className="relative mx-auto w-full max-w-[1200px]">
-          <div
-            className="relative z-10"
-            style={{ maxWidth: 680, paddingTop: fluid(162, 108), paddingBottom: fluid(172, 80) }}
-          >
-            <div className="flex items-center gap-2">
-              <span aria-hidden style={{ width: 8, height: 8, background: "#0E0B22" }} />
-              <span className="text-ink" style={{ fontSize: 14, lineHeight: "22px" }}>
-                Impact
-              </span>
-            </div>
+      <header className="relative overflow-hidden">
+        {/* single halftone hand — bleeds off the right viewport edge */}
+        <HalftoneHandStill
+          cropX={0.5}
+          cropW={0.5}
+          cropY={0.32}
+          cropH={0.52}
+          pitch={6}
+          className="pointer-events-none absolute right-0 select-none"
+          style={{
+            top: fluid(112, 64),
+            width: fluid(640, 320),
+            height: fluid(356, 178),
+          }}
+        />
 
-            <h1
-              className="font-display text-ink"
-              style={{
-                margin: `${fluid(32, 20)} 0 0`,
-                fontSize: fluid(40, 28),
-                lineHeight: 1.4,
-                fontWeight: 500,
-              }}
+        <div style={{ padding: pad }}>
+          <div className="relative mx-auto w-full max-w-[1200px]">
+            <div
+              className="relative z-10"
+              style={{ maxWidth: 620, paddingTop: fluid(162, 104), paddingBottom: fluid(112, 64) }}
             >
-              From AI Support to
-              <br />
-              Measurable Business Value
-            </h1>
+              <div className="flex items-center gap-2">
+                <span aria-hidden style={{ width: 5, height: 5, background: ACCENT }} />
+                <span
+                  className="uppercase"
+                  style={{
+                    fontSize: 12,
+                    lineHeight: "18px",
+                    letterSpacing: "0.08em",
+                    color: "var(--ink-faint, #A1A0A9)",
+                  }}
+                >
+                  Impact
+                </span>
+              </div>
 
-            <p
-              className="text-ink-muted"
-              style={{
-                margin: "22px 0 0",
-                maxWidth: 563,
-                fontSize: 15,
-                lineHeight: "24px",
-              }}
-            >
-              Every claim on this page is traceable to a number: resolution rate, cost per contact,
-              and the assumptions behind the model.
-            </p>
+              <h1
+                className="font-display text-ink"
+                style={{
+                  margin: `${fluid(34, 22)} 0 0`,
+                  fontSize: fluid(48, 30),
+                  lineHeight: 1.17,
+                  fontWeight: 500,
+                  letterSpacing: "-0.01em",
+                }}
+              >
+                From AI Support To
+                <br />
+                Measurable Business Value
+              </h1>
 
-            <div style={{ marginTop: fluid(40, 28) }}>
-              <RainbowButton label="Book a Demo" />
+              <p
+                style={{
+                  margin: `${fluid(20, 14)} 0 0`,
+                  maxWidth: 470,
+                  fontSize: 14,
+                  lineHeight: "22px",
+                  color: "var(--ink-muted, #7A7885)",
+                }}
+              >
+                Resolving 55% of conversations across 200K monthly inquiries, with a clear path to
+                lower operating costs.
+              </p>
+
+              <div style={{ marginTop: fluid(26, 20) }}>
+                <RainbowButton label="Book a Demo" />
+              </div>
             </div>
           </div>
-
-          {/* single halftone hand, right side of the hero */}
-          <HalftoneHandStill
-            cropX={0.5}
-            cropW={0.5}
-            className="pointer-events-none absolute right-0 select-none"
-            style={{
-              top: fluid(40, 0),
-              width: "51.4%",
-              height: fluid(425, 220),
-              maxWidth: 741,
-            }}
-          />
         </div>
       </header>
 
       {/* ------------------------------------------------------------ KPIs */}
       <section style={{ padding: pad }}>
         <div className="mx-auto w-full max-w-[1200px]">
-          <div className="grid gap-y-[clamp(48px,5vw,72px)] md:grid-cols-2">
+          {/* section rule: brand gradient across the first half, hairline after */}
+          <div aria-hidden className="flex" style={{ height: 2 }}>
+            <div style={{ width: "49%", backgroundImage: GRADIENT, opacity: 0.55 }} />
+            <div style={{ flex: 1, background: "#ECEBEF" }} />
+          </div>
+
+          <div
+            className="grid gap-y-[clamp(48px,5vw,72px)] md:grid-cols-2"
+            style={{ paddingTop: fluid(70, 40) }}
+          >
             <KpiColumn data={KPI_LEFT} style={{ paddingRight: fluid(60, 0) }} />
             <KpiColumn
               data={KPI_RIGHT}
@@ -366,78 +410,80 @@ function BusinessImpactPage() {
       </section>
 
       {/* -------------------------------------------------------- article */}
-      <section style={{ padding: pad, marginTop: fluid(120, 64) }}>
-        <div
-          className="mx-auto w-full max-w-[1200px] bg-white"
-          style={{
-            border: "1px solid var(--hairline, #E1E0E4)",
-            borderRadius: 8,
-            padding: fluid(60, 24),
-          }}
-        >
-          {/* card header */}
-          <p
-            className="uppercase text-ink-faint"
-            style={{ fontSize: 13, lineHeight: "20px", letterSpacing: "0.06em", margin: 0 }}
-          >
-            Business Value · ROI
-          </p>
-          <div style={{ marginTop: 10 }}>
-            <Hairline />
-          </div>
+      <section style={{ padding: pad, marginTop: fluid(72, 40) }}>
+        <div className="mx-auto w-full max-w-[1200px] overflow-hidden bg-white">
+          <div style={{ padding: `${fluid(40, 24)} ${fluid(64, 24)} 0` }}>
+            {/* card header */}
+            <p
+              style={{
+                fontSize: 11,
+                lineHeight: "18px",
+                margin: 0,
+                color: "var(--ink-muted, #7A7885)",
+              }}
+            >
+              Business Value · ROI
+            </p>
+            <div style={{ marginTop: 10 }}>
+              <Hairline />
+            </div>
 
-          <div
-            className="flex flex-col gap-8 md:flex-row md:items-start md:justify-between"
-            style={{ marginTop: fluid(54, 28) }}
-          >
-            <div style={{ maxWidth: 800 }}>
-              <h2
-                className="font-display"
-                style={{ margin: 0, fontSize: fluid(40, 26), lineHeight: 1.4, fontWeight: 500 }}
-              >
-                <span
+            <div
+              className="flex flex-col gap-8 md:flex-row md:items-start md:justify-between"
+              style={{ marginTop: fluid(40, 24) }}
+            >
+              <div style={{ maxWidth: 780 }}>
+                <h2
+                  className="font-display"
                   style={{
-                    backgroundImage:
-                      "linear-gradient(90deg, #137DFF 0%, #7B3BFF 45%, #B37BFF 100%)",
-                    WebkitBackgroundClip: "text",
-                    backgroundClip: "text",
-                    color: "transparent",
+                    margin: 0,
+                    fontSize: fluid(40, 26),
+                    lineHeight: 1.25,
+                    fontWeight: 500,
+                    letterSpacing: "-0.01em",
                   }}
                 >
-                  Scaling Support Smarter:
-                </span>{" "}
-                <span className="text-ink">Cost Analysis From 150 To 50 Agents</span>
-              </h2>
-              <p
-                className="text-ink-muted"
-                style={{ margin: "32px 0 0", fontSize: 14, lineHeight: "22px" }}
-              >
-                This is a projection based on the actual absorption capacity of the AI system in the
-                current observation cycle, using RMB 1.5M/month as the human cost baseline for 150
-                agents and 200K conversations/month as the volume baseline.
-              </p>
+                  <span style={{ color: "#9E8CFF" }}>Scaling Support Smarter:</span>{" "}
+                  <span className="text-ink">Cost Analysis From 150 To 50 Agents</span>
+                </h2>
+                <p
+                  style={{
+                    margin: `${fluid(24, 18)} 0 0`,
+                    maxWidth: 700,
+                    fontSize: 13,
+                    lineHeight: "21px",
+                    color: "var(--ink-muted, #7A7885)",
+                  }}
+                >
+                  This article quantifies the impact of integrating an AI Customer Service system on
+                  operational costs, using the current CS workforce structure as the subject. The
+                  current global CS team consists of 150 agents, with a comprehensive per-capita
+                  cost.
+                </p>
+              </div>
+
+              <div className="shrink-0">
+                <RainbowButton label="Book a Demo" size="sm" />
+              </div>
             </div>
 
-            <div className="shrink-0">
-              <RainbowButton label="Book a Demo" size="sm" />
+            {/* light blocks */}
+            <div
+              className="flex flex-col"
+              style={{ gap: fluid(60, 36), marginTop: fluid(96, 52), paddingBottom: fluid(96, 52) }}
+            >
+              {ARTICLE_LIGHT.map((b) => (
+                <ArticleBlock key={b.title} {...b} />
+              ))}
             </div>
           </div>
 
-          {/* light blocks */}
-          <div className="flex flex-col" style={{ gap: fluid(60, 36), marginTop: fluid(102, 56) }}>
-            {ARTICLE_LIGHT.map((b) => (
-              <ArticleBlock key={b.title} {...b} />
-            ))}
-          </div>
-
-          {/* dark inner block */}
+          {/* dark inner block — full-bleed inside the card */}
           <div
             data-dark-section
             style={{
-              marginTop: fluid(80, 48),
-              background: "#0A0A0A",
-              borderRadius: 8,
-              padding: fluid(60, 24),
+              background: "#050505",
+              padding: `${fluid(48, 28)} ${fluid(64, 24)}`,
               display: "flex",
               flexDirection: "column",
               gap: fluid(60, 36),
