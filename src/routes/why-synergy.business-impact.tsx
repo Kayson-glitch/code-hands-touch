@@ -800,6 +800,7 @@ function BusinessImpactPage() {
         position="bottom"
         height="140px"
         blurAmount="1.5px"
+        hiddenWhen={footerRef}
       />
     </div>
   );
