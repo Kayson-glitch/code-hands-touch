@@ -805,7 +805,7 @@ function BusinessImpactPage() {
           </div>
         </div>
 
-        </div>
+
       </footer>
 
       <FinChatDock alwaysVisible />
