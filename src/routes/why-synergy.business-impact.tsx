@@ -293,14 +293,14 @@ function KpiColumn({
         style={{
           fontSize: 14,
           lineHeight: "22px",
-          letterSpacing: "0.08em",
-          textTransform: "uppercase",
-          fontWeight: 500,
+          letterSpacing: "0.01em",
+          fontWeight: 400,
           margin: 0,
         }}
       >
         {data.kicker}
       </p>
+
 
       <p
         className="font-display text-ink"
@@ -590,7 +590,8 @@ function BusinessImpactPage() {
                     margin: 0,
                     fontSize: fluid(48, 30),
                     lineHeight: "56px",
-                    fontWeight: 500,
+                    fontWeight: 400,
+
                     letterSpacing: "-0.01em",
                   }}
                 >
