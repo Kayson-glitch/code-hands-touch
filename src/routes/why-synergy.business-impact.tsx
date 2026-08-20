@@ -466,7 +466,7 @@ function BusinessImpactPage() {
             <div
               className={tab === "roi" ? "kpi-rule-active" : undefined}
               style={{
-                width: "49%",
+                width: "50%",
                 background: tab === "roi" ? undefined : "#ECEBEF",
               }}
             />
@@ -485,7 +485,7 @@ function BusinessImpactPage() {
                 paddingRight: fluid(60, 0),
                 paddingLeft: fluid(60, 0),
                 paddingTop: fluid(48, 32),
-                paddingBottom: fluid(44, 30),
+                paddingBottom: fluid(30, 22),
               }}
             />
             <KpiColumn
@@ -496,7 +496,7 @@ function BusinessImpactPage() {
                 paddingLeft: fluid(52, 0),
                 paddingRight: fluid(52, 0),
                 paddingTop: fluid(48, 32),
-                paddingBottom: fluid(44, 30),
+                paddingBottom: fluid(30, 22),
                 borderLeft: "1px solid var(--hairline, #E1E0E4)",
               }}
               className="md:border-l"
@@ -507,7 +507,7 @@ function BusinessImpactPage() {
 
 
       {/* -------------------------------------------------------- article */}
-      <section style={{ padding: pad, marginTop: fluid(24, 16) }}>
+      <section style={{ padding: pad, marginTop: fluid(12, 10) }}>
         <div key={tab} className="mx-auto w-full max-w-[1200px] overflow-hidden bg-white">
           <div style={{ padding: `${fluid(60, 32)} ${fluid(60, 24)} 0` }}>
             {/* card header */}
