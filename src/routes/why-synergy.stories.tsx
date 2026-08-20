@@ -809,7 +809,7 @@ function StoriesPage() {
         <div style={{ borderBottom: "1px solid rgba(255,255,255,0.1)", height: 80, boxSizing: "border-box" }}>
           <div style={{ padding: pad }}>
             <div className="mx-auto grid h-full w-full max-w-[1200px] grid-cols-2 items-center gap-9 md:grid-cols-4">
-              <div className="flex items-center justify-center gap-2">
+              <div className="flex items-center justify-start gap-2">
                 <span
                   aria-hidden
                   style={{
@@ -845,7 +845,7 @@ function StoriesPage() {
             <div className="mx-auto w-full max-w-[1200px]">
               <div className="grid grid-cols-2 gap-9 md:grid-cols-4">
                 {FOOTER_COLUMNS.map((col, i) => (
-                  <Reveal key={col.title} delay={i * 90} y={18} className="flex flex-col items-center text-center">
+                  <Reveal key={col.title} delay={i * 90} y={18} className="flex flex-col items-start text-left">
                     <p
                       className="capitalize"
                       style={{
@@ -858,7 +858,7 @@ function StoriesPage() {
                     >
                       {col.title}
                     </p>
-                    <ul className="mt-6 flex flex-col items-center gap-[18px]">
+                    <ul className="mt-6 flex flex-col items-start gap-[18px]">
                       {col.links.map((l) => (
                         <li key={l}>
                           <span
