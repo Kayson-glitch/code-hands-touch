@@ -886,7 +886,7 @@ function StoriesPage() {
             <div className="mx-auto flex w-full max-w-[1200px] flex-col items-start justify-between gap-4 py-7 md:h-full md:flex-row md:items-center md:py-0">
               <span style={{ color: "rgba(255,255,255,0.65)", fontSize: 12, lineHeight: "20px" }}>
 
-                © {new Date().getFullYear()} Synergy.AI. All right reserved.
+                © {new Date().getFullYear()} Synergy.AI. All rights reserved.
               </span>
               <div className="flex items-center gap-4">
                 {[Linkedin, Twitter, Youtube].map((Icon, i) => (
