@@ -440,7 +440,7 @@ function BusinessImpactPage() {
           <div className="relative mx-auto w-full max-w-[1200px]">
             <div
               className="relative z-10"
-              style={{ maxWidth: 680, paddingTop: fluid(162, 104), paddingBottom: fluid(102, 60) }}
+              style={{ maxWidth: 680, paddingTop: fluid(162, 104), paddingBottom: fluid(172, 100) }}
             >
               <Reveal immediate className="flex items-center gap-2">
                 <span aria-hidden style={{ width: 8, height: 8, background: ACCENT }} />
