@@ -4,6 +4,7 @@ import { ArrowRight, MessageSquareCode, Map as MapIcon } from "lucide-react";
 import { SiteNav } from "@/components/SiteNav";
 import { HalftoneHandStill } from "@/components/HalftoneHandStill";
 import { Reveal } from "@/components/Reveal";
+import { ProgressiveBlur } from "@/components/ui/progressive-blur";
 
 export const Route = createFileRoute("/why-synergy/business-impact")({
   head: () => ({
@@ -750,6 +751,13 @@ function BusinessImpactPage() {
           </div>
         </div>
       </footer>
+
+      <ProgressiveBlur
+        className="fixed"
+        position="bottom"
+        height="140px"
+        blurAmount="1.5px"
+      />
     </div>
   );
 }
