@@ -271,11 +271,10 @@ function KpiColumn({
       }}
     >
       <p
-        className="uppercase"
         style={{
-          fontSize: 12,
-          lineHeight: "18px",
-          letterSpacing: "0.08em",
+          fontSize: 14,
+          lineHeight: "22px",
+          letterSpacing: "0.01em",
           margin: 0,
           color: "var(--ink-faint, #A1A0A9)",
         }}
@@ -285,9 +284,9 @@ function KpiColumn({
       <p
         className="font-display text-ink"
         style={{
-          margin: `${fluid(40, 24)} 0 0`,
+          margin: "20px 0 0",
           fontSize: fluid(100, 48),
-          lineHeight: 1,
+          lineHeight: 1.2,
           fontWeight: 500,
           letterSpacing: "-0.01em",
         }}
@@ -301,24 +300,24 @@ function KpiColumn({
       </p>
       <p
         style={{
-          margin: `${fluid(30, 18)} 0 0`,
+          margin: "8px 0 0",
           fontSize: 14,
-          lineHeight: "22px",
+          lineHeight: "24px",
           color: "var(--ink-muted, #7A7885)",
         }}
       >
         {data.caption}
       </p>
 
-      <div style={{ margin: `${fluid(40, 28)} 0 ${fluid(44, 30)}` }}>
+      <div style={{ margin: `${fluid(40, 28)} 0 ${fluid(40, 28)}` }}>
         <Hairline dashed />
       </div>
 
       <ul className="flex flex-col gap-6">
         {data.bullets.map((b, i) => (
-          <li key={b} className="flex items-start gap-[10px]">
+          <li key={b} className="flex items-start gap-2">
             <Bullet diamond={i % 2 === 0} />
-            <span className="text-ink" style={{ fontSize: 13, lineHeight: "22px" }}>
+            <span className="text-ink" style={{ fontSize: 14, lineHeight: "22px" }}>
               {b}
             </span>
           </li>
