@@ -470,18 +470,26 @@ function BusinessImpactPage() {
         <Reveal className="mx-auto w-full max-w-[1200px]">
           {/* section rule: brand gradient over the selected half, hairline after */}
           <div aria-hidden className="flex" style={{ height: 3 }}>
-            <div
-              className={tab === "roi" ? "kpi-rule-active" : undefined}
-              style={{
-                width: "50%",
-                background: tab === "roi" ? undefined : "#ECEBEF",
-              }}
-            />
-            <div
-              className={`flex-1 ${tab === "impact" ? "kpi-rule-active" : ""}`}
-              style={{ background: tab === "impact" ? undefined : "#ECEBEF" }}
-            />
+            <div className="relative" style={{ width: "50%", background: "#ECEBEF" }}>
+              {tab === "roi" && (
+                <span
+                  key="rule-roi"
+                  className="kpi-rule-active absolute left-0 top-0"
+                  style={{ height: 3, maxWidth: "100%", width: 120 }}
+                />
+              )}
+            </div>
+            <div className="relative flex-1" style={{ background: "#ECEBEF" }}>
+              {tab === "impact" && (
+                <span
+                  key="rule-impact"
+                  className="kpi-rule-active absolute left-0 top-0"
+                  style={{ height: 3, maxWidth: "100%", width: 120 }}
+                />
+              )}
+            </div>
           </div>
+
 
           <div className="grid md:grid-cols-2">
             <KpiColumn
