@@ -849,9 +849,15 @@ html.lenis body {
   background-image: linear-gradient(90deg, #137DFF 0%, #FF18AA 33.333%, #FFCD17 66.666%, #137DFF 100%);
   background-size: 120vw 100%;
   background-repeat: repeat;
-  animation: nav-border-flow 9s linear infinite;
+  animation: nav-border-flow 9s linear infinite, kpi-rule-extend 2.4s linear infinite;
+}
+
+@keyframes kpi-rule-extend {
+  0% { width: 120px; }
+  100% { width: 600px; }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .kpi-rule-active { animation: none; }
+  .kpi-rule-active { animation: none; width: 600px; }
 }
+
