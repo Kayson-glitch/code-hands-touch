@@ -147,15 +147,18 @@ export function SiteNav() {
             ].map((item, i) => (
               <li
                 key={item.label}
-                className={navItem}
-                style={itemStyle(i)}
+                className="relative"
                 onMouseEnter={() => setHovered(i)}
                 onMouseLeave={() => setHovered(null)}
               >
-                {item.label}
-                {item.chevron && <Chevron />}
+                <div className={navItem} style={itemStyle(i)}>
+                  {item.label}
+                  {item.chevron && <Chevron />}
+                </div>
+                {i === 0 && <WhySynergyMenu open={hovered === 0} />}
               </li>
             ))}
+
           </ul>
 
           {/* Right actions */}
@@ -192,7 +195,119 @@ export function SiteNav() {
 
 
 
+const WHY_SYNERGY_ITEMS = [
+  {
+    dot: "#9E8CFF",
+    kicker: "Impact",
+    title: "Business Impact",
+    desc: "55% of conversations resolved, with a clear path to lower costs.",
+  },
+  {
+    dot: "#D1E486",
+    kicker: "Stories",
+    title: "Stories from the Front Lines",
+    desc: "Multilingual support, risk management, and continuous improvement.",
+  },
+  {
+    dot: "#8CE0FF",
+    kicker: "Engineering",
+    title: "Technology & Guardrails",
+    desc: "Governed knowledge, precise retrieval, and human oversight.",
+  },
+  {
+    dot: "#FFCE91",
+    kicker: "Commitment",
+    title: "Security & Partnership",
+    desc: "Private deployment, customer-controlled data, and expert support after launch.",
+  },
+];
+
+function WhySynergyMenu({ open }: { open: boolean }) {
+  const [hover, setHover] = useState<number | null>(0);
+
+  return (
+    <div
+      className="absolute left-0 top-full pt-2"
+      style={{
+        opacity: open ? 1 : 0,
+        transform: open ? "translateY(0)" : "translateY(-6px)",
+        pointerEvents: open ? "auto" : "none",
+        transition: "opacity 200ms ease, transform 200ms ease",
+      }}
+    >
+      <div
+        className="flex flex-col items-start"
+        style={{
+          gap: 20,
+          padding: 24,
+          borderRadius: 16,
+          background: "#FFFFFF",
+          border: "1px solid #F1F1F3",
+          boxShadow: "0 12px 36px rgba(0,0,0,0.10)",
+        }}
+      >
+        <span
+          className="capitalize"
+          style={{ fontSize: 14, lineHeight: "20px", color: "#7A7885" }}
+        >
+          / why synergy
+        </span>
+        <div
+          className="grid grid-cols-2 overflow-hidden"
+          style={{
+            width: 719,
+            height: 331,
+            border: "1px solid #E1E0E4",
+          }}
+        >
+          {WHY_SYNERGY_ITEMS.map((it, i) => (
+            <div
+              key={it.title}
+              className="flex cursor-pointer flex-col items-start"
+              onMouseEnter={() => setHover(i)}
+              onMouseLeave={() => setHover(null)}
+              style={{
+                padding: 30,
+                gap: 10,
+                background: hover === i ? "#F8F8F9" : "transparent",
+                borderRight: i % 2 === 0 ? "1px solid #E1E0E4" : "none",
+                borderBottom: i < 2 ? "1px solid #E1E0E4" : "none",
+                transition: "background 180ms ease",
+              }}
+            >
+              <div className="flex items-center" style={{ gap: 8 }}>
+                <span style={{ width: 8, height: 8, background: it.dot, display: "block" }} />
+                <span
+                  className="uppercase whitespace-nowrap"
+                  style={{ fontSize: 12, lineHeight: "20px", color: "#A1A0A9" }}
+                >
+                  {it.kicker}
+                </span>
+              </div>
+              <div className="flex w-full flex-col items-start" style={{ gap: 10 }}>
+                <p
+                  className="w-full font-medium"
+                  style={{ fontSize: 18, lineHeight: "24px", color: "#000000" }}
+                >
+                  {it.title}
+                </p>
+                <p
+                  className="w-full"
+                  style={{ fontSize: 14, lineHeight: "20px", color: "#7A7885" }}
+                >
+                  {it.desc}
+                </p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function Chevron() {
+
   return (
     <svg
       width="16"
