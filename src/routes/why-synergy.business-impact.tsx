@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowRight, MessageSquareCode, Map as MapIcon } from "lucide-react";
 import { SiteNav } from "@/components/SiteNav";
@@ -770,34 +770,9 @@ function BusinessImpactPage() {
           </div>
         </div>
 
-        {/* oversized wordmark watermark — always spans the full viewport width */}
-        <div
-          aria-hidden
-          className="pointer-events-none w-full select-none overflow-hidden"
-          style={{ lineHeight: 0 }}
-        >
-          <svg
-            viewBox="0 0 1000 150"
-            width="100%"
-            preserveAspectRatio="none"
-            style={{ display: "block", height: "13.4vw" }}
-          >
-            <text
-              x="0"
-              y="118"
-              textLength="1000"
-              lengthAdjust="spacingAndGlyphs"
-              style={{
-                fontFamily: "var(--font-display)",
-                fontSize: 150,
-                fontWeight: 500,
-                fill: "rgba(255,255,255,0.08)",
-              }}
-            >
-              Synergy.AI
-            </text>
-          </svg>
-        </div>
+        {/* oversized wordmark watermark — uniform scale, never stretched */}
+        <FitWordmark text="Synergy.AI" />
+
 
 
         {/* bottom bar */}
@@ -831,3 +806,55 @@ function BusinessImpactPage() {
 }
 
 export default BusinessImpactPage;
+
+/** Wordmark that fills its container width by uniform font scaling (no glyph stretching). */
+function FitWordmark({ text }: { text: string }) {
+  const boxRef = useRef<HTMLDivElement>(null);
+  const textRef = useRef<HTMLSpanElement>(null);
+  const [size, setSize] = useState(200);
+
+  const fit = () => {
+    const box = boxRef.current;
+    const el = textRef.current;
+    if (!box || !el) return;
+    const probe = 200;
+    el.style.fontSize = `${probe}px`;
+    const w = el.scrollWidth;
+    const next = w > 0 ? (probe * box.clientWidth) / w : probe;
+    el.style.fontSize = `${next}px`;
+    setSize(next);
+  };
+
+
+  useLayoutEffect(fit);
+  useEffect(() => {
+    window.addEventListener("resize", fit);
+    if (document.fonts?.ready) document.fonts.ready.then(fit);
+    return () => window.removeEventListener("resize", fit);
+  }, []);
+
+  return (
+    <div
+      ref={boxRef}
+      aria-hidden
+      className="pointer-events-none w-full select-none overflow-hidden"
+      style={{ lineHeight: 0 }}
+    >
+      <span
+        ref={textRef}
+        className="font-display block whitespace-nowrap"
+        style={{
+          fontSize: size,
+          lineHeight: 0.8,
+          fontWeight: 500,
+          letterSpacing: "-0.02em",
+          color: "rgba(255,255,255,0.08)",
+          display: "inline-block",
+          transform: "translateY(12%)",
+        }}
+      >
+        {text}
+      </span>
+    </div>
+  );
+}
