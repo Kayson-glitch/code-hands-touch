@@ -133,14 +133,14 @@ export function SiteNav({ revealDelay = 4000 }: { revealDelay?: number } = {}) {
           <a
             href="/"
             className="pointer-events-auto flex shrink-0 items-center gap-2"
-            style={{ height: 28, color: inkStrong, transition: "color 300ms ease" }}
+            style={{ height: 24, color: inkStrong, transition: "color 300ms ease" }}
           >
             <img
               src={logo.url}
               alt="Synergy.AI"
               style={{
-                height: 28,
-                width: 28,
+                height: 24,
+                width: 24,
                 display: "block",
                 borderRadius: 888,
                 objectFit: "cover",
@@ -148,7 +148,7 @@ export function SiteNav({ revealDelay = 4000 }: { revealDelay?: number } = {}) {
             />
             <span
               className="font-medium"
-              style={{ fontSize: 18, lineHeight: "24px" }}
+              style={{ fontSize: 16, lineHeight: "24px" }}
             >
               Synergy.AI
             </span>
