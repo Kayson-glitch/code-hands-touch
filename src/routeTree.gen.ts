@@ -9,59 +9,87 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as WhySynergyRouteImport } from './routes/why-synergy'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as WhySynergyStoriesRouteImport } from './routes/why-synergy.stories'
 import { Route as WhySynergyBusinessImpactRouteImport } from './routes/why-synergy.business-impact'
 
+const WhySynergyRoute = WhySynergyRouteImport.update({
+  id: '/why-synergy',
+  path: '/why-synergy',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const WhySynergyStoriesRoute = WhySynergyStoriesRouteImport.update({
-  id: '/why-synergy/stories',
-  path: '/why-synergy/stories',
-  getParentRoute: () => rootRouteImport,
+  id: '/stories',
+  path: '/stories',
+  getParentRoute: () => WhySynergyRoute,
 } as any)
 const WhySynergyBusinessImpactRoute =
   WhySynergyBusinessImpactRouteImport.update({
-    id: '/why-synergy/business-impact',
-    path: '/why-synergy/business-impact',
-    getParentRoute: () => rootRouteImport,
+    id: '/business-impact',
+    path: '/business-impact',
+    getParentRoute: () => WhySynergyRoute,
   } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/why-synergy': typeof WhySynergyRouteWithChildren
   '/why-synergy/business-impact': typeof WhySynergyBusinessImpactRoute
   '/why-synergy/stories': typeof WhySynergyStoriesRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/why-synergy': typeof WhySynergyRouteWithChildren
   '/why-synergy/business-impact': typeof WhySynergyBusinessImpactRoute
   '/why-synergy/stories': typeof WhySynergyStoriesRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/why-synergy': typeof WhySynergyRouteWithChildren
   '/why-synergy/business-impact': typeof WhySynergyBusinessImpactRoute
   '/why-synergy/stories': typeof WhySynergyStoriesRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/why-synergy/business-impact' | '/why-synergy/stories'
+  fullPaths:
+    | '/'
+    | '/why-synergy'
+    | '/why-synergy/business-impact'
+    | '/why-synergy/stories'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/why-synergy/business-impact' | '/why-synergy/stories'
-  id: '__root__' | '/' | '/why-synergy/business-impact' | '/why-synergy/stories'
+  to:
+    | '/'
+    | '/why-synergy'
+    | '/why-synergy/business-impact'
+    | '/why-synergy/stories'
+  id:
+    | '__root__'
+    | '/'
+    | '/why-synergy'
+    | '/why-synergy/business-impact'
+    | '/why-synergy/stories'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  WhySynergyBusinessImpactRoute: typeof WhySynergyBusinessImpactRoute
-  WhySynergyStoriesRoute: typeof WhySynergyStoriesRoute
+  WhySynergyRoute: typeof WhySynergyRouteWithChildren
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/why-synergy': {
+      id: '/why-synergy'
+      path: '/why-synergy'
+      fullPath: '/why-synergy'
+      preLoaderRoute: typeof WhySynergyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -71,25 +99,38 @@ declare module '@tanstack/react-router' {
     }
     '/why-synergy/stories': {
       id: '/why-synergy/stories'
-      path: '/why-synergy/stories'
+      path: '/stories'
       fullPath: '/why-synergy/stories'
       preLoaderRoute: typeof WhySynergyStoriesRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof WhySynergyRoute
     }
     '/why-synergy/business-impact': {
       id: '/why-synergy/business-impact'
-      path: '/why-synergy/business-impact'
+      path: '/business-impact'
       fullPath: '/why-synergy/business-impact'
       preLoaderRoute: typeof WhySynergyBusinessImpactRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof WhySynergyRoute
     }
   }
 }
 
-const rootRouteChildren: RootRouteChildren = {
-  IndexRoute: IndexRoute,
+interface WhySynergyRouteChildren {
+  WhySynergyBusinessImpactRoute: typeof WhySynergyBusinessImpactRoute
+  WhySynergyStoriesRoute: typeof WhySynergyStoriesRoute
+}
+
+const WhySynergyRouteChildren: WhySynergyRouteChildren = {
   WhySynergyBusinessImpactRoute: WhySynergyBusinessImpactRoute,
   WhySynergyStoriesRoute: WhySynergyStoriesRoute,
+}
+
+const WhySynergyRouteWithChildren = WhySynergyRoute._addFileChildren(
+  WhySynergyRouteChildren,
+)
+
+const rootRouteChildren: RootRouteChildren = {
+  IndexRoute: IndexRoute,
+  WhySynergyRoute: WhySynergyRouteWithChildren,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
