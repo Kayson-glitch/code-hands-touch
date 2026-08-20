@@ -92,10 +92,10 @@ function Bullet({ diamond }: { diamond: boolean }) {
   return (
     <span
       aria-hidden
-      className="mt-[6px] inline-block shrink-0"
+      className="mt-[8px] inline-block shrink-0"
       style={{
-        width: 5,
-        height: 5,
+        width: 6,
+        height: 6,
         background: diamond ? ACCENT : "#0E0B22",
         transform: diamond ? "rotate(45deg)" : undefined,
       }}
