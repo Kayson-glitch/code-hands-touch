@@ -141,21 +141,24 @@ export function SiteNav() {
             className="pointer-events-auto hidden flex-1 items-center justify-center gap-2.5 md:flex"
             style={{ fontSize: 13, lineHeight: "20px" }}
           >
-            <li className={navItem} style={{ color: inkSoft }}>
-              Why Synergy
-            </li>
-            <li className={navItem} style={{ color: inkStrong }}>
-              Platform <Chevron />
-            </li>
-            <li className={navItem} style={{ color: inkSoft }}>
-              Solution <Chevron />
-            </li>
-            <li className={navItem} style={{ color: inkSoft }}>
-              Pricing
-            </li>
-            <li className={navItem} style={{ color: inkSoft }}>
-              Company Hub
-            </li>
+            {[
+              { label: "Why Synergy", chevron: false },
+              { label: "Platform", chevron: true },
+              { label: "Solution", chevron: true },
+              { label: "Pricing", chevron: false },
+              { label: "Company Hub", chevron: false },
+            ].map((item, i) => (
+              <li
+                key={item.label}
+                className={navItem}
+                style={itemStyle(i)}
+                onMouseEnter={() => setHovered(i)}
+                onMouseLeave={() => setHovered(null)}
+              >
+                {item.label}
+                {item.chevron && <Chevron />}
+              </li>
+            ))}
           </ul>
 
           {/* Right actions */}
