@@ -536,39 +536,68 @@ function StoryArticle({ story }: { story: Story }) {
 function StoriesPage() {
   const pad = `0 ${fluid(120, 24)}`;
   const footerRef = useRef<HTMLElement>(null);
+  const railRefs = useRef<Record<string, HTMLSpanElement | null>>({});
   const [active, setActive] = useState(STORIES[0].id);
-  // Per-module scroll progress (0..1) driving the gradient rails — fin.ai/train style.
-  const [progress, setProgress] = useState<Record<string, number>>({});
 
   // Sidebar follows whichever story currently owns the upper viewport.
   useEffect(() => {
-    let raf = 0;
-    const measure = () => {
-      raf = 0;
+    type StoryGeometry = { position: number; height: number };
+    const geometry: Record<string, StoryGeometry> = {};
+    let currentActive = STORIES[0].id;
+    let resizeTimer = 0;
+
+    const update = () => {
+      const scrollY = window.scrollY;
       let current = STORIES[0].id;
-      const next: Record<string, number> = {};
+      for (const s of STORIES) {
+        const bounds = geometry[s.id];
+        if (!bounds) continue;
+        if (scrollY >= bounds.position) current = s.id;
+        const p = (scrollY - bounds.position) / Math.max(bounds.height, 1);
+        const clamped = Math.min(1, Math.max(0, p));
+        const rail = railRefs.current[s.id];
+        if (rail) rail.style.transform = `scaleX(${clamped})`;
+      }
+      if (current !== currentActive) {
+        currentActive = current;
+        setActive(current);
+      }
+    };
+
+    const measure = () => {
+      const headerOffset = window.innerWidth < 768 ? 100 : 100;
       for (const s of STORIES) {
         const el = document.getElementById(s.id);
         if (!el) continue;
-        const r = el.getBoundingClientRect();
-        if (r.top <= window.innerHeight * 0.35) current = s.id;
-        const anchor = window.innerHeight * 0.35;
-        const p = (anchor - r.top) / Math.max(r.height - anchor * 0.5, 1);
-        next[s.id] = Math.min(1, Math.max(0, p));
+        const rect = el.getBoundingClientRect();
+        geometry[s.id] = {
+          position: rect.top + window.scrollY - headerOffset,
+          height: rect.height,
+        };
       }
-      setProgress(next);
-      setActive(current);
+      update();
     };
-    const onScroll = () => {
-      if (!raf) raf = requestAnimationFrame(measure);
+
+    const onResize = () => {
+      window.clearTimeout(resizeTimer);
+      resizeTimer = window.setTimeout(measure, 150);
     };
+
     measure();
-    window.addEventListener("scroll", onScroll, { passive: true });
-    window.addEventListener("resize", onScroll);
+    window.addEventListener("scroll", update, { passive: true });
+    window.addEventListener("resize", onResize);
+
+    const observer = new ResizeObserver(onResize);
+    for (const s of STORIES) {
+      const el = document.getElementById(s.id);
+      if (el) observer.observe(el);
+    }
+
     return () => {
-      window.removeEventListener("scroll", onScroll);
-      window.removeEventListener("resize", onScroll);
-      if (raf) cancelAnimationFrame(raf);
+      window.removeEventListener("scroll", update);
+      window.removeEventListener("resize", onResize);
+      observer.disconnect();
+      window.clearTimeout(resizeTimer);
     };
   }, []);
 
@@ -659,7 +688,6 @@ function StoriesPage() {
           >
             {STORIES.map((s) => {
               const on = active === s.id;
-              const p = progress[s.id] ?? 0;
               return (
                 <a
                   key={s.id}
@@ -681,17 +709,21 @@ function StoriesPage() {
                     className="pointer-events-none absolute inset-x-0 top-0"
                     style={{ height: 1, background: "#E1E0E4" }}
                   />
-                  {on ? (
-                    <span
-                      aria-hidden
-                      className="stories-rail-flow pointer-events-none absolute left-0 top-0"
-                      style={{
-                        height: 1.5,
-                        width: `${Math.max(p, 0.06) * 100}%`,
-                        transition: "width 120ms linear",
-                      }}
-                    />
-                  ) : null}
+                  <span
+                    ref={(node) => {
+                      railRefs.current[s.id] = node;
+                    }}
+                    aria-hidden
+                    className="stories-rail-flow pointer-events-none absolute left-0 top-0"
+                    style={{
+                      height: 1.5,
+                      width: "100%",
+                      opacity: on ? 1 : 0,
+                      transform: "scaleX(0)",
+                      transformOrigin: "left center",
+                      willChange: "transform",
+                    }}
+                  />
 
                   <span style={{ width: 24 }}>{s.index}</span>
                   <span className="whitespace-nowrap">{s.tab}</span>
