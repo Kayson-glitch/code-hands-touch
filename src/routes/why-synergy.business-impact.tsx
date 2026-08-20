@@ -357,7 +357,9 @@ function BusinessImpactPage() {
                   letterSpacing: "-0.01em",
                 }}
               >
-                Resolving 55% of conversations
+                From AI Support To
+                <br />
+                Measurable Business Value
               </h1>
 
               <p
