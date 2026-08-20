@@ -374,7 +374,7 @@ function ArticleBlock({
           <Hairline dark={dark} dashed />
         </div>
       ) : null}
-    </div>
+    </Reveal>
   );
 }
 
