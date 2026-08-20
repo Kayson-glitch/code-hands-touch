@@ -11,6 +11,12 @@ type ProgressiveBlurProps = {
    * (e.g. a footer) is visible in the viewport.
    */
   hiddenWhen?: React.RefObject<HTMLElement | null>;
+  /**
+   * CSS selector for element(s) that should hide the blur while visible
+   * (e.g. a footer). Useful from a shared layout where the target lives
+   * in a child route. All matching elements are observed.
+   */
+  hiddenWhenSelector?: string;
 };
 
 /**
