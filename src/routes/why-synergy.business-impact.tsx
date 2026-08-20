@@ -702,8 +702,8 @@ function BusinessImpactPage() {
               <span
                 aria-hidden
                 style={{
-                  width: 28,
-                  height: 28,
+                  width: 24,
+                  height: 24,
                   borderRadius: 6,
                   backgroundImage: GRADIENT,
                   backgroundSize: "200%",
@@ -711,7 +711,7 @@ function BusinessImpactPage() {
               />
               <span
                 className="font-display"
-                style={{ color: "#FFFFFF", fontSize: 18, lineHeight: "24px", fontWeight: 500 }}
+                style={{ color: "#FFFFFF", fontSize: 16, lineHeight: "24px", fontWeight: 500 }}
               >
                 Synergy.AI
               </span>
