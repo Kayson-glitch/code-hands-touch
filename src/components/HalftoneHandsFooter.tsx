@@ -111,7 +111,7 @@ const DYE_STOPS: Array<[number, number, number]> = [
  *  Bias the curve so yellow occupies most of the visible trail, magenta is a
  *  transition band, and blue only appears at the very highest concentration.
  */
-function dyeAt(t: number): [number, number, number] {
+export function dyeAt(t: number): [number, number, number] {
   const x = Math.min(1, Math.max(0, Math.pow(t, 1.6)));
   const seg = x < 0.5 ? 0 : 1;
   const f = seg === 0 ? x / 0.5 : (x - 0.5) / 0.5;
@@ -130,7 +130,7 @@ function dyeAt(t: number): [number, number, number] {
  * along the velocity, blurs a little and decays, giving the wispy trailing
  * smear of ink pushed across paper instead of a hard cursor halo.
  */
-class FluidField {
+export class FluidField {
   cols: number;
   rows: number;
   cellW: number;
@@ -264,7 +264,7 @@ function smoothstep(t: number) {
  *  Replaces a raw sine wave so the fade feels like a gentle swell,
  *  not a sharp flash.
  */
-function breathWave(phase: number) {
+export function breathWave(phase: number) {
   const t = phase % 1;
   const tri = t < 0.5 ? t * 2 : 2 - t * 2; // triangle 0..1..0
   return smoothstep(tri); // ease-in-out at both ends
