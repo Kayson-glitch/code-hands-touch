@@ -586,7 +586,7 @@ function BusinessImpactPage() {
                     margin: 0,
                     fontSize: fluid(48, 30),
                     lineHeight: "56px",
-                    fontWeight: 400,
+                    fontWeight: 500,
                     letterSpacing: "-0.01em",
                   }}
                 >
