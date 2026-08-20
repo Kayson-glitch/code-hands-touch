@@ -515,7 +515,7 @@ function BusinessImpactPage() {
 
       {/* -------------------------------------------------------- article */}
       <section style={{ padding: pad, marginTop: fluid(12, 10) }}>
-        <div key={tab} className="mx-auto w-full max-w-[1200px] overflow-hidden bg-white">
+        <Reveal key={tab} y={32} className="mx-auto w-full max-w-[1200px] overflow-hidden bg-white">
           <div style={{ padding: `${fluid(60, 32)} ${fluid(60, 24)} 0` }}>
             {/* card header */}
             <p
