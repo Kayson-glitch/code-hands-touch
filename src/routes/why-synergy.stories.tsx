@@ -676,24 +676,24 @@ function StoriesPage() {
                     opacity: on ? 1 : 0.55,
                   }}
                 >
-                  {/* base rail + gradient progress fill */}
+                  {/* base rail; gradient fill only on the active module */}
                   <span
                     aria-hidden
                     className="pointer-events-none absolute inset-x-0 top-0"
                     style={{ height: 1, background: "#E1E0E4" }}
                   />
-                  <span
-                    aria-hidden
-                    className="pointer-events-none absolute left-0 top-0"
-                    style={{
-                      height: 1.5,
-                      width: "100%",
-                      background: GRADIENT,
-                      transform: `scaleX(${p})`,
-                      transformOrigin: "left center",
-                      transition: "transform 120ms linear",
-                    }}
-                  />
+                  {on ? (
+                    <span
+                      aria-hidden
+                      className="stories-rail-flow pointer-events-none absolute left-0 top-0"
+                      style={{
+                        height: 1.5,
+                        width: `${Math.max(p, 0.06) * 100}%`,
+                        transition: "width 120ms linear",
+                      }}
+                    />
+                  ) : null}
+
                   <span style={{ width: 24 }}>{s.index}</span>
                   <span className="whitespace-nowrap">{s.tab}</span>
                 </a>
