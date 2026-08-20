@@ -243,11 +243,11 @@ function WhySynergyMenu({ open }: { open: boolean }) {
           borderRadius: 16,
           background: "#FFFFFF",
           border: "1px solid #F1F1F3",
-          boxShadow: "0 12px 36px rgba(0,0,0,0.10)",
+          boxShadow: "0px 12px 36px 0px rgba(0,0,0,0.10)",
         }}
       >
         <span
-          className="capitalize"
+          className="capitalize text-center whitespace-nowrap"
           style={{ fontSize: 14, lineHeight: "20px", color: "#7A7885" }}
         >
           / why synergy
@@ -255,8 +255,8 @@ function WhySynergyMenu({ open }: { open: boolean }) {
         <div
           className="grid grid-cols-2 overflow-hidden"
           style={{
-            width: 719,
-            height: 331,
+            width: 680,
+            height: 315,
             border: "1px solid #E1E0E4",
           }}
         >
@@ -268,7 +268,7 @@ function WhySynergyMenu({ open }: { open: boolean }) {
               onMouseLeave={() => setHover(null)}
               style={{
                 padding: 30,
-                gap: 10,
+                gap: 8,
                 background: hover === i ? "#F8F8F9" : "transparent",
                 borderRight: i % 2 === 0 ? "1px solid #E1E0E4" : "none",
                 borderBottom: i < 2 ? "1px solid #E1E0E4" : "none",
@@ -279,21 +279,21 @@ function WhySynergyMenu({ open }: { open: boolean }) {
                 <span style={{ width: 8, height: 8, background: it.dot, display: "block" }} />
                 <span
                   className="uppercase whitespace-nowrap"
-                  style={{ fontSize: 12, lineHeight: "20px", color: "#A1A0A9" }}
+                  style={{ fontSize: 10, lineHeight: "18px", color: "#7A7885" }}
                 >
                   {it.kicker}
                 </span>
               </div>
-              <div className="flex w-full flex-col items-start" style={{ gap: 10 }}>
+              <div className="flex w-full flex-col items-start" style={{ gap: 8 }}>
                 <p
                   className="w-full font-medium"
-                  style={{ fontSize: 18, lineHeight: "24px", color: "#000000" }}
+                  style={{ fontSize: 16, lineHeight: "22px", color: "#000000" }}
                 >
                   {it.title}
                 </p>
                 <p
                   className="w-full"
-                  style={{ fontSize: 14, lineHeight: "20px", color: "#7A7885" }}
+                  style={{ fontSize: 12, lineHeight: "20px", color: "#5E5C6A" }}
                 >
                   {it.desc}
                 </p>
