@@ -595,7 +595,7 @@ function BusinessImpactPage() {
             ))}
           </div>
 
-        </div>
+        </Reveal>
       </section>
 
       {/* ------------------------------------------------------------- CTA */}
