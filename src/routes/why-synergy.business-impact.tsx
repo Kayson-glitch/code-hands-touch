@@ -696,7 +696,7 @@ function BusinessImpactPage() {
                       </li>
                     ))}
                   </ul>
-                </div>
+                </Reveal>
               ))}
             </div>
           </div>
