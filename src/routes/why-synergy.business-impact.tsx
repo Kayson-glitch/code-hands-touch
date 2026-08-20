@@ -687,12 +687,13 @@ function BusinessImpactPage() {
               {FOOTER_COLUMNS.map((col, i) => (
                 <Reveal key={col.title} delay={i * 90} y={18} className="flex flex-col">
                   <p
+                    className="capitalize"
                     style={{
                       margin: 0,
-                      color: "#FFFFFF",
-                      fontSize: 13,
+                      color: "rgba(255,255,255,0.65)",
+                      fontSize: 12,
                       lineHeight: "20px",
-                      fontWeight: 500,
+                      fontWeight: 400,
                     }}
                   >
                     {col.title}
@@ -701,8 +702,8 @@ function BusinessImpactPage() {
                     {col.links.map((l) => (
                       <li key={l}>
                         <span
-                          className="cursor-pointer transition-colors hover:text-white"
-                          style={{ color: "rgba(255,255,255,0.55)", fontSize: 13, lineHeight: "22px" }}
+                          className="cursor-pointer transition-opacity hover:opacity-70"
+                          style={{ color: "#FFFFFF", fontSize: 14, lineHeight: "22px" }}
                         >
                           {l}
                         </span>
