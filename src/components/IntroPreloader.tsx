@@ -224,7 +224,7 @@ export function IntroPreloader({
         display: "grid",
         placeItems: "center",
         color: "#fff",
-        fontFamily: "Montserrat, ui-sans-serif, system-ui, sans-serif",
+        fontFamily: "var(--font-sans)",
         fontWeight: 500,
         fontSize: 48,
         lineHeight: "56px",

@@ -265,7 +265,7 @@ export function SloganSection() {
                 <p
                   style={{
                     margin: 0,
-                    fontFamily: '"Montserrat", sans-serif',
+                    fontFamily: "var(--font-sans)",
                     fontStyle: "italic",
                     fontWeight: 400,
                     fontSize: 14,
