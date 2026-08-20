@@ -123,7 +123,7 @@ export function SiteFooter() {
   const pad = `0 ${fluid(120, 24)}`;
 
   return (
-    <div className="relative" style={{ zIndex: 2, background: "#FAFAFA" }}>
+    <div className="relative" style={{ zIndex: 20, background: "#FAFAFA" }}>
       {/* ------------------------------------------------------------- CTA */}
       <section className="relative overflow-hidden" style={{ padding: `${fluid(160, 80)} 0` }}>
         <div
