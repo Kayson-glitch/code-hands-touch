@@ -378,7 +378,6 @@ function ArticleBlock({
     <Reveal delay={delay} y={20} duration={duration}>
       <Icon size={24} strokeWidth={1.5} color={dark ? "#FFFFFF" : "#0E0B22"} />
       <h3
-        className="font-display"
         style={{
           margin: "10px 0 0",
           fontSize: 18,
