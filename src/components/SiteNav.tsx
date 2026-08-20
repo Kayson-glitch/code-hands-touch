@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "@tanstack/react-router";
 import logo from "@/assets/synergy-logo-v3.png.asset.json";
 
 export function SiteNav({ revealDelay = 4000 }: { revealDelay?: number } = {}) {
@@ -200,11 +201,18 @@ export function SiteNav({ revealDelay = 4000 }: { revealDelay?: number } = {}) {
 
 
 
-const WHY_SYNERGY_ITEMS = [
+const WHY_SYNERGY_ITEMS: Array<{
+  dot: string;
+  kicker: string;
+  title: string;
+  desc: string;
+  to?: string;
+}> = [
   {
     dot: "#9E8CFF",
     kicker: "Impact",
     title: "Business Impact",
+    to: "/why-synergy/business-impact",
     desc: "55% of conversations resolved, with a clear path to lower costs.",
   },
   {
@@ -229,6 +237,7 @@ const WHY_SYNERGY_ITEMS = [
 
 function WhySynergyMenu({ open }: { open: boolean }) {
   const [hover, setHover] = useState<number | null>(null);
+  const navigate = useNavigate();
 
   return (
     <div
