@@ -97,14 +97,14 @@ export function SiteNav({ revealDelay = 4000 }: { revealDelay?: number } = {}) {
         transition: "opacity 260ms ease-out",
       }}
     >
-      {/* Flowing gradient top bar — 3px per Figma (63px total with the 60px nav).
+      {/* Flowing gradient top bar — 2px per Figma (62px total with the 60px nav).
           Scrolling down collapses it away so the nav alone is 60px tall. */}
       <span
         aria-hidden
         className="pointer-events-none block w-full shrink-0"
         style={{
-          height: 3,
-          marginTop: barVisible ? 0 : -3,
+          height: 2,
+          marginTop: barVisible ? 0 : -2,
           backgroundImage:
             "linear-gradient(90deg, #137DFF 0%, #FF18AA 33.333%, #FFCD17 66.666%, #137DFF 100%)",
           backgroundSize: "120vw 100%",
