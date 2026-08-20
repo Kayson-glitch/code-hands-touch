@@ -3,6 +3,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowRight, MessageSquareCode, Map as MapIcon } from "lucide-react";
 import { SiteNav } from "@/components/SiteNav";
 import { HalftoneHandStill } from "@/components/HalftoneHandStill";
+import { Reveal } from "@/components/Reveal";
 
 export const Route = createFileRoute("/why-synergy/business-impact")({
   head: () => ({
@@ -333,15 +334,17 @@ function ArticleBlock({
   body,
   divider,
   dark,
+  delay = 0,
 }: {
   icon: typeof MapIcon;
   title: string;
   body: string;
   divider: boolean;
   dark?: boolean;
+  delay?: number;
 }) {
   return (
-    <div>
+    <Reveal delay={delay} y={20}>
       <Icon size={24} strokeWidth={1.5} color={dark ? "#FFFFFF" : "#0E0B22"} />
       <h3
         className="font-display"
@@ -371,7 +374,7 @@ function ArticleBlock({
           <Hairline dark={dark} dashed />
         </div>
       ) : null}
-    </div>
+    </Reveal>
   );
 }
 
@@ -408,7 +411,7 @@ function BusinessImpactPage() {
               className="relative z-10"
               style={{ maxWidth: 680, paddingTop: fluid(162, 104), paddingBottom: fluid(102, 60) }}
             >
-              <div className="flex items-center gap-2">
+              <Reveal immediate className="flex items-center gap-2">
                 <span aria-hidden style={{ width: 8, height: 8, background: ACCENT }} />
                 <span
                   style={{
@@ -420,39 +423,43 @@ function BusinessImpactPage() {
                 >
                   Impact
                 </span>
-              </div>
+              </Reveal>
 
-              <h1
-                className="font-display text-ink"
-                style={{
-                  margin: "10px 0 0",
-                  fontSize: fluid(48, 30),
-                  lineHeight: 1.1667,
-                  fontWeight: 500,
-                  letterSpacing: "-0.01em",
-                }}
-              >
-                From AI Support To
-                <br />
-                Measurable Business Value
-              </h1>
+              <Reveal immediate delay={120}>
+                <h1
+                  className="font-display text-ink"
+                  style={{
+                    margin: "10px 0 0",
+                    fontSize: fluid(48, 30),
+                    lineHeight: 1.1667,
+                    fontWeight: 500,
+                    letterSpacing: "-0.01em",
+                  }}
+                >
+                  From AI Support To
+                  <br />
+                  Measurable Business Value
+                </h1>
+              </Reveal>
 
-              <p
-                style={{
-                  margin: "10px 0 0",
-                  maxWidth: 563,
-                  fontSize: 14,
-                  lineHeight: "24px",
-                  color: "var(--ink-muted, #7A7885)",
-                }}
-              >
-                Resolving 55% of conversations across 200K monthly inquiries, with a clear path to
-                lower operating costs.
-              </p>
+              <Reveal immediate delay={240}>
+                <p
+                  style={{
+                    margin: "10px 0 0",
+                    maxWidth: 563,
+                    fontSize: 14,
+                    lineHeight: "24px",
+                    color: "var(--ink-muted, #7A7885)",
+                  }}
+                >
+                  Resolving 55% of conversations across 200K monthly inquiries, with a clear path to
+                  lower operating costs.
+                </p>
+              </Reveal>
 
-              <div style={{ marginTop: fluid(40, 28) }}>
+              <Reveal immediate delay={360} style={{ marginTop: fluid(40, 28) }}>
                 <RainbowButton label="Book a Demo" />
-              </div>
+              </Reveal>
             </div>
           </div>
         </div>
@@ -460,7 +467,7 @@ function BusinessImpactPage() {
 
       {/* ------------------------------------------------------------ KPIs */}
       <section style={{ padding: pad }} role="tablist" aria-label="Business impact metrics">
-        <div className="mx-auto w-full max-w-[1200px]">
+        <Reveal className="mx-auto w-full max-w-[1200px]">
           {/* section rule: brand gradient over the selected half, hairline after */}
           <div aria-hidden className="flex" style={{ height: 3 }}>
             <div
@@ -502,13 +509,13 @@ function BusinessImpactPage() {
               className="md:border-l"
             />
           </div>
-        </div>
+        </Reveal>
       </section>
 
 
       {/* -------------------------------------------------------- article */}
       <section style={{ padding: pad, marginTop: fluid(12, 10) }}>
-        <div key={tab} className="mx-auto w-full max-w-[1200px] overflow-hidden bg-white">
+        <Reveal key={tab} y={32} className="mx-auto w-full max-w-[1200px] overflow-hidden bg-white">
           <div style={{ padding: `${fluid(60, 32)} ${fluid(60, 24)} 0` }}>
             {/* card header */}
             <p
@@ -566,8 +573,8 @@ function BusinessImpactPage() {
               className="flex flex-col"
               style={{ gap: fluid(60, 36), marginTop: fluid(80, 44), paddingBottom: fluid(80, 44) }}
             >
-              {article.light.map((b) => (
-                <ArticleBlock key={b.title} {...b} />
+              {article.light.map((b, i) => (
+                <ArticleBlock key={b.title} {...b} delay={i * 110} />
               ))}
             </div>
           </div>
@@ -583,12 +590,12 @@ function BusinessImpactPage() {
               gap: fluid(60, 36),
             }}
           >
-            {article.dark.map((b) => (
-              <ArticleBlock key={b.title} {...b} dark />
+            {article.dark.map((b, i) => (
+              <ArticleBlock key={b.title} {...b} dark delay={i * 110} />
             ))}
           </div>
 
-        </div>
+        </Reveal>
       </section>
 
       {/* ------------------------------------------------------------- CTA */}
@@ -607,17 +614,19 @@ function BusinessImpactPage() {
           }}
         />
         <div className="relative mx-auto flex w-full max-w-[800px] flex-col items-center px-6 text-center">
-          <h2
-            className="font-display"
-            style={{ margin: 0, fontSize: fluid(40, 26), lineHeight: 1.4, fontWeight: 500 }}
-          >
-            <span className="text-ink-ghost">Get started with the</span>
-            <br />
-            <span className="text-ink">Synergy.AI today</span>
-          </h2>
-          <div style={{ marginTop: fluid(40, 28) }}>
+          <Reveal>
+            <h2
+              className="font-display"
+              style={{ margin: 0, fontSize: fluid(40, 26), lineHeight: 1.4, fontWeight: 500 }}
+            >
+              <span className="text-ink-ghost">Get started with the</span>
+              <br />
+              <span className="text-ink">Synergy.AI today</span>
+            </h2>
+          </Reveal>
+          <Reveal delay={150} style={{ marginTop: fluid(40, 28) }}>
             <RainbowButton label="Book a Demo" />
-          </div>
+          </Reveal>
         </div>
       </section>
 
@@ -662,8 +671,8 @@ function BusinessImpactPage() {
               className="grid grid-cols-2 gap-10 md:grid-cols-4"
               style={{ paddingTop: fluid(44, 24), paddingBottom: fluid(60, 32) }}
             >
-              {FOOTER_COLUMNS.map((col) => (
-                <div key={col.title} className="flex flex-col">
+              {FOOTER_COLUMNS.map((col, i) => (
+                <Reveal key={col.title} delay={i * 90} y={18} className="flex flex-col">
                   <p
                     style={{
                       margin: 0,
@@ -687,7 +696,7 @@ function BusinessImpactPage() {
                       </li>
                     ))}
                   </ul>
-                </div>
+                </Reveal>
               ))}
             </div>
           </div>
