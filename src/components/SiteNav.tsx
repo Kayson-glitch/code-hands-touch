@@ -255,7 +255,7 @@ function WhySynergyMenu({ open }: { open: boolean }) {
         <div
           className="grid grid-cols-2 overflow-hidden"
           style={{
-            width: 680,
+            width: 620,
             height: 315,
             border: "1px solid #E1E0E4",
           }}
