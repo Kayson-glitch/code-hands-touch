@@ -37,13 +37,8 @@ const ProgressiveBlur = ({
   const [hidden, setHidden] = useState(false);
 
   useEffect(() => {
-    const targets: HTMLElement[] = [];
-    if (hiddenWhen?.current) targets.push(hiddenWhen.current);
-    if (hiddenWhenSelector) {
-      targets.push(...Array.from(document.querySelectorAll<HTMLElement>(hiddenWhenSelector)));
-    }
-    if (targets.length === 0) return;
     const visible = new Set<Element>();
+    const observed = new Set<Element>();
     const io = new IntersectionObserver(
       (entries) => {
         for (const e of entries) {
@@ -54,9 +49,42 @@ const ProgressiveBlur = ({
       },
       { threshold: 0.01 },
     );
-    targets.forEach((el) => io.observe(el));
-    return () => io.disconnect();
+
+    const scan = () => {
+      const targets: HTMLElement[] = [];
+      if (hiddenWhen?.current) targets.push(hiddenWhen.current);
+      if (hiddenWhenSelector) {
+        targets.push(...Array.from(document.querySelectorAll<HTMLElement>(hiddenWhenSelector)));
+      }
+      // observe newly mounted targets
+      for (const el of targets) {
+        if (!observed.has(el)) {
+          observed.add(el);
+          io.observe(el);
+        }
+      }
+      // forget targets that were unmounted (e.g. route change)
+      for (const el of Array.from(observed)) {
+        if (!el.isConnected) {
+          observed.delete(el);
+          visible.delete(el);
+          io.unobserve(el);
+        }
+      }
+      setHidden(visible.size > 0);
+    };
+
+    scan();
+    // child routes mount/unmount their footers after this layout renders,
+    // so keep watching the DOM instead of scanning only once.
+    const mo = new MutationObserver(scan);
+    mo.observe(document.body, { childList: true, subtree: true });
+    return () => {
+      mo.disconnect();
+      io.disconnect();
+    };
   }, [hiddenWhen, hiddenWhenSelector]);
+
 
   if (hidden) return null;
 
