@@ -467,7 +467,7 @@ function BusinessImpactPage() {
 
       {/* ------------------------------------------------------------ KPIs */}
       <section style={{ padding: pad }} role="tablist" aria-label="Business impact metrics">
-        <div className="mx-auto w-full max-w-[1200px]">
+        <Reveal className="mx-auto w-full max-w-[1200px]">
           {/* section rule: brand gradient over the selected half, hairline after */}
           <div aria-hidden className="flex" style={{ height: 3 }}>
             <div
