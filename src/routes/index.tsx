@@ -123,7 +123,11 @@ function Index() {
           <MetricsSection />
           {/* Fourth screen: dark closing statement with scroll-driven invert */}
           <ClosingSection />
-          <SiteFooter />
+          {/* Page-flip: the footer rises up over the closing section's
+              pinned final panel, mirroring the hero's fixed-cover transition. */}
+          <div style={{ marginTop: `-${100}vh`, position: "relative", zIndex: 30 }}>
+            <SiteFooter />
+          </div>
 
 
           {/* Always pinned to bottom, unaffected by parallax */}
