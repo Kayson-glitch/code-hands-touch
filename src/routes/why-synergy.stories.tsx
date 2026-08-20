@@ -541,19 +541,20 @@ function StoriesPage() {
 
   // Sidebar follows whichever story currently owns the upper viewport.
   useEffect(() => {
-    let raf = 0;
+    type StoryGeometry = { position: number; height: number };
+    const geometry: Record<string, StoryGeometry> = {};
     let currentActive = STORIES[0].id;
-    const measure = () => {
-      raf = 0;
+    let resizeTimer = 0;
+
+    const update = () => {
+      const scrollY = window.scrollY;
       let current = STORIES[0].id;
       for (const s of STORIES) {
-        const el = document.getElementById(s.id);
-        if (!el) continue;
-        const r = el.getBoundingClientRect();
-        if (r.top <= window.innerHeight * 0.35) current = s.id;
-        const anchor = window.innerHeight * 0.35;
-        const p = (anchor - r.top) / Math.max(r.height - anchor * 0.5, 1);
-        const clamped = Math.min(1, Math.max(0.06, p));
+        const bounds = geometry[s.id];
+        if (!bounds) continue;
+        if (scrollY >= bounds.position) current = s.id;
+        const p = (scrollY - bounds.position) / Math.max(bounds.height, 1);
+        const clamped = Math.min(1, Math.max(0, p));
         const rail = railRefs.current[s.id];
         if (rail) rail.style.transform = `scaleX(${clamped})`;
       }
@@ -562,16 +563,41 @@ function StoriesPage() {
         setActive(current);
       }
     };
-    const onScroll = () => {
-      if (!raf) raf = requestAnimationFrame(measure);
+
+    const measure = () => {
+      const headerOffset = window.innerWidth < 768 ? 100 : 100;
+      for (const s of STORIES) {
+        const el = document.getElementById(s.id);
+        if (!el) continue;
+        const rect = el.getBoundingClientRect();
+        geometry[s.id] = {
+          position: rect.top + window.scrollY - headerOffset,
+          height: rect.height,
+        };
+      }
+      update();
     };
+
+    const onResize = () => {
+      window.clearTimeout(resizeTimer);
+      resizeTimer = window.setTimeout(measure, 150);
+    };
+
     measure();
-    window.addEventListener("scroll", onScroll, { passive: true });
-    window.addEventListener("resize", onScroll);
+    window.addEventListener("scroll", update, { passive: true });
+    window.addEventListener("resize", onResize);
+
+    const observer = new ResizeObserver(onResize);
+    for (const s of STORIES) {
+      const el = document.getElementById(s.id);
+      if (el) observer.observe(el);
+    }
+
     return () => {
-      window.removeEventListener("scroll", onScroll);
-      window.removeEventListener("resize", onScroll);
-      if (raf) cancelAnimationFrame(raf);
+      window.removeEventListener("scroll", update);
+      window.removeEventListener("resize", onResize);
+      observer.disconnect();
+      window.clearTimeout(resizeTimer);
     };
   }, []);
 
@@ -693,7 +719,7 @@ function StoriesPage() {
                       height: 1.5,
                       width: "100%",
                       opacity: on ? 1 : 0,
-                      transform: "scaleX(0.06)",
+                      transform: "scaleX(0)",
                       transformOrigin: "left center",
                       willChange: "transform",
                     }}
