@@ -9,6 +9,11 @@ const easeOutCubic = (x: number) => 1 - Math.pow(1 - x, 3);
 const WIPE_END = 0.3; // light → dark reveal
 const SHRINK_END = 0.45; // headline scales down to 60%
 const TITLE_SCALE = 0.6;
+// Panels finish sliding before the very end; the remaining scroll is a
+// "hold" where the final panel stays pinned so the next module can flip
+// up over it (mirroring the hero's fixed-cover transition).
+const SLIDE_END = 0.9;
+const HOLD_VH = 100;
 
 const Words = () => (
   <p className="artemis-closing__text">
@@ -108,7 +113,7 @@ export function ClosingSection() {
   const shrink = pinned ? easeOutCubic(clamp((p - WIPE_END) / (SHRINK_END - WIPE_END))) : 1;
   // Panels begin sliding while the headline is still shrinking (about halfway).
   const SLIDE_START = WIPE_END + (SHRINK_END - WIPE_END) * 0.5;
-  const slide = pinned ? clamp((p - SLIDE_START) / (1 - SLIDE_START)) : 1;
+  const slide = pinned ? clamp((p - SLIDE_START) / (SLIDE_END - SLIDE_START)) : 1;
 
 
   const scale = pinned ? 1 - (1 - TITLE_SCALE) * shrink : TITLE_SCALE;
@@ -155,7 +160,7 @@ export function ClosingSection() {
       <div
         ref={wrapperRef}
         className="artemis-closing__wrapper"
-        style={pinned ? { height: `${300 + 80 + PANELS.length * 115}vh` } : undefined}
+        style={pinned ? { height: `${300 + 80 + PANELS.length * 115 + HOLD_VH}vh` } : undefined}
       >
         <div className="artemis-closing__sticky">
           {/* Light state: only visible while the dark layer wipes up. */}
