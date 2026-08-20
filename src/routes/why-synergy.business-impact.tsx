@@ -416,6 +416,7 @@ function BusinessImpactPage() {
   const pad = `0 ${fluid(120, 24)}`;
   const [tab, setTab] = useState<"roi" | "impact">("roi");
   const article = ARTICLES[tab];
+  const footerRef = useRef<HTMLElement>(null);
 
   return (
     <div className="relative min-h-screen bg-paper">
