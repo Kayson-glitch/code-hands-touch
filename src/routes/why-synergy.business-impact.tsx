@@ -770,26 +770,35 @@ function BusinessImpactPage() {
           </div>
         </div>
 
-        {/* oversized wordmark watermark */}
+        {/* oversized wordmark watermark — always spans the full viewport width */}
         <div
           aria-hidden
-          className="pointer-events-none select-none overflow-hidden"
+          className="pointer-events-none w-full select-none overflow-hidden"
           style={{ lineHeight: 0 }}
         >
-          <span
-            className="font-display block whitespace-nowrap"
-            style={{
-              fontSize: "13.4vw",
-              lineHeight: 0.82,
-              fontWeight: 500,
-              color: "rgba(255,255,255,0.08)",
-              letterSpacing: "-0.02em",
-              transform: "translateY(18%)",
-            }}
+          <svg
+            viewBox="0 0 1000 150"
+            width="100%"
+            preserveAspectRatio="none"
+            style={{ display: "block", height: "13.4vw" }}
           >
-            Synergy.AI
-          </span>
+            <text
+              x="0"
+              y="118"
+              textLength="1000"
+              lengthAdjust="spacingAndGlyphs"
+              style={{
+                fontFamily: "var(--font-display)",
+                fontSize: 150,
+                fontWeight: 500,
+                fill: "rgba(255,255,255,0.08)",
+              }}
+            >
+              Synergy.AI
+            </text>
+          </svg>
         </div>
+
 
         {/* bottom bar */}
         <div style={{ padding: pad }}>
