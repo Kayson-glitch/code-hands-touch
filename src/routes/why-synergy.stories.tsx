@@ -431,12 +431,13 @@ function StatValue({ value }: { value: string }) {
   );
 }
 
-function StoryArticle({ story }: { story: Story }) {
+function StoryArticle({ story, first }: { story: Story; first?: boolean }) {
   return (
     <article id={story.id} className="bg-white">
-      <div style={{ padding: `${fluid(60, 28)} ${fluid(60, 24)} 0` }}>
+      <div style={{ padding: `${first ? fluid(60, 28) : "0px"} ${fluid(60, 24)} 0` }}>
         <StatsCard story={story} />
       </div>
+
 
       {/* header — eyebrow, rule, 48px title, intro, CTA */}
       <div style={{ padding: `${fluid(80, 40)} ${fluid(60, 24)} 0` }}>
