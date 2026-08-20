@@ -223,7 +223,7 @@ const WHY_SYNERGY_ITEMS = [
 ];
 
 function WhySynergyMenu({ open }: { open: boolean }) {
-  const [hover, setHover] = useState<number | null>(0);
+  const [hover, setHover] = useState<number | null>(null);
 
   return (
     <div
