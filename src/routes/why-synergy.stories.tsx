@@ -520,7 +520,7 @@ function StoryArticle({ story }: { story: Story }) {
       </div>
 
       {/* closing block */}
-      <div style={{ padding: `${fluid(80, 44)} ${fluid(60, 24)}` }}>
+      <div style={{ padding: `${fluid(80, 44)} ${fluid(60, 24)} 0` }}>
         <ArticleBlock {...story.tail} />
       </div>
     </article>
