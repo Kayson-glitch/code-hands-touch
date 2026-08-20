@@ -461,21 +461,21 @@ function BusinessImpactPage() {
               </Reveal>
 
               <Reveal immediate delay={120}>
-                <h1
+                <GradientHoverHeading
+                  as="h1"
                   className="font-display text-ink"
+                  text={"From AI Support To\nMeasurable Business Value"}
                   style={{
                     margin: "10px 0 0",
                     fontSize: fluid(48, 30),
                     lineHeight: 1.1667,
                     fontWeight: 500,
                     letterSpacing: "-0.01em",
+                    cursor: "default",
                   }}
-                >
-                  From AI Support To
-                  <br />
-                  Measurable Business Value
-                </h1>
+                />
               </Reveal>
+
 
               <Reveal immediate delay={240}>
                 <p
