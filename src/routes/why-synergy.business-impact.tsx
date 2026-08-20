@@ -535,13 +535,13 @@ function BusinessImpactPage() {
               className="flex flex-col gap-8 md:flex-row md:items-start md:justify-between"
               style={{ marginTop: fluid(24, 18) }}
             >
-              <div style={{ maxWidth: 780 }}>
+              <div style={{ maxWidth: 800 }}>
                 <h2
                   className="font-display"
                   style={{
                     margin: 0,
                     fontSize: fluid(40, 26),
-                    lineHeight: 1.25,
+                    lineHeight: 1.4,
                     fontWeight: 500,
                     letterSpacing: "-0.01em",
                   }}
@@ -551,10 +551,10 @@ function BusinessImpactPage() {
                 </h2>
                 <p
                   style={{
-                    margin: `${fluid(24, 18)} 0 0`,
-                    maxWidth: 700,
+                    margin: "20px 0 0",
+                    maxWidth: 800,
                     fontSize: 13,
-                    lineHeight: "21px",
+                    lineHeight: "20px",
                     color: "var(--ink-muted, #7A7885)",
                   }}
                 >
@@ -570,7 +570,7 @@ function BusinessImpactPage() {
             {/* light blocks */}
             <div
               className="flex flex-col"
-              style={{ gap: fluid(60, 36), marginTop: fluid(96, 52), paddingBottom: fluid(96, 52) }}
+              style={{ gap: fluid(60, 36), marginTop: fluid(80, 44), paddingBottom: fluid(80, 44) }}
             >
               {article.light.map((b) => (
                 <ArticleBlock key={b.title} {...b} />
@@ -583,7 +583,7 @@ function BusinessImpactPage() {
             data-dark-section
             style={{
               background: "#050505",
-              padding: `${fluid(48, 28)} ${fluid(64, 24)}`,
+              padding: `${fluid(60, 32)} ${fluid(60, 24)}`,
               display: "flex",
               flexDirection: "column",
               gap: fluid(60, 36),
