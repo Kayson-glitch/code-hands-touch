@@ -671,8 +671,8 @@ function BusinessImpactPage() {
               className="grid grid-cols-2 gap-10 md:grid-cols-4"
               style={{ paddingTop: fluid(44, 24), paddingBottom: fluid(60, 32) }}
             >
-              {FOOTER_COLUMNS.map((col) => (
-                <div key={col.title} className="flex flex-col">
+              {FOOTER_COLUMNS.map((col, i) => (
+                <Reveal key={col.title} delay={i * 90} y={18} className="flex flex-col">
                   <p
                     style={{
                       margin: 0,
