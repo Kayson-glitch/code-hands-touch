@@ -13,6 +13,10 @@ import { HalftoneHandStill } from "@/components/HalftoneHandStill";
 import { Reveal } from "@/components/Reveal";
 import { FinChatDock } from "@/components/FinChatDock";
 import { ProgressiveBlur } from "@/components/ui/progressive-blur";
+import { getLenis } from "@/lib/smoothScroll";
+
+/** Nav (60) + breathing room, so a targeted module never hugs the header. */
+const ANCHOR_OFFSET = 60 + 40;
 
 export const Route = createFileRoute("/why-synergy/stories")({
   head: () => ({
@@ -692,6 +696,28 @@ function StoriesPage() {
                 <a
                   key={s.id}
                   href={`#${s.id}`}
+                  onClick={(event) => {
+                    const target = document.getElementById(s.id);
+                    if (!target) return;
+                    event.preventDefault();
+                    const lenis = getLenis();
+                    if (lenis) {
+                      // real animated scroll through the page, matching the
+                      // reference site's inertial anchor jump
+                      lenis.scrollTo(target, {
+                        offset: -ANCHOR_OFFSET,
+                        duration: 1.2,
+                      });
+                    } else {
+                      window.scrollTo({
+                        top:
+                          target.getBoundingClientRect().top +
+                          window.scrollY -
+                          ANCHOR_OFFSET,
+                        behavior: "smooth",
+                      });
+                    }
+                  }}
                   className="relative flex items-center transition-colors duration-300"
                   style={{
                     height: 54,
