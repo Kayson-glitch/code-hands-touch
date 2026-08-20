@@ -59,7 +59,7 @@ export function ScrollHint({ visible = true }: { visible?: boolean }) {
       >
       <span
         style={{
-          fontFamily: "'Montserrat', system-ui, sans-serif",
+          fontFamily: "var(--font-sans)",
           fontSize: "clamp(12px, 0.9722vw, 18px)",
           lineHeight: "clamp(18px, 1.3889vw, 26px)",
           fontWeight: 400,
