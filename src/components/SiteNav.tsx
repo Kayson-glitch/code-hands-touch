@@ -234,6 +234,7 @@ const WHY_SYNERGY_ITEMS: Array<{
     dot: "#D1E486",
     kicker: "Stories",
     title: "Stories from the Front Lines",
+    to: "/why-synergy/stories",
     desc: "Multilingual support, risk management, and continuous improvement.",
   },
   {
