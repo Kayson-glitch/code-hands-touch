@@ -242,13 +242,34 @@ function KpiColumn({
   data,
   className,
   style,
+  selected,
+  onSelect,
 }: {
   data: typeof KPI_LEFT;
   className?: string;
   style?: React.CSSProperties;
+  selected: boolean;
+  onSelect: () => void;
 }) {
   return (
-    <div className={className} style={style}>
+    <div
+      role="tab"
+      tabIndex={0}
+      aria-selected={selected}
+      onClick={onSelect}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          onSelect();
+        }
+      }}
+      className={`cursor-pointer transition-colors duration-300 ${className ?? ""}`}
+      style={{
+        background: selected ? "#FFFFFF" : "transparent",
+        opacity: selected ? 1 : 0.62,
+        ...style,
+      }}
+    >
       <p
         className="uppercase"
         style={{
