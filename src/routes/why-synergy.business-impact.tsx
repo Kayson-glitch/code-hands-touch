@@ -663,14 +663,14 @@ function BusinessImpactPage() {
               />
               <span
                 className="font-display"
-                style={{ color: "#FFFFFF", fontSize: 16, lineHeight: "24px", fontWeight: 500 }}
+                style={{ color: "#FFFFFF", fontSize: 18, lineHeight: "24px", fontWeight: 500 }}
               >
                 Synergy.AI
               </span>
             </div>
             <span
               className="hidden md:block"
-              style={{ color: "rgba(255,255,255,0.55)", fontSize: 13, lineHeight: "20px" }}
+              style={{ color: "rgba(255,255,255,0.5)", fontSize: 12, lineHeight: "20px" }}
             >
               Empowering financial institutions with intelligent, secure AI support.
             </span>
