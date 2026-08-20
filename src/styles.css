@@ -861,3 +861,15 @@ html.lenis body {
   .kpi-rule-active { animation: none; width: 600px; }
 }
 
+
+/* Stories sidebar: only the active module carries the flowing brand gradient. */
+.stories-rail-flow {
+  background-image: linear-gradient(90deg, #137DFF 0%, #FF18AA 33.333%, #FFCD17 66.666%, #137DFF 100%);
+  background-size: 120vw 100%;
+  background-repeat: repeat;
+  animation: nav-border-flow 9s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .stories-rail-flow { animation: none; }
+}
