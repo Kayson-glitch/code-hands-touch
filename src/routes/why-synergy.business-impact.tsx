@@ -704,9 +704,9 @@ function BusinessImpactPage() {
         <div aria-hidden style={{ height: 3, backgroundImage: GRADIENT, backgroundSize: "200%" }} />
 
         {/* header row — 80px, bottom hairline spans full width (Figma 1553:20545) */}
-        <div style={{ borderBottom: "1px solid rgba(255,255,255,0.1)" }}>
+        <div style={{ borderBottom: "1px solid rgba(255,255,255,0.1)", height: 80, boxSizing: "border-box" }}>
           <div style={{ padding: pad }}>
-            <div className="mx-auto flex h-20 w-full max-w-[1200px] items-center justify-between gap-6">
+            <div className="mx-auto flex h-full w-full max-w-[1200px] items-center justify-between gap-6">
               <div className="flex items-center gap-2">
                 <span
                   aria-hidden
@@ -784,9 +784,9 @@ function BusinessImpactPage() {
         </div>
 
         {/* bottom bar — 68px, top hairline spans full width (Figma 1553:20582) */}
-        <div style={{ borderTop: "1px solid rgba(255,255,255,0.1)" }}>
+        <div style={{ borderTop: "1px solid rgba(255,255,255,0.1)", boxSizing: "border-box" }} className="md:h-[68px]">
           <div style={{ padding: pad }}>
-            <div className="mx-auto flex w-full max-w-[1200px] flex-col items-start justify-between gap-4 py-7 md:h-[68px] md:flex-row md:items-center md:py-0">
+            <div className="mx-auto flex w-full max-w-[1200px] flex-col items-start justify-between gap-4 py-7 md:h-full md:flex-row md:items-center md:py-0">
               <span style={{ color: "rgba(255,255,255,0.65)", fontSize: 12, lineHeight: "20px", fontWeight: 500 }}>
 
                 © {new Date().getFullYear()} Synergy.AI. All right reserved.
