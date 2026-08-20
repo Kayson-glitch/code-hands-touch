@@ -787,7 +787,7 @@ function BusinessImpactPage() {
         <div style={{ borderTop: "1px solid rgba(255,255,255,0.1)" }}>
           <div style={{ padding: pad }}>
             <div className="mx-auto flex w-full max-w-[1200px] flex-col items-start justify-between gap-4 py-7 md:h-[68px] md:flex-row md:items-center md:py-0">
-              <span style={{ color: "rgba(255,255,255,0.65)", fontSize: 12, lineHeight: "20px" }}>
+              <span style={{ color: "rgba(255,255,255,0.65)", fontSize: 12, lineHeight: "20px", fontWeight: 500, marginTop: 20 }}>
                 © {new Date().getFullYear()} Synergy.AI. All right reserved.
               </span>
               <div className="flex items-center gap-4">
