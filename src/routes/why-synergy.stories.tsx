@@ -806,9 +806,9 @@ function StoriesPage() {
       >
         <div aria-hidden style={{ height: 3, backgroundImage: GRADIENT, backgroundSize: "200%" }} />
 
-        <div style={{ borderBottom: "1px solid rgba(255,255,255,0.1)" }}>
+        <div style={{ borderBottom: "1px solid rgba(255,255,255,0.1)", height: 80, boxSizing: "border-box" }}>
           <div style={{ padding: pad }}>
-            <div className="mx-auto flex h-20 w-full max-w-[1200px] items-center justify-between gap-6">
+            <div className="mx-auto flex h-full w-full max-w-[1200px] items-center justify-between gap-6">
               <div className="flex items-center gap-2">
                 <span
                   aria-hidden
@@ -839,50 +839,53 @@ function StoriesPage() {
           </div>
         </div>
 
-        <div style={{ padding: pad }}>
-          <div className="mx-auto w-full max-w-[1200px]">
-            <div
-              className="grid grid-cols-2 gap-9 md:grid-cols-4"
-              style={{ paddingTop: fluid(44, 24), paddingBottom: fluid(60, 32) }}
-            >
-              {FOOTER_COLUMNS.map((col, i) => (
-                <Reveal key={col.title} delay={i * 90} y={18} className="flex flex-col">
-                  <p
-                    className="capitalize"
-                    style={{
-                      margin: 0,
-                      color: "rgba(255,255,255,0.65)",
-                      fontSize: 12,
-                      lineHeight: "20px",
-                      whiteSpace: "pre-wrap",
-                    }}
-                  >
-                    {col.title}
-                  </p>
-                  <ul className="mt-6 flex flex-col gap-[18px]">
-                    {col.links.map((l) => (
-                      <li key={l}>
-                        <span
-                          className="cursor-pointer transition-opacity hover:opacity-70"
-                          style={{ color: "#FFFFFF", fontSize: 14, lineHeight: "22px" }}
-                        >
-                          {l}
-                        </span>
-                      </li>
-                    ))}
-                  </ul>
-                </Reveal>
-              ))}
+        {/* footer body — Figma 1553:20553: fixed 400px, wordmark absolutely placed */}
+        <div className="relative overflow-hidden" style={{ height: 400 }}>
+          <div className="flex h-full items-center" style={{ padding: pad }}>
+            <div className="mx-auto w-full max-w-[1200px]">
+              <div className="grid grid-cols-2 gap-9 md:grid-cols-4">
+                {FOOTER_COLUMNS.map((col, i) => (
+                  <Reveal key={col.title} delay={i * 90} y={18} className="flex flex-col">
+                    <p
+                      className="capitalize"
+                      style={{
+                        margin: 0,
+                        color: "rgba(255,255,255,0.65)",
+                        fontSize: 12,
+                        lineHeight: "20px",
+                        whiteSpace: "pre-wrap",
+                      }}
+                    >
+                      {col.title}
+                    </p>
+                    <ul className="mt-6 flex flex-col gap-[18px]">
+                      {col.links.map((l) => (
+                        <li key={l}>
+                          <span
+                            className="cursor-pointer transition-opacity hover:opacity-70"
+                            style={{ color: "#FFFFFF", fontSize: 14, lineHeight: "22px" }}
+                          >
+                            {l}
+                          </span>
+                        </li>
+                      ))}
+                    </ul>
+                  </Reveal>
+                ))}
+              </div>
             </div>
+          </div>
+
+          <div className="absolute left-0 w-full" style={{ top: 254 }}>
+            <FitWordmark text="Synergy.AI" />
           </div>
         </div>
 
-        <FitWordmark text="Synergy.AI" />
-
-        <div style={{ borderTop: "1px solid rgba(255,255,255,0.1)" }}>
+        <div style={{ borderTop: "1px solid rgba(255,255,255,0.1)", boxSizing: "border-box" }} className="md:h-[68px]">
           <div style={{ padding: pad }}>
-            <div className="mx-auto flex w-full max-w-[1200px] flex-col items-start justify-between gap-4 py-7 md:h-[68px] md:flex-row md:items-center md:py-0">
-              <span style={{ color: "rgba(255,255,255,0.65)", fontSize: 12, lineHeight: "20px", marginTop: 40 }}>
+            <div className="mx-auto flex w-full max-w-[1200px] flex-col items-start justify-between gap-4 py-7 md:h-full md:flex-row md:items-center md:py-0">
+              <span style={{ color: "rgba(255,255,255,0.65)", fontSize: 12, lineHeight: "20px" }}>
+
                 © {new Date().getFullYear()} Synergy.AI. All right reserved.
               </span>
               <div className="flex items-center gap-4">
