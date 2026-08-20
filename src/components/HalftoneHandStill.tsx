@@ -103,8 +103,19 @@ export function HalftoneHandStill({
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
       ctx.clearRect(0, 0, w, h);
 
-      const cols = Math.max(1, Math.floor(w / pitch));
-      const rows = Math.max(1, Math.floor(h / pitch));
+      // Contain-fit the cropped source so the hand keeps its aspect ratio.
+      const srcAr = (cropW * FRAME_W) / FRAME_H;
+      let drawW = w;
+      let drawH = drawW / srcAr;
+      if (drawH > h) {
+        drawH = h;
+        drawW = drawH * srcAr;
+      }
+      const offX = (w - drawW) * 0.5;
+      const offY = (h - drawH) * 0.5;
+
+      const cols = Math.max(1, Math.floor(drawW / pitch));
+      const rows = Math.max(1, Math.floor(drawH / pitch));
 
       const off = document.createElement("canvas");
       off.width = cols;
@@ -146,8 +157,8 @@ export function HalftoneHandStill({
           const keep = smoothstep((density - MIN_DENSITY) / 0.22);
           if (hash2(i, j) > 0.16 + keep * 0.84) continue;
 
-          const cxp = (i + 0.5) * pitch;
-          const cyp = (j + 0.5) * pitch;
+          const cxp = offX + (i + 0.5) * pitch;
+          const cyp = offY + (j + 0.5) * pitch;
           const r = Math.max(0.35, Math.sqrt(density) * half * DOT_FILL);
           const [ri, gi, bi] = inkAt(density);
           ctx.fillStyle = `rgb(${ri},${gi},${bi})`;
