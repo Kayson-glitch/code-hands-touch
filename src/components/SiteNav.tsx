@@ -153,7 +153,7 @@ export function SiteNav() {
           <div className="pointer-events-auto flex shrink-0 items-center gap-2.5">
             <button
               className="px-4 py-[7px] capitalize"
-              style={{ fontSize: 14, lineHeight: "22px", color: inkStrong }}
+              style={{ fontSize: 13, lineHeight: "20px", color: inkStrong }}
             >
               Log in
             </button>
