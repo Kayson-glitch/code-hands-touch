@@ -10,11 +10,17 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as WhySynergyStoriesRouteImport } from './routes/why-synergy.stories'
 import { Route as WhySynergyBusinessImpactRouteImport } from './routes/why-synergy.business-impact'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const WhySynergyStoriesRoute = WhySynergyStoriesRouteImport.update({
+  id: '/why-synergy/stories',
+  path: '/why-synergy/stories',
   getParentRoute: () => rootRouteImport,
 } as any)
 const WhySynergyBusinessImpactRoute =
@@ -27,27 +33,31 @@ const WhySynergyBusinessImpactRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/why-synergy/business-impact': typeof WhySynergyBusinessImpactRoute
+  '/why-synergy/stories': typeof WhySynergyStoriesRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/why-synergy/business-impact': typeof WhySynergyBusinessImpactRoute
+  '/why-synergy/stories': typeof WhySynergyStoriesRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/why-synergy/business-impact': typeof WhySynergyBusinessImpactRoute
+  '/why-synergy/stories': typeof WhySynergyStoriesRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/why-synergy/business-impact'
+  fullPaths: '/' | '/why-synergy/business-impact' | '/why-synergy/stories'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/why-synergy/business-impact'
-  id: '__root__' | '/' | '/why-synergy/business-impact'
+  to: '/' | '/why-synergy/business-impact' | '/why-synergy/stories'
+  id: '__root__' | '/' | '/why-synergy/business-impact' | '/why-synergy/stories'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   WhySynergyBusinessImpactRoute: typeof WhySynergyBusinessImpactRoute
+  WhySynergyStoriesRoute: typeof WhySynergyStoriesRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -57,6 +67,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/why-synergy/stories': {
+      id: '/why-synergy/stories'
+      path: '/why-synergy/stories'
+      fullPath: '/why-synergy/stories'
+      preLoaderRoute: typeof WhySynergyStoriesRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/why-synergy/business-impact': {
@@ -72,6 +89,7 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   WhySynergyBusinessImpactRoute: WhySynergyBusinessImpactRoute,
+  WhySynergyStoriesRoute: WhySynergyStoriesRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
