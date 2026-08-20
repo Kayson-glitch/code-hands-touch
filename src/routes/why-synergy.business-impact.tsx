@@ -197,41 +197,54 @@ function KpiColumn({
   return (
     <div className={className} style={style}>
       <p
-        className="uppercase text-ink-faint"
-        style={{ fontSize: 13, lineHeight: "22px", letterSpacing: "0.06em", margin: 0 }}
+        className="uppercase"
+        style={{
+          fontSize: 12,
+          lineHeight: "18px",
+          letterSpacing: "0.08em",
+          margin: 0,
+          color: "var(--ink-faint, #A1A0A9)",
+        }}
       >
         {data.kicker}
       </p>
       <p
         className="font-display text-ink"
         style={{
-          margin: `${fluid(42, 24)} 0 0`,
+          margin: `${fluid(40, 24)} 0 0`,
           fontSize: fluid(100, 48),
-          lineHeight: 1.05,
+          lineHeight: 1,
           fontWeight: 500,
+          letterSpacing: "-0.01em",
         }}
       >
         {data.value}
-        <span className="text-ink-ghost" style={{ fontSize: fluid(48, 26) }}>
+        <span
+          style={{ fontSize: fluid(40, 22), color: "var(--ink-ghost, #C7C6CD)", marginLeft: 6 }}
+        >
           {data.unit}
         </span>
       </p>
       <p
-        className="text-ink-muted"
-        style={{ margin: "12px 0 0", fontSize: 16, lineHeight: "24px" }}
+        style={{
+          margin: `${fluid(30, 18)} 0 0`,
+          fontSize: 14,
+          lineHeight: "22px",
+          color: "var(--ink-muted, #7A7885)",
+        }}
       >
         {data.caption}
       </p>
 
-      <div style={{ margin: `${fluid(40, 28)} 0` }}>
-        <Hairline />
+      <div style={{ margin: `${fluid(40, 28)} 0 ${fluid(44, 30)}` }}>
+        <Hairline dashed />
       </div>
 
       <ul className="flex flex-col gap-6">
         {data.bullets.map((b, i) => (
           <li key={b} className="flex items-start gap-[10px]">
             <Bullet diamond={i % 2 === 0} />
-            <span className="text-ink" style={{ fontSize: 15, lineHeight: "22px" }}>
+            <span className="text-ink" style={{ fontSize: 13, lineHeight: "22px" }}>
               {b}
             </span>
           </li>
