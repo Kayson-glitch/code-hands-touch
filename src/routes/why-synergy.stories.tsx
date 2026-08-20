@@ -655,7 +655,7 @@ function StoriesPage() {
           <nav
             aria-label="Stories"
             className="shrink-0 md:sticky"
-            style={{ width: 200, top: 83, background: "#FFFFFF" }}
+            style={{ width: 180, top: 83, marginRight: 20 }}
           >
             {STORIES.map((s) => {
               const on = active === s.id;
@@ -672,7 +672,6 @@ function StoriesPage() {
                     fontSize: 12,
                     lineHeight: "20px",
                     color: "#0E0B22",
-                    background: "#FFFFFF",
                     opacity: on ? 1 : 0.55,
                   }}
                 >
