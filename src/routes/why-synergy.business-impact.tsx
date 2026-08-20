@@ -582,7 +582,7 @@ function BusinessImpactPage() {
               style={{ gap: fluid(60, 36), marginTop: fluid(80, 44), paddingBottom: fluid(80, 44) }}
             >
               {article.light.map((b, i) => (
-                <ArticleBlock key={b.title} {...b} delay={i * 110} />
+                <ArticleBlock key={b.title} {...b} delay={i * 160} duration={1100} />
               ))}
             </div>
           </div>
