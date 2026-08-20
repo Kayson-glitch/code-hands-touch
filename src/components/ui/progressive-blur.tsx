@@ -43,11 +43,14 @@ const ProgressiveBlur = ({
       targets.push(...Array.from(document.querySelectorAll<HTMLElement>(hiddenWhenSelector)));
     }
     if (targets.length === 0) return;
+    const visible = new Set<Element>();
     const io = new IntersectionObserver(
       (entries) => {
-        // Hide if any observed target is currently intersecting.
-        const anyVisible = entries.some((e) => e.isIntersecting);
-        setHidden(anyVisible);
+        for (const e of entries) {
+          if (e.isIntersecting) visible.add(e.target);
+          else visible.delete(e.target);
+        }
+        setHidden(visible.size > 0);
       },
       { threshold: 0.01 },
     );
