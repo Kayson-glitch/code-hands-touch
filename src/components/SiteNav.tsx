@@ -173,7 +173,7 @@ export function SiteNav() {
                 fontSize: 12,
                 lineHeight: "20px",
                 padding: "0 14px",
-                borderRadius: onDark ? 12 : 6,
+                borderRadius: 8,
                 color: onDark ? "#0E0B22" : "#FFFFFF",
                 background: onDark ? "#FFFFFF" : "#0E0B22",
                 border: `1px solid ${onDark ? "#FFFFFF" : "#0E0B22"}`,
