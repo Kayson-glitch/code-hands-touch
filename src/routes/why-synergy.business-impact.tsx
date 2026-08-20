@@ -460,23 +460,50 @@ function BusinessImpactPage() {
       </header>
 
       {/* ------------------------------------------------------------ KPIs */}
-      <section style={{ padding: pad }}>
+      <section style={{ padding: pad }} role="tablist" aria-label="Business impact metrics">
         <div className="mx-auto w-full max-w-[1200px]">
-          {/* section rule: brand gradient across the first half, hairline after */}
+          {/* section rule: brand gradient over the selected half, hairline after */}
           <div aria-hidden className="flex" style={{ height: 2 }}>
-            <div style={{ width: "49%", backgroundImage: GRADIENT, opacity: 0.55 }} />
-            <div style={{ flex: 1, background: "#ECEBEF" }} />
+            <div
+              className="transition-all duration-300"
+              style={{
+                width: "49%",
+                backgroundImage: tab === "roi" ? GRADIENT : undefined,
+                background: tab === "roi" ? undefined : "#ECEBEF",
+                opacity: tab === "roi" ? 0.55 : 1,
+              }}
+            />
+            <div
+              className="flex-1 transition-all duration-300"
+              style={{
+                backgroundImage: tab === "impact" ? GRADIENT : undefined,
+                background: tab === "impact" ? undefined : "#ECEBEF",
+                opacity: tab === "impact" ? 0.55 : 1,
+              }}
+            />
           </div>
 
-          <div
-            className="grid gap-y-[clamp(48px,5vw,72px)] md:grid-cols-2"
-            style={{ paddingTop: fluid(70, 40) }}
-          >
-            <KpiColumn data={KPI_LEFT} style={{ paddingRight: fluid(60, 0) }} />
+          <div className="grid md:grid-cols-2">
+            <KpiColumn
+              data={KPI_LEFT}
+              selected={tab === "roi"}
+              onSelect={() => setTab("roi")}
+              style={{
+                paddingRight: fluid(60, 0),
+                paddingLeft: fluid(40, 0),
+                paddingTop: fluid(70, 40),
+                paddingBottom: fluid(70, 40),
+              }}
+            />
             <KpiColumn
               data={KPI_RIGHT}
+              selected={tab === "impact"}
+              onSelect={() => setTab("impact")}
               style={{
                 paddingLeft: fluid(52, 0),
+                paddingRight: fluid(40, 0),
+                paddingTop: fluid(70, 40),
+                paddingBottom: fluid(70, 40),
                 borderLeft: "1px solid var(--hairline, #E1E0E4)",
               }}
               className="md:border-l"
@@ -484,6 +511,7 @@ function BusinessImpactPage() {
           </div>
         </div>
       </section>
+
 
       {/* -------------------------------------------------------- article */}
       <section style={{ padding: pad, marginTop: fluid(72, 40) }}>
