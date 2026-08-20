@@ -549,6 +549,10 @@ function BusinessImpactPage() {
               className="md:border-l"
             />
           </div>
+
+          {/* closing hairline under the KPI block */}
+          <div aria-hidden style={{ height: 1, background: "var(--hairline, #E1E0E4)" }} />
+
         </Reveal>
       </section>
 
