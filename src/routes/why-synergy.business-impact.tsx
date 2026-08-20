@@ -706,7 +706,7 @@ function BusinessImpactPage() {
 
         {/* header row — 80px, bottom hairline spans full width (Figma 1553:20545) */}
         <div style={{ borderBottom: "1px solid rgba(255,255,255,0.1)", height: 80, boxSizing: "border-box" }}>
-          <div style={{ padding: pad }}>
+          <div className="h-full" style={{ padding: pad }}>
             <div className="mx-auto grid h-full w-full max-w-[1200px] grid-cols-2 items-center gap-9 md:grid-cols-4">
               <div className="flex items-center justify-start gap-2">
                 <span
@@ -786,7 +786,7 @@ function BusinessImpactPage() {
 
         {/* bottom bar — 68px, top hairline spans full width (Figma 1553:20582) */}
         <div style={{ borderTop: "1px solid rgba(255,255,255,0.1)", boxSizing: "border-box" }} className="md:h-[68px]">
-          <div style={{ padding: pad }}>
+          <div className="h-full" style={{ padding: pad }}>
             <div className="mx-auto grid w-full max-w-[1200px] grid-cols-2 items-center gap-9 py-7 md:h-full md:grid-cols-4 md:py-0">
               <span className="flex justify-start" style={{ color: "rgba(255,255,255,0.65)", fontSize: 12, lineHeight: "20px", fontWeight: 500 }}>
 
