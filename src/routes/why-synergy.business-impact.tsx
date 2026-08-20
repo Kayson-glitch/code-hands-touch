@@ -806,3 +806,52 @@ function BusinessImpactPage() {
 }
 
 export default BusinessImpactPage;
+
+/** Wordmark that fills its container width by uniform font scaling (no glyph stretching). */
+function FitWordmark({ text }: { text: string }) {
+  const boxRef = useRef<HTMLDivElement>(null);
+  const textRef = useRef<HTMLSpanElement>(null);
+  const [size, setSize] = useState(200);
+
+  const fit = () => {
+    const box = boxRef.current;
+    const el = textRef.current;
+    if (!box || !el) return;
+    const probe = 200;
+    el.style.fontSize = `${probe}px`;
+    const w = el.scrollWidth;
+    if (w > 0) setSize((probe * box.clientWidth) / w);
+  };
+
+  useLayoutEffect(fit);
+  useEffect(() => {
+    window.addEventListener("resize", fit);
+    if (document.fonts?.ready) document.fonts.ready.then(fit);
+    return () => window.removeEventListener("resize", fit);
+  }, []);
+
+  return (
+    <div
+      ref={boxRef}
+      aria-hidden
+      className="pointer-events-none w-full select-none overflow-hidden"
+      style={{ lineHeight: 0 }}
+    >
+      <span
+        ref={textRef}
+        className="font-display block whitespace-nowrap"
+        style={{
+          fontSize: size,
+          lineHeight: 0.8,
+          fontWeight: 500,
+          letterSpacing: "-0.02em",
+          color: "rgba(255,255,255,0.08)",
+          display: "inline-block",
+          transform: "translateY(12%)",
+        }}
+      >
+        {text}
+      </span>
+    </div>
+  );
+}
