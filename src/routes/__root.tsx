@@ -113,7 +113,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       },
       {
         rel: "stylesheet",
-        href: "https://api.fontshare.com/v2/css?f[]=clash-display@500,600&display=swap",
+        href: "https://api.fontshare.com/v2/css?f[]=clash-display@variable,400,500,600&display=swap",
       },
     ],
   }),
