@@ -310,70 +310,90 @@ function BusinessImpactPage() {
       <SiteNav revealDelay={0} />
 
       {/* ------------------------------------------------------------ hero */}
-      <header className="relative overflow-hidden" style={{ padding: pad }}>
-        <div className="relative mx-auto w-full max-w-[1200px]">
-          <div
-            className="relative z-10"
-            style={{ maxWidth: 680, paddingTop: fluid(162, 108), paddingBottom: fluid(172, 80) }}
-          >
-            <div className="flex items-center gap-2">
-              <span aria-hidden style={{ width: 8, height: 8, background: "#0E0B22" }} />
-              <span className="text-ink" style={{ fontSize: 14, lineHeight: "22px" }}>
-                Impact
-              </span>
-            </div>
+      <header className="relative overflow-hidden">
+        {/* single halftone hand — bleeds off the right viewport edge */}
+        <HalftoneHandStill
+          cropX={0.5}
+          cropW={0.5}
+          cropY={0.32}
+          cropH={0.52}
+          pitch={6}
+          className="pointer-events-none absolute right-0 select-none"
+          style={{
+            top: fluid(112, 64),
+            width: fluid(640, 320),
+            height: fluid(356, 178),
+          }}
+        />
 
-            <h1
-              className="font-display text-ink"
-              style={{
-                margin: `${fluid(32, 20)} 0 0`,
-                fontSize: fluid(40, 28),
-                lineHeight: 1.4,
-                fontWeight: 500,
-              }}
+        <div style={{ padding: pad }}>
+          <div className="relative mx-auto w-full max-w-[1200px]">
+            <div
+              className="relative z-10"
+              style={{ maxWidth: 620, paddingTop: fluid(162, 104), paddingBottom: fluid(112, 64) }}
             >
-              From AI Support to
-              <br />
-              Measurable Business Value
-            </h1>
+              <div className="flex items-center gap-2">
+                <span aria-hidden style={{ width: 5, height: 5, background: ACCENT }} />
+                <span
+                  className="uppercase"
+                  style={{
+                    fontSize: 12,
+                    lineHeight: "18px",
+                    letterSpacing: "0.08em",
+                    color: "var(--ink-faint, #A1A0A9)",
+                  }}
+                >
+                  Impact
+                </span>
+              </div>
 
-            <p
-              className="text-ink-muted"
-              style={{
-                margin: "22px 0 0",
-                maxWidth: 563,
-                fontSize: 15,
-                lineHeight: "24px",
-              }}
-            >
-              Every claim on this page is traceable to a number: resolution rate, cost per contact,
-              and the assumptions behind the model.
-            </p>
+              <h1
+                className="font-display text-ink"
+                style={{
+                  margin: `${fluid(34, 22)} 0 0`,
+                  fontSize: fluid(48, 30),
+                  lineHeight: 1.17,
+                  fontWeight: 500,
+                  letterSpacing: "-0.01em",
+                }}
+              >
+                Resolving 55% of conversations
+              </h1>
 
-            <div style={{ marginTop: fluid(40, 28) }}>
-              <RainbowButton label="Book a Demo" />
+              <p
+                style={{
+                  margin: `${fluid(20, 14)} 0 0`,
+                  maxWidth: 470,
+                  fontSize: 14,
+                  lineHeight: "22px",
+                  color: "var(--ink-muted, #7A7885)",
+                }}
+              >
+                Resolving 55% of conversations across 200K monthly inquiries, with a clear path to
+                lower operating costs.
+              </p>
+
+              <div style={{ marginTop: fluid(26, 20) }}>
+                <RainbowButton label="Book a Demo" />
+              </div>
             </div>
           </div>
-
-          {/* single halftone hand, right side of the hero */}
-          <HalftoneHandStill
-            cropX={0.5}
-            cropW={0.5}
-            className="pointer-events-none absolute right-0 select-none"
-            style={{
-              top: fluid(40, 0),
-              width: "51.4%",
-              height: fluid(425, 220),
-              maxWidth: 741,
-            }}
-          />
         </div>
       </header>
 
       {/* ------------------------------------------------------------ KPIs */}
       <section style={{ padding: pad }}>
         <div className="mx-auto w-full max-w-[1200px]">
-          <div className="grid gap-y-[clamp(48px,5vw,72px)] md:grid-cols-2">
+          {/* section rule: brand gradient across the first half, hairline after */}
+          <div aria-hidden className="flex" style={{ height: 2 }}>
+            <div style={{ width: "49%", backgroundImage: GRADIENT, opacity: 0.55 }} />
+            <div style={{ flex: 1, background: "#ECEBEF" }} />
+          </div>
+
+          <div
+            className="grid gap-y-[clamp(48px,5vw,72px)] md:grid-cols-2"
+            style={{ paddingTop: fluid(70, 40) }}
+          >
             <KpiColumn data={KPI_LEFT} style={{ paddingRight: fluid(60, 0) }} />
             <KpiColumn
               data={KPI_RIGHT}
