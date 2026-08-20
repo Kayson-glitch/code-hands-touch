@@ -65,6 +65,9 @@ type Props = {
   /** Horizontal crop of the source frame, 0..1. Defaults to the right hand. */
   cropX?: number;
   cropW?: number;
+  /** Vertical crop of the source frame, 0..1. */
+  cropY?: number;
+  cropH?: number;
   /** Dot pitch in CSS px. */
   pitch?: number;
   className?: string;
@@ -75,6 +78,8 @@ export function HalftoneHandStill({
   frame = FRAME_COUNT - 1,
   cropX = 0.44,
   cropW = 0.56,
+  cropY = 0,
+  cropH = 1,
   pitch = 5,
   className,
   style,
