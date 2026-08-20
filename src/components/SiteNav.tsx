@@ -130,8 +130,11 @@ export function SiteNav() {
           {/* Center menu */}
           <ul
             className="pointer-events-auto hidden flex-1 items-center justify-center gap-2.5 md:flex"
-            style={{ fontSize: 14, lineHeight: "22px" }}
+            style={{ fontSize: 13, lineHeight: "20px" }}
           >
+            <li className={navItem} style={{ color: inkSoft }}>
+              Why Synergy
+            </li>
             <li className={navItem} style={{ color: inkStrong }}>
               Platform <Chevron />
             </li>
