@@ -58,13 +58,22 @@ export function SiteNav() {
   }, []);
 
   void theme;
+  const [hovered, setHovered] = useState<number | null>(null);
   const navItem =
-    "flex cursor-pointer items-center gap-1.5 p-4 capitalize transition-colors duration-200 hover:opacity-80";
+    "flex cursor-pointer items-center gap-1.5 p-4 capitalize transition-colors duration-200";
   // Light variant (first screen) / dark variant (black second screen, per Figma).
   const glassBg = onDark ? "rgba(10,10,10,0.72)" : "rgba(250,250,250,0.72)";
   const inkStrong = onDark ? "#FFFFFF" : "#0E0B22";
   const inkSoft = "#7A7885";
   const hairline = onDark ? "rgba(255,255,255,0.15)" : "#F1F1F3";
+  // Hover/selected pill: light gray fill on light surfaces, white-translucent on dark.
+  const hoverBg = onDark ? "rgba(255,255,255,0.10)" : "#F3F4F6";
+  const itemStyle = (i: number) => ({
+    color: hovered === i ? inkStrong : inkSoft,
+    background: hovered === i ? hoverBg : "transparent",
+    borderRadius: 6,
+    transition: "color 200ms ease, background 200ms ease",
+  });
 
 
   return (
