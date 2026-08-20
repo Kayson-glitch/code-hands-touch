@@ -348,12 +348,24 @@ function ArticleBlock({
 }: {
   icon: typeof MapIcon;
   title: string;
-  body: string;
+  body: string | BodySegment[];
   divider: boolean;
   dark?: boolean;
   delay?: number;
   duration?: number;
 }) {
+  const bodyEl = Array.isArray(body) ? (
+    body.map((seg, i) => (
+      <span
+        key={i}
+        style={seg.highlight ? { color: "var(--ink, #0E0B22)" } : undefined}
+      >
+        {seg.text}
+      </span>
+    ))
+  ) : (
+    body
+  );
   return (
     <Reveal delay={delay} y={20} duration={duration}>
       <Icon size={24} strokeWidth={1.5} color={dark ? "#FFFFFF" : "#0E0B22"} />
@@ -373,12 +385,12 @@ function ArticleBlock({
         style={{
           margin: "20px 0 0",
           maxWidth: 1000,
-          fontSize: 13,
+          fontSize: 14,
           lineHeight: "22px",
-          color: dark ? "rgba(255,255,255,0.58)" : "var(--ink-muted, #7A7885)",
+          color: dark ? "rgba(255,255,255,0.5)" : "var(--ink-muted, #7A7885)",
         }}
       >
-        {body}
+        {bodyEl}
       </p>
       {divider ? (
         <div style={{ marginTop: fluid(60, 36) }}>
