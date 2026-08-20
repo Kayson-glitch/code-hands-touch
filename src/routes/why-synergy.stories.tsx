@@ -661,10 +661,11 @@ function StoriesPage() {
           </nav>
 
           {/* content column */}
-          <div className="min-w-0 flex-1 overflow-hidden">
-            {STORIES.map((s) => (
-              <StoryArticle key={s.id} story={s} />
+          <div className="flex min-w-0 flex-1 flex-col overflow-hidden" style={{ gap: 80 }}>
+            {STORIES.map((s, i) => (
+              <StoryArticle key={s.id} story={s} first={i === 0} />
             ))}
+
           </div>
         </div>
       </section>
