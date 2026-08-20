@@ -477,7 +477,7 @@ function BusinessImpactPage() {
                   style={{
                     margin: "10px 0 0",
                     maxWidth: 563,
-                    fontSize: 14,
+                    fontSize: 16,
                     lineHeight: "24px",
                     color: "var(--ink-muted, #7A7885)",
                   }}
