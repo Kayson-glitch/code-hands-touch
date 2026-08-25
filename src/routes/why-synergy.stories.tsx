@@ -59,9 +59,9 @@ function RainbowButton({ label }: { label: string }) {
       style={{
         height: 36,
         fontSize: 14,
-        lineHeight: "22px",
-        fontWeight: 500,
-        padding: "0 24px",
+        lineHeight: "20px",
+        fontWeight: 400,
+        padding: "0 20px",
         borderRadius: 2,
         borderBottom: "1.5px solid transparent",
         color: "#FFFFFF",
