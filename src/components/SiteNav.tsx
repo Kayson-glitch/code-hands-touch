@@ -383,7 +383,7 @@ function Chevron({ flipped }: { flipped?: boolean }) {
       }}
     >
       {dots.map(([x, y]) => (
-        <circle key={`${x}-${y}`} cx={x + 0.5} cy={y + 0.5} r={0.65} fill="currentColor" />
+        <circle key={`${x}-${y}`} cx={x + 0.5} cy={y + 0.5} r={0.35} fill="currentColor" />
       ))}
     </svg>
   );
