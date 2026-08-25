@@ -254,15 +254,20 @@ const WHY_SYNERGY_ITEMS: Array<{
 function WhySynergyMenu({ open }: { open: boolean }) {
   const [hover, setHover] = useState<number | null>(null);
   const navigate = useNavigate();
+  // Spring-ish easing for the panel reveal.
+  const PANEL_EASE = "cubic-bezier(0.22, 1, 0.36, 1)";
 
   return (
     <div
       className="absolute left-0 top-full pt-2"
       style={{
         opacity: open ? 1 : 0,
-        transform: open ? "translateY(0)" : "translateY(-6px)",
+        transform: open
+          ? "translateY(0) scale(1)"
+          : "translateY(-10px) scale(0.96)",
+        transformOrigin: "top left",
         pointerEvents: open ? "auto" : "none",
-        transition: "opacity 200ms ease, transform 200ms ease",
+        transition: `opacity 240ms ${PANEL_EASE}, transform 320ms ${PANEL_EASE}`,
       }}
     >
       <div
@@ -274,11 +279,23 @@ function WhySynergyMenu({ open }: { open: boolean }) {
           background: "#FFFFFF",
           border: "1px solid #F1F1F3",
           boxShadow: "0px 12px 36px 0px rgba(0,0,0,0.10)",
+          // Clip-path wipe so the card grows open from the top-left corner.
+          clipPath: open
+            ? "inset(0 0 0 0 round 16px)"
+            : "inset(0 100% 100% 0 round 16px)",
+          transition: `clip-path 360ms ${PANEL_EASE}`,
         }}
       >
         <span
           className="capitalize text-center whitespace-nowrap"
-          style={{ fontSize: 14, lineHeight: "20px", color: "#7A7885" }}
+          style={{
+            fontSize: 14,
+            lineHeight: "20px",
+            color: "#7A7885",
+            opacity: open ? 1 : 0,
+            transform: open ? "translateY(0)" : "translateY(-6px)",
+            transition: `opacity 200ms ${PANEL_EASE} 80ms, transform 240ms ${PANEL_EASE} 80ms`,
+          }}
         >
           / why synergy
         </span>
@@ -306,7 +323,9 @@ function WhySynergyMenu({ open }: { open: boolean }) {
                 background: hover === i ? "#F8F8F9" : "transparent",
                 borderRight: i % 2 === 0 ? "1px solid #E1E0E4" : "none",
                 borderBottom: i < 2 ? "1px solid #E1E0E4" : "none",
-                transition: "background 180ms ease",
+                opacity: open ? 1 : 0,
+                transform: open ? "translateY(0)" : "translateY(8px)",
+                transition: `background 180ms ease, opacity 260ms ${PANEL_EASE} ${120 + i * 60}ms, transform 300ms ${PANEL_EASE} ${120 + i * 60}ms`,
               }}
             >
               <div className="flex items-center" style={{ gap: 8 }}>
