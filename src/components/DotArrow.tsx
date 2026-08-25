@@ -54,10 +54,19 @@ export function DotArrow({
         transform: direction === "up" ? "rotate(-90deg)" : undefined,
       }}
     >
-      {/* Chevron head — always resident. */}
-      {CHEVRON_DOTS.map(([c, r]) => (
-        <circle key={`c-${c}-${r}`} cx={c * 2 + 1} cy={r * 2 + 1} r={0.65} fill="currentColor" />
-      ))}
+      {/* Chevron head — always resident; nudges outward as the shaft connects. */}
+      <g
+        className={
+          connectOnHover
+            ? "transition-transform duration-300 ease-out group-hover:translate-x-[1.5px]"
+            : undefined
+        }
+      >
+        {CHEVRON_DOTS.map(([c, r]) => (
+          <circle key={`c-${c}-${r}`} cx={c * 2 + 1} cy={r * 2 + 1} r={0.65} fill="currentColor" />
+        ))}
+      </g>
+
 
       {/* Shaft — connects into an arrow on hover. */}
       {SHAFT_DOTS.map(([c, r]) => {
