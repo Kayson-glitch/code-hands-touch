@@ -44,7 +44,7 @@ export function DotArrow({
           key={`${c}-${r}`}
           cx={c * 2 + 1}
           cy={r * 2 + 1}
-          r={0.85}
+          r={0.65}
           fill="currentColor"
         />
       ))}
