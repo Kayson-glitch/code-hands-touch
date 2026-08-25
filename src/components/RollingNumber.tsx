@@ -73,6 +73,7 @@ export function RollingNumber({
             key={`${ch}-${i}`}
             aria-hidden
             style={{
+              position: "relative",
               display: "inline-block",
               height: "1em",
               overflow: "hidden",
@@ -80,8 +81,15 @@ export function RollingNumber({
               lineHeight: "1em",
             }}
           >
+            {/* width sizer: the final digit only, so narrow digits keep their own width */}
+            <span style={{ visibility: "hidden", display: "block", height: "1em", lineHeight: "1em" }}>
+              {ch}
+            </span>
             <span
               style={{
+                position: "absolute",
+                left: 0,
+                top: 0,
                 display: "block",
                 transform: `translateY(-${offset}em)`,
                 transition: `transform ${duration}ms cubic-bezier(0.16, 1, 0.3, 1) ${delay}ms`,
@@ -91,13 +99,20 @@ export function RollingNumber({
               {Array.from({ length: 21 }, (_, n) => (
                 <span
                   key={n}
-                  style={{ display: "block", height: "1em", lineHeight: "1em" }}
+                  style={{
+                    display: "flex",
+                    justifyContent: "center",
+                    height: "1em",
+                    lineHeight: "1em",
+                    width: "100%",
+                  }}
                 >
                   {n % 10}
                 </span>
               ))}
             </span>
           </span>
+
         );
       })}
       <span className="sr-only">{value}</span>
