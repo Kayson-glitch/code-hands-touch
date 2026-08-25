@@ -13,9 +13,6 @@ const CARDS = [
 
 
 const START_Y = 320;
-// Original entry timing (reference site) — first card reveals as usual.
-const START_OFFSET_RATIO = 0.25;
-const END_OFFSET_RATIO = 0.8;
 // Give the dot-matrix artwork a dedicated entrance before the card begins
 // travelling upward. The two phases meet without a scroll dead zone.
 const ARTWORK_REVEAL_PHASE = 0.42;
@@ -82,11 +79,16 @@ export function MetricsSection() {
     const update = () => {
       frame = 0;
       const wrapper = wrapperRef.current;
-      if (!wrapper) return;
+      const sticky = stickyRef.current;
+      if (!wrapper || !sticky) return;
       const rect = wrapper.getBoundingClientRect();
-      const wh = window.innerHeight;
-      const scrolled = wh - rect.top - wh * START_OFFSET_RATIO;
-      const distance = Math.max(1, rect.height - wh * END_OFFSET_RATIO);
+      const stickyStyle = window.getComputedStyle(sticky);
+      const stickyTop = Number.parseFloat(stickyStyle.top) || 0;
+      // Start only when the section has actually reached its sticky position.
+      // Previously the viewport-height offset advanced the first card before
+      // the section arrived, so its dot artwork was already above the viewport.
+      const scrolled = stickyTop - rect.top;
+      const distance = Math.max(1, rect.height - sticky.getBoundingClientRect().height);
       setProgress(clamp(scrolled / distance));
     };
 
