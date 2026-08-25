@@ -1,11 +1,12 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowRight, MessageSquareCode, Map as MapIcon, Linkedin, Twitter, Youtube } from "lucide-react";
+import { MessageSquareCode, Map as MapIcon, Linkedin, Twitter, Youtube } from "lucide-react";
 import { SiteNav } from "@/components/SiteNav";
 import { HalftoneHandStill } from "@/components/HalftoneHandStill";
 import { Reveal } from "@/components/Reveal";
 import { FinChatDock } from "@/components/FinChatDock";
 import { GradientHoverHeading } from "@/components/GradientHoverHeading";
+import { DotArrow } from "@/components/DotArrow";
 
 
 export const Route = createFileRoute("/why-synergy/business-impact")({
@@ -82,7 +83,7 @@ function RainbowButton({ label, size = "lg" }: { label: string; size?: "lg" | "s
       <span className="relative z-10 inline-flex items-center gap-0">
         {label}
         <span className="inline-flex max-w-0 overflow-hidden opacity-0 transition-all duration-300 ease-out group-hover:ml-1.5 group-hover:max-w-[20px] group-hover:opacity-100">
-          <ArrowRight size={16} strokeWidth={2} className="relative -top-px flex-shrink-0" />
+          <DotArrow size={16} className="relative -top-px flex-shrink-0" />
         </span>
       </span>
     </button>

@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
-import { Mic, Paperclip, ArrowUp } from "lucide-react";
+import { Mic, Paperclip } from "lucide-react";
+import { DotArrow } from "@/components/DotArrow";
 
 const SUGGESTIONS = [
   "What can Fin do for me?",
@@ -330,7 +331,7 @@ export function FinChatDock({ alwaysVisible = false }: { alwaysVisible?: boolean
               transition: "background-color 200ms ease, color 200ms ease, opacity 200ms ease",
             }}
           >
-            <ArrowUp size={24} />
+            <DotArrow size={24} direction="up" />
           </button>
         </div>
 
