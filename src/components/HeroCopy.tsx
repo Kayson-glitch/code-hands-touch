@@ -70,7 +70,7 @@ export function HeroCopy() {
         </div>
 
         <button
-          className="pointer-events-auto group relative inline-flex shrink-0 cursor-pointer items-center justify-center font-medium transition-all"
+          className="pointer-events-auto group relative inline-flex shrink-0 cursor-pointer items-center justify-center font-normal transition-all"
           style={{
             height: 36,
             fontSize: 14,
