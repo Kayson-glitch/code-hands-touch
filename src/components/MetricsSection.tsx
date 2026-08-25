@@ -13,14 +13,16 @@ const CARDS = [
 
 
 const START_Y = 320;
-// Sequence only begins once the module is essentially pinned at the top.
-const START_OFFSET_RATIO = 0.95;
-// Dead zone after the start so the first card sits still and readable first.
-const HOLD_RATIO = 0.2;
+// Original entry timing (reference site) — first card reveals as usual.
+const START_OFFSET_RATIO = 0.25;
+// After the first card has settled, hold for ~1 viewport of scroll before the
+// rest of the sequence continues.
+const HOLD_VH = 1;
 const END_OFFSET_RATIO = 0.8;
 const clamp = (value: number) => Math.max(0, Math.min(1, value));
 // Reference site eases each column's reveal instead of translating linearly.
 const easeOutCubic = (x: number) => 1 - Math.pow(1 - x, 3);
+
 
 export function MetricsSection() {
   const wrapperRef = useRef<HTMLDivElement | null>(null);
@@ -85,11 +87,22 @@ export function MetricsSection() {
       if (!wrapper) return;
       const rect = wrapper.getBoundingClientRect();
       const wh = window.innerHeight;
-      // Start only once the module is pinned, then hold before the sequence runs.
-      const scrolled = wh - rect.top - wh * START_OFFSET_RATIO - wh * HOLD_RATIO;
-      const distance = Math.max(1, rect.height - wh * (HOLD_RATIO + END_OFFSET_RATIO));
-      setProgress(clamp(scrolled / distance));
+      const scrolled = wh - rect.top - wh * START_OFFSET_RATIO;
+      const distance = Math.max(1, rect.height - wh * END_OFFSET_RATIO);
+      const raw = clamp(scrolled / distance);
+      // Insert a dead zone right after the first column has settled: the card
+      // stays put for ~1 viewport of scrolling, then the sequence resumes.
+      const holdFrac = clamp((wh * HOLD_VH) / distance);
+      const span = Math.max(0.0001, 1 - holdFrac);
+      const first = 1 / CARDS.length;
+      const holdStart = first * span;
+      let mapped: number;
+      if (raw <= holdStart) mapped = raw / span;
+      else if (raw <= holdStart + holdFrac) mapped = first;
+      else mapped = first + (raw - holdStart - holdFrac) / span;
+      setProgress(clamp(mapped));
     };
+
     const request = () => {
       if (!frame) frame = requestAnimationFrame(update);
     };
@@ -110,7 +123,7 @@ export function MetricsSection() {
 
   return (
     <section className="kore-outcomes" aria-labelledby="outcomes-heading">
-      <div ref={wrapperRef} className="kore-outcomes__wrapper" style={desktop ? { height: cardHeight * CARDS.length + viewportH * HOLD_RATIO } : undefined}>
+      <div ref={wrapperRef} className="kore-outcomes__wrapper" style={desktop ? { height: cardHeight * CARDS.length + viewportH * HOLD_VH } : undefined}>
         <div ref={stickyRef} className="kore-outcomes__sticky">
           <header className="kore-outcomes__header">
             <div className="kore-outcomes__header-inner">
