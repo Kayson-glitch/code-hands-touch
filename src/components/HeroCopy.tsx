@@ -78,7 +78,7 @@ export function HeroCopy() {
             fontWeight: 500,
             padding: "0 clamp(20px, 2.2222vw, 42px)",
             borderRadius: 2,
-            border: "0.125rem solid transparent",
+            borderBottom: "0.125rem solid transparent",
             color: "#FFFFFF",
             backgroundImage: [
               `linear-gradient(${btnFace},${btnFace})`,
