@@ -13,9 +13,9 @@ const CARDS = [
 
 
 const START_Y = 320;
-// Give the dot-matrix artwork a dedicated entrance before the card begins
-// travelling upward. The two phases meet without a scroll dead zone.
-const ARTWORK_REVEAL_PHASE = 0.42;
+// Each column gets a substantial, viewport-relative entrance distance so the
+// complete dot artwork is readable before the card starts travelling upward.
+const ARTWORK_REVEAL_VH = 0.34;
 const clamp = (value: number) => Math.max(0, Math.min(1, value));
 // Reference site eases each column's reveal instead of translating linearly.
 const easeOutCubic = (x: number) => 1 - Math.pow(1 - x, 3);
@@ -29,6 +29,9 @@ export function MetricsSection() {
   const firstCopyRef = useRef<HTMLDivElement | null>(null);
   const firstNumberRef = useRef<HTMLDivElement | null>(null);
   const [progress, setProgress] = useState(0);
+  const [scrollDistance, setScrollDistance] = useState(0);
+  const [animationDistance, setAnimationDistance] = useState(1);
+  const [viewportHeight, setViewportHeight] = useState(1000);
   const [cardHeight, setCardHeight] = useState(856);
   const [copyTop, setCopyTop] = useState(520);
   const [numberTop, setNumberTop] = useState(600);
@@ -89,6 +92,9 @@ export function MetricsSection() {
       // the section arrived, so its dot artwork was already above the viewport.
       const scrolled = stickyTop - rect.top;
       const distance = Math.max(1, rect.height - sticky.getBoundingClientRect().height);
+      setScrollDistance(Math.max(0, scrolled));
+      setAnimationDistance(distance);
+      setViewportHeight(window.innerHeight);
       setProgress(clamp(scrolled / distance));
     };
 
@@ -131,12 +137,18 @@ export function MetricsSection() {
             </div>
             <div ref={cardsRef} className="kore-outcomes__cards">
               {CARDS.map((card, index) => {
-                const columnProgress = reducedMotion ? 1 : clamp(progress * CARDS.length - index);
+                const columnDistance = animationDistance / CARDS.length;
+                const columnScrolled = scrollDistance - columnDistance * index;
+                const revealDistance = Math.min(
+                  viewportHeight * ARTWORK_REVEAL_VH,
+                  columnDistance * 0.78,
+                );
+                const travelDistance = Math.max(1, columnDistance - revealDistance);
                 const restY = -copyTop;
-                const artworkProgress = reducedMotion ? 1 : clamp(columnProgress / ARTWORK_REVEAL_PHASE);
+                const artworkProgress = reducedMotion ? 1 : clamp(columnScrolled / revealDistance);
                 const cardScrollProgress = reducedMotion
                   ? 1
-                  : clamp((columnProgress - ARTWORK_REVEAL_PHASE) / (1 - ARTWORK_REVEAL_PHASE));
+                  : clamp((columnScrolled - revealDistance) / travelDistance);
                 const translateY = artworkProgress < 1
                   ? START_Y * (1 - easeOutCubic(artworkProgress))
                   : restY * easeOutCubic(cardScrollProgress);
