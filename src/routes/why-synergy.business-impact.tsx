@@ -52,7 +52,7 @@ function RainbowButton({ label, size = "lg" }: { label: string; size?: "lg" | "s
         lineHeight: "20px",
         fontWeight: 400,
         padding: lg ? "0 20px" : "0 20px",
-        borderRadius: 2,
+        borderRadius: 0,
         borderBottom: "1.5px solid transparent",
         color: "#FFFFFF",
         backgroundImage: [
@@ -605,7 +605,7 @@ function BusinessImpactPage() {
                   style={{
                     background: "#0E0B22",
                     borderBottom: "1.5px solid #137DFF",
-                    borderRadius: 2,
+                    borderRadius: 0,
                     height: 36,
                     padding: "0 24px",
                     fontSize: 12,
