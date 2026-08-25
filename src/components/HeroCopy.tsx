@@ -72,11 +72,12 @@ export function HeroCopy() {
         <button
           className="pointer-events-auto group relative inline-flex shrink-0 cursor-pointer items-center justify-center font-medium transition-all"
           style={{
-            height: "clamp(34px, 2.7778vw, 52px)",
-            fontSize: layout.bodyFontSize,
-            lineHeight: layout.bodyLineHeight,
+            height: 36,
+            fontSize: 14,
+            lineHeight: "20px",
             fontWeight: 500,
-            padding: "0 clamp(20px, 2.2222vw, 42px)",
+            padding: "0 24px",
+
             borderRadius: 2,
             borderBottom: "0.125rem solid transparent",
             color: "#FFFFFF",
