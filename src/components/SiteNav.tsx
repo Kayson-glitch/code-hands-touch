@@ -325,7 +325,7 @@ function WhySynergyMenu({ open }: { open: boolean }) {
                 borderBottom: i < 2 ? "1px solid #E1E0E4" : "none",
                 opacity: open ? 1 : 0,
                 transform: open ? "translateY(0)" : "translateY(8px)",
-                transition: `background 180ms ease, opacity 260ms ${PANEL_EASE} ${120 + i * 60}ms, transform 300ms ${PANEL_EASE} ${120 + i * 60}ms`,
+                transition: `background 180ms ease, opacity 460ms ${PANEL_EASE} ${220 + i * 110}ms, transform 540ms ${PANEL_EASE} ${220 + i * 110}ms`,
               }}
             >
               <div className="flex items-center" style={{ gap: 8 }}>
