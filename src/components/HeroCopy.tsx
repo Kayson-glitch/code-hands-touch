@@ -73,6 +73,7 @@ export function HeroCopy() {
           className="pointer-events-auto group relative inline-flex shrink-0 cursor-pointer items-center justify-center font-normal transition-all"
           style={{
             height: 36,
+            boxSizing: "content-box",
             fontSize: 14,
             lineHeight: "20px",
             fontWeight: 400,
