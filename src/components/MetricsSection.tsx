@@ -15,9 +15,6 @@ const CARDS = [
 const START_Y = 320;
 // Original entry timing (reference site) — first card reveals as usual.
 const START_OFFSET_RATIO = 0.25;
-// After the first card has settled, hold for ~1 viewport of scroll before the
-// rest of the sequence continues.
-const HOLD_VH = 1;
 const END_OFFSET_RATIO = 0.8;
 const clamp = (value: number) => Math.max(0, Math.min(1, value));
 // Reference site eases each column's reveal instead of translating linearly.
