@@ -36,14 +36,12 @@ export function MetricsSection() {
   const [copyTop, setCopyTop] = useState(520);
   const [numberTop, setNumberTop] = useState(600);
   const [desktop, setDesktop] = useState(true);
-  const [viewportH, setViewportH] = useState(900);
   const [reducedMotion, setReducedMotion] = useState(false);
 
   useLayoutEffect(() => {
     const measure = () => {
       const isDesktop = window.innerWidth >= 991;
       setDesktop(isDesktop);
-      setViewportH(window.innerHeight);
       if (!isDesktop) return;
       const item = firstItemRef.current;
       const copy = firstCopyRef.current;
