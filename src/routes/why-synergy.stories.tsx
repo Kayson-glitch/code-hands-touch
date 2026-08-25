@@ -63,7 +63,7 @@ function RainbowButton({ label }: { label: string }) {
         fontWeight: 500,
         padding: "0 24px",
         borderRadius: 2,
-        borderBottom: "0.125rem solid transparent",
+        borderBottom: "1.5px solid transparent",
         color: "#FFFFFF",
         backgroundImage: [
           `linear-gradient(${face},${face})`,
