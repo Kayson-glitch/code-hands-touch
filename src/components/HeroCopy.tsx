@@ -75,7 +75,7 @@ export function HeroCopy() {
             height: 36,
             fontSize: 14,
             lineHeight: "20px",
-            fontWeight: 500,
+            fontWeight: 400,
             padding: "0 20px",
 
             borderRadius: 2,
