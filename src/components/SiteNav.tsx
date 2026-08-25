@@ -360,11 +360,19 @@ function WhySynergyMenu({ open }: { open: boolean }) {
 }
 
 function Chevron({ flipped }: { flipped?: boolean }) {
+  // Dot-matrix (halftone) chevron on a 7x7 grid, matching DotArrow's dot style.
+  const dots: Array<[number, number]> = [
+    [1, 2],
+    [2, 3],
+    [3, 4],
+    [4, 3],
+    [5, 2],
+  ];
   return (
     <svg
       width="16"
       height="16"
-      viewBox="0 0 16 16"
+      viewBox="0 0 7 7"
       fill="none"
       aria-hidden
       style={{
@@ -374,15 +382,12 @@ function Chevron({ flipped }: { flipped?: boolean }) {
         transition: "transform 240ms cubic-bezier(0.16, 1, 0.3, 1)",
       }}
     >
-      <path
-        d="M4 6.5L8 10.5L12 6.5"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
+      {dots.map(([x, y]) => (
+        <circle key={`${x}-${y}`} cx={x + 0.5} cy={y + 0.5} r={0.65} fill="currentColor" />
+      ))}
     </svg>
   );
 }
+
 
 export default SiteNav;
