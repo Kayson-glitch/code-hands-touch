@@ -88,6 +88,7 @@ export function HeroCopy() {
               "linear-gradient(90deg, #137DFF 0%, #FF18AA 33.333%, #FFCD17 66.666%, #137DFF 100%)",
             ].join(","),
             backgroundClip: "padding-box, border-box, border-box",
+            backgroundColor: btnFace,
             backgroundOrigin: "border-box",
             backgroundSize: "200%",
             animation: "rainbow-btn-flow var(--rainbow-speed, 9s) infinite linear",
@@ -96,7 +97,7 @@ export function HeroCopy() {
           <span className="relative z-10 inline-flex items-center gap-0">
             Book a Demo
             <span className="inline-flex items-center ml-1.5">
-              <DotArrow size={16} className="relative -top-px flex-shrink-0" />
+              <DotArrow size={16} className="flex-shrink-0" />
             </span>
           </span>
 
