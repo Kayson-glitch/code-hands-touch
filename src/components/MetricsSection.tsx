@@ -15,9 +15,6 @@ const CARDS = [
 const START_Y = 320;
 // Original entry timing (reference site) — first card reveals as usual.
 const START_OFFSET_RATIO = 0.25;
-// After the first card has settled, hold for ~1 viewport of scroll before the
-// rest of the sequence continues.
-const HOLD_VH = 1;
 const END_OFFSET_RATIO = 0.8;
 const clamp = (value: number) => Math.max(0, Math.min(1, value));
 // Reference site eases each column's reveal instead of translating linearly.
@@ -90,20 +87,7 @@ export function MetricsSection() {
       const scrolled = wh - rect.top - wh * START_OFFSET_RATIO;
       const distance = Math.max(1, rect.height - wh * END_OFFSET_RATIO);
       const raw = clamp(scrolled / distance);
-      // Hold the moment the first card is fully in place (translateY ~ 0, i.e.
-      // the dot-matrix graphic is fully visible), not after it scrolls away.
-      const holdFrac = clamp((wh * HOLD_VH) / distance);
-      const span = Math.max(0.0001, 1 - holdFrac);
-      const settleEased = clamp(START_Y / (START_Y + copyTop));
-      const settleCp = 1 - Math.pow(1 - settleEased, 1 / 3);
-      const holdAt = settleCp / CARDS.length;
-      const holdStart = holdAt * span;
-      let mapped: number;
-      if (raw <= holdStart) mapped = raw / span;
-      else if (raw <= holdStart + holdFrac) mapped = holdAt;
-      else mapped = holdAt + (raw - holdStart - holdFrac) / span;
-
-      setProgress(clamp(mapped));
+      setProgress(raw);
     };
 
     const request = () => {
@@ -122,11 +106,11 @@ export function MetricsSection() {
       window.removeEventListener("resize", request);
       if (frame) cancelAnimationFrame(frame);
     };
-  }, [desktop, reducedMotion, copyTop]);
+  }, [desktop, reducedMotion]);
 
   return (
     <section className="kore-outcomes" aria-labelledby="outcomes-heading">
-      <div ref={wrapperRef} className="kore-outcomes__wrapper" style={desktop ? { height: cardHeight * CARDS.length + viewportH * HOLD_VH } : undefined}>
+      <div ref={wrapperRef} className="kore-outcomes__wrapper" style={desktop ? { height: cardHeight * CARDS.length } : undefined}>
         <div ref={stickyRef} className="kore-outcomes__sticky">
           <header className="kore-outcomes__header">
             <div className="kore-outcomes__header-inner">
