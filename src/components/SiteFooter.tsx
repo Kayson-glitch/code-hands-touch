@@ -1,6 +1,7 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
-import { ArrowRight, Linkedin, Twitter, Youtube } from "lucide-react";
+import { Linkedin, Twitter, Youtube } from "lucide-react";
 import { Reveal } from "@/components/Reveal";
+import { DotArrow } from "@/components/DotArrow";
 
 /** 1440px design width → fluid value. */
 const fluid = (px: number, min = px * 0.7) =>
@@ -60,7 +61,7 @@ function RainbowButton({ label, size = "lg" }: { label: string; size?: "lg" | "s
       <span className="relative z-10 inline-flex items-center gap-0">
         {label}
         <span className="inline-flex max-w-0 overflow-hidden opacity-0 transition-all duration-300 ease-out group-hover:ml-1.5 group-hover:max-w-[20px] group-hover:opacity-100">
-          <ArrowRight size={16} strokeWidth={2} className="relative -top-px flex-shrink-0" />
+          <DotArrow size={16} className="relative -top-px flex-shrink-0" />
         </span>
       </span>
     </button>

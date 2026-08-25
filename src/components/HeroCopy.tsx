@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
-import { ArrowRight } from "lucide-react";
 import { useHeroLayout } from "@/hooks/useHeroLayout";
+import { DotArrow } from "@/components/DotArrow";
 
 
 export function HeroCopy() {
@@ -113,7 +113,7 @@ export function HeroCopy() {
             <span
               className="inline-flex max-w-0 overflow-hidden opacity-0 transition-all duration-300 ease-out group-hover:ml-1.5 group-hover:max-w-[20px] group-hover:opacity-100"
             >
-              <ArrowRight size={16} strokeWidth={2} className="relative -top-px flex-shrink-0" />
+              <DotArrow size={16} className="relative -top-px flex-shrink-0" />
             </span>
           </span>
 

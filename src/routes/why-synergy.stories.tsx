@@ -1,7 +1,6 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import {
-  ArrowRight,
   MessageSquareCode,
   Map as MapIcon,
   Linkedin,
@@ -14,6 +13,7 @@ import { Reveal } from "@/components/Reveal";
 import { FinChatDock } from "@/components/FinChatDock";
 
 import { getLenis } from "@/lib/smoothScroll";
+import { DotArrow } from "@/components/DotArrow";
 
 /** Nav (60) + breathing room, so a targeted module never hugs the header. */
 const ANCHOR_OFFSET = 60 + 40;
@@ -93,7 +93,7 @@ function RainbowButton({ label }: { label: string }) {
       <span className="relative z-10 inline-flex items-center gap-0">
         {label}
         <span className="inline-flex max-w-0 overflow-hidden opacity-0 transition-all duration-300 ease-out group-hover:ml-1.5 group-hover:max-w-[20px] group-hover:opacity-100">
-          <ArrowRight size={16} strokeWidth={2} className="relative -top-px flex-shrink-0" />
+          <DotArrow size={16} className="relative -top-px flex-shrink-0" />
         </span>
       </span>
     </button>
