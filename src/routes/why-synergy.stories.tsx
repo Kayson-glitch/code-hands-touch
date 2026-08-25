@@ -55,7 +55,7 @@ function RainbowButton({ label }: { label: string }) {
   const faceRgb = "14,11,34";
   return (
     <button
-      className="group relative inline-flex shrink-0 cursor-pointer items-center justify-center font-medium transition-all"
+      className="group relative inline-flex shrink-0 cursor-pointer items-center justify-center font-regular transition-all"
       style={{
         height: 36,
         fontSize: 14,
