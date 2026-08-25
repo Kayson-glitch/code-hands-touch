@@ -66,20 +66,6 @@ function RainbowButton({ label, size = "lg" }: { label: string; size?: "lg" | "s
         animation: "rainbow-btn-flow var(--rainbow-speed, 9s) infinite linear",
       }}
     >
-      <span
-        aria-hidden
-        className="pointer-events-none absolute left-1/2 -translate-x-1/2"
-        style={{
-          bottom: "-20%",
-          zIndex: 0,
-          height: "20%",
-          width: "60%",
-          backgroundImage: GRADIENT,
-          backgroundSize: "200%",
-          filter: "blur(0.75rem)",
-          animation: "rainbow-btn-flow var(--rainbow-speed, 9s) infinite linear",
-        }}
-      />
       <span className="relative z-10 inline-flex items-center gap-0">
         {label}
         <span className="inline-flex max-w-0 overflow-hidden opacity-0 transition-all duration-300 ease-out group-hover:ml-1.5 group-hover:max-w-[20px] group-hover:opacity-100">

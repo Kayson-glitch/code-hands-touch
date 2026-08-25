@@ -92,23 +92,6 @@ export function HeroCopy() {
             animation: "rainbow-btn-flow var(--rainbow-speed, 9s) infinite linear",
           }}
         >
-          {/* Rainbow glow beneath the button (MagicUI ::before) */}
-          <span
-            aria-hidden
-            className="pointer-events-none absolute left-1/2 -translate-x-1/2"
-            style={{
-              bottom: "-20%",
-              zIndex: 0,
-              height: "20%",
-              width: "60%",
-              backgroundImage:
-                "linear-gradient(90deg, #137DFF 0%, #FF18AA 33.333%, #FFCD17 66.666%, #137DFF 100%)",
-              backgroundSize: "200%",
-              filter: "blur(0.75rem)",
-              animation: "rainbow-btn-flow var(--rainbow-speed, 9s) infinite linear",
-            }}
-          />
-
           <span className="relative z-10 inline-flex items-center gap-0">
             Book a Demo
             <span
