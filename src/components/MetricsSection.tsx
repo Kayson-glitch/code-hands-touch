@@ -15,9 +15,10 @@ const CARDS = [
 const START_Y = 320;
 // Original entry timing (reference site) — first card reveals as usual.
 const START_OFFSET_RATIO = 0.25;
-// Keep the first card's original reveal timing, then continue immediately.
-const HOLD_VH = 0;
 const END_OFFSET_RATIO = 0.8;
+// Give the dot-matrix artwork a dedicated entrance before the card begins
+// travelling upward. The two phases meet without a scroll dead zone.
+const ARTWORK_REVEAL_PHASE = 0.42;
 const clamp = (value: number) => Math.max(0, Math.min(1, value));
 // Reference site eases each column's reveal instead of translating linearly.
 const easeOutCubic = (x: number) => 1 - Math.pow(1 - x, 3);
@@ -88,21 +89,7 @@ export function MetricsSection() {
       const wh = window.innerHeight;
       const scrolled = wh - rect.top - wh * START_OFFSET_RATIO;
       const distance = Math.max(1, rect.height - wh * END_OFFSET_RATIO);
-      const raw = clamp(scrolled / distance);
-      // Hold the moment the first card is fully in place (translateY ~ 0, i.e.
-      // the dot-matrix graphic is fully visible), not after it scrolls away.
-      const holdFrac = clamp((wh * HOLD_VH) / distance);
-      const span = Math.max(0.0001, 1 - holdFrac);
-      const settleEased = clamp(START_Y / (START_Y + copyTop));
-      const settleCp = 1 - Math.pow(1 - settleEased, 1 / 3);
-      const holdAt = settleCp / CARDS.length;
-      const holdStart = holdAt * span;
-      let mapped: number;
-      if (raw <= holdStart) mapped = raw / span;
-      else if (raw <= holdStart + holdFrac) mapped = holdAt;
-      else mapped = holdAt + (raw - holdStart - holdFrac) / span;
-
-      setProgress(clamp(mapped));
+      setProgress(clamp(scrolled / distance));
     };
 
     const request = () => {
@@ -125,7 +112,7 @@ export function MetricsSection() {
 
   return (
     <section className="kore-outcomes" aria-labelledby="outcomes-heading">
-      <div ref={wrapperRef} className="kore-outcomes__wrapper" style={desktop ? { height: cardHeight * CARDS.length + viewportH * HOLD_VH } : undefined}>
+      <div ref={wrapperRef} className="kore-outcomes__wrapper" style={desktop ? { height: cardHeight * CARDS.length } : undefined}>
         <div ref={stickyRef} className="kore-outcomes__sticky">
           <header className="kore-outcomes__header">
             <div className="kore-outcomes__header-inner">
@@ -145,10 +132,15 @@ export function MetricsSection() {
             <div ref={cardsRef} className="kore-outcomes__cards">
               {CARDS.map((card, index) => {
                 const columnProgress = reducedMotion ? 1 : clamp(progress * CARDS.length - index);
-                const eased = reducedMotion ? 1 : easeOutCubic(columnProgress);
-                const opacity = reducedMotion ? 1 : easeOutCubic(clamp(columnProgress * 3));
                 const restY = -copyTop;
-                const translateY = START_Y + (restY - START_Y) * eased;
+                const artworkProgress = reducedMotion ? 1 : clamp(columnProgress / ARTWORK_REVEAL_PHASE);
+                const cardScrollProgress = reducedMotion
+                  ? 1
+                  : clamp((columnProgress - ARTWORK_REVEAL_PHASE) / (1 - ARTWORK_REVEAL_PHASE));
+                const translateY = artworkProgress < 1
+                  ? START_Y * (1 - easeOutCubic(artworkProgress))
+                  : restY * easeOutCubic(cardScrollProgress);
+                const opacity = reducedMotion ? 1 : easeOutCubic(artworkProgress);
                 return (
                   <div ref={index === 0 ? firstItemRef : undefined} key={card.title} className="kore-outcomes__item" style={desktop ? { opacity, transform: `translate3d(0, ${translateY}px, 0)` } : undefined}>
                     <article className="kore-outcomes__card">
