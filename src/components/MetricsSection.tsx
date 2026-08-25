@@ -41,6 +41,7 @@ export function MetricsSection() {
     const measure = () => {
       const isDesktop = window.innerWidth >= 991;
       setDesktop(isDesktop);
+      setViewportH(window.innerHeight);
       if (!isDesktop) return;
       const item = firstItemRef.current;
       const copy = firstCopyRef.current;
