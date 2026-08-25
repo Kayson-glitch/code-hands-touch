@@ -122,7 +122,7 @@ export function MetricsSection() {
       window.removeEventListener("resize", request);
       if (frame) cancelAnimationFrame(frame);
     };
-  }, [desktop, reducedMotion]);
+  }, [desktop, reducedMotion, copyTop]);
 
   return (
     <section className="kore-outcomes" aria-labelledby="outcomes-heading">
