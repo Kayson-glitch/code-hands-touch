@@ -25,7 +25,7 @@ function RainbowButton({ label, size = "lg" }: { label: string; size?: "lg" | "s
     <button
       className="group relative inline-flex shrink-0 cursor-pointer items-center justify-center font-medium transition-all"
       style={{
-        height: lg ? 40 : 36,
+        height: 36,
         fontSize: lg ? 14 : 13,
         lineHeight: "20px",
         fontWeight: 500,
