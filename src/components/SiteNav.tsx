@@ -370,8 +370,8 @@ function Chevron({ flipped }: { flipped?: boolean }) {
   ];
   return (
     <svg
-      width="16"
-      height="16"
+      width="14"
+      height="14"
       viewBox="0 0 7 7"
       fill="none"
       aria-hidden
