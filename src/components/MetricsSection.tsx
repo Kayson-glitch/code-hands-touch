@@ -90,16 +90,19 @@ export function MetricsSection() {
       const scrolled = wh - rect.top - wh * START_OFFSET_RATIO;
       const distance = Math.max(1, rect.height - wh * END_OFFSET_RATIO);
       const raw = clamp(scrolled / distance);
-      // Insert a dead zone right after the first column has settled: the card
-      // stays put for ~1 viewport of scrolling, then the sequence resumes.
+      // Hold the moment the first card is fully in place (translateY ~ 0, i.e.
+      // the dot-matrix graphic is fully visible), not after it scrolls away.
       const holdFrac = clamp((wh * HOLD_VH) / distance);
       const span = Math.max(0.0001, 1 - holdFrac);
-      const first = 1 / CARDS.length;
-      const holdStart = first * span;
+      const settleEased = clamp(START_Y / (START_Y + copyTop));
+      const settleCp = 1 - Math.pow(1 - settleEased, 1 / 3);
+      const holdAt = settleCp / CARDS.length;
+      const holdStart = holdAt * span;
       let mapped: number;
       if (raw <= holdStart) mapped = raw / span;
-      else if (raw <= holdStart + holdFrac) mapped = first;
-      else mapped = first + (raw - holdStart - holdFrac) / span;
+      else if (raw <= holdStart + holdFrac) mapped = holdAt;
+      else mapped = holdAt + (raw - holdStart - holdFrac) / span;
+
       setProgress(clamp(mapped));
     };
 
