@@ -78,7 +78,7 @@ function RainbowButton({ label }: { label: string }) {
     >
       <span className="relative z-10 inline-flex items-center gap-0">
         {label}
-        <span className="inline-flex max-w-0 overflow-hidden opacity-0 transition-all duration-300 ease-out group-hover:ml-1.5 group-hover:max-w-[20px] group-hover:opacity-100">
+        <span className="inline-flex items-center ml-1.5">
           <DotArrow size={16} className="relative -top-px flex-shrink-0" />
         </span>
       </span>

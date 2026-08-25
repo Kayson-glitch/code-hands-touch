@@ -1,30 +1,45 @@
+import type * as React from "react";
+
 /**
  * Dot-matrix (halftone) arrow used inside buttons.
  * Drawn on a 7x7 dot grid so it reads as a pixel/dot arrow rather than a stroke icon.
+ *
+ * Default state shows only the ">" chevron head (resident).
+ * On hover (group-hover), the shaft dots fade in from the chevron outward,
+ * "connecting" into a full arrow — see https://www.decimal.app hero button.
+ *
+ * Set `connectOnHover={false}` to always render the full arrow (e.g. the send button).
  */
+type Dot = [number, number];
+
+const CHEVRON_DOTS: Dot[] = [
+  [3, 1],
+  [4, 2],
+  [5, 3],
+  [4, 4],
+  [3, 5],
+];
+
+// Shaft extends leftward from the chevron base.
+const SHAFT_DOTS: Dot[] = [
+  [0, 3],
+  [1, 3],
+  [2, 3],
+  [3, 3],
+  [4, 3],
+];
+
 export function DotArrow({
   size = 16,
   className,
   direction = "right",
+  connectOnHover = true,
 }: {
   size?: number;
   className?: string;
   direction?: "right" | "up";
+  connectOnHover?: boolean;
 }) {
-  // [col, row] on a 7x7 grid, arrow pointing right.
-  const dots: Array<[number, number]> = [
-    [0, 3],
-    [1, 3],
-    [2, 3],
-    [3, 3],
-    [4, 3],
-    [5, 3],
-    [3, 1],
-    [4, 2],
-    [4, 4],
-    [3, 5],
-  ];
-
   return (
     <svg
       width={size}
@@ -39,15 +54,33 @@ export function DotArrow({
         transform: direction === "up" ? "rotate(-90deg)" : undefined,
       }}
     >
-      {dots.map(([c, r]) => (
-        <circle
-          key={`${c}-${r}`}
-          cx={c * 2 + 1}
-          cy={r * 2 + 1}
-          r={0.65}
-          fill="currentColor"
-        />
+      {/* Chevron head — always resident. */}
+      {CHEVRON_DOTS.map(([c, r]) => (
+        <circle key={`c-${c}-${r}`} cx={c * 2 + 1} cy={r * 2 + 1} r={0.65} fill="currentColor" />
       ))}
+
+      {/* Shaft — connects into an arrow on hover. */}
+      {SHAFT_DOTS.map(([c, r]) => {
+        if (!connectOnHover) {
+          return (
+            <circle key={`s-${c}-${r}`} cx={c * 2 + 1} cy={r * 2 + 1} r={0.65} fill="currentColor" />
+          );
+        }
+        // Rightmost shaft dot (closest to chevron) appears first,
+        // leftmost last — so the line draws out from the chevron.
+        const delay = (4 - c) * 45;
+        return (
+          <circle
+            key={`s-${c}-${r}`}
+            cx={c * 2 + 1}
+            cy={r * 2 + 1}
+            r={0.65}
+            fill="currentColor"
+            className="opacity-0 transition-opacity duration-300 ease-out group-hover:opacity-100"
+            style={{ transitionDelay: `${delay}ms` }}
+          />
+        );
+      })}
     </svg>
   );
 }

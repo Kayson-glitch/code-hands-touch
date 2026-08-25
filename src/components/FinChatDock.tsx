@@ -331,7 +331,7 @@ export function FinChatDock({ alwaysVisible = false }: { alwaysVisible?: boolean
               transition: "background-color 200ms ease, color 200ms ease, opacity 200ms ease",
             }}
           >
-            <DotArrow size={24} direction="up" />
+            <DotArrow size={24} direction="up" connectOnHover={false} />
           </button>
         </div>
 
