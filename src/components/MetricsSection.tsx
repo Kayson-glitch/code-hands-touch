@@ -13,7 +13,10 @@ const CARDS = [
 
 
 const START_Y = 320;
-const START_OFFSET_RATIO = 0.25;
+// Sequence only begins once the module is essentially pinned at the top.
+const START_OFFSET_RATIO = 0.95;
+// Dead zone after the start so the first card sits still and readable first.
+const HOLD_RATIO = 0.2;
 const END_OFFSET_RATIO = 0.8;
 const clamp = (value: number) => Math.max(0, Math.min(1, value));
 // Reference site eases each column's reveal instead of translating linearly.
