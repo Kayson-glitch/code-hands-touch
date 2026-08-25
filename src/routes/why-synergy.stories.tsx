@@ -71,6 +71,7 @@ function RainbowButton({ label }: { label: string }) {
           GRADIENT,
         ].join(","),
         backgroundClip: "padding-box, border-box, border-box",
+        backgroundColor: face,
         backgroundOrigin: "border-box",
         backgroundSize: "200%",
         animation: "rainbow-btn-flow var(--rainbow-speed, 9s) infinite linear",
@@ -79,7 +80,7 @@ function RainbowButton({ label }: { label: string }) {
       <span className="relative z-10 inline-flex items-center gap-0">
         {label}
         <span className="inline-flex items-center ml-1.5">
-          <DotArrow size={16} className="relative -top-px flex-shrink-0" />
+          <DotArrow size={16} className="flex-shrink-0" />
         </span>
       </span>
     </button>
