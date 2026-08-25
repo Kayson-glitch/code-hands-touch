@@ -227,7 +227,7 @@ body {
 .kore-outcomes {
   position: relative;
   z-index: 11;
-  padding-bottom: 8rem;
+  padding-bottom: 3rem;
   overflow: clip;
   background: var(--paper);
   color: var(--ink);
