@@ -267,7 +267,7 @@ function WhySynergyMenu({ open }: { open: boolean }) {
           : "translateY(-10px) scale(0.96)",
         transformOrigin: "top left",
         pointerEvents: open ? "auto" : "none",
-        transition: `opacity 240ms ${PANEL_EASE}, transform 320ms ${PANEL_EASE}`,
+        transition: `opacity 420ms ${PANEL_EASE}, transform 560ms ${PANEL_EASE}`,
       }}
     >
       <div
@@ -283,7 +283,7 @@ function WhySynergyMenu({ open }: { open: boolean }) {
           clipPath: open
             ? "inset(0 0 0 0 round 16px)"
             : "inset(0 100% 100% 0 round 16px)",
-          transition: `clip-path 360ms ${PANEL_EASE}`,
+          transition: `clip-path 620ms ${PANEL_EASE}`,
         }}
       >
         <span
@@ -294,7 +294,7 @@ function WhySynergyMenu({ open }: { open: boolean }) {
             color: "#7A7885",
             opacity: open ? 1 : 0,
             transform: open ? "translateY(0)" : "translateY(-6px)",
-            transition: `opacity 200ms ${PANEL_EASE} 80ms, transform 240ms ${PANEL_EASE} 80ms`,
+            transition: `opacity 360ms ${PANEL_EASE} 140ms, transform 440ms ${PANEL_EASE} 140ms`,
           }}
         >
           / why synergy
