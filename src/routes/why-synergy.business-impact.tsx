@@ -7,6 +7,8 @@ import { Reveal } from "@/components/Reveal";
 import { FinChatDock } from "@/components/FinChatDock";
 import { GradientHoverHeading } from "@/components/GradientHoverHeading";
 import { DotArrow } from "@/components/DotArrow";
+import { RollingNumber } from "@/components/RollingNumber";
+
 
 
 export const Route = createFileRoute("/why-synergy/business-impact")({
