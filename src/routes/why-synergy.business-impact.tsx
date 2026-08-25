@@ -302,7 +302,7 @@ function KpiColumn({
           letterSpacing: "-0.01em",
         }}
       >
-        {data.value}
+        <RollingNumber key={data.value} value={data.value} />
         <span
           style={{ fontSize: fluid(40, 22), color: "var(--ink-ghost, #C7C6CD)", marginLeft: 6 }}
         >
