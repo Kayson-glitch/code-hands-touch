@@ -84,9 +84,10 @@ export function MetricsSection() {
       if (!wrapper) return;
       const rect = wrapper.getBoundingClientRect();
       const wh = window.innerHeight;
-      // Source-site mapping: p = (wh - top - wh*0.25) / (height - wh*0.8)
-      const distance = Math.max(1, rect.height - wh * END_OFFSET_RATIO);
-      setProgress(clamp((wh - rect.top - wh * START_OFFSET_RATIO) / distance));
+      // Start only once the module is pinned, then hold before the sequence runs.
+      const scrolled = wh - rect.top - wh * START_OFFSET_RATIO - wh * HOLD_RATIO;
+      const distance = Math.max(1, rect.height - wh * (HOLD_RATIO + END_OFFSET_RATIO));
+      setProgress(clamp(scrolled / distance));
     };
     const request = () => {
       if (!frame) frame = requestAnimationFrame(update);
