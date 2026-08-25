@@ -15,7 +15,8 @@ const CARDS = [
 const START_Y = 320;
 // Each column gets a substantial, viewport-relative entrance distance so the
 // complete dot artwork is readable before the card starts travelling upward.
-const ARTWORK_REVEAL_VH = 0.34;
+const ARTWORK_REVEAL_VH = 0.46;
+const SCROLL_LENGTH_MULTIPLIER = 1.25;
 const clamp = (value: number) => Math.max(0, Math.min(1, value));
 // Reference site eases each column's reveal instead of translating linearly.
 const easeOutCubic = (x: number) => 1 - Math.pow(1 - x, 3);
@@ -25,13 +26,11 @@ export function MetricsSection() {
   const wrapperRef = useRef<HTMLDivElement | null>(null);
   const stickyRef = useRef<HTMLDivElement | null>(null);
   const cardsRef = useRef<HTMLDivElement | null>(null);
+  const itemRefs = useRef<Array<HTMLDivElement | null>>([]);
+  const progressFillRef = useRef<HTMLDivElement | null>(null);
   const firstItemRef = useRef<HTMLDivElement | null>(null);
   const firstCopyRef = useRef<HTMLDivElement | null>(null);
   const firstNumberRef = useRef<HTMLDivElement | null>(null);
-  const [progress, setProgress] = useState(0);
-  const [scrollDistance, setScrollDistance] = useState(0);
-  const [animationDistance, setAnimationDistance] = useState(1);
-  const [viewportHeight, setViewportHeight] = useState(1000);
   const [cardHeight, setCardHeight] = useState(856);
   const [copyTop, setCopyTop] = useState(520);
   const [numberTop, setNumberTop] = useState(600);
@@ -75,7 +74,11 @@ export function MetricsSection() {
 
   useEffect(() => {
     if (!desktop || reducedMotion) {
-      setProgress(reducedMotion ? 1 : 0);
+      itemRefs.current.forEach((item) => {
+        if (!item) return;
+        item.style.opacity = "";
+        item.style.transform = "";
+      });
       return;
     }
     let frame = 0;
@@ -92,10 +95,27 @@ export function MetricsSection() {
       // the section arrived, so its dot artwork was already above the viewport.
       const scrolled = stickyTop - rect.top;
       const distance = Math.max(1, rect.height - sticky.getBoundingClientRect().height);
-      setScrollDistance(Math.max(0, scrolled));
-      setAnimationDistance(distance);
-      setViewportHeight(window.innerHeight);
-      setProgress(clamp(scrolled / distance));
+      const scrollDistance = Math.max(0, scrolled);
+      const progress = clamp(scrolled / distance);
+      progressFillRef.current?.style.setProperty("--p", String(progress));
+
+      const columnDistance = distance / CARDS.length;
+      itemRefs.current.forEach((item, index) => {
+        if (!item) return;
+        const columnScrolled = scrollDistance - columnDistance * index;
+        const revealDistance = Math.min(
+          window.innerHeight * ARTWORK_REVEAL_VH,
+          columnDistance * 0.78,
+        );
+        const travelDistance = Math.max(1, columnDistance - revealDistance);
+        const artworkProgress = clamp(columnScrolled / revealDistance);
+        const cardScrollProgress = clamp((columnScrolled - revealDistance) / travelDistance);
+        const translateY = artworkProgress < 1
+          ? START_Y * (1 - easeOutCubic(artworkProgress))
+          : -copyTop * easeOutCubic(cardScrollProgress);
+        item.style.opacity = String(easeOutCubic(artworkProgress));
+        item.style.transform = `translate3d(0, ${translateY}px, 0)`;
+      });
     };
 
     const request = () => {
@@ -105,11 +125,11 @@ export function MetricsSection() {
     // Lenis drives the page; read progress on its tick so the reveal never
     // trails the smoothed scroll position by a frame.
     const lenis = getLenis();
-    lenis?.on("scroll", update);
+    lenis?.on("scroll", request);
     window.addEventListener("scroll", request, { passive: true });
     window.addEventListener("resize", request);
     return () => {
-      lenis?.off("scroll", update);
+      lenis?.off("scroll", request);
       window.removeEventListener("scroll", request);
       window.removeEventListener("resize", request);
       if (frame) cancelAnimationFrame(frame);
@@ -118,7 +138,7 @@ export function MetricsSection() {
 
   return (
     <section className="kore-outcomes" aria-labelledby="outcomes-heading">
-      <div ref={wrapperRef} className="kore-outcomes__wrapper" style={desktop ? { height: cardHeight * CARDS.length } : undefined}>
+      <div ref={wrapperRef} className="kore-outcomes__wrapper" style={desktop ? { height: cardHeight * CARDS.length * SCROLL_LENGTH_MULTIPLIER } : undefined}>
         <div ref={stickyRef} className="kore-outcomes__sticky">
           <header className="kore-outcomes__header">
             <div className="kore-outcomes__header-inner">
@@ -131,30 +151,22 @@ export function MetricsSection() {
           <div className="kore-outcomes__cards-container">
             <div className="kore-outcomes__progress" aria-hidden="true">
               <div
+                ref={progressFillRef}
                 className="kore-outcomes__progress-fill"
-                style={{ "--p": !desktop || reducedMotion ? 1 : clamp(progress) } as React.CSSProperties}
+                style={{ "--p": !desktop || reducedMotion ? 1 : 0 } as React.CSSProperties}
               />
             </div>
             <div ref={cardsRef} className="kore-outcomes__cards">
               {CARDS.map((card, index) => {
-                const columnDistance = animationDistance / CARDS.length;
-                const columnScrolled = scrollDistance - columnDistance * index;
-                const revealDistance = Math.min(
-                  viewportHeight * ARTWORK_REVEAL_VH,
-                  columnDistance * 0.78,
-                );
-                const travelDistance = Math.max(1, columnDistance - revealDistance);
-                const restY = -copyTop;
-                const artworkProgress = reducedMotion ? 1 : clamp(columnScrolled / revealDistance);
-                const cardScrollProgress = reducedMotion
-                  ? 1
-                  : clamp((columnScrolled - revealDistance) / travelDistance);
-                const translateY = artworkProgress < 1
-                  ? START_Y * (1 - easeOutCubic(artworkProgress))
-                  : restY * easeOutCubic(cardScrollProgress);
-                const opacity = reducedMotion ? 1 : easeOutCubic(artworkProgress);
                 return (
-                  <div ref={index === 0 ? firstItemRef : undefined} key={card.title} className="kore-outcomes__item" style={desktop ? { opacity, transform: `translate3d(0, ${translateY}px, 0)` } : undefined}>
+                  <div
+                    ref={(node) => {
+                      itemRefs.current[index] = node;
+                      if (index === 0) firstItemRef.current = node;
+                    }}
+                    key={card.title}
+                    className="kore-outcomes__item"
+                  >
                     <article className="kore-outcomes__card">
                       <div className="kore-outcomes__media"><img src={card.image} alt="" /></div>
                       <div ref={index === 0 ? firstCopyRef : undefined} className="kore-outcomes__copy">
