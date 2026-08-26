@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "@tanstack/react-router";
+import { Link, useNavigate } from "@tanstack/react-router";
 import logo from "@/assets/synergy-logo-v3.png.asset.json";
 
 export function SiteNav({ revealDelay = 4000 }: { revealDelay?: number } = {}) {
@@ -130,8 +130,9 @@ export function SiteNav({ revealDelay = 4000 }: { revealDelay?: number } = {}) {
       >
         <div className="flex h-full w-full max-w-[1200px] items-center justify-between">
           {/* Logo */}
-          <a
-            href="/"
+          <Link
+            to="/"
+            preload="intent"
             className="pointer-events-auto flex shrink-0 items-center gap-2"
             style={{ height: 24, color: inkStrong, transition: "color 300ms ease" }}
           >
@@ -152,7 +153,7 @@ export function SiteNav({ revealDelay = 4000 }: { revealDelay?: number } = {}) {
             >
               Synergy.AI
             </span>
-          </a>
+          </Link>
 
           {/* Center menu */}
           <ul
