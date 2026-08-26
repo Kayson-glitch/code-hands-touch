@@ -153,7 +153,7 @@ export function SiteNav({ revealDelay = 4000 }: { revealDelay?: number } = {}) {
             >
               Synergy.AI
             </span>
-          </a>
+          </Link>
 
           {/* Center menu */}
           <ul
