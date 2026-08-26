@@ -75,14 +75,15 @@ export function RollingNumber({
             style={{
               position: "relative",
               display: "inline-block",
-              height: "1em",
+              height: "1.2em",
               overflow: "hidden",
               verticalAlign: "bottom",
-              lineHeight: "1em",
+              lineHeight: "1.2em",
+              marginBottom: "-0.2em",
             }}
           >
             {/* width sizer: the final digit only, so narrow digits keep their own width */}
-            <span style={{ visibility: "hidden", display: "block", height: "1em", lineHeight: "1em" }}>
+            <span style={{ visibility: "hidden", display: "block", height: "1.2em", lineHeight: "1.2em" }}>
               {ch}
             </span>
             <span
@@ -90,8 +91,9 @@ export function RollingNumber({
                 position: "absolute",
                 left: 0,
                 top: 0,
+                width: "100%",
                 display: "block",
-                transform: `translateY(-${offset}em)`,
+                transform: `translateY(-${offset * 1.2}em)`,
                 transition: `transform ${duration}ms cubic-bezier(0.16, 1, 0.3, 1) ${delay}ms`,
                 willChange: "transform",
               }}
@@ -102,8 +104,8 @@ export function RollingNumber({
                   style={{
                     display: "flex",
                     justifyContent: "center",
-                    height: "1em",
-                    lineHeight: "1em",
+                    height: "1.2em",
+                    lineHeight: "1.2em",
                     width: "100%",
                   }}
                 >
@@ -112,6 +114,7 @@ export function RollingNumber({
               ))}
             </span>
           </span>
+
 
         );
       })}
