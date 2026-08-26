@@ -6,9 +6,10 @@ import { useRef, useState, type CSSProperties } from "react";
  * Implemented as an ink base layer plus a gradient-clipped copy masked by a
  * radial circle at the pointer — no layout change, no per-letter animation.
  */
-
-const RADIUS = 150; // px — spotlight size
+const RADIUS = 105; // px — spotlight size (slightly smaller)
 const GRADIENT = "linear-gradient(90deg, #137DFF 0%, #FF18AA 52%, #FFCD17 100%)";
+const ENTER_DELAY = 260; // ms — wait before the spotlight fades in
+const ENTER_DURATION = 340; // ms — fade-in duration after the delay
 
 type Props = {
   text: string; // use "\n" for explicit line breaks
@@ -19,7 +20,9 @@ type Props = {
 
 export function GradientHoverHeading({ text, className, style, as: Tag = "h1" }: Props) {
   const ref = useRef<HTMLDivElement>(null);
+  const timer = useRef<number | null>(null);
   const [pos, setPos] = useState<{ x: number; y: number } | null>(null);
+  const [visible, setVisible] = useState(false);
 
   const lines = text.split("\n");
   const content = lines.map((line, i) => (
@@ -41,7 +44,18 @@ export function GradientHoverHeading({ text, className, style, as: Tag = "h1" }:
         if (!r) return;
         setPos({ x: e.clientX - r.left, y: e.clientY - r.top });
       }}
-      onMouseLeave={() => setPos(null)}
+      onMouseEnter={() => {
+        if (timer.current) window.clearTimeout(timer.current);
+        timer.current = window.setTimeout(() => setVisible(true), ENTER_DELAY);
+      }}
+      onMouseLeave={() => {
+        if (timer.current) {
+          window.clearTimeout(timer.current);
+          timer.current = null;
+        }
+        setVisible(false);
+        setPos(null);
+      }}
     >
       <span ref={ref} style={{ display: "block" }}>
         {content}
@@ -59,8 +73,10 @@ export function GradientHoverHeading({ text, className, style, as: Tag = "h1" }:
           color: "transparent",
           WebkitMaskImage: mask,
           maskImage: mask,
-          opacity: pos ? 1 : 0,
-          transition: "opacity 260ms ease-out",
+          opacity: visible ? 1 : 0,
+          transition: visible
+            ? `opacity ${ENTER_DURATION}ms ease-out`
+            : "opacity 160ms ease-out",
         }}
       >
         {content}
