@@ -193,7 +193,7 @@ export function SiteNav({ revealDelay = 4000 }: { revealDelay?: number } = {}) {
             <button
               className="font-normal transition-transform hover:scale-[1.02]"
               style={{
-                height: 32,
+                height: 60,
                 fontSize: 12,
                 lineHeight: "20px",
                 padding: "0 14px",
