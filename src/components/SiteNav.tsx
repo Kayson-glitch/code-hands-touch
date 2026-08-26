@@ -191,17 +191,22 @@ export function SiteNav({ revealDelay = 4000 }: { revealDelay?: number } = {}) {
               Log in
             </button>
             <button
-              className="font-normal transition-transform hover:scale-[1.02]"
+              className="font-normal transition-colors duration-300"
               style={{
                 height: 60,
                 fontSize: 12,
                 lineHeight: "20px",
-                padding: "0 14px",
+                padding: "0 16px",
                 borderRadius: 0,
                 color: "#0E0B22",
                 background: onDark ? "#FFFFFF" : "#F1F1F3",
                 border: "none",
-                transition: "background 300ms ease, color 300ms ease",
+              }}
+              onMouseEnter={(e) => {
+                (e.currentTarget as HTMLButtonElement).style.background = onDark ? "#E6E6E8" : "#E6E6E8";
+              }}
+              onMouseLeave={(e) => {
+                (e.currentTarget as HTMLButtonElement).style.background = onDark ? "#FFFFFF" : "#F1F1F3";
               }}
             >
               Book a Demo
