@@ -300,7 +300,7 @@ function KpiColumn({
           margin: "20px 0 0",
           fontSize: fluid(100, 48),
           lineHeight: 1.2,
-          fontWeight: 500,
+          fontWeight: 400,
           letterSpacing: "-0.01em",
         }}
       >
