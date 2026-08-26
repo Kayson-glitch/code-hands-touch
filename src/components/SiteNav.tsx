@@ -130,8 +130,9 @@ export function SiteNav({ revealDelay = 4000 }: { revealDelay?: number } = {}) {
       >
         <div className="flex h-full w-full max-w-[1200px] items-center justify-between">
           {/* Logo */}
-          <a
-            href="/"
+          <Link
+            to="/"
+            preload="intent"
             className="pointer-events-auto flex shrink-0 items-center gap-2"
             style={{ height: 24, color: inkStrong, transition: "color 300ms ease" }}
           >
