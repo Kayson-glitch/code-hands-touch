@@ -198,11 +198,10 @@ export function SiteNav({ revealDelay = 4000 }: { revealDelay?: number } = {}) {
                 lineHeight: "20px",
                 padding: "0 14px",
                 borderRadius: 0,
-                color: onDark ? "#0E0B22" : "#FFFFFF",
-                background: onDark ? "#FFFFFF" : "#0E0B22",
-                border: `1px solid ${onDark ? "#FFFFFF" : "#0E0B22"}`,
-
-                transition: "background 300ms ease, color 300ms ease, border-color 300ms ease",
+                color: "#0E0B22",
+                background: onDark ? "#FFFFFF" : "#F1F1F3",
+                border: "none",
+                transition: "background 300ms ease, color 300ms ease",
               }}
             >
               Book a Demo
