@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "@tanstack/react-router";
+import { Link, useNavigate } from "@tanstack/react-router";
 import logo from "@/assets/synergy-logo-v3.png.asset.json";
 
 export function SiteNav({ revealDelay = 4000 }: { revealDelay?: number } = {}) {
