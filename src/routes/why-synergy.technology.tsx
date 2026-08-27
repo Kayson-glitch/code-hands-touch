@@ -425,10 +425,10 @@ function ArticleBlock({
 }
 
 /** Stats card — two-column split: left primary stat, right bullet list,
- *  separated by a dashed vertical rule (ref: image-133). */
+ *  separated by a dashed vertical rule (ref: image-134). */
 function StatsCard({ module }: { module: Module }) {
   return (
-    <Reveal y={32} duration={1600} style={{ background: "#F8F9F9" }}>
+    <Reveal y={32} duration={1600} style={{ background: "#F8F9FA" }}>
       <div
         className="flex"
         style={{
@@ -437,7 +437,7 @@ function StatsCard({ module }: { module: Module }) {
         }}
       >
         {/* left column — primary metric */}
-        <div className="shrink-0" style={{ width: "33%" }}>
+        <div className="shrink-0" style={{ width: "35%" }}>
           <p
             className="font-sans uppercase tracking-wide"
             style={{
@@ -446,7 +446,7 @@ function StatsCard({ module }: { module: Module }) {
               lineHeight: "18px",
               fontWeight: 600,
               letterSpacing: "0.08em",
-              color: "#12121B",
+              color: "#374151",
             }}
           >
             Overall Impact
@@ -459,8 +459,8 @@ function StatsCard({ module }: { module: Module }) {
               margin: `${fluid(20, 14)} 0 0`,
               fontSize: 14,
               lineHeight: "22px",
-              color: "var(--ink-muted, #6B7280)",
-              maxWidth: 320,
+              color: "#6B7280",
+              maxWidth: 340,
             }}
           >
             {module.caption}
@@ -483,7 +483,7 @@ function StatsCard({ module }: { module: Module }) {
           {module.bullets.map((b, i) => (
             <li key={b} className="flex items-start gap-3">
               <Bullet diamond={i % 2 === 0} />
-              <span className="text-ink" style={{ fontSize: 14, lineHeight: "22px" }}>
+              <span style={{ fontSize: 14, lineHeight: "22px", color: "#374151" }}>
                 {b}
               </span>
             </li>
