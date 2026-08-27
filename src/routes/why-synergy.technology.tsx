@@ -469,8 +469,8 @@ function StatsCard({ module }: { module: Module }) {
 
         {/* right column — bullet details */}
         <ul
-          className="flex flex-1 flex-col justify-center"
-          style={{ gap: 22, paddingLeft: fluid(56, 24) }}
+          className="flex flex-1 flex-col"
+          style={{ gap: 22, paddingLeft: fluid(56, 24), paddingTop: 2 }}
         >
           {module.bullets.map((b, i) => (
             <li key={b} className="flex items-start gap-3">
