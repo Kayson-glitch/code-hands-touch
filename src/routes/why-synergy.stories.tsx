@@ -10,6 +10,7 @@ import {
 import { SiteNav } from "@/components/SiteNav";
 import { HalftoneHandStill } from "@/components/HalftoneHandStill";
 import { Reveal } from "@/components/Reveal";
+import { RollingNumber } from "@/components/RollingNumber";
 import { FinChatDock } from "@/components/FinChatDock";
 
 import { getLenis } from "@/lib/smoothScroll";
@@ -412,9 +413,9 @@ function StatValue({ value }: { value: string }) {
   return (
     <p
       className="font-display text-ink whitespace-nowrap capitalize"
-      style={{ margin: 0, fontSize: fluid(100, 52), lineHeight: 1.2, fontWeight: 500 }}
+      style={{ margin: 0, fontSize: fluid(100, 52), lineHeight: 1.2, fontWeight: 400 }}
     >
-      {digits}
+      <RollingNumber value={digits} />
       {unit ? (
         <span style={{ fontSize: fluid(60, 32), fontWeight: 400, color: "#A1A0A9" }}>{unit}</span>
       ) : null}
