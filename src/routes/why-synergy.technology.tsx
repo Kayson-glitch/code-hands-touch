@@ -467,13 +467,14 @@ function StatsCard({ module }: { module: Module }) {
           </p>
         </div>
 
-        {/* dashed vertical divider */}
+        {/* dashed vertical divider — stretches near the card's top/bottom edges */}
         <div
           aria-hidden
           className="self-stretch"
           style={{
             width: 0,
             borderLeft: "1px dashed #D1D5DB",
+            marginBlock: fluid(-28, -16),
             marginInline: fluid(8, 4),
           }}
         />
