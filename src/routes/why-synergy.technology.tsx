@@ -873,7 +873,7 @@ function TechnologyPage() {
                     lineHeight: "20px",
                   }}
                 >
-                  Revenue-Driven AI Support. Engineed on Synergy. Scale Securely.
+                  Revenue-Driven AI Support. Engineered on Synergy. Scale Securely.
                 </span>
               </div>
             </div>

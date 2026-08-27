@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as WhySynergyRouteImport } from './routes/why-synergy'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as WhySynergyTechnologyRouteImport } from './routes/why-synergy.technology'
 import { Route as WhySynergyStoriesRouteImport } from './routes/why-synergy.stories'
 import { Route as WhySynergyBusinessImpactRouteImport } from './routes/why-synergy.business-impact'
 
@@ -23,6 +24,11 @@ const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
+} as any)
+const WhySynergyTechnologyRoute = WhySynergyTechnologyRouteImport.update({
+  id: '/technology',
+  path: '/technology',
+  getParentRoute: () => WhySynergyRoute,
 } as any)
 const WhySynergyStoriesRoute = WhySynergyStoriesRouteImport.update({
   id: '/stories',
@@ -41,12 +47,14 @@ export interface FileRoutesByFullPath {
   '/why-synergy': typeof WhySynergyRouteWithChildren
   '/why-synergy/business-impact': typeof WhySynergyBusinessImpactRoute
   '/why-synergy/stories': typeof WhySynergyStoriesRoute
+  '/why-synergy/technology': typeof WhySynergyTechnologyRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/why-synergy': typeof WhySynergyRouteWithChildren
   '/why-synergy/business-impact': typeof WhySynergyBusinessImpactRoute
   '/why-synergy/stories': typeof WhySynergyStoriesRoute
+  '/why-synergy/technology': typeof WhySynergyTechnologyRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -54,6 +62,7 @@ export interface FileRoutesById {
   '/why-synergy': typeof WhySynergyRouteWithChildren
   '/why-synergy/business-impact': typeof WhySynergyBusinessImpactRoute
   '/why-synergy/stories': typeof WhySynergyStoriesRoute
+  '/why-synergy/technology': typeof WhySynergyTechnologyRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -62,18 +71,21 @@ export interface FileRouteTypes {
     | '/why-synergy'
     | '/why-synergy/business-impact'
     | '/why-synergy/stories'
+    | '/why-synergy/technology'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/why-synergy'
     | '/why-synergy/business-impact'
     | '/why-synergy/stories'
+    | '/why-synergy/technology'
   id:
     | '__root__'
     | '/'
     | '/why-synergy'
     | '/why-synergy/business-impact'
     | '/why-synergy/stories'
+    | '/why-synergy/technology'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -97,6 +109,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/why-synergy/technology': {
+      id: '/why-synergy/technology'
+      path: '/technology'
+      fullPath: '/why-synergy/technology'
+      preLoaderRoute: typeof WhySynergyTechnologyRouteImport
+      parentRoute: typeof WhySynergyRoute
+    }
     '/why-synergy/stories': {
       id: '/why-synergy/stories'
       path: '/stories'
@@ -117,11 +136,13 @@ declare module '@tanstack/react-router' {
 interface WhySynergyRouteChildren {
   WhySynergyBusinessImpactRoute: typeof WhySynergyBusinessImpactRoute
   WhySynergyStoriesRoute: typeof WhySynergyStoriesRoute
+  WhySynergyTechnologyRoute: typeof WhySynergyTechnologyRoute
 }
 
 const WhySynergyRouteChildren: WhySynergyRouteChildren = {
   WhySynergyBusinessImpactRoute: WhySynergyBusinessImpactRoute,
   WhySynergyStoriesRoute: WhySynergyStoriesRoute,
+  WhySynergyTechnologyRoute: WhySynergyTechnologyRoute,
 }
 
 const WhySynergyRouteWithChildren = WhySynergyRoute._addFileChildren(
