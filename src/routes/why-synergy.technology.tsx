@@ -432,8 +432,8 @@ function StatsCard({ module }: { module: Module }) {
       <div
         className="relative flex"
         style={{
-          padding: `${fluid(48, 32)} ${fluid(24, 12)}`,
-          gap: fluid(24, 12),
+          padding: `${fluid(56, 36)} ${fluid(40, 16)}`,
+          gap: fluid(40, 20),
         }}
       >
         {/* left column — primary metric */}
