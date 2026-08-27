@@ -365,14 +365,14 @@ function ArticleBlock({
 }
 
 /** Stats card — Figma 1569:103640 (880×440, #FAFAFA). */
-function StatsCard({ story }: { story: Story }) {
+function StatsCard({ story, dark = false }: { story: Story; dark?: boolean }) {
   return (
-    <Reveal y={32} duration={1600} style={{ background: "#FAFAFA" }}>
+    <Reveal y={32} duration={1600} style={{ background: dark ? "#0E0B22" : "#FAFAFA" }}>
       <div style={{ padding: `${fluid(40, 28)} ${fluid(68, 24)}` }}>
         <div className="flex items-center" style={{ gap: fluid(74, 24) }}>
-          <StatValue value={story.stats[0]} />
-          <span aria-hidden style={{ width: 56, height: 56, background: "#E1E0E4" }} />
-          <StatValue value={story.stats[1]} />
+          <StatValue value={story.stats[0]} dark={dark} />
+          <span aria-hidden style={{ width: 56, height: 56, background: dark ? "rgba(255,255,255,0.18)" : "#E1E0E4" }} />
+          <StatValue value={story.stats[1]} dark={dark} />
         </div>
 
         <p
@@ -380,21 +380,21 @@ function StatsCard({ story }: { story: Story }) {
             margin: `${fluid(20, 14)} 0 0`,
             fontSize: 14,
             lineHeight: "24px",
-            color: "var(--ink-faint, #A1A0A9)",
+            color: dark ? "rgba(255,255,255,0.5)" : "var(--ink-faint, #A1A0A9)",
           }}
         >
           {story.caption}
         </p>
 
         <div style={{ margin: `${fluid(40, 24)} 0 ${fluid(40, 24)}`, maxWidth: 680 }}>
-          <Hairline />
+          <Hairline dark={dark} />
         </div>
 
         <ul className="flex flex-col" style={{ gap: 24 }}>
           {story.bullets.map((b, i) => (
             <li key={b} className="flex items-start gap-2">
-              <Bullet diamond={i % 2 === 0} />
-              <span className="text-ink" style={{ fontSize: 14, lineHeight: "22px" }}>
+              <Bullet diamond={i % 2 === 0} dark={dark} />
+              <span style={{ fontSize: 14, lineHeight: "22px", color: dark ? "rgba(255,255,255,0.75)" : "var(--ink, #0E0B22)" }}>
                 {b}
               </span>
             </li>
