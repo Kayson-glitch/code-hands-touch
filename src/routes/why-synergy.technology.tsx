@@ -489,7 +489,7 @@ function StatsCard({ module }: { module: Module }) {
             position: "absolute",
             top: fluid(16, 10),
             bottom: fluid(16, 10),
-            left: "35%",
+            left: "30%",
             width: 0,
             borderLeft: "1px dashed #D1D5DB",
           }}
