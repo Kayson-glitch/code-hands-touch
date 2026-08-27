@@ -199,15 +199,19 @@ export function SiteNav({ revealDelay = 4000 }: { revealDelay?: number } = {}) {
                 lineHeight: "20px",
                 padding: "0 16px",
                 borderRadius: 0,
-                color: "#0E0B22",
-                background: onDark ? "#FFFFFF" : "#F1F1F3",
+                color: onDark ? "#FFFFFF" : "#0E0B22",
+                background: onDark ? "rgba(255, 255, 255, 0.15)" : "#F1F1F3",
                 border: "none",
               }}
               onMouseEnter={(e) => {
-                (e.currentTarget as HTMLButtonElement).style.background = onDark ? "#E6E6E8" : "#E6E6E8";
+                (e.currentTarget as HTMLButtonElement).style.background = onDark
+                  ? "rgba(255, 255, 255, 0.22)"
+                  : "#E6E6E8";
               }}
               onMouseLeave={(e) => {
-                (e.currentTarget as HTMLButtonElement).style.background = onDark ? "#FFFFFF" : "#F1F1F3";
+                (e.currentTarget as HTMLButtonElement).style.background = onDark
+                  ? "rgba(255, 255, 255, 0.15)"
+                  : "#F1F1F3";
               }}
             >
               Book a Demo
