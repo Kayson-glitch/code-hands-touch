@@ -250,6 +250,7 @@ const WHY_SYNERGY_ITEMS: Array<{
     dot: "#8CE0FF",
     kicker: "Engineering",
     title: "Technology & Guardrails",
+    to: "/why-synergy/technology",
     desc: "Governed knowledge, precise retrieval, and human oversight.",
   },
   {
