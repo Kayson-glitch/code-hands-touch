@@ -168,7 +168,7 @@ const MODULES: Module[] = [
       "We describe how grounding works, what happens when confidence is low, and the safeguards that prevent fabricated answers from reaching customers.",
     ],
     stats: ["75%", "0"],
-    caption: "AI resolution rate across 200K conversations, with zero hallucination incidents reported.",
+    caption: "AI resolution rate across 200K",
     bullets: [
       "AI resolves 55% of conversations end-to-end",
       "AI handles 70% of messages, around 110K/month",
