@@ -475,7 +475,7 @@ function StatsCard({ module }: { module: Module }) {
           {module.bullets.map((b, i) => (
             <li key={b} className="flex items-start gap-3">
               <Bullet diamond={i % 2 === 0} />
-              <span style={{ fontSize: 14, lineHeight: "22px", color: "#374151" }}>
+              <span className="whitespace-nowrap" style={{ fontSize: 14, lineHeight: "22px", color: "#374151" }}>
                 {b}
               </span>
             </li>
