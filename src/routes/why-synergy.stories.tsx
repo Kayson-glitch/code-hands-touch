@@ -406,18 +406,18 @@ function StatsCard({ story, dark = false }: { story: Story; dark?: boolean }) {
 }
 
 /** 100px Clash Display digits with a 60px regular unit (Figma 1569:103641). */
-function StatValue({ value }: { value: string }) {
+function StatValue({ value, dark = false }: { value: string; dark?: boolean }) {
   const match = /^([\d.]+)(.*)$/.exec(value);
   const digits = match ? match[1] : value;
   const unit = match ? match[2] : "";
   return (
     <p
-      className="font-display text-ink whitespace-nowrap capitalize"
-      style={{ margin: 0, fontSize: fluid(100, 52), lineHeight: 1.2, fontWeight: 400 }}
+      className="font-display whitespace-nowrap capitalize"
+      style={{ margin: 0, fontSize: fluid(100, 52), lineHeight: 1.2, fontWeight: 400, color: dark ? "#FFFFFF" : "var(--ink, #0E0B22)" }}
     >
       <RollingNumber value={digits} />
       {unit ? (
-        <span style={{ fontSize: fluid(60, 32), fontWeight: 400, color: "#A1A0A9" }}>{unit}</span>
+        <span style={{ fontSize: fluid(60, 32), fontWeight: 400, color: dark ? "rgba(255,255,255,0.5)" : "#A1A0A9" }}>{unit}</span>
       ) : null}
     </p>
   );
