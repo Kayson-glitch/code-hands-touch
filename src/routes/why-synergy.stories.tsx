@@ -423,13 +423,15 @@ function StatValue({ value, dark = false }: { value: string; dark?: boolean }) {
   );
 }
 
-function StoryArticle({ story }: { story: Story }) {
+function StoryArticle({ story, dark = false }: { story: Story; dark?: boolean }) {
+  const ink = dark ? "#FFFFFF" : "var(--ink, #0E0B22)";
+  const inkMuted = dark ? "rgba(255,255,255,0.5)" : "var(--ink-muted, #7A7885)";
   return (
-    <article id={story.id} className="bg-white">
+    <article id={story.id} style={{ background: dark ? "#000000" : "#FFFFFF" }} data-dark-section={dark || undefined}>
       {/* module top hairline — Figma: full-width rule opening every story module */}
-      <Hairline />
+      <Hairline dark={dark} />
       <div style={{ padding: `${fluid(60, 28)} ${fluid(60, 24)} 0` }}>
-        <StatsCard story={story} />
+        <StatsCard story={story} dark={dark} />
       </div>
 
 
@@ -439,12 +441,12 @@ function StoryArticle({ story }: { story: Story }) {
         <Reveal y={32} duration={1600}>
           <p
             className="capitalize"
-            style={{ margin: 0, fontSize: 12, lineHeight: "20px", color: "var(--ink, #0E0B22)" }}
+            style={{ margin: 0, fontSize: 12, lineHeight: "20px", color: ink }}
           >
             {story.eyebrow}
           </p>
           <div style={{ marginTop: 10 }}>
-            <Hairline />
+            <Hairline dark={dark} />
           </div>
 
           <div
@@ -462,7 +464,7 @@ function StoryArticle({ story }: { story: Story }) {
                 }}
               >
                 <span style={{ color: LIME }}>{story.titleAccent}</span>
-                <span className="text-ink">{story.titleRest}</span>
+                <span style={{ color: ink }}>{story.titleRest}</span>
               </h2>
               <div style={{ marginTop: 20 }}>
                 {story.intro.map((p) => (
@@ -472,7 +474,7 @@ function StoryArticle({ story }: { story: Story }) {
                       margin: 0,
                       fontSize: 13,
                       lineHeight: "20px",
-                      color: "var(--ink-muted, #7A7885)",
+                      color: inkMuted,
                     }}
                   >
                     {p}
@@ -480,7 +482,7 @@ function StoryArticle({ story }: { story: Story }) {
                 ))}
               </div>
             </div>
-            <InlineDemoButton />
+            <InlineDemoButton dark={dark} />
           </div>
         </Reveal>
       </div>
@@ -495,7 +497,7 @@ function StoryArticle({ story }: { story: Story }) {
         }}
       >
         {story.light.map((b, i) => (
-          <ArticleBlock key={b.title} {...b} delay={i * 260} />
+          <ArticleBlock key={b.title} {...b} dark={dark} delay={i * 260} />
         ))}
       </div>
 
@@ -509,13 +511,13 @@ function StoryArticle({ story }: { story: Story }) {
         }}
       >
         {story.dark.map((b, i) => (
-          <ArticleBlock key={b.title} {...b} delay={i * 260} />
+          <ArticleBlock key={b.title} {...b} dark={dark} delay={i * 260} />
         ))}
       </div>
 
       {/* closing block */}
       <div style={{ padding: `${fluid(80, 44)} ${fluid(60, 24)} ${fluid(60, 36)}` }}>
-        <ArticleBlock {...story.tail} />
+        <ArticleBlock {...story.tail} dark={dark} />
       </div>
     </article>
   );
