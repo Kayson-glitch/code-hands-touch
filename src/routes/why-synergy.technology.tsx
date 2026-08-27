@@ -469,7 +469,7 @@ function StatsCard({ module }: { module: Module }) {
 
         {/* right column — bullet details */}
         <ul
-          className="flex flex-1 flex-col"
+          className="flex flex-1 flex-col justify-between"
           style={{ gap: 22, paddingLeft: fluid(56, 24), margin: 0 }}
         >
           {module.bullets.map((b, i) => (
