@@ -89,12 +89,12 @@ function RainbowButton({ label }: { label: string }) {
 }
 
 /** Small dark CTA inside the article header (Figma 1569:103625). */
-function InlineDemoButton() {
+function InlineDemoButton({ dark = false }: { dark?: boolean }) {
   return (
     <button
       className="shrink-0 cursor-pointer transition-opacity hover:opacity-90"
       style={{
-        background: "#0E0B22",
+        background: dark ? "rgba(255,255,255,0.12)" : "#0E0B22",
         borderBottom: "1.5px solid #137DFF",
         borderRadius: 0,
         height: 36,
@@ -111,7 +111,7 @@ function InlineDemoButton() {
 }
 
 /** Alternating lime diamond / ink square bullet (Figma 1569:103648 / 103653). */
-function Bullet({ diamond }: { diamond: boolean }) {
+function Bullet({ diamond, dark = false }: { diamond: boolean; dark?: boolean }) {
   return (
     <span
       aria-hidden
@@ -119,7 +119,7 @@ function Bullet({ diamond }: { diamond: boolean }) {
       style={{
         width: 6,
         height: 6,
-        background: diamond ? LIME : "#2A2836",
+        background: diamond ? LIME : dark ? "rgba(255,255,255,0.55)" : "#2A2836",
         transform: diamond ? "rotate(45deg)" : undefined,
       }}
     />
@@ -365,14 +365,14 @@ function ArticleBlock({
 }
 
 /** Stats card — Figma 1569:103640 (880×440, #FAFAFA). */
-function StatsCard({ story }: { story: Story }) {
+function StatsCard({ story, dark = false }: { story: Story; dark?: boolean }) {
   return (
-    <Reveal y={32} duration={1600} style={{ background: "#FAFAFA" }}>
+    <Reveal y={32} duration={1600} style={{ background: dark ? "#0E0B22" : "#FAFAFA" }}>
       <div style={{ padding: `${fluid(40, 28)} ${fluid(68, 24)}` }}>
         <div className="flex items-center" style={{ gap: fluid(74, 24) }}>
-          <StatValue value={story.stats[0]} />
-          <span aria-hidden style={{ width: 56, height: 56, background: "#E1E0E4" }} />
-          <StatValue value={story.stats[1]} />
+          <StatValue value={story.stats[0]} dark={dark} />
+          <span aria-hidden style={{ width: 56, height: 56, background: dark ? "rgba(255,255,255,0.18)" : "#E1E0E4" }} />
+          <StatValue value={story.stats[1]} dark={dark} />
         </div>
 
         <p
@@ -380,21 +380,21 @@ function StatsCard({ story }: { story: Story }) {
             margin: `${fluid(20, 14)} 0 0`,
             fontSize: 14,
             lineHeight: "24px",
-            color: "var(--ink-faint, #A1A0A9)",
+            color: dark ? "rgba(255,255,255,0.5)" : "var(--ink-faint, #A1A0A9)",
           }}
         >
           {story.caption}
         </p>
 
         <div style={{ margin: `${fluid(40, 24)} 0 ${fluid(40, 24)}`, maxWidth: 680 }}>
-          <Hairline />
+          <Hairline dark={dark} />
         </div>
 
         <ul className="flex flex-col" style={{ gap: 24 }}>
           {story.bullets.map((b, i) => (
             <li key={b} className="flex items-start gap-2">
-              <Bullet diamond={i % 2 === 0} />
-              <span className="text-ink" style={{ fontSize: 14, lineHeight: "22px" }}>
+              <Bullet diamond={i % 2 === 0} dark={dark} />
+              <span style={{ fontSize: 14, lineHeight: "22px", color: dark ? "rgba(255,255,255,0.75)" : "var(--ink, #0E0B22)" }}>
                 {b}
               </span>
             </li>
@@ -406,30 +406,32 @@ function StatsCard({ story }: { story: Story }) {
 }
 
 /** 100px Clash Display digits with a 60px regular unit (Figma 1569:103641). */
-function StatValue({ value }: { value: string }) {
+function StatValue({ value, dark = false }: { value: string; dark?: boolean }) {
   const match = /^([\d.]+)(.*)$/.exec(value);
   const digits = match ? match[1] : value;
   const unit = match ? match[2] : "";
   return (
     <p
-      className="font-display text-ink whitespace-nowrap capitalize"
-      style={{ margin: 0, fontSize: fluid(100, 52), lineHeight: 1.2, fontWeight: 400 }}
+      className="font-display whitespace-nowrap capitalize"
+      style={{ margin: 0, fontSize: fluid(100, 52), lineHeight: 1.2, fontWeight: 400, color: dark ? "#FFFFFF" : "var(--ink, #0E0B22)" }}
     >
       <RollingNumber value={digits} />
       {unit ? (
-        <span style={{ fontSize: fluid(60, 32), fontWeight: 400, color: "#A1A0A9" }}>{unit}</span>
+        <span style={{ fontSize: fluid(60, 32), fontWeight: 400, color: dark ? "rgba(255,255,255,0.5)" : "#A1A0A9" }}>{unit}</span>
       ) : null}
     </p>
   );
 }
 
-function StoryArticle({ story }: { story: Story }) {
+function StoryArticle({ story, dark = false }: { story: Story; dark?: boolean }) {
+  const ink = dark ? "#FFFFFF" : "var(--ink, #0E0B22)";
+  const inkMuted = dark ? "rgba(255,255,255,0.5)" : "var(--ink-muted, #7A7885)";
   return (
-    <article id={story.id} className="bg-white">
+    <article id={story.id} style={{ background: dark ? "#000000" : "#FFFFFF" }} data-dark-section={dark || undefined}>
       {/* module top hairline — Figma: full-width rule opening every story module */}
-      <Hairline />
+      <Hairline dark={dark} />
       <div style={{ padding: `${fluid(60, 28)} ${fluid(60, 24)} 0` }}>
-        <StatsCard story={story} />
+        <StatsCard story={story} dark={dark} />
       </div>
 
 
@@ -439,12 +441,12 @@ function StoryArticle({ story }: { story: Story }) {
         <Reveal y={32} duration={1600}>
           <p
             className="capitalize"
-            style={{ margin: 0, fontSize: 12, lineHeight: "20px", color: "var(--ink, #0E0B22)" }}
+            style={{ margin: 0, fontSize: 12, lineHeight: "20px", color: ink }}
           >
             {story.eyebrow}
           </p>
           <div style={{ marginTop: 10 }}>
-            <Hairline />
+            <Hairline dark={dark} />
           </div>
 
           <div
@@ -462,7 +464,7 @@ function StoryArticle({ story }: { story: Story }) {
                 }}
               >
                 <span style={{ color: LIME }}>{story.titleAccent}</span>
-                <span className="text-ink">{story.titleRest}</span>
+                <span style={{ color: ink }}>{story.titleRest}</span>
               </h2>
               <div style={{ marginTop: 20 }}>
                 {story.intro.map((p) => (
@@ -472,7 +474,7 @@ function StoryArticle({ story }: { story: Story }) {
                       margin: 0,
                       fontSize: 13,
                       lineHeight: "20px",
-                      color: "var(--ink-muted, #7A7885)",
+                      color: inkMuted,
                     }}
                   >
                     {p}
@@ -480,7 +482,7 @@ function StoryArticle({ story }: { story: Story }) {
                 ))}
               </div>
             </div>
-            <InlineDemoButton />
+            <InlineDemoButton dark={dark} />
           </div>
         </Reveal>
       </div>
@@ -495,7 +497,7 @@ function StoryArticle({ story }: { story: Story }) {
         }}
       >
         {story.light.map((b, i) => (
-          <ArticleBlock key={b.title} {...b} delay={i * 260} />
+          <ArticleBlock key={b.title} {...b} dark={dark} delay={i * 260} />
         ))}
       </div>
 
@@ -509,13 +511,13 @@ function StoryArticle({ story }: { story: Story }) {
         }}
       >
         {story.dark.map((b, i) => (
-          <ArticleBlock key={b.title} {...b} delay={i * 260} />
+          <ArticleBlock key={b.title} {...b} dark={dark} delay={i * 260} />
         ))}
       </div>
 
       {/* closing block */}
       <div style={{ padding: `${fluid(80, 44)} ${fluid(60, 24)} ${fluid(60, 36)}` }}>
-        <ArticleBlock {...story.tail} />
+        <ArticleBlock {...story.tail} dark={dark} />
       </div>
     </article>
   );
@@ -747,7 +749,7 @@ function StoriesPage() {
           {/* content column */}
           <div className="flex min-w-0 flex-1 flex-col overflow-hidden" style={{ gap: 80 }}>
             {STORIES.map((s) => (
-              <StoryArticle key={s.id} story={s} />
+              <StoryArticle key={s.id} story={s} dark={s.id === "payment-risk"} />
             ))}
 
           </div>
