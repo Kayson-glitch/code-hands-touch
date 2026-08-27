@@ -184,7 +184,7 @@ export function SiteNav({ revealDelay = 4000 }: { revealDelay?: number } = {}) {
           </ul>
 
           {/* Right actions */}
-          <div className="pointer-events-auto flex shrink-0 items-center gap-2.5">
+          <div className="pointer-events-auto flex h-full shrink-0 items-center gap-2.5">
             <button
               className="px-4 py-[7px] capitalize"
               style={{ fontSize: 13, lineHeight: "20px", color: inkStrong }}
@@ -194,7 +194,7 @@ export function SiteNav({ revealDelay = 4000 }: { revealDelay?: number } = {}) {
             <button
               className="font-normal transition-colors duration-300"
               style={{
-                height: 60,
+                alignSelf: "stretch",
                 fontSize: 12,
                 lineHeight: "20px",
                 padding: "0 16px",
