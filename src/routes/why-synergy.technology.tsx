@@ -113,7 +113,7 @@ function InlineDemoButton() {
   );
 }
 
-/** Alternating sky diamond / ink square bullet (Figma 1569:103648 / 103653). */
+/** Alternating sky diamond / ink square bullet (ref: image-133). */
 function Bullet({ diamond }: { diamond: boolean }) {
   return (
     <span
@@ -122,7 +122,7 @@ function Bullet({ diamond }: { diamond: boolean }) {
       style={{
         width: 6,
         height: 6,
-        background: diamond ? SKY : "#2A2836",
+        background: diamond ? "#93C5FD" : "#12121B",
         transform: diamond ? "rotate(45deg)" : undefined,
       }}
     />
