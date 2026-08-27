@@ -113,16 +113,16 @@ function InlineDemoButton() {
   );
 }
 
-/** Alternating sky diamond / ink square bullet (ref: image-133). */
+/** Alternating sky diamond / ink square bullet (ref: image-134). */
 function Bullet({ diamond }: { diamond: boolean }) {
   return (
     <span
       aria-hidden
-      className="mt-[8px] inline-block shrink-0"
+      className="mt-[7px] inline-block shrink-0"
       style={{
         width: 6,
         height: 6,
-        background: diamond ? "#93C5FD" : "#12121B",
+        background: diamond ? "#93C5FD" : "#374151",
         transform: diamond ? "rotate(45deg)" : undefined,
       }}
     />
@@ -168,7 +168,7 @@ const MODULES: Module[] = [
       "We describe how grounding works, what happens when confidence is low, and the safeguards that prevent fabricated answers from reaching customers.",
     ],
     stats: ["75%", "0"],
-    caption: "AI resolution rate across 200K conversations, with zero hallucination incidents reported.",
+    caption: "AI resolution rate across 200K",
     bullets: [
       "AI resolves 55% of conversations end-to-end",
       "AI handles 70% of messages, around 110K/month",
@@ -425,19 +425,19 @@ function ArticleBlock({
 }
 
 /** Stats card — two-column split: left primary stat, right bullet list,
- *  separated by a dashed vertical rule (ref: image-133). */
+ *  separated by a dashed vertical rule (ref: image-134). */
 function StatsCard({ module }: { module: Module }) {
   return (
-    <Reveal y={32} duration={1600} style={{ background: "#F8F9F9" }}>
+    <Reveal y={32} duration={1600} style={{ background: "#F8F9FA" }}>
       <div
-        className="flex"
+        className="relative flex"
         style={{
-          padding: `${fluid(48, 32)} ${fluid(68, 24)}`,
-          gap: fluid(56, 24),
+          padding: `${fluid(56, 36)} ${fluid(40, 16)}`,
+          gap: fluid(40, 20),
         }}
       >
         {/* left column — primary metric */}
-        <div className="shrink-0" style={{ width: "33%" }}>
+        <div className="shrink-0" style={{ width: "35%" }}>
           <p
             className="font-sans uppercase tracking-wide"
             style={{
@@ -446,7 +446,7 @@ function StatsCard({ module }: { module: Module }) {
               lineHeight: "18px",
               fontWeight: 600,
               letterSpacing: "0.08em",
-              color: "#12121B",
+              color: "#374151",
             }}
           >
             Overall Impact
@@ -459,54 +459,59 @@ function StatsCard({ module }: { module: Module }) {
               margin: `${fluid(20, 14)} 0 0`,
               fontSize: 14,
               lineHeight: "22px",
-              color: "var(--ink-muted, #6B7280)",
-              maxWidth: 320,
+              color: "#6B7280",
+              maxWidth: 340,
             }}
           >
             {module.caption}
           </p>
         </div>
 
-        {/* dashed vertical divider */}
-        <div
-          aria-hidden
-          className="self-stretch"
-          style={{
-            width: 0,
-            borderLeft: "1px dashed #D1D5DB",
-            marginInline: fluid(8, 4),
-          }}
-        />
-
         {/* right column — bullet details */}
-        <ul className="flex flex-1 flex-col justify-center" style={{ gap: 22 }}>
+        <ul
+          className="flex flex-1 flex-col justify-between"
+          style={{ gap: 22, paddingLeft: fluid(40, 20), margin: 0 }}
+        >
           {module.bullets.map((b, i) => (
             <li key={b} className="flex items-start gap-3">
               <Bullet diamond={i % 2 === 0} />
-              <span className="text-ink" style={{ fontSize: 14, lineHeight: "22px" }}>
+              <span className="whitespace-nowrap" style={{ fontSize: 14, lineHeight: "22px", color: "#374151" }}>
                 {b}
               </span>
             </li>
           ))}
         </ul>
+
+        {/* dashed vertical divider — absolutely positioned for precise edge control */}
+        <div
+          aria-hidden
+          style={{
+            position: "absolute",
+            top: "30%",
+            bottom: "30%",
+            left: "38%",
+            width: 0,
+            borderLeft: "1px dashed #D1D5DB",
+          }}
+        />
       </div>
     </Reveal>
   );
 }
 
-/** 100px Clash Display digits with a 60px regular unit (Figma 1569:103641). */
+/** 100px Clash Display digits with a 60px regular unit (ref: image-134). */
 function StatValue({ value }: { value: string }) {
   const match = /^([\d.]+)(.*)$/.exec(value);
   const digits = match ? match[1] : value;
   const unit = match ? match[2] : "";
   return (
     <p
-      className="font-display text-ink whitespace-nowrap capitalize"
-      style={{ margin: 0, fontSize: fluid(100, 52), lineHeight: 1.2, fontWeight: 400 }}
+      className="font-display whitespace-nowrap capitalize"
+      style={{ margin: 0, fontSize: fluid(100, 52), lineHeight: 1.2, fontWeight: 400, color: "#111827" }}
     >
       <RollingNumber value={digits} />
       {unit ? (
-        <span style={{ fontSize: fluid(60, 32), fontWeight: 400, color: "#A1A0A9" }}>{unit}</span>
+        <span style={{ fontSize: fluid(60, 32), fontWeight: 400, color: "#9CA3AF" }}>{unit}</span>
       ) : null}
     </p>
   );
