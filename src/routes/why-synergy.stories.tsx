@@ -89,12 +89,12 @@ function RainbowButton({ label }: { label: string }) {
 }
 
 /** Small dark CTA inside the article header (Figma 1569:103625). */
-function InlineDemoButton() {
+function InlineDemoButton({ dark = false }: { dark?: boolean }) {
   return (
     <button
       className="shrink-0 cursor-pointer transition-opacity hover:opacity-90"
       style={{
-        background: "#0E0B22",
+        background: dark ? "rgba(255,255,255,0.12)" : "#0E0B22",
         borderBottom: "1.5px solid #137DFF",
         borderRadius: 0,
         height: 36,
@@ -111,7 +111,7 @@ function InlineDemoButton() {
 }
 
 /** Alternating lime diamond / ink square bullet (Figma 1569:103648 / 103653). */
-function Bullet({ diamond }: { diamond: boolean }) {
+function Bullet({ diamond, dark = false }: { diamond: boolean; dark?: boolean }) {
   return (
     <span
       aria-hidden
@@ -119,7 +119,7 @@ function Bullet({ diamond }: { diamond: boolean }) {
       style={{
         width: 6,
         height: 6,
-        background: diamond ? LIME : "#2A2836",
+        background: diamond ? LIME : dark ? "rgba(255,255,255,0.55)" : "#2A2836",
         transform: diamond ? "rotate(45deg)" : undefined,
       }}
     />
