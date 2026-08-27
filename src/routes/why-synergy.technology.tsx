@@ -487,9 +487,9 @@ function StatsCard({ module }: { module: Module }) {
           aria-hidden
           style={{
             position: "absolute",
-            top: "22%",
-            bottom: "22%",
-            left: "calc(35% + 8px)",
+            top: "30%",
+            bottom: "30%",
+            left: "38%",
             width: 0,
             borderLeft: "1px dashed #D1D5DB",
           }}
