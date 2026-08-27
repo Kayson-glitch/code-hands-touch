@@ -113,16 +113,16 @@ function InlineDemoButton() {
   );
 }
 
-/** Alternating sky diamond / ink square bullet (ref: image-133). */
+/** Alternating sky diamond / ink square bullet (ref: image-134). */
 function Bullet({ diamond }: { diamond: boolean }) {
   return (
     <span
       aria-hidden
-      className="mt-[8px] inline-block shrink-0"
+      className="mt-[7px] inline-block shrink-0"
       style={{
         width: 6,
         height: 6,
-        background: diamond ? "#93C5FD" : "#12121B",
+        background: diamond ? "#93C5FD" : "#374151",
         transform: diamond ? "rotate(45deg)" : undefined,
       }}
     />
