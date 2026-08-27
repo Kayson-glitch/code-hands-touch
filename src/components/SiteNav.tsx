@@ -194,6 +194,7 @@ export function SiteNav({ revealDelay = 4000 }: { revealDelay?: number } = {}) {
             <button
               className="font-normal transition-colors duration-300"
               style={{
+                position: "relative",
                 height: 60,
                 fontSize: 12,
                 lineHeight: "20px",
@@ -210,6 +211,31 @@ export function SiteNav({ revealDelay = 4000 }: { revealDelay?: number } = {}) {
                 (e.currentTarget as HTMLButtonElement).style.background = onDark ? "#FFFFFF" : "#F1F1F3";
               }}
             >
+              {/* Left + right rainbow edge lines — same gradient as the top bar. */}
+              <span
+                aria-hidden
+                style={{
+                  position: "absolute",
+                  left: 0,
+                  top: 0,
+                  bottom: 0,
+                  width: 1.5,
+                  backgroundImage:
+                    "linear-gradient(180deg, #137DFF 0%, #FF18AA 33.333%, #FFCD17 66.666%, #137DFF 100%)",
+                }}
+              />
+              <span
+                aria-hidden
+                style={{
+                  position: "absolute",
+                  right: 0,
+                  top: 0,
+                  bottom: 0,
+                  width: 1.5,
+                  backgroundImage:
+                    "linear-gradient(180deg, #137DFF 0%, #FF18AA 33.333%, #FFCD17 66.666%, #137DFF 100%)",
+                }}
+              />
               Book a Demo
             </button>
           </div>
