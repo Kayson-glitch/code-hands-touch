@@ -113,7 +113,7 @@ function InlineDemoButton() {
   );
 }
 
-/** Alternating sky diamond / ink square bullet (Figma 1569:103648 / 103653). */
+/** Alternating sky diamond / ink square bullet (ref: image-133). */
 function Bullet({ diamond }: { diamond: boolean }) {
   return (
     <span
@@ -122,7 +122,7 @@ function Bullet({ diamond }: { diamond: boolean }) {
       style={{
         width: 6,
         height: 6,
-        background: diamond ? SKY : "#2A2836",
+        background: diamond ? "#93C5FD" : "#12121B",
         transform: diamond ? "rotate(45deg)" : undefined,
       }}
     />
@@ -424,35 +424,64 @@ function ArticleBlock({
   );
 }
 
-/** Stats card — Figma 1569:103640 (880×440, #FAFAFA). */
+/** Stats card — two-column split: left primary stat, right bullet list,
+ *  separated by a dashed vertical rule (ref: image-133). */
 function StatsCard({ module }: { module: Module }) {
   return (
-    <Reveal y={32} duration={1600} style={{ background: "#FAFAFA" }}>
-      <div style={{ padding: `${fluid(40, 28)} ${fluid(68, 24)}` }}>
-        <div className="flex items-center" style={{ gap: fluid(74, 24) }}>
-          <StatValue value={module.stats[0]} />
-          <span aria-hidden style={{ width: 56, height: 56, background: "#E1E0E4" }} />
-          <StatValue value={module.stats[1]} />
+    <Reveal y={32} duration={1600} style={{ background: "#F8F9F9" }}>
+      <div
+        className="flex"
+        style={{
+          padding: `${fluid(48, 32)} ${fluid(68, 24)}`,
+          gap: fluid(56, 24),
+        }}
+      >
+        {/* left column — primary metric */}
+        <div className="shrink-0" style={{ width: "33%" }}>
+          <p
+            className="font-sans uppercase tracking-wide"
+            style={{
+              margin: 0,
+              fontSize: 13,
+              lineHeight: "18px",
+              fontWeight: 600,
+              letterSpacing: "0.08em",
+              color: "#12121B",
+            }}
+          >
+            Overall Impact
+          </p>
+          <div style={{ marginTop: fluid(20, 14) }}>
+            <StatValue value={module.stats[0]} />
+          </div>
+          <p
+            style={{
+              margin: `${fluid(20, 14)} 0 0`,
+              fontSize: 14,
+              lineHeight: "22px",
+              color: "var(--ink-muted, #6B7280)",
+              maxWidth: 320,
+            }}
+          >
+            {module.caption}
+          </p>
         </div>
 
-        <p
+        {/* dashed vertical divider */}
+        <div
+          aria-hidden
+          className="self-stretch"
           style={{
-            margin: `${fluid(20, 14)} 0 0`,
-            fontSize: 14,
-            lineHeight: "24px",
-            color: "var(--ink-faint, #A1A0A9)",
+            width: 0,
+            borderLeft: "1px dashed #D1D5DB",
+            marginInline: fluid(8, 4),
           }}
-        >
-          {module.caption}
-        </p>
+        />
 
-        <div style={{ margin: `${fluid(40, 24)} 0 ${fluid(40, 24)}`, maxWidth: 680 }}>
-          <Hairline />
-        </div>
-
-        <ul className="flex flex-col" style={{ gap: 24 }}>
+        {/* right column — bullet details */}
+        <ul className="flex flex-1 flex-col justify-center" style={{ gap: 22 }}>
           {module.bullets.map((b, i) => (
-            <li key={b} className="flex items-start gap-2">
+            <li key={b} className="flex items-start gap-3">
               <Bullet diamond={i % 2 === 0} />
               <span className="text-ink" style={{ fontSize: 14, lineHeight: "22px" }}>
                 {b}
