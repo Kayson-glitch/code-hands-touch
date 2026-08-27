@@ -494,19 +494,19 @@ function StatsCard({ module }: { module: Module }) {
   );
 }
 
-/** 100px Clash Display digits with a 60px regular unit (Figma 1569:103641). */
+/** 100px Clash Display digits with a 60px regular unit (ref: image-134). */
 function StatValue({ value }: { value: string }) {
   const match = /^([\d.]+)(.*)$/.exec(value);
   const digits = match ? match[1] : value;
   const unit = match ? match[2] : "";
   return (
     <p
-      className="font-display text-ink whitespace-nowrap capitalize"
-      style={{ margin: 0, fontSize: fluid(100, 52), lineHeight: 1.2, fontWeight: 400 }}
+      className="font-display whitespace-nowrap capitalize"
+      style={{ margin: 0, fontSize: fluid(100, 52), lineHeight: 1.2, fontWeight: 400, color: "#111827" }}
     >
       <RollingNumber value={digits} />
       {unit ? (
-        <span style={{ fontSize: fluid(60, 32), fontWeight: 400, color: "#A1A0A9" }}>{unit}</span>
+        <span style={{ fontSize: fluid(60, 32), fontWeight: 400, color: "#9CA3AF" }}>{unit}</span>
       ) : null}
     </p>
   );
