@@ -170,10 +170,10 @@ const MODULES: Module[] = [
     stats: ["75%", "0"],
     caption: "AI resolution rate across 200K conversations, with zero hallucination incidents reported.",
     bullets: [
-      "AI resolves 55% of conversations end-to-end without human intervention",
-      "Every answer cites the exact source passage used to generate it",
-      "No fabricated answers shipped — low-confidence queries are routed to a human by default",
-      "Continuous red-teaming tests the guardrails against adversarial prompt injections",
+      "AI resolves 55% of conversations end-to-end",
+      "AI handles 70% of messages, around 110K/month",
+      "Both metrics were zero before launch",
+      "No inflated metrics: human agent intervene",
     ],
     light: [
       {
