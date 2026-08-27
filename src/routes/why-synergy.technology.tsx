@@ -437,7 +437,7 @@ function StatsCard({ module }: { module: Module }) {
         }}
       >
         {/* left column — primary metric */}
-        <div className="shrink-0" style={{ width: "35%" }}>
+        <div className="shrink-0" style={{ width: "35%", paddingBlock: fluid(64, 40) }}>
           <p
             className="font-sans uppercase tracking-wide"
             style={{
