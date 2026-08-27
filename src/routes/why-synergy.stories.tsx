@@ -499,11 +499,9 @@ function StoryArticle({ story }: { story: Story }) {
         ))}
       </div>
 
-      {/* dark block — full-bleed inside the column */}
+      {/* dark-block content now on white bg (black background removed) */}
       <div
-        data-dark-section
         style={{
-          background: "#000000",
           padding: `${fluid(80, 44)} ${fluid(60, 24)}`,
           display: "flex",
           flexDirection: "column",
@@ -511,7 +509,7 @@ function StoryArticle({ story }: { story: Story }) {
         }}
       >
         {story.dark.map((b, i) => (
-          <ArticleBlock key={b.title} {...b} dark delay={i * 260} />
+          <ArticleBlock key={b.title} {...b} delay={i * 260} />
         ))}
       </div>
 
