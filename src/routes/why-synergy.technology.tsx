@@ -430,14 +430,14 @@ function StatsCard({ module }: { module: Module }) {
   return (
     <Reveal y={32} duration={1600} style={{ background: "#F8F9FA" }}>
       <div
-        className="flex"
+        className="relative flex"
         style={{
-          padding: `0 ${fluid(68, 24)}`,
+          padding: `${fluid(56, 36)} ${fluid(68, 24)}`,
           gap: fluid(56, 24),
         }}
       >
         {/* left column — primary metric */}
-        <div className="shrink-0" style={{ width: "35%", paddingBlock: fluid(64, 40) }}>
+        <div className="shrink-0" style={{ width: "35%" }}>
           <p
             className="font-sans uppercase tracking-wide"
             style={{
@@ -467,20 +467,11 @@ function StatsCard({ module }: { module: Module }) {
           </p>
         </div>
 
-        {/* dashed vertical divider — stretches near the card's top/bottom edges */}
-        <div
-          aria-hidden
-          className="self-stretch"
-          style={{
-            width: 0,
-            borderLeft: "1px dashed #D1D5DB",
-            marginBlock: fluid(-28, -16),
-            marginInline: fluid(8, 4),
-          }}
-        />
-
         {/* right column — bullet details */}
-        <ul className="flex flex-1 flex-col justify-center" style={{ gap: 22, paddingBlock: fluid(64, 40) }}>
+        <ul
+          className="flex flex-1 flex-col justify-center"
+          style={{ gap: 22, paddingLeft: fluid(56, 24) }}
+        >
           {module.bullets.map((b, i) => (
             <li key={b} className="flex items-start gap-3">
               <Bullet diamond={i % 2 === 0} />
@@ -490,6 +481,19 @@ function StatsCard({ module }: { module: Module }) {
             </li>
           ))}
         </ul>
+
+        {/* dashed vertical divider — absolutely positioned for precise edge control */}
+        <div
+          aria-hidden
+          style={{
+            position: "absolute",
+            top: fluid(16, 10),
+            bottom: fluid(16, 10),
+            left: "35%",
+            width: 0,
+            borderLeft: "1px dashed #D1D5DB",
+          }}
+        />
       </div>
     </Reveal>
   );
