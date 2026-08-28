@@ -653,8 +653,12 @@ html.lenis body {
   /* Centred lattice insets are measured in px by ClosingSection (ResizeObserver)
      because percentages inside background-position resolve against the
      positioning area (element minus image), which skewed mod() math. */
-  --grid-x-inset: var(--grid-x-min);
-  --grid-y-inset: var(--grid-y-min);
+  --grid-x-inset: calc(
+    var(--grid-x-min) + mod(calc(100% - 2 * var(--grid-x-min)), calc(2 * var(--grid-step))) / 2
+  );
+  --grid-y-inset: calc(
+    var(--grid-y-min) + mod(calc(100% - var(--grid-nav) - 2 * var(--grid-y-min)), calc(2 * var(--grid-step))) / 2
+  );
   --grid-y-start: calc(var(--grid-nav) + var(--grid-y-inset));
   --grid-y-end: calc(100% - var(--grid-y-inset));
   position: absolute;
