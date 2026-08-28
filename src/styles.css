@@ -782,6 +782,9 @@ html.lenis body {
 
 .artemis-gallery__panel {
   position: relative;
+  /* One module per viewport: panel pitch (width + track gap) equals 100vw so a
+     resting module is alone on screen, as in the static Figma frame. */
+  min-width: calc(100vw - 14rem);
   display: flex;
   flex-direction: column;
   align-items: flex-start;
