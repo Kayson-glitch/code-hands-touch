@@ -865,14 +865,17 @@ html.lenis body {
 }
 
 
-/* Placeholder media block (Figma: 360×480, square corners). */
+/* Placeholder media block (Figma: 360×480, square corners).
+   Sits 80px right of the module's 16% boundary rule. */
 .artemis-gallery__media {
   flex: 0 0 auto;
+  margin-left: 80px;
   width: 360px;
   height: 480px;
   border-radius: 0;
   background: #d9d9d9;
 }
+
 
 .artemis-gallery__copy {
   display: flex;
