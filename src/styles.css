@@ -650,20 +650,25 @@ html.lenis body {
   --grid-nav: 60px;
   --grid-x-min: 120px;
   --grid-y-min: 80px;
-  --grid-x-inset: calc(var(--grid-x-min) + mod(100% - (2 * var(--grid-x-min)), var(--grid-step)) / 2);
-  --grid-y-inset: calc(var(--grid-y-min) + mod(100% - var(--grid-nav) - (2 * var(--grid-y-min)), var(--grid-step)) / 2);
+  /* Centred lattice insets are measured in px by ClosingSection (ResizeObserver)
+     because percentages inside background-position resolve against the
+     positioning area (element minus image), which skewed mod() math. */
+  --grid-x-inset: var(--grid-x-min);
+  --grid-y-inset: var(--grid-y-min);
   --grid-y-start: calc(var(--grid-nav) + var(--grid-y-inset));
   position: absolute;
   inset: 0;
   pointer-events: none;
   z-index: 0;
   /* Crosshairs sit exactly on the first vertical and horizontal grid rules. */
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 10 10'%3E%3Cpath d='M5 0V10M0 5H10' stroke='white' stroke-opacity='0.2'/%3E%3C/svg%3E");
+  background-image:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 10 10'%3E%3Cpath d='M5 0V10M0 5H10' stroke='white' stroke-opacity='0.16'/%3E%3C/svg%3E"),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 10 10'%3E%3Cpath d='M5 0V10M0 5H10' stroke='white' stroke-opacity='0.16'/%3E%3C/svg%3E");
   background-repeat: no-repeat, no-repeat;
   background-position:
     calc(var(--grid-x-inset) - 5px) calc(var(--grid-y-start) - 5px),
     calc(var(--grid-x-inset) - 5px) calc(100% - var(--grid-y-inset) - 5px);
-  background-size: 10px 10px;
+  background-size: 10px 10px, 10px 10px;
 }
 
 /* Vertical rules */
@@ -675,12 +680,12 @@ html.lenis body {
   left: var(--grid-x-inset);
   right: var(--grid-x-inset);
   background-image:
-    /* left edge rule (20%) */
-    linear-gradient(to right, rgba(255, 255, 255, 0.2) 0 1px, transparent 1px),
-    /* inner rules (10%) — same origin and strict 40px pitch */
+    /* left edge rule (16%) */
+    linear-gradient(to right, rgba(255, 255, 255, 0.16) 0 1px, transparent 1px),
+    /* inner rules (8%) — same origin and strict 40px pitch */
     linear-gradient(
       to right,
-      rgba(255, 255, 255, 0.1) 0 1px,
+      rgba(255, 255, 255, 0.08) 0 1px,
       transparent 1px var(--grid-step)
     );
   background-repeat: no-repeat, repeat-x;
@@ -714,11 +719,11 @@ html.lenis body {
   top: var(--grid-y-start);
   bottom: var(--grid-y-inset);
   background-image:
-    linear-gradient(to bottom, rgba(255, 255, 255, 0.2) 0 1px, transparent 1px),
-    linear-gradient(to top, rgba(255, 255, 255, 0.2) 0 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.16) 0 1px, transparent 1px),
+    linear-gradient(to top, rgba(255, 255, 255, 0.16) 0 1px, transparent 1px),
     linear-gradient(
       to bottom,
-      rgba(255, 255, 255, 0.1) 0 1px,
+      rgba(255, 255, 255, 0.08) 0 1px,
       transparent 1px var(--grid-step)
     );
   background-repeat: no-repeat, no-repeat, repeat-y;
