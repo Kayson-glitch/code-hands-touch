@@ -695,7 +695,13 @@ html.lenis body {
   top: var(--grid-nav);
   bottom: 0;
   width: 1px;
-  background: rgba(255, 255, 255, 0.16);
+  /* Two stacked layers: a 16% white rule on top of an opaque #000 occluder.
+     The occluder matches the invert's #000000 background and sits above the
+     8% static vertical grid, so the 8% line beneath this column is erased and
+     the edge reads as a clean 16% white line rather than a ~22.7% blend. */
+  background:
+    linear-gradient(rgba(255, 255, 255, 0.16), rgba(255, 255, 255, 0.16)),
+    linear-gradient(#000000, #000000);
   -webkit-mask-image: linear-gradient(
     to bottom,
     transparent 0,
