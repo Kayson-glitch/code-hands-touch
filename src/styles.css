@@ -690,9 +690,9 @@ html.lenis body {
   will-change: transform;
 }
 
-/* Per-module frame: each panel's edge carries the 20% left vertical rule, the
-   20% top/bottom boundary rules and the two crosshair strokes, so all three
-   lines slide left in lockstep with the module. */
+/* Each rule spans nav → stage bottom so it can carry the same vertical fade
+   the static grid had: fading in over --grid-y-inset above the top lattice
+   boundary and fading out over --grid-y-inset below the bottom boundary. */
 .artemis-closing__edge {
   position: absolute;
   top: var(--grid-nav);
@@ -700,61 +700,76 @@ html.lenis body {
   width: 1px;
 }
 
-/* The pseudo element spans from the edge column to well past the right
-   viewport edge (clipped by .artemis-closing__edges), with 20px of slack
-   above the top boundary and below the bottom boundary for the crosshair
-   overshoots. Every 20% line sits on an opaque #000 occluder that erases the
-   8% lattice where they cross, keeping all three lines clean. */
+/* The rule itself: 20% white over an opaque #000 occluder that erases the 8%
+   static vertical grid in this column, with the original vertical fade. */
+.artemis-closing__edge::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.2)),
+    linear-gradient(#000000, #000000);
+  -webkit-mask-image: linear-gradient(
+    to bottom,
+    transparent 0,
+    #000 var(--grid-y-inset),
+    #000 calc(100% - var(--grid-y-inset)),
+    transparent 100%
+  );
+  mask-image: linear-gradient(
+    to bottom,
+    transparent 0,
+    #000 var(--grid-y-inset),
+    #000 calc(100% - var(--grid-y-inset)),
+    transparent 100%
+  );
+}
+
+/* Crosshairs: the fade above reaches zero exactly at the lattice boundaries,
+   so the vertical stroke of each crosshair is drawn separately, outside the
+   mask. Each stroke is split into two 16px segments that stop 4px short of the
+   horizontal boundary rule, leaving a gap so the crossing reads as a "+". */
 .artemis-closing__edge::after {
   content: "";
   position: absolute;
   left: 0;
-  width: 200vw;
+  width: 1px;
   top: calc(var(--grid-y-start) - var(--grid-nav) - 20px);
   bottom: calc(var(--grid-y-inset) - 20px);
   background-image:
-    /* crosshair vertical strokes: 16px segments that stop 4px short of the
-       horizontal rule, leaving a gap so the crossing reads as a "+" */
     linear-gradient(rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.2)),
-    linear-gradient(rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.2)),
-    /* vertical rule between the two boundaries, with matching 4px gaps at
-       both ends; its #000 occluder twin spans the full height so the gaps
-       and crosshair strokes also sit on pure black (erasing the 8% lattice
-       in this column) */
-    linear-gradient(
-      to bottom,
-      transparent 0 24px,
-      rgba(255, 255, 255, 0.2) 24px,
-      rgba(255, 255, 255, 0.2) calc(100% - 24px),
-      transparent calc(100% - 24px)
-    ),
-    linear-gradient(#000000, #000000),
-    /* 20% horizontal boundary rules over their #000 occluders */
+    linear-gradient(rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.2));
+  background-repeat: no-repeat, no-repeat;
+  background-size: 100% 16px, 100% 16px;
+  background-position: 0 0, 0 100%;
+}
+
+/* Per-module horizontal boundary rules: each panel's edge carries the 20%
+   top/bottom lines, so they slide left in lockstep with the module and its
+   vertical rule. The element spans from the edge column to well past the
+   right viewport edge (clipped by .artemis-closing__edges). Each rule sits
+   on an opaque #000 occluder that erases the 8% lattice where they cross. */
+.artemis-closing__edge-lines {
+  position: absolute;
+  left: 0;
+  width: 200vw;
+  top: calc(var(--grid-y-start) - var(--grid-nav));
+  /* Extend 1px past the bottom boundary: percentage background-position
+     subtracts the tile height, so this makes the bottom tile land exactly on
+     the --grid-y-end lattice coordinate. */
+  bottom: calc(var(--grid-y-inset) - 1px);
+  background-image:
     linear-gradient(rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.2)),
     linear-gradient(#000000, #000000),
     linear-gradient(rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.2)),
     linear-gradient(#000000, #000000);
   background-repeat: no-repeat;
-  background-size:
-    1px 16px,
-    1px 16px,
-    1px 100%,
-    1px 100%,
-    100% 1px,
-    100% 1px,
-    100% 1px,
-    100% 1px;
-  /* Percentage background-position subtracts the tile height, so the bottom
-     rules use 19px (not 20px) to land exactly on the lattice coordinate. */
+  background-size: 100% 1px, 100% 1px, 100% 1px, 100% 1px;
   background-position:
     0 0,
+    0 0,
     0 100%,
-    0 0,
-    0 0,
-    0 20px,
-    0 20px,
-    0 calc(100% - 19px),
-    0 calc(100% - 19px);
+    0 100%;
 }
 
 
