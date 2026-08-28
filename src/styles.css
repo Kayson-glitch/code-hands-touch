@@ -652,12 +652,12 @@ html.lenis body {
   background-image:
     repeating-linear-gradient(
       to right,
-      rgba(255, 255, 255, 0.05) 0 1px,
+      rgba(255, 255, 255, 0.1) 0 1px,
       transparent 1px 40px
     ),
     repeating-linear-gradient(
       to bottom,
-      rgba(255, 255, 255, 0.05) 0 1px,
+      rgba(255, 255, 255, 0.1) 0 1px,
       transparent 1px 40px
     );
   background-position: 120px 0, 0 0;
