@@ -821,6 +821,13 @@ html.lenis body {
     transform: none !important;
   }
 
+  .artemis-gallery__row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1.5rem;
+    width: 100%;
+  }
+
   .artemis-gallery__panel:not(:last-child)::after {
     display: none;
   }
