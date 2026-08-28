@@ -223,7 +223,9 @@ export function ClosingSection() {
           >
             {/* Dots are inside the pinned stage, so they stay locked while the
                 headline shrinks and the panels slide through. */}
-            <div ref={dotsRef} className="artemis-closing__dots" />
+            <div ref={dotsRef} className="artemis-closing__dots">
+              <div className="artemis-closing__edge" style={{ opacity: edgeOn }} aria-hidden />
+            </div>
             <div
               ref={trackRef}
               className="artemis-closing__track"
