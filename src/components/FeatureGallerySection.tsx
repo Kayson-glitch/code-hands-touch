@@ -1,10 +1,3 @@
-const clamp = (v: number) => Math.max(0, Math.min(1, v));
-const easeOutQuint = (x: number) => 1 - Math.pow(1 - x, 5);
-const smoothstep = (a: number, b: number, x: number) => {
-  const t = clamp((x - a) / (b - a));
-  return t * t * (3 - 2 * t);
-};
-
 type Point = { label: string; text: string };
 
 type Panel = {
@@ -80,87 +73,38 @@ export const PANELS: Panel[] = [
 
 /**
  * Feature panels for the closing screen's horizontal track.
- * Reveal is geometric, not index-based: each panel fades and lifts in as its
- * own left edge crosses into the viewport, so it always matches the travel.
+ * The track snaps between discrete states, so the reveal is time-based: when a
+ * panel becomes the active state its content animates in with a stagger (CSS
+ * keyframes), independent of wheel position.
  */
-const fieldReveal = (
-  enter: number,
-  start: number,
-  end: number,
-  distance = 16,
-  blur = 8
-) => {
-  const a = smoothstep(start, end, enter);
-  return {
-    opacity: a,
-    filter: `blur(${(1 - a) * blur}px)`,
-    transform: `translateY(${(1 - a) * distance}px)`,
-  };
-};
-
 export function FeaturePanels({
-  lefts,
-  viewportW,
-  viewportH,
+  activeIndex,
   pinned,
 }: {
-  lefts: number[];
-  viewportW: number;
-  viewportH: number;
+  activeIndex: number;
   pinned: boolean;
 }) {
   return (
     <>
       {PANELS.map((panel, index) => {
-        const left = lefts[index];
-        const enter =
-          pinned && viewportW > 0 && left !== undefined
-            ? clamp((viewportW - left) / (viewportW * 0.6))
-            : 1;
-        const eased = easeOutQuint(enter);
-        const lift = pinned && viewportH > 0 ? (1 - eased) * viewportH : 0;
-        // Delay the text reveal so the panel shell is already in view first.
-        const textEnter = clamp((enter - 0.85) / 0.15);
+        const active = !pinned || index === activeIndex;
         return (
           <article
             key={panel.id}
-            className="artemis-gallery__panel"
-            style={
-              pinned
-                ? { opacity: clamp(eased), transform: `translate3d(0, ${lift.toFixed(2)}px, 0)` }
-                : undefined
-            }
+            className={`artemis-gallery__panel${active ? " is-active" : ""}`}
           >
-            <p
-              className="artemis-gallery__eyebrow"
-              style={pinned ? fieldReveal(textEnter, 0.0, 0.6, 14, 6) : undefined}
-            >
-              [ {panel.eyebrow} ]
-            </p>
+            <p className="artemis-gallery__eyebrow">[ {panel.eyebrow} ]</p>
             <div className="artemis-gallery__row">
               <div className="artemis-gallery__media" aria-hidden />
               <div className="artemis-gallery__copy">
-                <h3
-                  className="artemis-gallery__title"
-                  style={pinned ? fieldReveal(textEnter, 0.0, 0.65, 18, 10) : undefined}
-                >
-                  {panel.title}
-                </h3>
+                <h3 className="artemis-gallery__title">{panel.title}</h3>
                 <ul className="artemis-gallery__list">
-                  {panel.points.map((point, pi) => {
-                    const rowStart = 0.08 + pi * 0.12;
-                    const rowEnd = rowStart + 0.65;
-                    return (
-                      <li
-                        key={point.label}
-                        className="artemis-gallery__item"
-                        style={pinned ? fieldReveal(textEnter, rowStart, rowEnd, 14, 6) : undefined}
-                      >
-                        <p className="artemis-gallery__label">{point.label}</p>
-                        <p className="artemis-gallery__body">{point.text}</p>
-                      </li>
-                    );
-                  })}
+                  {panel.points.map((point) => (
+                    <li key={point.label} className="artemis-gallery__item">
+                      <p className="artemis-gallery__label">{point.label}</p>
+                      <p className="artemis-gallery__body">{point.text}</p>
+                    </li>
+                  ))}
                 </ul>
               </div>
             </div>
