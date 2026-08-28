@@ -9,6 +9,7 @@ type Point = { label: string; text: string };
 
 type Panel = {
   id: string;
+  eyebrow: string;
   title: string;
   points: Point[];
 };
@@ -16,6 +17,7 @@ type Panel = {
 export const PANELS: Panel[] = [
   {
     id: "001",
+    eyebrow: "Rapid Response",
     title: "Resolve 93% of Customer Issues Instantly",
     points: [
       { label: "Rapid Response", text: "Answers in under 3 seconds—always fast, always ready." },
@@ -32,6 +34,7 @@ export const PANELS: Panel[] = [
   },
   {
     id: "002",
+    eyebrow: "Brand Voice",
     title: "Speak in Your Brand Voice, Every Time",
     points: [
       { label: "Tone Control", text: "Tuned to your style guide, from playful to strictly formal." },
@@ -42,6 +45,7 @@ export const PANELS: Panel[] = [
   },
   {
     id: "003",
+    eyebrow: "Smart Routing",
     title: "Route Every Conversation to the Right Place",
     points: [
       { label: "Intent Detection", text: "Reads urgency, sentiment and account value in real time." },
@@ -52,6 +56,7 @@ export const PANELS: Panel[] = [
   },
   {
     id: "004",
+    eyebrow: "Omnichannel",
     title: "One Conversation Across Every Channel",
     points: [
       { label: "Unified Inbox", text: "Web chat, email, app and social threads live in one timeline." },
@@ -62,6 +67,7 @@ export const PANELS: Panel[] = [
   },
   {
     id: "005",
+    eyebrow: "Support Insight",
     title: "Turn Support Data Into Product Insight",
     points: [
       { label: "Auto Clustering", text: "Groups recurring questions into themes you can act on." },
@@ -125,30 +131,38 @@ export function FeaturePanels({
                 : undefined
             }
           >
-            <div className="artemis-gallery__media" aria-hidden />
-            <div className="artemis-gallery__copy">
-              <h3
-                className="artemis-gallery__title"
-                style={pinned ? fieldReveal(textEnter, 0.0, 0.65, 18, 10) : undefined}
-              >
-                {panel.title}
-              </h3>
-              <ul className="artemis-gallery__list">
-                {panel.points.map((point, pi) => {
-                  const rowStart = 0.08 + pi * 0.12;
-                  const rowEnd = rowStart + 0.65;
-                  return (
-                    <li
-                      key={point.label}
-                      className="artemis-gallery__item"
-                      style={pinned ? fieldReveal(textEnter, rowStart, rowEnd, 14, 6) : undefined}
-                    >
-                      <p className="artemis-gallery__label">{point.label}</p>
-                      <p className="artemis-gallery__body">{point.text}</p>
-                    </li>
-                  );
-                })}
-              </ul>
+            <p
+              className="artemis-gallery__eyebrow"
+              style={pinned ? fieldReveal(textEnter, 0.0, 0.6, 14, 6) : undefined}
+            >
+              [ {panel.eyebrow} ]
+            </p>
+            <div className="artemis-gallery__row">
+              <div className="artemis-gallery__media" aria-hidden />
+              <div className="artemis-gallery__copy">
+                <h3
+                  className="artemis-gallery__title"
+                  style={pinned ? fieldReveal(textEnter, 0.0, 0.65, 18, 10) : undefined}
+                >
+                  {panel.title}
+                </h3>
+                <ul className="artemis-gallery__list">
+                  {panel.points.map((point, pi) => {
+                    const rowStart = 0.08 + pi * 0.12;
+                    const rowEnd = rowStart + 0.65;
+                    return (
+                      <li
+                        key={point.label}
+                        className="artemis-gallery__item"
+                        style={pinned ? fieldReveal(textEnter, rowStart, rowEnd, 14, 6) : undefined}
+                      >
+                        <p className="artemis-gallery__label">{point.label}</p>
+                        <p className="artemis-gallery__body">{point.text}</p>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </div>
             </div>
           </article>
         );
