@@ -695,12 +695,14 @@ html.lenis body {
   top: var(--grid-nav);
   bottom: 0;
   width: 1px;
-  /* Two stacked layers: a 16% white rule on top of an opaque #000 occluder.
-     The occluder matches the invert's #000000 background and sits above the
-     8% static vertical grid, so the 8% line beneath this column is erased and
-     the edge reads as a clean 16% white line rather than a ~22.7% blend. */
+  /* Boundary rule at 20%: a 20% white line over an opaque #000 occluder that
+     matches the invert's #000000 background. The occluder erases the 8%
+     static vertical grid beneath this column, so the edge reads as a clean
+     20% white line (no 8% bleed). The crosshair at each end is simply where
+     this 20% vertical meets the 20% top/bottom horizontal boundary — no
+     separate tick marker is needed. */
   background:
-    linear-gradient(rgba(255, 255, 255, 0.16), rgba(255, 255, 255, 0.16)),
+    linear-gradient(rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.2)),
     linear-gradient(#000000, #000000);
   -webkit-mask-image: linear-gradient(
     to bottom,
@@ -716,26 +718,6 @@ html.lenis body {
     #000 calc(100% - var(--grid-y-inset)),
     transparent 100%
   );
-}
-
- /* Crosshairs sit on the lattice boundaries (grid-y-start / grid-y-end),
-    outside the faded tips, at 20% opacity. */
- .artemis-closing__edge::before,
- .artemis-closing__edge::after {
-   content: "";
-   position: absolute;
-   left: -5px;
-   width: 10px;
-   height: 10px;
-   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 10 10'%3E%3Cpath d='M5 0V10M0 5H10' stroke='white' stroke-opacity='0.2'/%3E%3C/svg%3E");
- }
-
-.artemis-closing__edge::before {
-  top: calc(var(--grid-y-inset) - 5px);
-}
-
-.artemis-closing__edge::after {
-  bottom: calc(var(--grid-y-inset) - 5px);
 }
 
 
@@ -787,8 +769,8 @@ html.lenis body {
      the 1px bottom rule is painted one pixel above the crosshair centre. */
   bottom: calc(100% - var(--grid-y-end) - 1px);
   background-image:
-    linear-gradient(to bottom, rgba(255, 255, 255, 0.16) 0 1px, transparent 1px),
-    linear-gradient(to top, rgba(255, 255, 255, 0.16) 0 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.2) 0 1px, transparent 1px),
+    linear-gradient(to top, rgba(255, 255, 255, 0.2) 0 1px, transparent 1px),
     linear-gradient(
       to bottom,
       rgba(255, 255, 255, 0.08) 0 1px,
