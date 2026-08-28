@@ -51,6 +51,7 @@ export function ClosingSection() {
   const [titleLeft, setTitleLeft] = useState(0);
   const [offsets, setOffsets] = useState<number[]>([]);
   const [viewportW, setViewportW] = useState(1440);
+  const [gridX, setGridX] = useState(120);
 
   useEffect(() => {
     const media = window.matchMedia("(prefers-reduced-motion: reduce)");
@@ -99,6 +100,7 @@ export function ClosingSection() {
       const yInset = yMin + (((h - NAV - 2 * yMin) % STEP) + STEP) % STEP / 2;
       const yStart = NAV + yInset;
       const yEnd = yStart + Math.floor((h - yInset - yStart) / STEP) * STEP;
+      setGridX(xInset);
       el.style.setProperty("--grid-x-inset", `${xInset}px`);
       el.style.setProperty("--grid-y-inset", `${yInset}px`);
       el.style.setProperty("--grid-y-end", `${yEnd}px`);
@@ -187,7 +189,7 @@ export function ClosingSection() {
         (el) => el.offsetLeft,
       ),
     );
-  }, [scale, travel, titleW, lead, desktop]);
+  }, [scale, travel, titleW, lead, desktop, gridX]);
 
 
 
@@ -228,7 +230,7 @@ export function ClosingSection() {
             {/* Dots are inside the pinned stage, so they stay locked while the
                 headline shrinks and the panels slide through. */}
             <div ref={dotsRef} className="artemis-closing__dots">
-              <div className="artemis-closing__edge" style={{ opacity: edgeOn }} aria-hidden />
+              <div className="artemis-closing__edge" style={{ transform: `translate3d(${edgeX.toFixed(2)}px, 0, 0)` }} aria-hidden />
             </div>
             <div
               ref={trackRef}
