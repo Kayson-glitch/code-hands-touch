@@ -227,8 +227,24 @@ export function ClosingSection() {
             {/* Dots are inside the pinned stage, so they stay locked while the
                 headline shrinks and the panels slide through. */}
             <div ref={dotsRef} className="artemis-closing__dots">
-              <div className="artemis-closing__edge" style={{ transform: `translate3d(${edgeX.toFixed(2)}px, 0, 0)` }} aria-hidden />
+              {pinned && (
+                <div className="artemis-closing__edges" aria-hidden>
+                  <div
+                    className="artemis-closing__edges-inner"
+                    style={{ transform: `translate3d(${-x}px, 0, 0)` }}
+                  >
+                    {offsets.map((offset, index) => (
+                      <div
+                        key={PANELS[index]?.id ?? index}
+                        className="artemis-closing__edge"
+                        style={{ left: `${offset}px` }}
+                      />
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
+
             <div
               ref={trackRef}
               className="artemis-closing__track"
