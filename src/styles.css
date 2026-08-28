@@ -611,6 +611,9 @@ html.lenis body {
   width: max-content;
   padding-inline: max(5.5rem, calc((100% - 95.5rem) / 2));
   will-change: transform;
+  /* Step transitions are time-based: the wheel only advances the state. */
+  transition: transform 0.85s cubic-bezier(0.22, 0.61, 0.36, 1);
+
 }
 
 .artemis-closing__title-slot {
