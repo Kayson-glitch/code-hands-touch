@@ -9,6 +9,7 @@ type Point = { label: string; text: string };
 
 type Panel = {
   id: string;
+  eyebrow: string;
   title: string;
   points: Point[];
 };
