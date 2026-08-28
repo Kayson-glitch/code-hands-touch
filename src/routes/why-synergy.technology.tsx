@@ -10,6 +10,7 @@ import {
   Twitter,
   Youtube,
 } from "lucide-react";
+import logo from "@/assets/synergy-logo-v3.png.asset.json";
 import { SiteNav } from "@/components/SiteNav";
 import { HalftoneHandStill } from "@/components/HalftoneHandStill";
 import { Reveal } from "@/components/Reveal";
@@ -1020,7 +1021,7 @@ function FitWordmark({ text }: { text: string }) {
     >
       <span
         ref={textRef}
-        className="font-display block whitespace-nowrap"
+        className="font-sans block whitespace-nowrap"
         style={{
           fontSize: size,
           lineHeight: 0.8,

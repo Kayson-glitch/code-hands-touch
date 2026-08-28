@@ -844,7 +844,7 @@ function FitWordmark({ text }: { text: string }) {
     >
       <span
         ref={textRef}
-        className="font-display block whitespace-nowrap"
+        className="font-sans block whitespace-nowrap"
         style={{
           fontSize: size,
           lineHeight: 0.8,
