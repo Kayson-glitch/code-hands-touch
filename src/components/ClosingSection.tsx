@@ -238,7 +238,9 @@ export function ClosingSection() {
                         key={PANELS[index]?.id ?? index}
                         className="artemis-closing__edge"
                         style={{ left: `${offset}px` }}
-                      />
+                      >
+                        <div className="artemis-closing__edge-lines" />
+                      </div>
                     ))}
                   </div>
                 </div>
