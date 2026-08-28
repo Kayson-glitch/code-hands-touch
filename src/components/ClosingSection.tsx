@@ -29,6 +29,7 @@ export function ClosingSection() {
   const wrapperRef = useRef<HTMLDivElement | null>(null);
   const trackRef = useRef<HTMLDivElement | null>(null);
   const titleRef = useRef<HTMLDivElement | null>(null);
+  const dotsRef = useRef<HTMLDivElement | null>(null);
   const [progress, setProgress] = useState(0);
   const [reduced, setReduced] = useState(false);
   const [desktop, setDesktop] = useState(true);
@@ -69,6 +70,30 @@ export function ClosingSection() {
       observer.disconnect();
       window.removeEventListener("resize", measure);
     };
+  }, []);
+
+  /* Centre the 40px lattice: leftover space after the minimum clearances is
+     split equally on both sides, measured in px so background-position math
+     stays exact. */
+  useEffect(() => {
+    const el = dotsRef.current;
+    if (!el) return;
+    const STEP = 40;
+    const NAV = 60;
+    const apply = () => {
+      const w = el.clientWidth;
+      const h = el.clientHeight;
+      const xMin = window.innerWidth <= 990 ? 16 : 120;
+      const yMin = 80;
+      const xInset = xMin + (((w - 2 * xMin) % STEP) + STEP) % STEP / 2;
+      const yInset = yMin + (((h - NAV - 2 * yMin) % STEP) + STEP) % STEP / 2;
+      el.style.setProperty("--grid-x-inset", `${xInset}px`);
+      el.style.setProperty("--grid-y-inset", `${yInset}px`);
+    };
+    apply();
+    const observer = new ResizeObserver(apply);
+    observer.observe(el);
+    return () => observer.disconnect();
   }, []);
 
   const pinned = desktop && !reduced;
@@ -175,7 +200,7 @@ export function ClosingSection() {
           >
             {/* Dots are inside the pinned stage, so they stay locked while the
                 headline shrinks and the panels slide through. */}
-            <div className="artemis-closing__dots" />
+            <div ref={dotsRef} className="artemis-closing__dots" />
             <div
               ref={trackRef}
               className="artemis-closing__track"
