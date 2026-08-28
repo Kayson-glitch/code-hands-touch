@@ -695,12 +695,14 @@ html.lenis body {
   top: var(--grid-nav);
   bottom: 0;
   width: 1px;
-  /* Boundary rule at 20%: a 20% white line over an opaque #000 occluder that
-     matches the invert's #000000 background. The occluder erases the 8%
-     static vertical grid beneath this column, so the edge reads as a clean
-     20% white line (no 8% bleed). The crosshair at each end is simply where
-     this 20% vertical meets the 20% top/bottom horizontal boundary — no
-     separate tick marker is needed. */
+}
+
+/* The rule itself: 20% white over an opaque #000 occluder that erases the 8%
+   static vertical grid in this column, with the original vertical fade. */
+.artemis-closing__edge::before {
+  content: "";
+  position: absolute;
+  inset: 0;
   background:
     linear-gradient(rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.2)),
     linear-gradient(#000000, #000000);
@@ -719,6 +721,26 @@ html.lenis body {
     transparent 100%
   );
 }
+
+/* Crosshairs: the fade above reaches zero exactly at the lattice boundaries,
+   so the vertical stroke of each crosshair has to be drawn separately, outside
+   the mask — a 20px unmasked 20% segment centred on the top and bottom
+   boundary, crossing the existing 20% horizontal boundary rules. */
+.artemis-closing__edge::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  width: 1px;
+  top: calc(var(--grid-y-start) - var(--grid-nav) - 10px);
+  bottom: calc(var(--grid-y-inset) - 10px);
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.2)),
+    linear-gradient(rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.2));
+  background-repeat: no-repeat, no-repeat;
+  background-size: 100% 20px, 100% 20px;
+  background-position: 0 0, 0 100%;
+}
+
 
 
 /* Vertical rules */
