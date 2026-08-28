@@ -17,6 +17,7 @@ type Panel = {
 export const PANELS: Panel[] = [
   {
     id: "001",
+    eyebrow: "Rapid Response",
     title: "Resolve 93% of Customer Issues Instantly",
     points: [
       { label: "Rapid Response", text: "Answers in under 3 seconds—always fast, always ready." },
@@ -33,6 +34,7 @@ export const PANELS: Panel[] = [
   },
   {
     id: "002",
+    eyebrow: "Brand Voice",
     title: "Speak in Your Brand Voice, Every Time",
     points: [
       { label: "Tone Control", text: "Tuned to your style guide, from playful to strictly formal." },
@@ -43,6 +45,7 @@ export const PANELS: Panel[] = [
   },
   {
     id: "003",
+    eyebrow: "Smart Routing",
     title: "Route Every Conversation to the Right Place",
     points: [
       { label: "Intent Detection", text: "Reads urgency, sentiment and account value in real time." },
@@ -53,6 +56,7 @@ export const PANELS: Panel[] = [
   },
   {
     id: "004",
+    eyebrow: "Omnichannel",
     title: "One Conversation Across Every Channel",
     points: [
       { label: "Unified Inbox", text: "Web chat, email, app and social threads live in one timeline." },
@@ -63,6 +67,7 @@ export const PANELS: Panel[] = [
   },
   {
     id: "005",
+    eyebrow: "Support Insight",
     title: "Turn Support Data Into Product Insight",
     points: [
       { label: "Auto Clustering", text: "Groups recurring questions into themes you can act on." },
