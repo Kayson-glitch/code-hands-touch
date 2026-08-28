@@ -687,14 +687,33 @@ html.lenis body {
   will-change: transform;
 }
 
+/* Each rule spans nav → stage bottom so it can carry the same vertical fade
+   the static grid had: fading in over --grid-y-inset above the top lattice
+   boundary and fading out over --grid-y-inset below the bottom boundary. */
 .artemis-closing__edge {
   position: absolute;
-  top: var(--grid-y-start);
-  height: calc(var(--grid-y-end) - var(--grid-y-start) + 1px);
+  top: var(--grid-nav);
+  bottom: 0;
   width: 1px;
   background: rgba(255, 255, 255, 0.16);
+  -webkit-mask-image: linear-gradient(
+    to bottom,
+    transparent 0,
+    #000 var(--grid-y-inset),
+    #000 calc(100% - var(--grid-y-inset)),
+    transparent 100%
+  );
+  mask-image: linear-gradient(
+    to bottom,
+    transparent 0,
+    #000 var(--grid-y-inset),
+    #000 calc(100% - var(--grid-y-inset)),
+    transparent 100%
+  );
 }
 
+/* Crosshairs sit on the lattice boundaries (grid-y-start / grid-y-end),
+   outside the faded tips, at full 16% opacity. */
 .artemis-closing__edge::before,
 .artemis-closing__edge::after {
   content: "";
@@ -706,11 +725,11 @@ html.lenis body {
 }
 
 .artemis-closing__edge::before {
-  top: -5px;
+  top: calc(var(--grid-y-inset) - 5px);
 }
 
 .artemis-closing__edge::after {
-  bottom: -5px;
+  bottom: calc(var(--grid-y-inset) - 5px);
 }
 
 
