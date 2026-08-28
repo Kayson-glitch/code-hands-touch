@@ -8,6 +8,7 @@ import {
   Youtube,
 } from "lucide-react";
 import { SiteNav } from "@/components/SiteNav";
+import logo from "@/assets/synergy-logo-v3.png.asset.json";
 import { HalftoneHandStill } from "@/components/HalftoneHandStill";
 import { Reveal } from "@/components/Reveal";
 import { RollingNumber } from "@/components/RollingNumber";
@@ -798,14 +799,15 @@ function StoriesPage() {
           <div className="h-full" style={{ padding: pad }}>
             <div className="mx-auto grid h-full w-full max-w-[1200px] grid-cols-2 items-center gap-9 md:grid-cols-4">
               <div className="flex items-center justify-start gap-2">
-                <span
-                  aria-hidden
+                <img
+                  src={logo.url}
+                  alt="Synergy.AI"
                   style={{
                     width: 28,
                     height: 28,
+                    display: "block",
                     borderRadius: 999,
-                    backgroundImage: GRADIENT,
-                    backgroundSize: "200%",
+                    objectFit: "cover",
                   }}
                 />
                 <span style={{ color: "#FFFFFF", fontSize: 18, lineHeight: "24px", fontWeight: 500 }}>
@@ -933,7 +935,7 @@ function FitWordmark({ text }: { text: string }) {
     >
       <span
         ref={textRef}
-        className="font-display block whitespace-nowrap"
+        className="font-sans block whitespace-nowrap"
         style={{
           fontSize: size,
           lineHeight: 0.8,
