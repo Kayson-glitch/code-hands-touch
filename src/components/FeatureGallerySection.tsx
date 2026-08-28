@@ -131,30 +131,38 @@ export function FeaturePanels({
                 : undefined
             }
           >
-            <div className="artemis-gallery__media" aria-hidden />
-            <div className="artemis-gallery__copy">
-              <h3
-                className="artemis-gallery__title"
-                style={pinned ? fieldReveal(textEnter, 0.0, 0.65, 18, 10) : undefined}
-              >
-                {panel.title}
-              </h3>
-              <ul className="artemis-gallery__list">
-                {panel.points.map((point, pi) => {
-                  const rowStart = 0.08 + pi * 0.12;
-                  const rowEnd = rowStart + 0.65;
-                  return (
-                    <li
-                      key={point.label}
-                      className="artemis-gallery__item"
-                      style={pinned ? fieldReveal(textEnter, rowStart, rowEnd, 14, 6) : undefined}
-                    >
-                      <p className="artemis-gallery__label">{point.label}</p>
-                      <p className="artemis-gallery__body">{point.text}</p>
-                    </li>
-                  );
-                })}
-              </ul>
+            <p
+              className="artemis-gallery__eyebrow"
+              style={pinned ? fieldReveal(textEnter, 0.0, 0.6, 14, 6) : undefined}
+            >
+              [ {panel.eyebrow} ]
+            </p>
+            <div className="artemis-gallery__row">
+              <div className="artemis-gallery__media" aria-hidden />
+              <div className="artemis-gallery__copy">
+                <h3
+                  className="artemis-gallery__title"
+                  style={pinned ? fieldReveal(textEnter, 0.0, 0.65, 18, 10) : undefined}
+                >
+                  {panel.title}
+                </h3>
+                <ul className="artemis-gallery__list">
+                  {panel.points.map((point, pi) => {
+                    const rowStart = 0.08 + pi * 0.12;
+                    const rowEnd = rowStart + 0.65;
+                    return (
+                      <li
+                        key={point.label}
+                        className="artemis-gallery__item"
+                        style={pinned ? fieldReveal(textEnter, rowStart, rowEnd, 14, 6) : undefined}
+                      >
+                        <p className="artemis-gallery__label">{point.label}</p>
+                        <p className="artemis-gallery__body">{point.text}</p>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </div>
             </div>
           </article>
         );
