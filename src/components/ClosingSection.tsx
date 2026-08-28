@@ -169,13 +169,10 @@ export function ClosingSection() {
   const lead = pinned
     ? Math.max(0, viewportW - (titleLeft + titleW * TITLE_SCALE) - 2 * 128 - 200)
     : 0;
-  // The 16% boundary rule belongs to the panels: it travels in from the right
-  // with the active module and sits on the grid line while it rests.
-  const edgeX = pinned
-    ? state > 0 && offsets[state - 1] !== undefined
-      ? offsets[state - 1]! - x - gridX
-      : viewportW
-    : 0;
+  // The 16% boundary rules belong to the panels: one per module, laid out in
+  // track coordinates and moved by the same offset, so each rule travels left
+  // with its module instead of appearing in place.
+
 
 
 
@@ -230,8 +227,24 @@ export function ClosingSection() {
             {/* Dots are inside the pinned stage, so they stay locked while the
                 headline shrinks and the panels slide through. */}
             <div ref={dotsRef} className="artemis-closing__dots">
-              <div className="artemis-closing__edge" style={{ transform: `translate3d(${edgeX.toFixed(2)}px, 0, 0)` }} aria-hidden />
+              {pinned && (
+                <div className="artemis-closing__edges" aria-hidden>
+                  <div
+                    className="artemis-closing__edges-inner"
+                    style={{ transform: `translate3d(${-x}px, 0, 0)` }}
+                  >
+                    {offsets.map((offset, index) => (
+                      <div
+                        key={PANELS[index]?.id ?? index}
+                        className="artemis-closing__edge"
+                        style={{ left: `${offset}px` }}
+                      />
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
+
             <div
               ref={trackRef}
               className="artemis-closing__track"
