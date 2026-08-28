@@ -718,7 +718,9 @@ html.lenis body {
     linear-gradient(rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.2)),
     linear-gradient(rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.2)),
     /* vertical rule between the two boundaries, with matching 4px gaps at
-       both ends, over its #000 occluder twin */
+       both ends; its #000 occluder twin spans the full height so the gaps
+       and crosshair strokes also sit on pure black (erasing the 8% lattice
+       in this column) */
     linear-gradient(
       to bottom,
       transparent 0 24px,
@@ -726,13 +728,7 @@ html.lenis body {
       rgba(255, 255, 255, 0.2) calc(100% - 24px),
       transparent calc(100% - 24px)
     ),
-    linear-gradient(
-      to bottom,
-      transparent 0 24px,
-      #000000 24px,
-      #000000 calc(100% - 24px),
-      transparent calc(100% - 24px)
-    ),
+    linear-gradient(#000000, #000000),
     /* 20% horizontal boundary rules over their #000 occluders */
     linear-gradient(rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.2)),
     linear-gradient(#000000, #000000),
