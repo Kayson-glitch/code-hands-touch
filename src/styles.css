@@ -834,10 +834,11 @@ html.lenis body {
 
 /* Stacked fallback: no pinning, no horizontal travel. */
 @media (max-width: 990px) {
-  .artemis-closing__dots {
+  .artemis-closing__dots::before {
     left: 1rem;
     right: 1rem;
   }
+
 
   .artemis-closing__wrapper {
     height: auto !important;
