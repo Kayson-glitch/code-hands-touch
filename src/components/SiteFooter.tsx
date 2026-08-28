@@ -220,7 +220,7 @@ export function SiteFooter() {
             </div>
           </div>
 
-          <div className="absolute left-0 w-full" style={{ top: 174 }}>
+          <div className="absolute left-0 w-full" style={{ top: 198 }}>
             <FitWordmark text="Synergy.AI" />
           </div>
         </div>
