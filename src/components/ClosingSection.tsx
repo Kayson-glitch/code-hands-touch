@@ -138,9 +138,12 @@ export function ClosingSection() {
   const p = clamp(progress);
   const wipe = pinned ? clamp(p / WIPE_END) : 1;
   const shrink = pinned ? easeOutCubic(clamp((p - WIPE_END) / (SHRINK_END - WIPE_END))) : 1;
-  // Panels begin sliding while the headline is still shrinking (about halfway).
-  const SLIDE_START = WIPE_END + (SHRINK_END - WIPE_END) * 0.5;
-  const slide = pinned ? clamp((p - SLIDE_START) / (SLIDE_END - SLIDE_START)) : 1;
+  // Once the headline has reached its smallest size, the track stops scrolling
+  // freely: each panel holds ("snaps") on screen for most of its scroll segment
+  // and then transitions quickly to the next one.
+  const SLIDE_START = SHRINK_END;
+  const raw = pinned ? clamp((p - SLIDE_START) / (SLIDE_END - SLIDE_START)) : 1;
+  const slide = pinned ? snapSlide(raw) : 1;
 
 
   const scale = pinned ? 1 - (1 - TITLE_SCALE) * shrink : TITLE_SCALE;
@@ -150,6 +153,9 @@ export function ClosingSection() {
   const lead = pinned
     ? Math.max(0, viewportW - (titleLeft + titleW * TITLE_SCALE) - 2 * 128 - 200)
     : 0;
+  // The 16% boundary rule arrives with the first panel.
+  const firstLeft = offsets[0] !== undefined ? offsets[0] - x : viewportW;
+  const edgeOn = pinned ? clamp((viewportW - firstLeft) / (viewportW * 0.5)) : 1;
 
 
   // Panel offsets shift while the headline shrinks (its layout width is
