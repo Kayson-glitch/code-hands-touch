@@ -667,40 +667,49 @@ html.lenis body {
   z-index: 0;
 }
 
-/* Left boundary rule (16%) plus its two terminal crosshairs. Fades in with the
-   first feature panel, so the headline state shows no left edge line. */
-.artemis-closing__edge {
-  content: "";
+/* Left boundary rules (16%): one per feature panel. They live in a layer that
+   shares the horizontal track's transform, so each rule travels left together
+   with its module and acts as the visible scroll reference. */
+.artemis-closing__edges {
   position: absolute;
   inset: 0;
+  overflow: hidden;
   pointer-events: none;
-  background-image:
-    linear-gradient(to right, rgba(255, 255, 255, 0.16) 0 1px, transparent 1px),
-    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 10 10'%3E%3Cpath d='M5 0V10M0 5H10' stroke='white' stroke-opacity='0.16'/%3E%3C/svg%3E"),
-    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 10 10'%3E%3Cpath d='M5 0V10M0 5H10' stroke='white' stroke-opacity='0.16'/%3E%3C/svg%3E");
-  background-repeat: no-repeat, no-repeat, no-repeat;
-  background-size: 1px 100%, 10px 10px, 10px 10px;
-  background-position:
-    var(--grid-x-inset) 0,
-    calc(var(--grid-x-inset) - 5px) calc(var(--grid-y-start) - 5px),
-    calc(var(--grid-x-inset) - 5px) calc(var(--grid-y-end) - 5px);
-  -webkit-mask-image: linear-gradient(
-    to bottom,
-    transparent 0,
-    transparent var(--grid-nav),
-    #000 var(--grid-y-start),
-    #000 var(--grid-y-end),
-    transparent 100%
-  );
-  mask-image: linear-gradient(
-    to bottom,
-    transparent 0,
-    transparent var(--grid-nav),
-    #000 var(--grid-y-start),
-    #000 var(--grid-y-end),
-    transparent 100%
-  );
 }
+
+.artemis-closing__edges-inner {
+  position: absolute;
+  inset: 0;
+  transition: transform 0.85s cubic-bezier(0.22, 0.61, 0.36, 1);
+  will-change: transform;
+}
+
+.artemis-closing__edge {
+  position: absolute;
+  top: var(--grid-y-start);
+  height: calc(var(--grid-y-end) - var(--grid-y-start) + 1px);
+  width: 1px;
+  background: rgba(255, 255, 255, 0.16);
+}
+
+.artemis-closing__edge::before,
+.artemis-closing__edge::after {
+  content: "";
+  position: absolute;
+  left: -5px;
+  width: 10px;
+  height: 10px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 10 10'%3E%3Cpath d='M5 0V10M0 5H10' stroke='white' stroke-opacity='0.16'/%3E%3C/svg%3E");
+}
+
+.artemis-closing__edge::before {
+  top: -5px;
+}
+
+.artemis-closing__edge::after {
+  bottom: -5px;
+}
+
 
 /* Vertical rules */
 .artemis-closing__dots::before {
