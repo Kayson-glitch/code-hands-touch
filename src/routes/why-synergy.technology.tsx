@@ -885,14 +885,15 @@ function TechnologyPage() {
           <div className="h-full" style={{ padding: pad }}>
             <div className="mx-auto grid h-full w-full max-w-[1200px] grid-cols-2 items-center gap-9 md:grid-cols-4">
               <div className="flex items-center justify-start gap-2">
-                <span
-                  aria-hidden
+                <img
+                  src={logo.url}
+                  alt="Synergy.AI"
                   style={{
                     width: 28,
                     height: 28,
+                    display: "block",
                     borderRadius: 999,
-                    backgroundImage: GRADIENT,
-                    backgroundSize: "200%",
+                    objectFit: "cover",
                   }}
                 />
                 <span style={{ color: "#FFFFFF", fontSize: 18, lineHeight: "24px", fontWeight: 500 }}>
