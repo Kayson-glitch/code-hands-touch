@@ -717,7 +717,9 @@ html.lenis body {
   left: 0;
   right: 0;
   top: var(--grid-y-start);
-  bottom: var(--grid-y-inset);
+  /* Include the terminal lattice coordinate itself. Without this extra pixel,
+     the 1px bottom rule is painted one pixel above the crosshair centre. */
+  bottom: calc(var(--grid-y-inset) - 1px);
   background-image:
     linear-gradient(to bottom, rgba(255, 255, 255, 0.16) 0 1px, transparent 1px),
     linear-gradient(to top, rgba(255, 255, 255, 0.16) 0 1px, transparent 1px),
