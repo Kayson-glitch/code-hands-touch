@@ -712,17 +712,17 @@ html.lenis body {
   );
 }
 
-/* Crosshairs sit on the lattice boundaries (grid-y-start / grid-y-end),
-   outside the faded tips, at full 16% opacity. */
-.artemis-closing__edge::before,
-.artemis-closing__edge::after {
-  content: "";
-  position: absolute;
-  left: -5px;
-  width: 10px;
-  height: 10px;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 10 10'%3E%3Cpath d='M5 0V10M0 5H10' stroke='white' stroke-opacity='0.16'/%3E%3C/svg%3E");
-}
+ /* Crosshairs sit on the lattice boundaries (grid-y-start / grid-y-end),
+    outside the faded tips, at 20% opacity. */
+ .artemis-closing__edge::before,
+ .artemis-closing__edge::after {
+   content: "";
+   position: absolute;
+   left: -5px;
+   width: 10px;
+   height: 10px;
+   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 10 10'%3E%3Cpath d='M5 0V10M0 5H10' stroke='white' stroke-opacity='0.2'/%3E%3C/svg%3E");
+ }
 
 .artemis-closing__edge::before {
   top: calc(var(--grid-y-inset) - 5px);
