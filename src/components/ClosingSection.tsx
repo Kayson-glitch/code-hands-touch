@@ -15,20 +15,16 @@ const TITLE_SCALE = 0.6;
 const SLIDE_END = 0.9;
 const HOLD_VH = 100;
 
-/** Fraction of each panel's scroll segment spent moving (rest is a hold). */
-const SNAP_MOVE = 0.42;
-
 /**
- * Quantises the free 0→1 track progress into per-panel steps: each panel rests
- * in place, then the track glides to the next panel at the end of its segment.
+ * Discrete states of the slide phase: 0 = headline only, 1..n = panel n pinned
+ * at the left grid boundary. Each state occupies one equal slice of the slide
+ * scroll range and the track jumps between them with no intermediate position.
  */
-const snapSlide = (s: number) => {
-  const steps = PANELS.length;
-  const i = Math.min(steps - 1, Math.floor(s * steps));
-  const f = clamp(s * steps - i);
-  const t = clamp((f - (1 - SNAP_MOVE)) / SNAP_MOVE);
-  return clamp((i + t * t * (3 - 2 * t)) / steps);
+const slideState = (s: number) => {
+  const states = PANELS.length + 1;
+  return Math.min(states - 1, Math.floor(clamp(s) * states));
 };
+
 
 const Words = () => (
   <p className="artemis-closing__text">
