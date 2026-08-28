@@ -643,13 +643,26 @@ html.lenis body {
    fully dark — the headline and panels move, the dots do not. */
 .artemis-closing__dots {
   position: absolute;
-  top: 0;
-  bottom: 0;
-  left: 100px;
-  right: 100px;
+  top: 80px;
+  bottom: 80px;
+  left: 0;
+  right: 0;
   pointer-events: none;
-  background-image: radial-gradient(rgba(255, 255, 255, 0.08) 2px, transparent 2.4px);
-  background-size: 40px 40px;
+  /* Figma: 40px guide grid — vertical rules inset 120px, horizontal full-bleed. */
+  background-image:
+    repeating-linear-gradient(
+      to right,
+      rgba(255, 255, 255, 0.05) 0 1px,
+      transparent 1px 40px
+    ),
+    repeating-linear-gradient(
+      to bottom,
+      rgba(255, 255, 255, 0.05) 0 1px,
+      transparent 1px 40px
+    );
+  background-position: 120px 0, 0 0;
+  background-size: calc(100% - 240px) 100%, 100% 100%;
+  background-repeat: no-repeat;
   z-index: 0;
 }
 
@@ -658,9 +671,26 @@ html.lenis body {
 .artemis-gallery__panel {
   position: relative;
   display: flex;
-  align-items: center;
-  gap: 60px;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 20px;
   will-change: transform, opacity;
+}
+
+.artemis-gallery__row {
+  display: flex;
+  align-items: center;
+  gap: 120px;
+}
+
+.artemis-gallery__eyebrow {
+  margin: 0;
+  font-family: var(--font-sans);
+  font-weight: 400;
+  font-size: 14px;
+  line-height: 22px;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.5);
 }
 
 /* Gradient-transparent vertical divider between panels.
@@ -682,12 +712,12 @@ html.lenis body {
   pointer-events: none;
 }
 
-/* Placeholder media block (Figma: 360×480, radius 20). */
+/* Placeholder media block (Figma: 360×480, square corners). */
 .artemis-gallery__media {
   flex: 0 0 auto;
   width: 360px;
   height: 480px;
-  border-radius: 20px;
+  border-radius: 0;
   background: #d9d9d9;
 }
 
@@ -700,17 +730,17 @@ html.lenis body {
 
 .artemis-gallery__title {
   margin: 0;
-  font-family: var(--font-sans);
+  font-family: var(--font-display);
   font-weight: 500;
-  font-size: 24px;
-  line-height: 1.4;
+  font-size: 28px;
+  line-height: 36px;
   color: #fff;
 }
 
 .artemis-gallery__list {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 24px;
   margin: 0;
   padding: 0;
   list-style: none;
