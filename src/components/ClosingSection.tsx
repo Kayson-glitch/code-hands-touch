@@ -15,20 +15,16 @@ const TITLE_SCALE = 0.6;
 const SLIDE_END = 0.9;
 const HOLD_VH = 100;
 
-/** Fraction of each panel's scroll segment spent moving (rest is a hold). */
-const SNAP_MOVE = 0.42;
-
 /**
- * Quantises the free 0→1 track progress into per-panel steps: each panel rests
- * in place, then the track glides to the next panel at the end of its segment.
+ * Discrete states of the slide phase: 0 = headline only, 1..n = panel n pinned
+ * at the left grid boundary. Each state occupies one equal slice of the slide
+ * scroll range and the track jumps between them with no intermediate position.
  */
-const snapSlide = (s: number) => {
-  const steps = PANELS.length;
-  const i = Math.min(steps - 1, Math.floor(s * steps));
-  const f = clamp(s * steps - i);
-  const t = clamp((f - (1 - SNAP_MOVE)) / SNAP_MOVE);
-  return clamp((i + t * t * (3 - 2 * t)) / steps);
+const slideState = (s: number) => {
+  const states = PANELS.length + 1;
+  return Math.min(states - 1, Math.floor(clamp(s) * states));
 };
+
 
 const Words = () => (
   <p className="artemis-closing__text">
@@ -55,6 +51,7 @@ export function ClosingSection() {
   const [titleLeft, setTitleLeft] = useState(0);
   const [offsets, setOffsets] = useState<number[]>([]);
   const [viewportW, setViewportW] = useState(1440);
+  const [gridX, setGridX] = useState(120);
 
   useEffect(() => {
     const media = window.matchMedia("(prefers-reduced-motion: reduce)");
@@ -103,6 +100,7 @@ export function ClosingSection() {
       const yInset = yMin + (((h - NAV - 2 * yMin) % STEP) + STEP) % STEP / 2;
       const yStart = NAV + yInset;
       const yEnd = yStart + Math.floor((h - yInset - yStart) / STEP) * STEP;
+      setGridX(xInset);
       el.style.setProperty("--grid-x-inset", `${xInset}px`);
       el.style.setProperty("--grid-y-inset", `${yInset}px`);
       el.style.setProperty("--grid-y-end", `${yEnd}px`);
@@ -153,24 +151,32 @@ export function ClosingSection() {
   const p = clamp(progress);
   const wipe = pinned ? clamp(p / WIPE_END) : 1;
   const shrink = pinned ? easeOutCubic(clamp((p - WIPE_END) / (SHRINK_END - WIPE_END))) : 1;
-  // Once the headline has reached its smallest size, the track stops scrolling
-  // freely: each panel holds ("snaps") on screen for most of its scroll segment
-  // and then transitions quickly to the next one.
+  // Once the headline has reached its smallest size the track stops scrolling
+  // freely: it snaps instantly between discrete states, each panel resting at
+  // the left grid boundary exactly as in the static Figma frame.
   const SLIDE_START = SHRINK_END;
   const raw = pinned ? clamp((p - SLIDE_START) / (SLIDE_END - SLIDE_START)) : 1;
-  const slide = pinned ? snapSlide(raw) : 1;
-
+  const state = pinned ? slideState(raw) : PANELS.length;
 
   const scale = pinned ? 1 - (1 - TITLE_SCALE) * shrink : TITLE_SCALE;
-  const x = pinned ? travel * slide : 0;
+  const target =
+    state > 0 && offsets[state - 1] !== undefined
+      ? Math.min(travel, Math.max(0, offsets[state - 1]! - gridX))
+      : 0;
+  const x = pinned ? target : 0;
   // Static: measured against the final headline scale so the offset never
   // shifts mid-slide.
   const lead = pinned
     ? Math.max(0, viewportW - (titleLeft + titleW * TITLE_SCALE) - 2 * 128 - 200)
     : 0;
-  // The 16% boundary rule arrives with the first panel.
-  const firstLeft = offsets[0] !== undefined ? offsets[0] - x : viewportW;
-  const edgeOn = pinned ? clamp((viewportW - firstLeft) / (viewportW * 0.5)) : 1;
+  // The 16% boundary rule belongs to the panels: it travels in from the right
+  // with the active module and sits on the grid line while it rests.
+  const edgeX = pinned
+    ? state > 0 && offsets[state - 1] !== undefined
+      ? offsets[state - 1]! - x - gridX
+      : viewportW
+    : 0;
+
 
 
   // Panel offsets shift while the headline shrinks (its layout width is
@@ -183,7 +189,7 @@ export function ClosingSection() {
         (el) => el.offsetLeft,
       ),
     );
-  }, [scale, travel, titleW, lead, desktop]);
+  }, [scale, travel, titleW, lead, desktop, gridX]);
 
 
 
@@ -224,7 +230,7 @@ export function ClosingSection() {
             {/* Dots are inside the pinned stage, so they stay locked while the
                 headline shrinks and the panels slide through. */}
             <div ref={dotsRef} className="artemis-closing__dots">
-              <div className="artemis-closing__edge" style={{ opacity: edgeOn }} aria-hidden />
+              <div className="artemis-closing__edge" style={{ transform: `translate3d(${edgeX.toFixed(2)}px, 0, 0)` }} aria-hidden />
             </div>
             <div
               ref={trackRef}
