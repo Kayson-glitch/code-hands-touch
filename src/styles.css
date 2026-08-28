@@ -670,9 +670,7 @@ html.lenis body {
   background-image:
     /* left edge rule (20%) */
     linear-gradient(to right, rgba(255, 255, 255, 0.2) 0 1px, transparent 1px),
-    /* right edge rule (20%) */
-    linear-gradient(to left, rgba(255, 255, 255, 0.2) 0 1px, transparent 1px),
-    /* inner rules (10%) */
+    /* inner rules (10%) — no right edge rule */
     repeating-linear-gradient(
       to right,
       rgba(255, 255, 255, 0.1) 0 1px,
@@ -754,24 +752,6 @@ html.lenis body {
   color: rgba(255, 255, 255, 0.5);
 }
 
-/* Gradient-transparent vertical divider between panels.
-   Sits in the middle of the track gap and fades at both ends. */
-.artemis-gallery__panel:not(:last-child)::after {
-  content: "";
-  position: absolute;
-  top: 50%;
-  right: calc(-1 * (14rem / 2));
-  transform: translateY(-50%);
-  width: 1px;
-  height: 480px;
-  background: linear-gradient(
-    180deg,
-    rgba(255, 255, 255, 0) 0%,
-    rgba(255, 255, 255, 0.22) 50%,
-    rgba(255, 255, 255, 0) 100%
-  );
-  pointer-events: none;
-}
 
 /* Placeholder media block (Figma: 360×480, square corners). */
 .artemis-gallery__media {
@@ -890,9 +870,6 @@ html.lenis body {
     width: 100%;
   }
 
-  .artemis-gallery__panel:not(:last-child)::after {
-    display: none;
-  }
 
   .artemis-gallery__media {
     width: min(100%, 480px);
