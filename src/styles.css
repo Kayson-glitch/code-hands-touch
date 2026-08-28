@@ -652,10 +652,10 @@ html.lenis body {
   inset: 0;
   pointer-events: none;
   z-index: 0;
-  /* Crosshair markers at (120, 80) and (120, height - 80). */
+  /* Crosshair markers at (120, 60 + 80) and (120, height - 80). */
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 10 10'%3E%3Cpath d='M5 0V10M0 5H10' stroke='white' stroke-opacity='0.2'/%3E%3C/svg%3E");
   background-repeat: no-repeat, no-repeat;
-  background-position: 115px 75px, 115px calc(100% - 85px);
+  background-position: 115px 135px, 115px calc(100% - 85px);
   background-size: 10px 10px;
 }
 
@@ -679,14 +679,16 @@ html.lenis body {
   -webkit-mask-image: linear-gradient(
     to bottom,
     transparent 0,
-    #000 80px,
+    transparent 60px, /* nav bar height */
+    #000 140px,
     #000 calc(100% - 80px),
     transparent 100%
   );
   mask-image: linear-gradient(
     to bottom,
     transparent 0,
-    #000 80px,
+    transparent 60px, /* nav bar height */
+    #000 140px,
     #000 calc(100% - 80px),
     transparent 100%
   );
@@ -698,7 +700,7 @@ html.lenis body {
   position: absolute;
   left: 0;
   right: 0;
-  top: 80px;
+  top: 140px; /* 60px nav + 80px inset */
   bottom: 80px;
   background-image:
     linear-gradient(to bottom, rgba(255, 255, 255, 0.2) 0 1px, transparent 1px),
