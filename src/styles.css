@@ -653,9 +653,14 @@ html.lenis body {
   /* Centred lattice insets are measured in px by ClosingSection (ResizeObserver)
      because percentages inside background-position resolve against the
      positioning area (element minus image), which skewed mod() math. */
-  --grid-x-inset: var(--grid-x-min);
-  --grid-y-inset: var(--grid-y-min);
+  --grid-x-inset: calc(
+    var(--grid-x-min) + mod(calc(100% - 2 * var(--grid-x-min)), var(--grid-step)) / 2
+  );
+  --grid-y-inset: calc(
+    var(--grid-y-min) + mod(calc(100% - var(--grid-nav) - 2 * var(--grid-y-min)), var(--grid-step)) / 2
+  );
   --grid-y-start: calc(var(--grid-nav) + var(--grid-y-inset));
+  --grid-y-end: calc(100% - var(--grid-y-inset));
   position: absolute;
   inset: 0;
   pointer-events: none;
@@ -667,7 +672,7 @@ html.lenis body {
   background-repeat: no-repeat, no-repeat;
   background-position:
     calc(var(--grid-x-inset) - 5px) calc(var(--grid-y-start) - 5px),
-    calc(var(--grid-x-inset) - 5px) calc(100% - var(--grid-y-inset) - 5px);
+    calc(var(--grid-x-inset) - 5px) calc(var(--grid-y-end) - 5px);
   background-size: 10px 10px, 10px 10px;
 }
 
@@ -697,7 +702,7 @@ html.lenis body {
     transparent 0,
     transparent var(--grid-nav),
     #000 var(--grid-y-start),
-    #000 calc(100% - var(--grid-y-inset)),
+    #000 var(--grid-y-end),
     transparent 100%
   );
   mask-image: linear-gradient(
@@ -705,7 +710,7 @@ html.lenis body {
     transparent 0,
     transparent var(--grid-nav),
     #000 var(--grid-y-start),
-    #000 calc(100% - var(--grid-y-inset)),
+    #000 var(--grid-y-end),
     transparent 100%
   );
 }
@@ -717,7 +722,9 @@ html.lenis body {
   left: 0;
   right: 0;
   top: var(--grid-y-start);
-  bottom: var(--grid-y-inset);
+  /* Include the terminal lattice coordinate itself. Without this extra pixel,
+     the 1px bottom rule is painted one pixel above the crosshair centre. */
+  bottom: calc(100% - var(--grid-y-end) - 1px);
   background-image:
     linear-gradient(to bottom, rgba(255, 255, 255, 0.16) 0 1px, transparent 1px),
     linear-gradient(to top, rgba(255, 255, 255, 0.16) 0 1px, transparent 1px),

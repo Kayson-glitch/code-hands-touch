@@ -72,9 +72,8 @@ export function ClosingSection() {
     };
   }, []);
 
-  /* Centre the 40px lattice: leftover space after the minimum clearances is
-     split equally on both sides, measured in px so background-position math
-     stays exact. */
+  /* Centre the 40px lattice. Keep both terminal crosshairs on actual lattice
+     intersections rather than deriving the lower point from a separate inset. */
   useEffect(() => {
     const el = dotsRef.current;
     if (!el) return;
@@ -87,8 +86,11 @@ export function ClosingSection() {
       const yMin = 80;
       const xInset = xMin + (((w - 2 * xMin) % STEP) + STEP) % STEP / 2;
       const yInset = yMin + (((h - NAV - 2 * yMin) % STEP) + STEP) % STEP / 2;
+      const yStart = NAV + yInset;
+      const yEnd = yStart + Math.floor((h - yInset - yStart) / STEP) * STEP;
       el.style.setProperty("--grid-x-inset", `${xInset}px`);
       el.style.setProperty("--grid-y-inset", `${yInset}px`);
+      el.style.setProperty("--grid-y-end", `${yEnd}px`);
     };
     apply();
     const observer = new ResizeObserver(apply);
