@@ -161,7 +161,7 @@ export function ClosingSection() {
   const scale = pinned ? 1 - (1 - TITLE_SCALE) * shrink : TITLE_SCALE;
   const target =
     state > 0 && offsets[state - 1] !== undefined
-      ? Math.min(travel, Math.max(0, offsets[state - 1]! - gridX))
+      ? Math.max(0, offsets[state - 1]! - gridX)
       : 0;
   const x = pinned ? target : 0;
   // Static: measured against the final headline scale so the offset never
@@ -255,7 +255,9 @@ export function ClosingSection() {
                   first card is dragged in from off-screen instead of sitting
                   next to the shrunken headline. */}
               <div className="artemis-closing__lead" style={{ flex: `0 0 ${lead}px` }} aria-hidden />
-              <FeaturePanels lefts={offsets.map((o) => o - x)} viewportW={viewportW} viewportH={viewportH} pinned={pinned} />
+              <FeaturePanels activeIndex={state - 1} pinned={pinned} />
+              {/* Trailing room so the last module can also rest on the left grid line. */}
+              <div className="artemis-closing__lead" style={{ flex: `0 0 ${lead}px` }} aria-hidden />
             </div>
           </div>
         </div>
