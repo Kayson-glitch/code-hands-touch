@@ -169,13 +169,10 @@ export function ClosingSection() {
   const lead = pinned
     ? Math.max(0, viewportW - (titleLeft + titleW * TITLE_SCALE) - 2 * 128 - 200)
     : 0;
-  // The 16% boundary rule belongs to the panels: it travels in from the right
-  // with the active module and sits on the grid line while it rests.
-  const edgeX = pinned
-    ? state > 0 && offsets[state - 1] !== undefined
-      ? offsets[state - 1]! - x - gridX
-      : viewportW
-    : 0;
+  // The 16% boundary rules belong to the panels: one per module, laid out in
+  // track coordinates and moved by the same offset, so each rule travels left
+  // with its module instead of appearing in place.
+
 
 
 
