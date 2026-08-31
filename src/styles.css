@@ -929,6 +929,29 @@ html.lenis body {
   gap: 120px;
 }
 
+/* Blinking typewriter caret shown while a field is still typing. */
+.artemis-caret {
+  display: inline-block;
+  width: 0.5em;
+  height: 1em;
+  margin-left: 1px;
+  vertical-align: -0.12em;
+  background: currentColor;
+  opacity: 0.75;
+  animation: artemis-caret-blink 0.7s steps(1, end) infinite;
+}
+
+@keyframes artemis-caret-blink {
+  0%,
+  49% {
+    opacity: 0.75;
+  }
+  50%,
+  100% {
+    opacity: 0;
+  }
+}
+
 .artemis-gallery__eyebrow {
   margin: 0;
   /* Left edge aligns with the media block below (which is offset 80px from
