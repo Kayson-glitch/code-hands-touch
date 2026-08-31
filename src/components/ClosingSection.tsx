@@ -14,6 +14,8 @@ const TITLE_SCALE = 0.6;
 // up over it (mirroring the hero's fixed-cover transition).
 const SLIDE_END = 0.9;
 const HOLD_VH = 100;
+/** Fixed navbar height; the background grid starts below it. */
+const NAV_HEIGHT = 60;
 
 /**
  * Discrete states of the slide phase: 0 = headline only, 1..n = panel n pinned
