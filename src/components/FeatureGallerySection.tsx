@@ -79,6 +79,13 @@ const CHAR_MS = 52;
 const CHAR_JITTER_MS = 26;
 /** Delay before a field starts typing once its panel is active. */
 const BASE_DELAY = 140;
+/** Pause between one field finishing and the next starting. */
+const FIELD_GAP = 120;
+/** Estimated per-char duration (base + half the jitter) used to schedule the
+ *  next field so typing never overlaps — every field types at the same speed,
+ *  one after another, for a consistent rhythm. */
+const AVG_CHAR = CHAR_MS + CHAR_JITTER_MS / 2;
+const fieldDuration = (text: string) => text.length * AVG_CHAR;
 
 /**
  * Typewriter text: when `active` flips true the characters appear one by one.
