@@ -75,15 +75,14 @@ export const PANELS: Panel[] = [
   },
 ];
 
-/** Milliseconds per typed character. */
-const CHAR_MS = 14;
-/** Delay before a field starts typing once its panel is active. */
-const BASE_DELAY = 120;
+/** Seconds of stagger per letter. */
+const LETTER_STEP = 0.018;
+/** Delay before a field starts rolling once its panel is active. */
+const BASE_DELAY = 0.12;
 
 /**
- * Typewriter text: when `active` flips true the characters appear one by one.
- * The untyped tail is rendered with `visibility: hidden` so the layout never
- * shifts as the text grows.
+ * Roll-in text: when `active` flips true each letter flips up into place.
+ * While inactive the text stays in the layout but invisible, so nothing shifts.
  */
 function Typed({
   text,
@@ -98,44 +97,27 @@ function Typed({
   className?: string;
   style?: CSSProperties;
 }) {
-  const [count, setCount] = useState(0);
-  const timerRef = useRef<number | null>(null);
-
-  useEffect(() => {
-    if (!active) {
-      setCount(0);
-      return;
-    }
-    let interval = 0;
-    const timeout = window.setTimeout(() => {
-      interval = window.setInterval(() => {
-        setCount((c) => {
-          if (c >= text.length) {
-            window.clearInterval(interval);
-            return c;
-          }
-          return c + 1;
-        });
-      }, CHAR_MS);
-    }, delay);
-    return () => {
-      window.clearTimeout(timeout);
-      if (interval) window.clearInterval(interval);
-    };
-  }, [active, text, delay]);
-
-  const done = count >= text.length;
+  if (!active) {
+    return (
+      <span className={className} style={{ ...style, visibility: "hidden" }} aria-label={text}>
+        {text}
+      </span>
+    );
+  }
   return (
-    <span className={className} style={style} aria-label={text}>
-      <span aria-hidden>{text.slice(0, count)}</span>
-      {!done && (
-        <span aria-hidden style={{ visibility: "hidden" }}>
-          {text.slice(count)}
-        </span>
-      )}
-    </span>
+    <TextRoll
+      key={text}
+      className={className}
+      duration={0.5}
+      getEnterDelay={(i) => delay + i * LETTER_STEP}
+      getExitDelay={(i) => delay + i * LETTER_STEP + 0.2}
+      transition={{ ease: "easeIn" }}
+    >
+      {text}
+    </TextRoll>
   );
 }
+
 
 /**
  * Feature panels for the closing screen's horizontal track.
