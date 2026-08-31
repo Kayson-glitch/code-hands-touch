@@ -79,13 +79,6 @@ const CHAR_MS = 52;
 const CHAR_JITTER_MS = 26;
 /** Delay before a field starts typing once its panel is active. */
 const BASE_DELAY = 140;
-/** Pause between one field finishing and the next starting. */
-const FIELD_GAP = 120;
-/** Estimated per-char duration (base + half the jitter) used to schedule the
- *  next field so typing never overlaps — every field types at the same speed,
- *  one after another, for a consistent rhythm. */
-const AVG_CHAR = CHAR_MS + CHAR_JITTER_MS / 2;
-const fieldDuration = (text: string) => text.length * AVG_CHAR;
 
 /**
  * Typewriter text: when `active` flips true the characters appear one by one.
@@ -175,13 +168,10 @@ export function FeaturePanels({
             className={`artemis-gallery__panel${active ? " is-active" : ""}`}
           >
             {(() => {
-              // Sequential typing: each field waits for the previous one to
-              // finish so the speed stays consistent across the whole panel.
-              let t = BASE_DELAY;
-              const eyebrowDelay = t;
-              t += fieldDuration(panel.eyebrow) + FIELD_GAP;
-              const titleDelay = t;
-              t += fieldDuration(panel.title) + FIELD_GAP;
+              // Simultaneous typing: every field starts at the same moment and
+              // types at the same speed.
+              const eyebrowDelay = BASE_DELAY;
+              const titleDelay = BASE_DELAY;
               return (
                 <>
                   <p className="artemis-gallery__eyebrow">
@@ -195,9 +185,8 @@ export function FeaturePanels({
                       </h3>
                       <ul className="artemis-gallery__list">
                         {panel.points.map((point) => {
-                          const labelDelay = t;
-                          const bodyDelay = t + fieldDuration(point.label) + FIELD_GAP;
-                          t = bodyDelay + fieldDuration(point.text) + FIELD_GAP;
+                          const labelDelay = BASE_DELAY;
+                          const bodyDelay = BASE_DELAY;
                           return (
                             <li key={point.label} className="artemis-gallery__item">
                               <p className="artemis-gallery__label">
