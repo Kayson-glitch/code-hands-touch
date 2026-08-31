@@ -106,6 +106,9 @@ export function ClosingSection() {
       el.style.setProperty("--grid-y-inset", `${yInset}px`);
       el.style.setProperty("--grid-y-start", `${yInset}px`);
       el.style.setProperty("--grid-y-end", `${yEnd}px`);
+      /* Symmetric fade: same clearance above the top boundary (measured from the
+         navbar) as below the bottom boundary. */
+      el.style.setProperty("--grid-y-fade", `${yInset - NAV_HEIGHT}px`);
     };
     apply();
     const observer = new ResizeObserver(apply);
