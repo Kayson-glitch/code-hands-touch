@@ -1,4 +1,6 @@
-import { useEffect, useRef, useState, type CSSProperties } from "react";
+import type { CSSProperties } from "react";
+import TextRoll from "@/components/ui/text-roll";
+
 
 type Point = { label: string; text: string };
 
