@@ -932,6 +932,9 @@ html.lenis body {
 
 .artemis-gallery__eyebrow {
   margin: 0;
+  /* Left edge aligns with the media block below (which is offset 80px from
+     the module's 16% boundary rule). */
+  margin-left: 80px;
   font-family: var(--font-sans);
   font-weight: 400;
   font-size: 14px;
@@ -1007,7 +1010,8 @@ html.lenis body {
    so the intrinsic 1023px module would overflow the clipped stage. Scale the
    media, gap and copy column down so the whole card always fits on screen. */
 @media (min-width: 991px) and (max-width: 1246px) {
-  .artemis-gallery__media {
+  .artemis-gallery__media,
+  .artemis-gallery__eyebrow {
     margin-left: clamp(32px, 6.2vw, 80px);
     width: clamp(240px, 28vw, 360px);
     height: auto;
