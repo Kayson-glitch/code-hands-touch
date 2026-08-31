@@ -100,7 +100,7 @@ export function ClosingSection() {
       const regionH = h - NAV_HEIGHT;
       const yInset =
         NAV_HEIGHT + Math.min(80, regionH * (80 / (920 - NAV_HEIGHT)));
-      const yEnd = h - yInset;
+      const yEnd = h - (yInset - NAV_HEIGHT);
       setGridX(xInset);
       el.style.setProperty("--grid-x-inset", `${xInset}px`);
       el.style.setProperty("--grid-y-inset", `${yInset}px`);
