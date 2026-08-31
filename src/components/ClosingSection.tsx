@@ -196,7 +196,7 @@ export function ClosingSection() {
       last = now;
       const prev = smoothRef.current;
       // ~0.85s to cover most of the distance, same feel as the old easing.
-      const next = prev + (x - prev) * (1 - Math.exp(-dt / 220));
+      const next = prev + (x - prev) * (1 - Math.exp(-dt / 120));
       const settled = Math.abs(x - next) < 0.5;
       const value = settled ? x : next;
       if (value !== prev) {
@@ -260,7 +260,7 @@ export function ClosingSection() {
       <div
         ref={wrapperRef}
         className="artemis-closing__wrapper"
-        style={pinned ? { height: `${300 + 80 + PANELS.length * 115 + HOLD_VH}vh` } : undefined}
+        style={pinned ? { height: `${300 + 80 + PANELS.length * 90 + HOLD_VH}vh` } : undefined}
       >
         <div className="artemis-closing__sticky">
           {/* Light state: only visible while the dark layer wipes up. */}
