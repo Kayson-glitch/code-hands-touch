@@ -215,6 +215,26 @@ export function ClosingSection() {
     }
     return () => cancelAnimationFrame(raf);
   }, [x, pinned]);
+  /* Fractional module position derived from the damped track offset, so the
+     label progress bar slides continuously while the track glides between
+     snapped states instead of jumping with it. */
+  const tickerPos = (() => {
+    if (!pinned) return PANELS.length - 1;
+    const stops = PANELS.map((_, i) =>
+      offsets[i] !== undefined ? Math.max(0, offsets[i]! - gridX) : 0,
+    );
+    if (smoothX <= stops[0]!) return 0;
+    for (let i = 0; i < stops.length - 1; i += 1) {
+      const a = stops[i]!;
+      const b = stops[i + 1]!;
+      if (smoothX < b) {
+        const span = b - a;
+        return i + (span > 0 ? (smoothX - a) / span : 0);
+      }
+    }
+    return stops.length - 1;
+  })();
+
   // Static: measured against the final headline scale so the offset never
   // shifts mid-slide.
   const lead = pinned
@@ -321,7 +341,7 @@ export function ClosingSection() {
                   first card is dragged in from off-screen instead of sitting
                   next to the shrunken headline. */}
               <div className="artemis-closing__lead" style={{ flex: `0 0 ${lead}px` }} aria-hidden />
-              <FeaturePanels activeIndex={state - 1} pinned={pinned} />
+              <FeaturePanels activeIndex={state - 1} pinned={pinned} tickerPos={tickerPos} />
               {/* Trailing room so the last module can also rest on the left grid line. */}
               <div className="artemis-closing__lead" style={{ flex: `0 0 ${lead}px` }} aria-hidden />
             </div>

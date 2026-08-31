@@ -154,9 +154,12 @@ function Typed({
 export function FeaturePanels({
   activeIndex,
   pinned,
+  tickerPos,
 }: {
   activeIndex: number;
   pinned: boolean;
+  /** Fractional module position so the label progress bar slides while scrolling. */
+  tickerPos?: number;
 }) {
   return (
     <>
@@ -205,20 +208,27 @@ export function FeaturePanels({
                       track; the current module sits centred and bright. */}
                   <div className="artemis-gallery__progress" aria-hidden>
                     <div
-                      className="artemis-gallery__ticker"
-                      style={{ "--i": index } as CSSProperties}
+                      className="artemis-gallery__ticker is-live"
+                      style={{ "--i": tickerPos ?? index } as CSSProperties}
                     >
-                      {PANELS.map((p, i) => (
-                        <span
-                          key={p.id}
-                          className={
-                            "artemis-gallery__ticker-item" +
-                            (i === index ? " is-active" : "")
-                          }
-                        >
-                          [ {p.eyebrow} ]
-                        </span>
-                      ))}
+                      {PANELS.map((p, i) => {
+                        const d = Math.abs((tickerPos ?? index) - i);
+                        return (
+                          <span
+                            key={p.id}
+                            className="artemis-gallery__ticker-item"
+                            style={
+                              {
+                                // Brightness follows the sliding position, so
+                                // the highlight travels with the scroll.
+                                "--lum": Math.max(0, 1 - d).toFixed(3),
+                              } as CSSProperties
+                            }
+                          >
+                            [ {p.eyebrow} ]
+                          </span>
+                        );
+                      })}
                     </div>
                   </div>
                 </>
