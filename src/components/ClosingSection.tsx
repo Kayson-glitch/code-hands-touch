@@ -96,11 +96,18 @@ export function ClosingSection() {
       const h = el.clientHeight;
       const xInset = window.innerWidth <= 990 ? 16 : Math.min(120, w / 12);
       /* Grid starts below the 60px navbar and is vertically centered in
-         the remaining viewport (80px margins at the 920px reference). */
+         the remaining viewport (80px margins at the 920px reference).
+         Both boundary lines must land exactly on the 40px lattice
+         (vertical lines are anchored at y=0), so the clearance c above
+         the top boundary and below the bottom boundary must satisfy
+         NAV + c ≡ 0 and h - c ≡ 0 (mod 40) → c ≡ h (mod 40). */
       const regionH = h - NAV_HEIGHT;
-      const yInset =
-        NAV_HEIGHT + Math.min(80, regionH * (80 / (920 - NAV_HEIGHT)));
-      const yEnd = h - (yInset - NAV_HEIGHT);
+      const STEP = 40;
+      const c0 = Math.min(80, regionH * (80 / (920 - NAV_HEIGHT)));
+      const r = (((h - c0) % STEP) + STEP) % STEP;
+      const c = c0 + (r <= STEP / 2 ? r : r - STEP);
+      const yInset = NAV_HEIGHT + c;
+      const yEnd = h - c;
       setGridX(xInset);
       el.style.setProperty("--grid-x-inset", `${xInset}px`);
       el.style.setProperty("--grid-y-inset", `${yInset}px`);
