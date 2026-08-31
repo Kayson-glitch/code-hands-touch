@@ -1063,6 +1063,11 @@ html.lenis body {
     aspect-ratio: 3 / 4;
   }
 
+  .artemis-gallery__progress {
+    margin-left: clamp(32px, 6.2vw, 80px);
+    width: clamp(240px, 28vw, 360px);
+  }
+
   .artemis-gallery__row {
     gap: clamp(48px, 7.5vw, 120px);
   }
