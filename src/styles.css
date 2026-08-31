@@ -1030,62 +1030,55 @@ html.lenis body {
 /* Per-module progress bar: 2px tall, 60px below the grey media block,
    width and left edge strictly matching the media block. The fill uses the
    same flowing brand gradient + animation as the navbar's top bar. */
-/* Marquee ticker under the media block: the module label repeats and scrolls
-   left; a masked bright layer highlights whichever copy is centred. */
+/* Progress indicator under the media block: the five module labels sit on one
+   track, the current module's label is centred and bright, its neighbours peek
+   in dimmed at the edges. Width matches the grey media block. */
 .artemis-gallery__progress {
+  --track-w: 360px;
+  --slot-w: calc(var(--track-w) * 0.72);
   margin: 40px 0 0 80px;
   position: relative;
-  width: 640px;
+  width: var(--track-w);
   max-width: 100%;
   height: 20px;
   overflow: hidden;
-  -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 12%, #000 88%, transparent 100%);
-  mask-image: linear-gradient(90deg, transparent 0, #000 12%, #000 88%, transparent 100%);
+  -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 18%, #000 82%, transparent 100%);
+  mask-image: linear-gradient(90deg, transparent 0, #000 18%, #000 82%, transparent 100%);
 }
 
 .artemis-gallery__ticker {
   position: absolute;
   inset: 0;
   display: flex;
-  width: max-content;
   align-items: center;
-  gap: 48px;
   white-space: nowrap;
   font-family: var(--font-sans);
   font-weight: 400;
   font-size: 12px;
   line-height: 20px;
   text-transform: uppercase;
-  animation: artemis-ticker 18s linear infinite;
+  transform: translate3d(
+    calc(var(--track-w) / 2 - var(--i, 0) * var(--slot-w) - var(--slot-w) / 2),
+    0,
+    0
+  );
+  transition: transform 620ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-.artemis-gallery__ticker--dim {
+.artemis-gallery__ticker-item {
+  flex: 0 0 var(--slot-w);
+  width: var(--slot-w);
+  text-align: center;
   color: rgba(255, 255, 255, 0.28);
+  transition: color 420ms ease;
 }
 
-.artemis-gallery__ticker-layer {
-  position: absolute;
-  inset: 0;
-  overflow: hidden;
-}
-
-.artemis-gallery__ticker-layer--bright {
+.artemis-gallery__ticker-item.is-active {
   color: #ffffff;
-  -webkit-mask-image: linear-gradient(90deg, transparent 34%, #000 45%, #000 55%, transparent 66%);
-  mask-image: linear-gradient(90deg, transparent 34%, #000 45%, #000 55%, transparent 66%);
-}
-
-.artemis-gallery__ticker-layer--dim {
-  color: rgba(255, 255, 255, 0.28);
-}
-
-@keyframes artemis-ticker {
-  from { transform: translate3d(0, 0, 0); }
-  to { transform: translate3d(-50%, 0, 0); }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .artemis-gallery__ticker { animation: none; }
+  .artemis-gallery__ticker { transition: none; }
 }
 
 
@@ -1106,7 +1099,7 @@ html.lenis body {
 
   .artemis-gallery__progress {
     margin-left: clamp(32px, 6.2vw, 80px);
-    width: clamp(240px, 28vw, 360px);
+    --track-w: clamp(240px, 28vw, 360px);
   }
 
   .artemis-gallery__row {
