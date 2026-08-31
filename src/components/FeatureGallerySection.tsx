@@ -74,7 +74,7 @@ export const PANELS: Panel[] = [
 ];
 
 /** Milliseconds per typed character. */
-const CHAR_MS = 82;
+const CHAR_MS = 130;
 /** Extra jitter per character so the rhythm feels human. */
 const CHAR_JITTER_MS = 26;
 /** Delay before a field starts typing once its panel is active. */
