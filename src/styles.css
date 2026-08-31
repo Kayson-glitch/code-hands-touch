@@ -809,17 +809,17 @@ html.lenis body {
 
   -webkit-mask-image: linear-gradient(
     to bottom,
-    transparent 0,
+    transparent calc(var(--grid-y-start) - var(--grid-y-fade)),
     #000 var(--grid-y-start),
     #000 var(--grid-y-end),
-    transparent 100%
+    transparent calc(var(--grid-y-end) + var(--grid-y-fade))
   );
   mask-image: linear-gradient(
     to bottom,
-    transparent 0,
+    transparent calc(var(--grid-y-start) - var(--grid-y-fade)),
     #000 var(--grid-y-start),
     #000 var(--grid-y-end),
-    transparent 100%
+    transparent calc(var(--grid-y-end) + var(--grid-y-fade))
   );
 }
 
