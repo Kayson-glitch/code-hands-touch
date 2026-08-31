@@ -273,7 +273,7 @@ export function ClosingSection() {
                 <div className="artemis-closing__edges" aria-hidden>
                   <div
                     className="artemis-closing__edges-inner"
-                    style={{ transform: `translate3d(${-x}px, 0, 0)` }}
+                    style={{ transform: `translate3d(${-smoothX}px, 0, 0)` }}
                   >
                     {offsets.map((offset, index) => (
                       <div
@@ -292,7 +292,7 @@ export function ClosingSection() {
             <div
               ref={trackRef}
               className="artemis-closing__track"
-              style={pinned ? { transform: `translate3d(${-x}px, 0, 0)` } : undefined}
+              style={pinned ? { transform: `translate3d(${-smoothX}px, 0, 0)` } : undefined}
             >
               <div
                 ref={titleRef}
