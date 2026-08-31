@@ -663,6 +663,9 @@ html.lenis body {
   );
   --grid-y-start: var(--grid-y-inset);
   --grid-y-end: calc(100% - var(--grid-y-inset));
+  /* Vertical fade length above/below the boundary lines — equal on both sides
+     so the top clearance under the navbar matches the bottom clearance. */
+  --grid-y-fade: var(--grid-y-min);
   position: absolute;
   inset: 0;
   pointer-events: none;
