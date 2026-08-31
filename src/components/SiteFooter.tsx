@@ -2,7 +2,7 @@ import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { Linkedin, Twitter, Youtube } from "lucide-react";
 import { Reveal } from "@/components/Reveal";
 import { DotArrow } from "@/components/DotArrow";
-import KineticGrid from "@/components/ui/kinetic-grid";
+import PrismaticBurst from "@/components/ui/prismatic-burst";
 import logo from "@/assets/synergy-logo-v3.png.asset.json";
 
 
@@ -121,12 +121,23 @@ export function SiteFooter() {
           aria-hidden
           className="pointer-events-none absolute inset-0"
           style={{
-            maskImage: "radial-gradient(120% 80% at 50% 50%, #000 25%, transparent 90%)",
-            WebkitMaskImage: "radial-gradient(120% 80% at 50% 50%, #000 25%, transparent 90%)",
+            maskImage: "radial-gradient(110% 85% at 50% 50%, #000 35%, transparent 92%)",
+            WebkitMaskImage: "radial-gradient(110% 85% at 50% 50%, #000 35%, transparent 92%)",
+            opacity: 0.9,
           }}
         >
-          <KineticGrid theme="light" transparent />
+          <PrismaticBurst
+            animationType="rotate3d"
+            intensity={2}
+            speed={0.4}
+            distort={1.2}
+            rayCount={22}
+            hoverDampness={0.3}
+            lightMode
+            colors={["#137DFF", "#FF18AA", "#FFCD17"]}
+          />
         </div>
+
 
         <div className="relative mx-auto flex w-full max-w-[800px] flex-col items-center px-6 text-center">
           <Reveal>
