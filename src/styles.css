@@ -1099,7 +1099,7 @@ html.lenis body {
 
   .artemis-gallery__progress {
     margin-left: clamp(32px, 6.2vw, 80px);
-    width: clamp(240px, 28vw, 360px);
+    --track-w: clamp(240px, 28vw, 360px);
   }
 
   .artemis-gallery__row {
