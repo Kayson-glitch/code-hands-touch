@@ -14,6 +14,8 @@ const TITLE_SCALE = 0.6;
 // up over it (mirroring the hero's fixed-cover transition).
 const SLIDE_END = 0.9;
 const HOLD_VH = 100;
+/** Fixed navbar height; the background grid starts below it. */
+const NAV_HEIGHT = 60;
 
 /**
  * Discrete states of the slide phase: 0 = headline only, 1..n = panel n pinned
@@ -93,8 +95,12 @@ export function ClosingSection() {
       const w = el.clientWidth;
       const h = el.clientHeight;
       const xInset = window.innerWidth <= 990 ? 16 : Math.min(120, w / 12);
-      const yInset = Math.min(80, h * (80 / 920));
-      const yEnd = h - yInset;
+      /* Grid starts below the 60px navbar and is vertically centered in
+         the remaining viewport (80px margins at the 920px reference). */
+      const regionH = h - NAV_HEIGHT;
+      const yInset =
+        NAV_HEIGHT + Math.min(80, regionH * (80 / (920 - NAV_HEIGHT)));
+      const yEnd = h - (yInset - NAV_HEIGHT);
       setGridX(xInset);
       el.style.setProperty("--grid-x-inset", `${xInset}px`);
       el.style.setProperty("--grid-y-inset", `${yInset}px`);
