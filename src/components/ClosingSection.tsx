@@ -84,25 +84,21 @@ export function ClosingSection() {
     };
   }, []);
 
-  /* Centre the 40px lattice. Keep both terminal crosshairs on actual lattice
-     intersections rather than deriving the lower point from a separate inset. */
+  /* Figma 1696:29556: 40px lattice, 120px horizontal and 80px vertical
+     boundary insets at the 1440×920 reference frame. */
   useEffect(() => {
     const el = dotsRef.current;
     if (!el) return;
-    const STEP = 40;
-    const NAV = 60;
     const apply = () => {
       const w = el.clientWidth;
       const h = el.clientHeight;
-      const xMin = window.innerWidth <= 990 ? 16 : 120;
-      const yMin = 80;
-      const xInset = xMin + (((w - 2 * xMin) % STEP) + STEP) % STEP / 2;
-      const yInset = yMin + (((h - NAV - 2 * yMin) % STEP) + STEP) % STEP / 2;
-      const yStart = NAV + yInset;
-      const yEnd = yStart + Math.floor((h - yInset - yStart) / STEP) * STEP;
+      const xInset = window.innerWidth <= 990 ? 16 : Math.min(120, w / 12);
+      const yInset = Math.min(80, h * (80 / 920));
+      const yEnd = h - yInset;
       setGridX(xInset);
       el.style.setProperty("--grid-x-inset", `${xInset}px`);
       el.style.setProperty("--grid-y-inset", `${yInset}px`);
+      el.style.setProperty("--grid-y-start", `${yInset}px`);
       el.style.setProperty("--grid-y-end", `${yEnd}px`);
     };
     apply();
