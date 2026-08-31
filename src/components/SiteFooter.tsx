@@ -2,7 +2,9 @@ import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { Linkedin, Twitter, Youtube } from "lucide-react";
 import { Reveal } from "@/components/Reveal";
 import { DotArrow } from "@/components/DotArrow";
+import KineticGrid from "@/components/ui/kinetic-grid";
 import logo from "@/assets/synergy-logo-v3.png.asset.json";
+
 
 /** 1440px design width → fluid value. */
 const fluid = (px: number, min = px * 0.7) =>
@@ -119,13 +121,13 @@ export function SiteFooter() {
           aria-hidden
           className="pointer-events-none absolute inset-0"
           style={{
-            backgroundImage:
-              "radial-gradient(circle, rgba(14,11,34,0.16) 1px, transparent 1px)",
-            backgroundSize: "20px 21px",
-            maskImage: "radial-gradient(120% 80% at 50% 50%, #000 25%, transparent 78%)",
-            WebkitMaskImage: "radial-gradient(120% 80% at 50% 50%, #000 25%, transparent 78%)",
+            maskImage: "radial-gradient(120% 80% at 50% 50%, #000 25%, transparent 90%)",
+            WebkitMaskImage: "radial-gradient(120% 80% at 50% 50%, #000 25%, transparent 90%)",
           }}
-        />
+        >
+          <KineticGrid theme="light" transparent />
+        </div>
+
         <div className="relative mx-auto flex w-full max-w-[800px] flex-col items-center px-6 text-center">
           <Reveal>
             <h2
