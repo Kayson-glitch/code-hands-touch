@@ -207,30 +207,45 @@ export function FeaturePanels({
                   {/* Progress indicator: one label per module on a sliding
                       track; the current module sits centred and bright. */}
                   <div className="artemis-gallery__progress" aria-hidden>
-                    <div
-                      className="artemis-gallery__ticker is-live"
-                      style={{ "--i": tickerPos ?? index } as CSSProperties}
-                    >
-                      {PANELS.map((p, i) => {
-                        const d = Math.abs((tickerPos ?? index) - i);
-                        return (
-                          <span
-                            key={p.id}
-                            className="artemis-gallery__ticker-item"
-                            style={
-                              {
-                                // Brightness follows the sliding position, so
-                                // the highlight travels with the scroll.
-                                "--lum": Math.max(0, 1 - d).toFixed(3),
-                              } as CSSProperties
-                            }
-                          >
-                            [ {p.eyebrow} ]
-                          </span>
-                        );
-                      })}
-                    </div>
+                    {(() => {
+                      // Cyclic track: clone 2 modules on each side so the strip
+                      // is always full — no gap at the first/last module.
+                      const CLONES = 2;
+                      const n = PANELS.length;
+                      const pos = tickerPos ?? index;
+                      const items = Array.from({ length: n + CLONES * 2 }, (_, k) => {
+                        const real = ((k - CLONES) % n + n) % n;
+                        return { key: k, real, panel: PANELS[real] };
+                      });
+                      return (
+                        <div
+                          className="artemis-gallery__ticker is-live"
+                          style={{ "--i": pos + CLONES } as CSSProperties}
+                        >
+                          {items.map(({ key, real, panel: p }) => {
+                            // Shortest cyclic distance keeps brightness smooth
+                            // across the wrap point.
+                            const raw = Math.abs(pos - real);
+                            const d = Math.min(raw, n - raw);
+                            return (
+                              <span
+                                key={key}
+                                className="artemis-gallery__ticker-item"
+                                style={
+                                  {
+                                    "--lum": Math.max(0, 1 - d).toFixed(3),
+                                  } as CSSProperties
+                                }
+                              >
+                                [ {p.eyebrow} ]
+                              </span>
+                            );
+                          })}
+                        </div>
+                      );
+                    })()}
                   </div>
+
                 </>
               );
             })()}
