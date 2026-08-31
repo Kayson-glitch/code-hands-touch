@@ -97,15 +97,17 @@ export function ClosingSection() {
       const xInset = window.innerWidth <= 990 ? 16 : Math.min(120, w / 12);
       /* Grid starts below the 60px navbar and is vertically centered in
          the remaining viewport (80px margins at the 920px reference).
-         Both boundary lines must land exactly on the 40px lattice
-         (vertical lines are anchored at y=0), so the clearance c above
-         the top boundary and below the bottom boundary must satisfy
-         NAV + c ≡ 0 and h - c ≡ 0 (mod 40) → c ≡ h (mod 40). */
+         The horizontal lattice is anchored at the top boundary line, so
+         the bottom boundary lands on a 40px row only when
+         (h - NAV - 2c) ≡ 0 (mod 40), where c is the equal clearance
+         above the top and below the bottom boundary. */
       const regionH = h - NAV_HEIGHT;
       const STEP = 40;
       const c0 = Math.min(80, regionH * (80 / (920 - NAV_HEIGHT)));
-      const r = (((h - c0) % STEP) + STEP) % STEP;
-      const c = c0 + (r <= STEP / 2 ? r : r - STEP);
+      const m = (((h - NAV_HEIGHT) % STEP) + STEP) % STEP;
+      const target = (m / 2) % (STEP / 2);
+      const d0 = (((target - c0) % (STEP / 2)) + STEP / 2) % (STEP / 2);
+      const c = c0 + (d0 <= STEP / 4 ? d0 : d0 - STEP / 2);
       const yInset = NAV_HEIGHT + c;
       const yEnd = h - c;
       setGridX(xInset);
