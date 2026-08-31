@@ -1027,6 +1027,29 @@ html.lenis body {
   color: rgba(255, 255, 255, 0.6);
 }
 
+/* Per-module progress bar: 2px tall, 60px below the grey media block,
+   width and left edge strictly matching the media block. The fill uses the
+   same flowing brand gradient + animation as the navbar's top bar. */
+.artemis-gallery__progress {
+  /* 20px panel column gap + 40px margin = 60px below the media block. */
+  margin: 40px 0 0 80px;
+  width: 360px;
+  height: 2px;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.artemis-gallery__progress-fill {
+  height: 100%;
+  background-image: linear-gradient(90deg, #137DFF 0%, #FF18AA 33.333%, #FFCD17 66.666%, #137DFF 100%);
+  background-size: 120vw 100%;
+  background-repeat: repeat-x;
+  animation: nav-border-flow 9s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .artemis-gallery__progress-fill { animation: none; }
+}
+
 
 /* Narrow laptops / landscape tablets: panels snap to the 120px lattice inset,
    so the intrinsic 1023px module would overflow the clipped stage. Scale the
