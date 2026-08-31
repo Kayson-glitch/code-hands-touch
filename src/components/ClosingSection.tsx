@@ -169,6 +169,43 @@ export function ClosingSection() {
       ? Math.max(0, offsets[state - 1]! - gridX)
       : 0;
   const x = pinned ? target : 0;
+
+  /* Smooth glide between snapped states: instead of a CSS transition (which
+     restarts abruptly when the wheel advances the state mid-flight), the
+     position is damped toward the target every frame with exponential
+     smoothing, so speed is consistent regardless of scroll rhythm. */
+  const [smoothX, setSmoothX] = useState(0);
+  const smoothRef = useRef(0);
+  useEffect(() => {
+    if (!pinned) {
+      smoothRef.current = 0;
+      setSmoothX(0);
+      return;
+    }
+    let raf = 0;
+    let last = performance.now();
+    const tick = (now: number) => {
+      const dt = Math.min(64, now - last);
+      last = now;
+      const prev = smoothRef.current;
+      // ~0.85s to cover most of the distance, same feel as the old easing.
+      const next = prev + (x - prev) * (1 - Math.exp(-dt / 220));
+      const settled = Math.abs(x - next) < 0.5;
+      const value = settled ? x : next;
+      if (value !== prev) {
+        smoothRef.current = value;
+        setSmoothX(value);
+      }
+      if (!settled) raf = requestAnimationFrame(tick);
+    };
+    if (Math.abs(x - smoothRef.current) >= 0.5) {
+      raf = requestAnimationFrame(tick);
+    } else if (smoothRef.current !== x) {
+      smoothRef.current = x;
+      setSmoothX(x);
+    }
+    return () => cancelAnimationFrame(raf);
+  }, [x, pinned]);
   // Static: measured against the final headline scale so the offset never
   // shifts mid-slide.
   const lead = pinned
