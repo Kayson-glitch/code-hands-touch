@@ -341,7 +341,7 @@ export function ClosingSection() {
                   first card is dragged in from off-screen instead of sitting
                   next to the shrunken headline. */}
               <div className="artemis-closing__lead" style={{ flex: `0 0 ${lead}px` }} aria-hidden />
-              <FeaturePanels activeIndex={state - 1} pinned={pinned} />
+              <FeaturePanels activeIndex={state - 1} pinned={pinned} tickerPos={tickerPos} />
               {/* Trailing room so the last module can also rest on the left grid line. */}
               <div className="artemis-closing__lead" style={{ flex: `0 0 ${lead}px` }} aria-hidden />
             </div>
