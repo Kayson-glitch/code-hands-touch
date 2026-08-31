@@ -74,9 +74,11 @@ export const PANELS: Panel[] = [
 ];
 
 /** Milliseconds per typed character. */
-const CHAR_MS = 14;
+const CHAR_MS = 34;
+/** Extra jitter per character so the rhythm feels human. */
+const CHAR_JITTER_MS = 26;
 /** Delay before a field starts typing once its panel is active. */
-const BASE_DELAY = 120;
+const BASE_DELAY = 140;
 
 /**
  * Typewriter text: when `active` flips true the characters appear one by one.
@@ -104,28 +106,36 @@ function Typed({
       setCount(0);
       return;
     }
-    let interval = 0;
-    const timeout = window.setTimeout(() => {
-      interval = window.setInterval(() => {
-        setCount((c) => {
-          if (c >= text.length) {
-            window.clearInterval(interval);
-            return c;
-          }
-          return c + 1;
-        });
-      }, CHAR_MS);
-    }, delay);
+    let cancelled = false;
+    const step = () => {
+      if (cancelled) return;
+      setCount((c) => {
+        const next = c + 1;
+        if (next < text.length) {
+          // Pause a little longer after punctuation / spaces, like real typing.
+          const ch = text[next - 1] ?? "";
+          const punct = /[.,—:;!?]/.test(ch) ? 140 : ch === " " ? 40 : 0;
+          timerRef.current = window.setTimeout(
+            step,
+            CHAR_MS + Math.random() * CHAR_JITTER_MS + punct
+          );
+        }
+        return Math.min(next, text.length);
+      });
+    };
+    timerRef.current = window.setTimeout(step, delay);
     return () => {
-      window.clearTimeout(timeout);
-      if (interval) window.clearInterval(interval);
+      cancelled = true;
+      if (timerRef.current) window.clearTimeout(timerRef.current);
     };
   }, [active, text, delay]);
 
+  const started = count > 0;
   const done = count >= text.length;
   return (
     <span className={className} style={style} aria-label={text}>
       <span aria-hidden>{text.slice(0, count)}</span>
+      {started && !done && <span aria-hidden className="artemis-caret" />}
       {!done && (
         <span aria-hidden style={{ visibility: "hidden" }}>
           {text.slice(count)}
