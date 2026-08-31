@@ -1112,7 +1112,7 @@ html.lenis body {
 
   .artemis-gallery__progress {
     --track-w: clamp(240px, 28vw, 360px);
-    margin-left: calc(clamp(32px, 6.2vw, 80px) - var(--bleed));
+    margin-left: clamp(32px, 6.2vw, 80px);
   }
 
   .artemis-gallery__row {
