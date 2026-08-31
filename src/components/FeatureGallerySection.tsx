@@ -201,21 +201,25 @@ export function FeaturePanels({
                       </ul>
                     </div>
                   </div>
-                  {/* Marquee ticker: the module label repeats and scrolls left,
-                      the centred copy reads bright white, the rest stay dim. */}
+                  {/* Progress indicator: one label per module on a sliding
+                      track; the current module sits centred and bright. */}
                   <div className="artemis-gallery__progress" aria-hidden>
-                    {(["dim", "bright"] as const).map((layer) => (
-                      <div
-                        key={layer}
-                        className={`artemis-gallery__ticker-layer artemis-gallery__ticker-layer--${layer}`}
-                      >
-                        <div className="artemis-gallery__ticker">
-                          {Array.from({ length: 12 }).map((_, i) => (
-                            <span key={i}>[ {panel.eyebrow} ]</span>
-                          ))}
-                        </div>
-                      </div>
-                    ))}
+                    <div
+                      className="artemis-gallery__ticker"
+                      style={{ "--i": index } as CSSProperties}
+                    >
+                      {PANELS.map((p, i) => (
+                        <span
+                          key={p.id}
+                          className={
+                            "artemis-gallery__ticker-item" +
+                            (i === index ? " is-active" : "")
+                          }
+                        >
+                          [ {p.eyebrow} ]
+                        </span>
+                      ))}
+                    </div>
                   </div>
                 </>
               );
