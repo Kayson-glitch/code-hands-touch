@@ -119,13 +119,13 @@ export function SiteFooter() {
           aria-hidden
           className="pointer-events-none absolute inset-0"
           style={{
-            backgroundImage:
-              "radial-gradient(circle, rgba(14,11,34,0.16) 1px, transparent 1px)",
-            backgroundSize: "20px 21px",
-            maskImage: "radial-gradient(120% 80% at 50% 50%, #000 25%, transparent 78%)",
-            WebkitMaskImage: "radial-gradient(120% 80% at 50% 50%, #000 25%, transparent 78%)",
+            maskImage: "radial-gradient(120% 80% at 50% 50%, #000 25%, transparent 90%)",
+            WebkitMaskImage: "radial-gradient(120% 80% at 50% 50%, #000 25%, transparent 90%)",
           }}
-        />
+        >
+          <KineticGrid theme="light" transparent />
+        </div>
+
         <div className="relative mx-auto flex w-full max-w-[800px] flex-col items-center px-6 text-center">
           <Reveal>
             <h2
