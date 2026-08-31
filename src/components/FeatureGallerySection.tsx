@@ -154,9 +154,12 @@ function Typed({
 export function FeaturePanels({
   activeIndex,
   pinned,
+  tickerPos,
 }: {
   activeIndex: number;
   pinned: boolean;
+  /** Fractional module position so the label progress bar slides while scrolling. */
+  tickerPos?: number;
 }) {
   return (
     <>
