@@ -148,19 +148,20 @@ export function FeaturePanels({
               <div className="artemis-gallery__media" aria-hidden />
               <div className="artemis-gallery__copy">
                 <h3 className="artemis-gallery__title">
-                  <Typed text={panel.title} active={active} delay={BASE_DELAY + 150} />
+                  <Typed text={panel.title} active={active} delay={BASE_DELAY + 0.15} />
                 </h3>
                 <ul className="artemis-gallery__list">
                   {panel.points.map((point, pointIndex) => {
-                    const pointDelay = BASE_DELAY + 350 + pointIndex * 220;
+                    const pointDelay = BASE_DELAY + 0.35 + pointIndex * 0.18;
                     return (
                       <li key={point.label} className="artemis-gallery__item">
                         <p className="artemis-gallery__label">
                           <Typed text={point.label} active={active} delay={pointDelay} />
                         </p>
                         <p className="artemis-gallery__body">
-                          <Typed text={point.text} active={active} delay={pointDelay + 120} />
+                          <Typed text={point.text} active={active} delay={pointDelay + 0.12} />
                         </p>
+
                       </li>
                     );
                   })}
