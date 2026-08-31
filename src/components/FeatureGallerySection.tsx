@@ -79,6 +79,13 @@ const CHAR_MS = 52;
 const CHAR_JITTER_MS = 26;
 /** Delay before a field starts typing once its panel is active. */
 const BASE_DELAY = 140;
+/** Pause between one field finishing and the next starting. */
+const FIELD_GAP = 120;
+/** Estimated per-char duration (base + half the jitter) used to schedule the
+ *  next field so typing never overlaps — every field types at the same speed,
+ *  one after another, for a consistent rhythm. */
+const AVG_CHAR = CHAR_MS + CHAR_JITTER_MS / 2;
+const fieldDuration = (text: string) => text.length * AVG_CHAR;
 
 /**
  * Typewriter text: when `active` flips true the characters appear one by one.
@@ -167,32 +174,47 @@ export function FeaturePanels({
             key={panel.id}
             className={`artemis-gallery__panel${active ? " is-active" : ""}`}
           >
-            <p className="artemis-gallery__eyebrow">
-              [ <Typed text={panel.eyebrow} active={active} delay={BASE_DELAY} /> ]
-            </p>
-            <div className="artemis-gallery__row">
-              <div className="artemis-gallery__media" aria-hidden />
-              <div className="artemis-gallery__copy">
-                <h3 className="artemis-gallery__title">
-                  <Typed text={panel.title} active={active} delay={BASE_DELAY + 150} />
-                </h3>
-                <ul className="artemis-gallery__list">
-                  {panel.points.map((point, pointIndex) => {
-                    const pointDelay = BASE_DELAY + 350 + pointIndex * 220;
-                    return (
-                      <li key={point.label} className="artemis-gallery__item">
-                        <p className="artemis-gallery__label">
-                          <Typed text={point.label} active={active} delay={pointDelay} />
-                        </p>
-                        <p className="artemis-gallery__body">
-                          <Typed text={point.text} active={active} delay={pointDelay + 120} />
-                        </p>
-                      </li>
-                    );
-                  })}
-                </ul>
-              </div>
-            </div>
+            {(() => {
+              // Sequential typing: each field waits for the previous one to
+              // finish so the speed stays consistent across the whole panel.
+              let t = BASE_DELAY;
+              const eyebrowDelay = t;
+              t += fieldDuration(panel.eyebrow) + FIELD_GAP;
+              const titleDelay = t;
+              t += fieldDuration(panel.title) + FIELD_GAP;
+              return (
+                <>
+                  <p className="artemis-gallery__eyebrow">
+                    [ <Typed text={panel.eyebrow} active={active} delay={eyebrowDelay} /> ]
+                  </p>
+                  <div className="artemis-gallery__row">
+                    <div className="artemis-gallery__media" aria-hidden />
+                    <div className="artemis-gallery__copy">
+                      <h3 className="artemis-gallery__title">
+                        <Typed text={panel.title} active={active} delay={titleDelay} />
+                      </h3>
+                      <ul className="artemis-gallery__list">
+                        {panel.points.map((point) => {
+                          const labelDelay = t;
+                          const bodyDelay = t + fieldDuration(point.label) + FIELD_GAP;
+                          t = bodyDelay + fieldDuration(point.text) + FIELD_GAP;
+                          return (
+                            <li key={point.label} className="artemis-gallery__item">
+                              <p className="artemis-gallery__label">
+                                <Typed text={point.label} active={active} delay={labelDelay} />
+                              </p>
+                              <p className="artemis-gallery__body">
+                                <Typed text={point.text} active={active} delay={bodyDelay} />
+                              </p>
+                            </li>
+                          );
+                        })}
+                      </ul>
+                    </div>
+                  </div>
+                </>
+              );
+            })()}
           </article>
         );
       })}
