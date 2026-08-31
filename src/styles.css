@@ -1075,7 +1075,10 @@ html.lenis body {
   line-height: 20px;
   text-transform: uppercase;
   transform: translate3d(
-    calc(var(--track-w) / 2 - var(--i, 0) * var(--slot-w) - var(--slot-w) / 2),
+    calc(
+      (var(--track-w) + var(--bleed) * 2) / 2 - var(--i, 0) * var(--slot-w) -
+        var(--slot-w) / 2
+    ),
     0,
     0
   );
