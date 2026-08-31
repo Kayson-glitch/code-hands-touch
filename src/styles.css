@@ -954,10 +954,9 @@ html.lenis body {
 
 .artemis-gallery__eyebrow {
   margin: 0;
-  /* Left edge aligns with the media block above (which is offset 80px from
-     the module's 16% boundary rule). Sits 40px below the row, mirroring the
-     progress bar's former top gap. */
-  margin: 40px 0 0 80px;
+  /* Left edge aligns with the media block below (which is offset 80px from
+     the module's 16% boundary rule). */
+  margin-left: 80px;
   font-family: var(--font-sans);
   font-weight: 400;
   font-size: 14px;
@@ -1037,7 +1036,7 @@ html.lenis body {
 .artemis-gallery__progress {
   --track-w: 360px;
   --slot-w: calc(var(--track-w) * 0.42);
-  margin-left: 80px;
+  margin: 40px 0 0 80px;
   position: relative;
   width: var(--track-w);
   max-width: 100%;
