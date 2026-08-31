@@ -201,18 +201,20 @@ export function FeaturePanels({
                       </ul>
                     </div>
                   </div>
-                  {/* Per-module progress bar: five segments, one per module.
-                      The active module's segment carries the flowing brand
-                      gradient; the rest stay at 8% white. */}
+                  {/* Marquee ticker: the module label repeats and scrolls left,
+                      the centred copy reads bright white, the rest stay dim. */}
                   <div className="artemis-gallery__progress" aria-hidden>
-                    {PANELS.map((p, i) => (
-                      <span
-                        key={p.title ?? i}
-                        className={
-                          "artemis-gallery__progress-seg" +
-                          (i === index ? " is-active" : "")
-                        }
-                      />
+                    {(["dim", "bright"] as const).map((layer) => (
+                      <div
+                        key={layer}
+                        className={`artemis-gallery__ticker-layer artemis-gallery__ticker-layer--${layer}`}
+                      >
+                        <div className="artemis-gallery__ticker">
+                          {Array.from({ length: 12 }).map((_, i) => (
+                            <span key={i}>[ {panel.eyebrow} ]</span>
+                          ))}
+                        </div>
+                      </div>
                     ))}
                   </div>
                 </>
