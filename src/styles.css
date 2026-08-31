@@ -725,23 +725,25 @@ html.lenis body {
   );
 }
 
-/* Crosshairs: the fade above reaches zero exactly at the lattice boundaries,
-   so the vertical stroke of each crosshair is drawn separately, outside the
-   mask. Each stroke is split into two 16px segments that stop 4px short of the
-   horizontal boundary rule, leaving a gap so the crossing reads as a "+". */
+/* Crosshairs sit above every grid layer. The horizontal arm extends 20px to
+   both sides of the edge; the vertical arm extends 20px above and below the
+   boundary, so the marker remains a clear "+" instead of a detached tick. */
 .artemis-closing__edge::after {
   content: "";
   position: absolute;
-  left: 0;
-  width: 1px;
+  left: -20px;
+  width: 41px;
   top: calc(var(--grid-y-start) - var(--grid-nav) - 20px);
   bottom: calc(var(--grid-y-inset) - 20px);
   background-image:
     linear-gradient(rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.2)),
+    linear-gradient(rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.2)),
+    linear-gradient(rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.2)),
     linear-gradient(rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.2));
-  background-repeat: no-repeat, no-repeat;
-  background-size: 100% 16px, 100% 16px;
-  background-position: 0 0, 0 100%;
+  background-repeat: no-repeat;
+  background-size: 41px 1px, 41px 1px, 1px 41px, 1px 41px;
+  background-position: 0 20px, 0 calc(100% - 20px), 20px 0, 20px 100%;
+  z-index: 2;
 }
 
 /* Per-module horizontal boundary rules: each panel's edge carries the 20%
@@ -751,8 +753,8 @@ html.lenis body {
    on an opaque #000 occluder that erases the 8% lattice where they cross. */
 .artemis-closing__edge-lines {
   position: absolute;
-  left: 0;
-  width: 200vw;
+  left: -20px;
+  width: calc(200vw + 20px);
   top: calc(var(--grid-y-start) - var(--grid-nav));
   /* Extend 1px past the bottom boundary: percentage background-position
      subtracts the tile height, so this makes the bottom tile land exactly on
@@ -770,6 +772,20 @@ html.lenis body {
     0 0,
     0 100%,
     0 100%;
+  -webkit-mask-image: linear-gradient(
+    to right,
+    transparent 0,
+    #000 20px,
+    #000 calc(100% - var(--grid-x-inset)),
+    transparent 100%
+  );
+  mask-image: linear-gradient(
+    to right,
+    transparent 0,
+    #000 20px,
+    #000 calc(100% - var(--grid-x-inset)),
+    transparent 100%
+  );
 }
 
 
