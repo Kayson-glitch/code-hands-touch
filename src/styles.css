@@ -663,6 +663,9 @@ html.lenis body {
   );
   --grid-y-start: var(--grid-y-inset);
   --grid-y-end: calc(100% - var(--grid-y-inset));
+  /* Vertical fade length above/below the boundary lines — equal on both sides
+     so the top clearance under the navbar matches the bottom clearance. */
+  --grid-y-fade: var(--grid-y-min);
   position: absolute;
   inset: 0;
   pointer-events: none;
@@ -710,17 +713,17 @@ html.lenis body {
     linear-gradient(#000000, #000000);
   -webkit-mask-image: linear-gradient(
     to bottom,
-    transparent 0,
+    transparent calc(var(--grid-y-start) - var(--grid-y-fade)),
     #000 var(--grid-y-start),
     #000 var(--grid-y-end),
-    transparent 100%
+    transparent calc(var(--grid-y-end) + var(--grid-y-fade))
   );
   mask-image: linear-gradient(
     to bottom,
-    transparent 0,
+    transparent calc(var(--grid-y-start) - var(--grid-y-fade)),
     #000 var(--grid-y-start),
     #000 var(--grid-y-end),
-    transparent 100%
+    transparent calc(var(--grid-y-end) + var(--grid-y-fade))
   );
 }
 
@@ -809,17 +812,17 @@ html.lenis body {
 
   -webkit-mask-image: linear-gradient(
     to bottom,
-    transparent 0,
+    transparent calc(var(--grid-y-start) - var(--grid-y-fade)),
     #000 var(--grid-y-start),
     #000 var(--grid-y-end),
-    transparent 100%
+    transparent calc(var(--grid-y-end) + var(--grid-y-fade))
   );
   mask-image: linear-gradient(
     to bottom,
-    transparent 0,
+    transparent calc(var(--grid-y-start) - var(--grid-y-fade)),
     #000 var(--grid-y-start),
     #000 var(--grid-y-end),
-    transparent 100%
+    transparent calc(var(--grid-y-end) + var(--grid-y-fade))
   );
 }
 
