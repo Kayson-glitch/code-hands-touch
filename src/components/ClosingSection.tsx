@@ -95,12 +95,16 @@ export function ClosingSection() {
       const w = el.clientWidth;
       const h = el.clientHeight;
       const xInset = window.innerWidth <= 990 ? 16 : Math.min(120, w / 12);
-      /* Grid starts below the 60px navbar and is vertically centered in
-         the remaining viewport (80px margins at the 920px reference). */
+      /* Treat the navbar bottom as the vertical origin. Centre complete 40px
+         rows inside the remaining viewport, with at least 80px clearance on
+         both sides. This avoids mixing viewport and post-navbar coordinates. */
       const regionH = h - NAV_HEIGHT;
-      const yInset =
-        NAV_HEIGHT + Math.min(80, regionH * (80 / (920 - NAV_HEIGHT)));
-      const yEnd = h - (yInset - NAV_HEIGHT);
+      const minClearance = Math.min(80, regionH / 2);
+      const usableAfterClearance = Math.max(0, regionH - minClearance * 2);
+      const latticeRemainder = usableAfterClearance % 40;
+      const gridClearance = minClearance + latticeRemainder / 2;
+      const yInset = NAV_HEIGHT + gridClearance;
+      const yEnd = h - gridClearance;
       setGridX(xInset);
       el.style.setProperty("--grid-x-inset", `${xInset}px`);
       el.style.setProperty("--grid-y-inset", `${yInset}px`);
@@ -108,7 +112,7 @@ export function ClosingSection() {
       el.style.setProperty("--grid-y-end", `${yEnd}px`);
       /* Symmetric fade: same clearance above the top boundary (measured from the
          navbar) as below the bottom boundary. */
-      el.style.setProperty("--grid-y-fade", `${yInset - NAV_HEIGHT}px`);
+      el.style.setProperty("--grid-y-fade", `${gridClearance}px`);
     };
     apply();
     const observer = new ResizeObserver(apply);
