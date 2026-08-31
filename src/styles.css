@@ -611,9 +611,9 @@ html.lenis body {
   width: max-content;
   padding-inline: max(5.5rem, calc((100% - 95.5rem) / 2));
   will-change: transform;
-  /* Step transitions are time-based: the wheel only advances the state. */
-  transition: transform 0.85s cubic-bezier(0.22, 0.61, 0.36, 1);
-
+  /* Position is damped per frame in JS (see ClosingSection), so no CSS
+     transition here — a transition would restart mid-glide when the wheel
+     advances the state again. */
 }
 
 .artemis-closing__title-slot {
@@ -688,7 +688,6 @@ html.lenis body {
 .artemis-closing__edges-inner {
   position: absolute;
   inset: 0;
-  transition: transform 0.85s cubic-bezier(0.22, 0.61, 0.36, 1);
   will-change: transform;
 }
 
