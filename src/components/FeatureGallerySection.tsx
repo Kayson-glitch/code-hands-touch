@@ -201,15 +201,19 @@ export function FeaturePanels({
                       </ul>
                     </div>
                   </div>
-                  {/* Per-module progress bar: sits 60px below the grey media
-                      block, same width as the media block, and its fill grows
-                      with the module index. The fill carries the same flowing
-                      brand gradient as the navbar's top bar. */}
+                  {/* Per-module progress bar: five segments, one per module.
+                      The active module's segment carries the flowing brand
+                      gradient; the rest stay at 8% white. */}
                   <div className="artemis-gallery__progress" aria-hidden>
-                    <div
-                      className="artemis-gallery__progress-fill"
-                      style={{ width: `${((index + 1) / PANELS.length) * 100}%` }}
-                    />
+                    {PANELS.map((p, i) => (
+                      <span
+                        key={p.title ?? i}
+                        className={
+                          "artemis-gallery__progress-seg" +
+                          (i === index ? " is-active" : "")
+                        }
+                      />
+                    ))}
                   </div>
                 </>
               );
