@@ -86,7 +86,7 @@ export function ClosingSection() {
     };
   }, []);
 
-  /* Figma 1696:29556: 40${-smoothX}px lattice, 120${-smoothX}px horizontal and 80${-smoothX}px vertical
+  /* Figma 1696:29556: 40px lattice, 120px horizontal and 80px vertical
      boundary insets at the 1440×920 reference frame. */
   useEffect(() => {
     const el = dotsRef.current;
@@ -95,20 +95,20 @@ export function ClosingSection() {
       const w = el.clientWidth;
       const h = el.clientHeight;
       const xInset = window.innerWidth <= 990 ? 16 : Math.min(120, w / 12);
-      /* Grid starts below the 60${-smoothX}px navbar and is vertically centered in
-         the remaining viewport (80${-smoothX}px margins at the 920${-smoothX}px reference). */
+      /* Grid starts below the 60px navbar and is vertically centered in
+         the remaining viewport (80px margins at the 920px reference). */
       const regionH = h - NAV_HEIGHT;
       const yInset =
         NAV_HEIGHT + Math.min(80, regionH * (80 / (920 - NAV_HEIGHT)));
       const yEnd = h - (yInset - NAV_HEIGHT);
       setGridX(xInset);
-      el.style.setProperty("--grid-x-inset", `${xInset}${-smoothX}px`);
-      el.style.setProperty("--grid-y-inset", `${yInset}${-smoothX}px`);
-      el.style.setProperty("--grid-y-start", `${yInset}${-smoothX}px`);
-      el.style.setProperty("--grid-y-end", `${yEnd}${-smoothX}px`);
+      el.style.setProperty("--grid-x-inset", `${xInset}px`);
+      el.style.setProperty("--grid-y-inset", `${yInset}px`);
+      el.style.setProperty("--grid-y-start", `${yInset}px`);
+      el.style.setProperty("--grid-y-end", `${yEnd}px`);
       /* Symmetric fade: same clearance above the top boundary (measured from the
          navbar) as below the bottom boundary. */
-      el.style.setProperty("--grid-y-fade", `${yInset - NAV_HEIGHT}${-smoothX}px`);
+      el.style.setProperty("--grid-y-fade", `${yInset - NAV_HEIGHT}px`);
     };
     apply();
     const observer = new ResizeObserver(apply);
@@ -273,13 +273,13 @@ export function ClosingSection() {
                 <div className="artemis-closing__edges" aria-hidden>
                   <div
                     className="artemis-closing__edges-inner"
-                    style={{ transform: `translate3d(${-smoothX}${-smoothX}px, 0, 0)` }}
+                    style={{ transform: `translate3d(${-smoothX}px, 0, 0)` }}
                   >
                     {offsets.map((offset, index) => (
                       <div
                         key={PANELS[index]?.id ?? index}
                         className="artemis-closing__edge"
-                        style={{ left: `${offset}${-smoothX}px` }}
+                        style={{ left: `${offset}px` }}
                       >
                         <div className="artemis-closing__edge-lines" />
                       </div>
@@ -292,7 +292,7 @@ export function ClosingSection() {
             <div
               ref={trackRef}
               className="artemis-closing__track"
-              style={pinned ? { transform: `translate3d(${-smoothX}${-smoothX}px, 0, 0)` } : undefined}
+              style={pinned ? { transform: `translate3d(${-smoothX}px, 0, 0)` } : undefined}
             >
               <div
                 ref={titleRef}
@@ -301,7 +301,7 @@ export function ClosingSection() {
                   pinned
                     ? {
                         transform: `scale(${scale})`,
-                        marginRight: `${((scale - 1) * titleW).toFixed(2)}${-smoothX}px`,
+                        marginRight: `${((scale - 1) * titleW).toFixed(2)}px`,
                       }
                     : undefined
                 }
@@ -311,10 +311,10 @@ export function ClosingSection() {
               {/* Pushes the panel group past the right viewport edge, so the
                   first card is dragged in from off-screen instead of sitting
                   next to the shrunken headline. */}
-              <div className="artemis-closing__lead" style={{ flex: `0 0 ${lead}${-smoothX}px` }} aria-hidden />
+              <div className="artemis-closing__lead" style={{ flex: `0 0 ${lead}px` }} aria-hidden />
               <FeaturePanels activeIndex={state - 1} pinned={pinned} />
               {/* Trailing room so the last module can also rest on the left grid line. */}
-              <div className="artemis-closing__lead" style={{ flex: `0 0 ${lead}${-smoothX}px` }} aria-hidden />
+              <div className="artemis-closing__lead" style={{ flex: `0 0 ${lead}px` }} aria-hidden />
             </div>
           </div>
         </div>
