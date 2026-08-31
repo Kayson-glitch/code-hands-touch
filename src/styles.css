@@ -735,14 +735,14 @@ html.lenis body {
   width: 11px;
   top: calc(var(--grid-y-start) - 5px);
   bottom: calc(100% - var(--grid-y-end) - 5px);
+  /* Only the top crosshair is drawn; the bottom crosshair was removed
+     together with the bottom horizontal boundary line. */
   background-image:
-    linear-gradient(rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.2)),
-    linear-gradient(rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.2)),
     linear-gradient(rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.2)),
     linear-gradient(rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.2));
   background-repeat: no-repeat;
-  background-size: 11px 1px, 11px 1px, 1px 11px, 1px 11px;
-  background-position: 0 5px, 0 calc(100% - 5px), 5px 0, 5px 100%;
+  background-size: 11px 1px, 1px 11px;
+  background-position: 0 5px, 5px 0;
   z-index: 2;
 }
 
@@ -760,18 +760,16 @@ html.lenis body {
      subtracts the tile height, so this makes the bottom tile land exactly on
      the --grid-y-end lattice coordinate. */
   bottom: calc(100% - var(--grid-y-end) - 1px);
+  /* Only the top 20% boundary rule is drawn; the bottom rule and its
+     occluder were removed, so the 8% lattice shows through normally there. */
   background-image:
-    linear-gradient(rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.2)),
-    linear-gradient(#000000, #000000),
     linear-gradient(rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.2)),
     linear-gradient(#000000, #000000);
   background-repeat: no-repeat;
-  background-size: 100% 1px, 100% 1px, 100% 1px, 100% 1px;
+  background-size: 100% 1px, 100% 1px;
   background-position:
     0 0,
-    0 0,
-    0 100%,
-    0 100%;
+    0 0;
   -webkit-mask-image: linear-gradient(
     to right,
     transparent 0,
