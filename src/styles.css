@@ -650,7 +650,6 @@ html.lenis body {
    centred and ends on a complete 40px cell at every viewport size. */
 .artemis-closing__dots {
   --grid-step: 40px;
-  --grid-nav: 60px;
   --grid-x-min: 120px;
   --grid-y-min: 80px;
   /* Centred lattice insets are measured in px by ClosingSection (ResizeObserver)
@@ -662,7 +661,7 @@ html.lenis body {
   --grid-y-inset: calc(
     var(--grid-y-min) + mod(calc(100% - var(--grid-nav) - 2 * var(--grid-y-min)), var(--grid-step)) / 2
   );
-  --grid-y-start: calc(var(--grid-nav) + var(--grid-y-inset));
+  --grid-y-start: var(--grid-y-inset);
   --grid-y-end: calc(100% - var(--grid-y-inset));
   position: absolute;
   inset: 0;
@@ -695,7 +694,7 @@ html.lenis body {
    boundary and fading out over --grid-y-inset below the bottom boundary. */
 .artemis-closing__edge {
   position: absolute;
-  top: var(--grid-nav);
+  top: 0;
   bottom: 0;
   width: 1px;
 }
@@ -712,37 +711,36 @@ html.lenis body {
   -webkit-mask-image: linear-gradient(
     to bottom,
     transparent 0,
-    #000 var(--grid-y-inset),
-    #000 calc(100% - var(--grid-y-inset)),
+    #000 var(--grid-y-start),
+    #000 var(--grid-y-end),
     transparent 100%
   );
   mask-image: linear-gradient(
     to bottom,
     transparent 0,
-    #000 var(--grid-y-inset),
-    #000 calc(100% - var(--grid-y-inset)),
+    #000 var(--grid-y-start),
+    #000 var(--grid-y-end),
     transparent 100%
   );
 }
 
-/* Crosshairs sit above every grid layer. The horizontal arm extends 20px to
-   both sides of the edge; the vertical arm extends 20px above and below the
-   boundary, so the marker remains a clear "+" instead of a detached tick. */
+/* Exact Figma crosshair asset: 10×10, 1px strokes at 20% opacity, centred on
+   the upper and lower boundary intersections. */
 .artemis-closing__edge::after {
   content: "";
   position: absolute;
-  left: -20px;
-  width: 41px;
-  top: calc(var(--grid-y-start) - var(--grid-nav) - 20px);
-  bottom: calc(var(--grid-y-inset) - 20px);
+  left: -5px;
+  width: 11px;
+  top: calc(var(--grid-y-start) - 5px);
+  bottom: calc(100% - var(--grid-y-end) - 5px);
   background-image:
     linear-gradient(rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.2)),
     linear-gradient(rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.2)),
     linear-gradient(rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.2)),
     linear-gradient(rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.2));
   background-repeat: no-repeat;
-  background-size: 41px 1px, 41px 1px, 1px 41px, 1px 41px;
-  background-position: 0 20px, 0 calc(100% - 20px), 20px 0, 20px 100%;
+  background-size: 11px 1px, 11px 1px, 1px 11px, 1px 11px;
+  background-position: 0 5px, 0 calc(100% - 5px), 5px 0, 5px 100%;
   z-index: 2;
 }
 
@@ -753,13 +751,13 @@ html.lenis body {
    on an opaque #000 occluder that erases the 8% lattice where they cross. */
 .artemis-closing__edge-lines {
   position: absolute;
-  left: -20px;
-  width: calc(200vw + 20px);
-  top: calc(var(--grid-y-start) - var(--grid-nav));
+  left: calc(-1 * var(--grid-x-inset));
+  width: 100vw;
+  top: var(--grid-y-start);
   /* Extend 1px past the bottom boundary: percentage background-position
      subtracts the tile height, so this makes the bottom tile land exactly on
      the --grid-y-end lattice coordinate. */
-  bottom: calc(var(--grid-y-inset) - 1px);
+  bottom: calc(100% - var(--grid-y-end) - 1px);
   background-image:
     linear-gradient(rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.2)),
     linear-gradient(#000000, #000000),
@@ -775,14 +773,14 @@ html.lenis body {
   -webkit-mask-image: linear-gradient(
     to right,
     transparent 0,
-    #000 20px,
+    #000 var(--grid-x-inset),
     #000 calc(100% - var(--grid-x-inset)),
     transparent 100%
   );
   mask-image: linear-gradient(
     to right,
     transparent 0,
-    #000 20px,
+    #000 var(--grid-x-inset),
     #000 calc(100% - var(--grid-x-inset)),
     transparent 100%
   );
@@ -802,7 +800,7 @@ html.lenis body {
     /* inner rules (8%) — same origin and strict 40px pitch */
     linear-gradient(
       to right,
-      rgba(255, 255, 255, 0.08) 0 1px,
+      rgba(255, 255, 255, 0.1) 0 1px,
       transparent 1px var(--grid-step)
     );
   background-repeat: repeat-x;
@@ -812,7 +810,6 @@ html.lenis body {
   -webkit-mask-image: linear-gradient(
     to bottom,
     transparent 0,
-    transparent var(--grid-nav),
     #000 var(--grid-y-start),
     #000 var(--grid-y-end),
     transparent 100%
@@ -820,7 +817,6 @@ html.lenis body {
   mask-image: linear-gradient(
     to bottom,
     transparent 0,
-    transparent var(--grid-nav),
     #000 var(--grid-y-start),
     #000 var(--grid-y-end),
     transparent 100%
@@ -843,7 +839,7 @@ html.lenis body {
   background-image:
     linear-gradient(
       to bottom,
-      rgba(255, 255, 255, 0.08) 0 1px,
+      rgba(255, 255, 255, 0.1) 0 1px,
       transparent 1px var(--grid-step)
     );
   background-repeat: repeat-y;
