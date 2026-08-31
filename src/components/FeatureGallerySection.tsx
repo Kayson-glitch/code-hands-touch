@@ -1,3 +1,5 @@
+import { useEffect, useRef, useState, type CSSProperties } from "react";
+
 type Point = { label: string; text: string };
 
 type Panel = {
@@ -71,11 +73,73 @@ export const PANELS: Panel[] = [
   },
 ];
 
+/** Milliseconds per typed character. */
+const CHAR_MS = 14;
+/** Delay before a field starts typing once its panel is active. */
+const BASE_DELAY = 120;
+
+/**
+ * Typewriter text: when `active` flips true the characters appear one by one.
+ * The untyped tail is rendered with `visibility: hidden` so the layout never
+ * shifts as the text grows.
+ */
+function Typed({
+  text,
+  active,
+  delay = 0,
+  className,
+  style,
+}: {
+  text: string;
+  active: boolean;
+  delay?: number;
+  className?: string;
+  style?: CSSProperties;
+}) {
+  const [count, setCount] = useState(0);
+  const timerRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    if (!active) {
+      setCount(0);
+      return;
+    }
+    let interval = 0;
+    const timeout = window.setTimeout(() => {
+      interval = window.setInterval(() => {
+        setCount((c) => {
+          if (c >= text.length) {
+            window.clearInterval(interval);
+            return c;
+          }
+          return c + 1;
+        });
+      }, CHAR_MS);
+    }, delay);
+    return () => {
+      window.clearTimeout(timeout);
+      if (interval) window.clearInterval(interval);
+    };
+  }, [active, text, delay]);
+
+  const done = count >= text.length;
+  return (
+    <span className={className} style={style} aria-label={text}>
+      <span aria-hidden>{text.slice(0, count)}</span>
+      {!done && (
+        <span aria-hidden style={{ visibility: "hidden" }}>
+          {text.slice(count)}
+        </span>
+      )}
+    </span>
+  );
+}
+
 /**
  * Feature panels for the closing screen's horizontal track.
  * The track snaps between discrete states, so the reveal is time-based: when a
  * panel becomes the active state its content animates in with a stagger (CSS
- * keyframes), independent of wheel position.
+ * keyframes) and each field types itself out, independent of wheel position.
  */
 export function FeaturePanels({
   activeIndex,
@@ -93,18 +157,29 @@ export function FeaturePanels({
             key={panel.id}
             className={`artemis-gallery__panel${active ? " is-active" : ""}`}
           >
-            <p className="artemis-gallery__eyebrow">[ {panel.eyebrow} ]</p>
+            <p className="artemis-gallery__eyebrow">
+              [ <Typed text={panel.eyebrow} active={active} delay={BASE_DELAY} /> ]
+            </p>
             <div className="artemis-gallery__row">
               <div className="artemis-gallery__media" aria-hidden />
               <div className="artemis-gallery__copy">
-                <h3 className="artemis-gallery__title">{panel.title}</h3>
+                <h3 className="artemis-gallery__title">
+                  <Typed text={panel.title} active={active} delay={BASE_DELAY + 150} />
+                </h3>
                 <ul className="artemis-gallery__list">
-                  {panel.points.map((point) => (
-                    <li key={point.label} className="artemis-gallery__item">
-                      <p className="artemis-gallery__label">{point.label}</p>
-                      <p className="artemis-gallery__body">{point.text}</p>
-                    </li>
-                  ))}
+                  {panel.points.map((point, pointIndex) => {
+                    const pointDelay = BASE_DELAY + 350 + pointIndex * 220;
+                    return (
+                      <li key={point.label} className="artemis-gallery__item">
+                        <p className="artemis-gallery__label">
+                          <Typed text={point.label} active={active} delay={pointDelay} />
+                        </p>
+                        <p className="artemis-gallery__body">
+                          <Typed text={point.text} active={active} delay={pointDelay + 120} />
+                        </p>
+                      </li>
+                    );
+                  })}
                 </ul>
               </div>
             </div>
