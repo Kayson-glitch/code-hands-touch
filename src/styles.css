@@ -934,7 +934,9 @@ html.lenis body {
   display: inline-block;
   width: 0.5em;
   height: 1em;
-  margin-left: 1px;
+  /* Negative right margin keeps the caret from shifting the hidden tail,
+     so line wrapping never jumps while typing. */
+  margin-right: -0.5em;
   vertical-align: -0.12em;
   background: currentColor;
   opacity: 0.75;
