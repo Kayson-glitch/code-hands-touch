@@ -173,9 +173,13 @@ export function FeaturePanels({
             {(() => {
               // Simultaneous typing: every field starts at the same moment and
               // types at the same speed.
+              const eyebrowDelay = BASE_DELAY;
               const titleDelay = BASE_DELAY;
               return (
                 <>
+                  <p className="artemis-gallery__eyebrow">
+                    [ <Typed text={panel.eyebrow} active={active} delay={eyebrowDelay} /> ]
+                  </p>
                   <div className="artemis-gallery__row">
                     <div className="artemis-gallery__media" aria-hidden />
                     <div className="artemis-gallery__copy">
