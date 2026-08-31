@@ -1035,16 +1035,33 @@ html.lenis body {
    in dimmed at the edges. Width matches the grey media block. */
 .artemis-gallery__progress {
   --track-w: 360px;
-  --slot-w: calc(var(--track-w) * 0.72);
-  margin: 40px 0 0 80px;
+  --slot-w: calc(var(--track-w) * 0.7);
+  --bleed: var(--slot-w);
+  margin: 40px 0 0 calc(80px - var(--bleed));
   position: relative;
-  width: var(--track-w);
-  max-width: 100%;
+  width: calc(var(--track-w) + var(--bleed) * 2);
   height: 20px;
   overflow: hidden;
-  -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 18%, #000 82%, transparent 100%);
-  mask-image: linear-gradient(90deg, transparent 0, #000 18%, #000 82%, transparent 100%);
+  -webkit-mask-image: linear-gradient(
+    90deg,
+    transparent 0,
+    rgba(0, 0, 0, 0.35) 12%,
+    #000 32%,
+    #000 68%,
+    rgba(0, 0, 0, 0.35) 88%,
+    transparent 100%
+  );
+  mask-image: linear-gradient(
+    90deg,
+    transparent 0,
+    rgba(0, 0, 0, 0.35) 12%,
+    #000 32%,
+    #000 68%,
+    rgba(0, 0, 0, 0.35) 88%,
+    transparent 100%
+  );
 }
+
 
 .artemis-gallery__ticker {
   position: absolute;
@@ -1058,7 +1075,10 @@ html.lenis body {
   line-height: 20px;
   text-transform: uppercase;
   transform: translate3d(
-    calc(var(--track-w) / 2 - var(--i, 0) * var(--slot-w) - var(--slot-w) / 2),
+    calc(
+      (var(--track-w) + var(--bleed) * 2) / 2 - var(--i, 0) * var(--slot-w) -
+        var(--slot-w) / 2
+    ),
     0,
     0
   );
@@ -1098,8 +1118,8 @@ html.lenis body {
   }
 
   .artemis-gallery__progress {
-    margin-left: clamp(32px, 6.2vw, 80px);
     --track-w: clamp(240px, 28vw, 360px);
+    margin-left: calc(clamp(32px, 6.2vw, 80px) - var(--bleed));
   }
 
   .artemis-gallery__row {
