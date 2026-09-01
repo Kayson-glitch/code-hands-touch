@@ -166,11 +166,13 @@ export function SiteFooter() {
           </Reveal>
         </div>
 
-        {/* The footer overlaps the lower half of the dashboard image (negative
-            margin = half the image height). Because both move with the scroll,
-            the footer enters the viewport at the exact moment the image is half
-            revealed, and at rest the image's top half sits above the footer
-            while the footer fills the bottom of the viewport. */}
+        {/* The footer overlaps the lower portion of the dashboard image via a
+            negative margin. Because both move with the scroll, the footer
+            enters the viewport around the moment the image is half revealed,
+            and at rest the image's top half (incl. its browser chrome) sits
+            above the footer while the footer fills the bottom of the viewport.
+            An extra offset lifts the image so its top rests just below the
+            fixed site nav, keeping the dashboard chrome visible. */}
         <div className="relative" style={{ marginTop: fluid(72, 40), zIndex: 1 }}>
           <ContainerScroll>
             <img
@@ -189,7 +191,7 @@ export function SiteFooter() {
         data-dark-section
         data-progressive-blur-hide
         className="relative overflow-hidden"
-        style={{ background: "#0A0A0A", marginTop: -halfH, zIndex: 30 }}
+        style={{ background: "#0A0A0A", marginTop: -(halfH + 96), zIndex: 30 }}
       >
         <div aria-hidden style={{ height: 2, backgroundImage: GRADIENT, backgroundSize: "200%" }} />
 
