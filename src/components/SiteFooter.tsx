@@ -123,20 +123,16 @@ export function SiteFooter() {
           style={{
             maskImage: "radial-gradient(110% 85% at 50% 50%, #000 35%, transparent 92%)",
             WebkitMaskImage: "radial-gradient(110% 85% at 50% 50%, #000 35%, transparent 92%)",
-            opacity: 0.9,
+            opacity: 0.5,
           }}
         >
-          <Galaxy
-            lightMode
-            density={1.1}
-            glowIntensity={0.32}
-            saturation={0.75}
-            hueShift={210}
-            starSpeed={0.35}
-            speed={0.8}
-            rotationSpeed={0.05}
-            twinkleIntensity={0.25}
-            repulsionStrength={1.6}
+          <HalftoneHandStill
+            ink="dark"
+            pitch={7}
+            cropX={0}
+            cropW={1}
+            frame={48}
+            style={{ width: "100%", height: "100%" }}
           />
         </div>
 
