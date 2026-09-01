@@ -2,8 +2,10 @@ import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { Linkedin, Twitter, Youtube } from "lucide-react";
 import { Reveal } from "@/components/Reveal";
 import { DotArrow } from "@/components/DotArrow";
+import { ContainerScroll } from "@/components/ui/container-scroll-animation";
 
 import logo from "@/assets/synergy-logo-v3.png.asset.json";
+import dashboardAsset from "@/assets/ask-synergy-dashboard.png.asset.json";
 
 
 /** 1440px design width → fluid value. */
