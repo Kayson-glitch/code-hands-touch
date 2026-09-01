@@ -118,7 +118,7 @@ export function SiteFooter() {
   return (
     <div className="relative" style={{ zIndex: 20, background: "#FAFAFA" }}>
       {/* ------------------------------------------------------------- CTA */}
-      <section className="relative flex overflow-hidden" style={{ height: 880, padding: `${fluid(160, 80)} 0`, alignItems: "center", justifyContent: "center" }}>
+      <section className="relative overflow-hidden" style={{ padding: `${fluid(160, 80)} 0 ${fluid(120, 64)}` }}>
         <div
           aria-hidden
           className="pointer-events-none absolute inset-0"
@@ -130,7 +130,6 @@ export function SiteFooter() {
             WebkitMaskImage: "radial-gradient(120% 80% at 50% 50%, #000 25%, transparent 78%)",
           }}
         />
-
 
         <div className="relative mx-auto flex w-full max-w-[800px] flex-col items-center px-6 text-center">
           <Reveal>
@@ -146,6 +145,17 @@ export function SiteFooter() {
           <Reveal delay={150} style={{ marginTop: fluid(40, 28) }}>
             <RainbowButton label="Book a Demo" />
           </Reveal>
+        </div>
+
+        <div className="relative" style={{ marginTop: fluid(72, 40) }}>
+          <ContainerScroll>
+            <img
+              src={dashboardAsset.url}
+              alt="Ask Synergy — AI performance dashboard"
+              className="block h-auto w-full"
+              draggable={false}
+            />
+          </ContainerScroll>
         </div>
       </section>
 
