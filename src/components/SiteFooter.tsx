@@ -121,19 +121,11 @@ export function SiteFooter() {
           aria-hidden
           className="pointer-events-none absolute inset-0"
           style={{
-            maskImage: "radial-gradient(110% 85% at 50% 50%, #000 35%, transparent 92%)",
-            WebkitMaskImage: "radial-gradient(110% 85% at 50% 50%, #000 35%, transparent 92%)",
-            opacity: 0.5,
+            maskImage: "radial-gradient(120% 80% at 50% 50%, #000 25%, transparent 90%)",
+            WebkitMaskImage: "radial-gradient(120% 80% at 50% 50%, #000 25%, transparent 90%)",
           }}
         >
-          <HalftoneHandStill
-            ink="dark"
-            pitch={7}
-            cropX={0}
-            cropW={1}
-            frame={48}
-            style={{ width: "100%", height: "100%" }}
-          />
+          <KineticGrid theme="light" transparent />
         </div>
 
 
