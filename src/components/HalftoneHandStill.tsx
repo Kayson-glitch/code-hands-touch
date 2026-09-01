@@ -100,6 +100,8 @@ type Props = {
   cropH?: number;
   /** Dot pitch in CSS px. */
   pitch?: number;
+  /** Ink tone: "light" (default, for dark backgrounds) or "dark" (for light backgrounds). */
+  ink?: "light" | "dark";
   className?: string;
   style?: React.CSSProperties;
 };
@@ -111,6 +113,7 @@ export function HalftoneHandStill({
   cropY = 0,
   cropH = 1,
   pitch = 5,
+  ink = "light",
   className,
   style,
 }: Props) {
