@@ -127,6 +127,7 @@ export function HalftoneHandStill({
     let raf = 0;
     let atlas: HTMLImageElement | null = null;
     let dots: Dot[] = [];
+    const stops = ink === "dark" ? INK_STOPS_DARK : INK_STOPS_LIGHT;
     const prefersReduce = window.matchMedia(
       "(prefers-reduced-motion: reduce)",
     ).matches;
