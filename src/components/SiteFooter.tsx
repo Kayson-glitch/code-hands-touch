@@ -152,7 +152,7 @@ export function SiteFooter() {
             <img
               src={dashboardAsset.url}
               alt="Ask Synergy — AI performance dashboard"
-              className="block h-auto w-full overflow-hidden rounded-[20px]"
+              className="block h-auto w-full"
               draggable={false}
             />
           </ContainerScroll>
