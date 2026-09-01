@@ -2,7 +2,7 @@ import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { Linkedin, Twitter, Youtube } from "lucide-react";
 import { Reveal } from "@/components/Reveal";
 import { DotArrow } from "@/components/DotArrow";
-import PrismaticBurst from "@/components/ui/prismatic-burst";
+import Galaxy from "@/components/ui/galaxy";
 import logo from "@/assets/synergy-logo-v3.png.asset.json";
 
 
@@ -126,15 +126,17 @@ export function SiteFooter() {
             opacity: 0.9,
           }}
         >
-          <PrismaticBurst
-            animationType="rotate3d"
-            intensity={2}
-            speed={0.4}
-            distort={1.2}
-            rayCount={22}
-            hoverDampness={0.3}
+          <Galaxy
             lightMode
-            colors={["#137DFF", "#FF18AA", "#FFCD17"]}
+            density={1.1}
+            glowIntensity={0.32}
+            saturation={0.75}
+            hueShift={210}
+            starSpeed={0.35}
+            speed={0.8}
+            rotationSpeed={0.05}
+            twinkleIntensity={0.25}
+            repulsionStrength={1.6}
           />
         </div>
 
