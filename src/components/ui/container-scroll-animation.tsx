@@ -83,14 +83,10 @@ export const Card = ({
       style={{
         rotateX: rotate,
         scale,
-        boxShadow:
-          "0 0 #0000004d, 0 9px 20px #0000004a, 0 37px 37px #00000042, 0 84px 50px #00000026, 0 149px 60px #0000000a, 0 233px 65px #00000003",
       }}
-      className="mx-auto w-full max-w-5xl rounded-[30px] border-4 border-[#D8D8DE] bg-[#ECECF1] p-2 shadow-2xl md:p-4"
+      className="mx-auto w-full max-w-5xl"
     >
-      <div className="h-full w-full overflow-hidden rounded-2xl bg-white">
-        {children}
-      </div>
+      {children}
     </motion.div>
   );
 };
