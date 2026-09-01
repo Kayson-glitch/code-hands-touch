@@ -1036,7 +1036,7 @@ html.lenis body {
 .artemis-gallery__progress {
   --track-w: 360px;
   --slot-w: calc(var(--track-w) * 0.42);
-  margin: 100px 0 0 80px;
+  margin: 40px 0 0 80px;
   position: relative;
   width: var(--track-w);
   max-width: 100%;
@@ -1117,7 +1117,6 @@ html.lenis body {
 
   .artemis-gallery__progress {
     --track-w: clamp(240px, 28vw, 360px);
-    margin-top: clamp(56px, 7vw, 100px);
     margin-left: clamp(32px, 6.2vw, 80px);
   }
 
