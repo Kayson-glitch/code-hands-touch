@@ -376,7 +376,7 @@ export function HalftoneHandStill({
       window.removeEventListener("mousemove", onMove);
       window.removeEventListener("mouseleave", onLeave);
     };
-  }, [frame, cropX, cropW, cropY, cropH, pitch]);
+  }, [frame, cropX, cropW, cropY, cropH, pitch, ink]);
 
   return (
     <div ref={hostRef} className={className} style={style} aria-hidden>
