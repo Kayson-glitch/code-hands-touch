@@ -269,7 +269,7 @@ export function HalftoneHandStill({
             ) *
               DOT_ALPHA_AMP;
 
-        const [ir, ig, ib] = inkAt(d);
+        const [ir, ig, ib] = inkAt(d, stops);
         if (dye > 0.004) {
           const mix = smoothstep(dye) * (0.45 + d * 0.55);
           const [dr, dg, db] = dyeAt(Math.min(1, dye * 0.9 + d * 0.02));
