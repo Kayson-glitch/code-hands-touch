@@ -7,6 +7,13 @@ import { ContainerScroll } from "@/components/ui/container-scroll-animation";
 import logo from "@/assets/synergy-logo-v3.png.asset.json";
 import dashboardAsset from "@/assets/ask-synergy-dashboard.png.asset.json";
 
+/**
+ * Footer rises to cover the dashboard image so that it enters the viewport
+ * exactly when the image is ~half revealed. The footer overlaps the lower
+ * half of the image (negative margin = half the image's rendered height) and
+ * sits on a higher stacking layer, so scrolling pushes it up over the image.
+ */
+
 
 /** 1440px design width → fluid value. */
 const fluid = (px: number, min = px * 0.7) =>
@@ -114,11 +121,23 @@ function FitWordmark({ text }: { text: string }) {
 /** Closing CTA block + brand footer, shared across pages. */
 export function SiteFooter() {
   const pad = `0 ${fluid(120, 24)}`;
+  const imgRef = useRef<HTMLImageElement>(null);
+  const [halfH, setHalfH] = useState(0);
+
+  useEffect(() => {
+    const el = imgRef.current;
+    if (!el) return;
+    const measure = () => setHalfH(el.offsetHeight / 2);
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
 
   return (
     <div className="relative" style={{ zIndex: 20, background: "#FAFAFA" }}>
       {/* ------------------------------------------------------------- CTA */}
-      <section className="relative overflow-hidden" style={{ padding: `${fluid(160, 80)} 0 ${fluid(120, 64)}` }}>
+      <section className="relative overflow-hidden" style={{ padding: `${fluid(160, 80)} 0 0` }}>
         <div
           aria-hidden
           className="pointer-events-none absolute inset-0"
@@ -147,9 +166,15 @@ export function SiteFooter() {
           </Reveal>
         </div>
 
-        <div className="relative" style={{ marginTop: fluid(72, 40) }}>
+        {/* The footer overlaps the lower half of the dashboard image (negative
+            margin = half the image height). Because both move with the scroll,
+            the footer enters the viewport at the exact moment the image is half
+            revealed, and at rest the image's top half sits above the footer
+            while the footer fills the bottom of the viewport. */}
+        <div className="relative" style={{ marginTop: fluid(72, 40), zIndex: 1 }}>
           <ContainerScroll>
             <img
+              ref={imgRef}
               src={dashboardAsset.url}
               alt="Ask Synergy — AI performance dashboard"
               className="block h-auto w-full"
@@ -164,7 +189,7 @@ export function SiteFooter() {
         data-dark-section
         data-progressive-blur-hide
         className="relative overflow-hidden"
-        style={{ background: "#0A0A0A" }}
+        style={{ background: "#0A0A0A", marginTop: -halfH, zIndex: 30 }}
       >
         <div aria-hidden style={{ height: 2, backgroundImage: GRADIENT, backgroundSize: "200%" }} />
 
