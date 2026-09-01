@@ -2,7 +2,7 @@ import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { Linkedin, Twitter, Youtube } from "lucide-react";
 import { Reveal } from "@/components/Reveal";
 import { DotArrow } from "@/components/DotArrow";
-import Galaxy from "@/components/ui/galaxy";
+import KineticGrid from "@/components/ui/kinetic-grid";
 import logo from "@/assets/synergy-logo-v3.png.asset.json";
 
 
@@ -121,23 +121,11 @@ export function SiteFooter() {
           aria-hidden
           className="pointer-events-none absolute inset-0"
           style={{
-            maskImage: "radial-gradient(110% 85% at 50% 50%, #000 35%, transparent 92%)",
-            WebkitMaskImage: "radial-gradient(110% 85% at 50% 50%, #000 35%, transparent 92%)",
-            opacity: 0.9,
+            maskImage: "radial-gradient(120% 80% at 50% 50%, #000 25%, transparent 90%)",
+            WebkitMaskImage: "radial-gradient(120% 80% at 50% 50%, #000 25%, transparent 90%)",
           }}
         >
-          <Galaxy
-            lightMode
-            density={1.1}
-            glowIntensity={0.32}
-            saturation={0.75}
-            hueShift={210}
-            starSpeed={0.35}
-            speed={0.8}
-            rotationSpeed={0.05}
-            twinkleIntensity={0.25}
-            repulsionStrength={1.6}
-          />
+          <KineticGrid theme="light" transparent />
         </div>
 
 

@@ -21,10 +21,17 @@ const FRAME_H = 178;
 const DOT_FILL = 0.9;
 const MIN_DENSITY = 0.05;
 const SQUARE_AT = 0.88;
-const INK_STOPS: Array<[number, number, number]> = [
+/** Light ink stops — for dark backgrounds (the homepage hero). */
+const INK_STOPS_LIGHT: Array<[number, number, number]> = [
   [0xdc, 0xdc, 0xdc],
   [0xb4, 0xb4, 0xb4],
   [0x82, 0x82, 0x82],
+];
+/** Dark ink stops — mirror of the light set, for light/white backgrounds. */
+const INK_STOPS_DARK: Array<[number, number, number]> = [
+  [0x7d, 0x7d, 0x7d],
+  [0x4b, 0x4b, 0x4b],
+  [0x23, 0x23, 0x23],
 ];
 
 // Matches the homepage hands.
@@ -39,12 +46,12 @@ const BAYER = [0, 8, 2, 10, 12, 4, 14, 6, 3, 11, 1, 9, 15, 7, 13, 5].map(
   (v) => (v + 0.5) / 16,
 );
 
-function inkAt(d: number) {
+function inkAt(d: number, stops: Array<[number, number, number]>) {
   const t = Math.min(1, Math.max(0, d));
   const seg = t < 0.5 ? 0 : 1;
   const f = seg === 0 ? t / 0.5 : (t - 0.5) / 0.5;
-  const a = INK_STOPS[seg];
-  const b = INK_STOPS[seg + 1];
+  const a = stops[seg];
+  const b = stops[seg + 1];
   return [
     Math.round(a[0] + (b[0] - a[0]) * f),
     Math.round(a[1] + (b[1] - a[1]) * f),
@@ -93,6 +100,8 @@ type Props = {
   cropH?: number;
   /** Dot pitch in CSS px. */
   pitch?: number;
+  /** Ink tone: "light" (default, for dark backgrounds) or "dark" (for light backgrounds). */
+  ink?: "light" | "dark";
   className?: string;
   style?: React.CSSProperties;
 };
@@ -104,6 +113,7 @@ export function HalftoneHandStill({
   cropY = 0,
   cropH = 1,
   pitch = 5,
+  ink = "light",
   className,
   style,
 }: Props) {
@@ -117,6 +127,7 @@ export function HalftoneHandStill({
     let raf = 0;
     let atlas: HTMLImageElement | null = null;
     let dots: Dot[] = [];
+    const stops = ink === "dark" ? INK_STOPS_DARK : INK_STOPS_LIGHT;
     const prefersReduce = window.matchMedia(
       "(prefers-reduced-motion: reduce)",
     ).matches;
@@ -259,7 +270,7 @@ export function HalftoneHandStill({
             ) *
               DOT_ALPHA_AMP;
 
-        const [ir, ig, ib] = inkAt(d);
+        const [ir, ig, ib] = inkAt(d, stops);
         if (dye > 0.004) {
           const mix = smoothstep(dye) * (0.45 + d * 0.55);
           const [dr, dg, db] = dyeAt(Math.min(1, dye * 0.9 + d * 0.02));
@@ -365,7 +376,7 @@ export function HalftoneHandStill({
       window.removeEventListener("mousemove", onMove);
       window.removeEventListener("mouseleave", onLeave);
     };
-  }, [frame, cropX, cropW, cropY, cropH, pitch]);
+  }, [frame, cropX, cropW, cropY, cropH, pitch, ink]);
 
   return (
     <div ref={hostRef} className={className} style={style} aria-hidden>
