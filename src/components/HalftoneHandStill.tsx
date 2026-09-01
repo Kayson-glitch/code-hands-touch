@@ -21,10 +21,17 @@ const FRAME_H = 178;
 const DOT_FILL = 0.9;
 const MIN_DENSITY = 0.05;
 const SQUARE_AT = 0.88;
-const INK_STOPS: Array<[number, number, number]> = [
+/** Light ink stops — for dark backgrounds (the homepage hero). */
+const INK_STOPS_LIGHT: Array<[number, number, number]> = [
   [0xdc, 0xdc, 0xdc],
   [0xb4, 0xb4, 0xb4],
   [0x82, 0x82, 0x82],
+];
+/** Dark ink stops — mirror of the light set, for light/white backgrounds. */
+const INK_STOPS_DARK: Array<[number, number, number]> = [
+  [0x7d, 0x7d, 0x7d],
+  [0x4b, 0x4b, 0x4b],
+  [0x23, 0x23, 0x23],
 ];
 
 // Matches the homepage hands.
