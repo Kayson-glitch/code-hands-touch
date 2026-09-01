@@ -2,7 +2,7 @@ import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { Linkedin, Twitter, Youtube } from "lucide-react";
 import { Reveal } from "@/components/Reveal";
 import { DotArrow } from "@/components/DotArrow";
-import KineticGrid from "@/components/ui/kinetic-grid";
+
 import logo from "@/assets/synergy-logo-v3.png.asset.json";
 
 
