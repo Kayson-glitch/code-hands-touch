@@ -182,9 +182,9 @@ export function SiteFooter() {
             ink: ["#E6E6E6", "#C8C8C8"],
             strength: 0.6,
             noiseScale: 220,
-            drift: 0.035,
             noiseMix: 0.35,
-            jitter: 0.08,
+            drift: 0,
+            jitter: 0,
             breathe: [1, 1],
           }}
           className="pointer-events-none absolute inset-x-0 top-0"
