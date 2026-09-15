@@ -1,11 +1,11 @@
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { MessageSquareCode, Map as MapIcon, Linkedin, Twitter, Youtube } from "lucide-react";
+import { MessageSquareCode, Map as MapIcon } from "lucide-react";
 import { SiteNav } from "@/components/SiteNav";
-import { logoAsset as logo } from "@/lib/media";
 import { HalftoneHandStill } from "@/components/HalftoneHandStill";
 import { Reveal } from "@/components/Reveal";
 import { FinChatDock } from "@/components/FinChatDock";
+import { SiteFooter } from "@/components/SiteFooter";
 import { GradientHoverHeading } from "@/components/GradientHoverHeading";
 import { DotArrow } from "@/components/DotArrow";
 import { RollingNumber } from "@/components/RollingNumber";
@@ -238,13 +238,6 @@ const ARTICLES: Record<"roi" | "impact", ArticleSet> = {
     ],
   },
 };
-
-const FOOTER_COLUMNS = [
-  { title: "why  synergy", links: ["Features", "Pricing", "Book a demo"] },
-  { title: "platform", links: ["Features", "Pricing", "Book a demo"] },
-  { title: "solution", links: ["Events", "Blog"] },
-  { title: "Company", links: ["About us", "Contact us"] },
-];
 
 
 /* ------------------------------------------------------------------ page */
@@ -659,148 +652,8 @@ function BusinessImpactPage() {
         </Reveal>
       </section>
 
-      {/* ------------------------------------------------------------- CTA */}
-      <section className="relative overflow-hidden" style={{ padding: `${fluid(160, 80)} 0` }}>
-        <div
-          aria-hidden
-          className="pointer-events-none absolute inset-0"
-          style={{
-            backgroundImage:
-              "radial-gradient(circle, rgba(14,11,34,0.16) 1px, transparent 1px)",
-            backgroundSize: "20px 21px",
-            maskImage:
-              "radial-gradient(120% 80% at 50% 50%, #000 25%, transparent 78%)",
-            WebkitMaskImage:
-              "radial-gradient(120% 80% at 50% 50%, #000 25%, transparent 78%)",
-          }}
-        />
-        <div className="relative mx-auto flex w-full max-w-[800px] flex-col items-center px-6 text-center">
-          <Reveal>
-            <h2
-              className="font-display"
-              style={{ margin: 0, fontSize: fluid(48, 28), lineHeight: 1.1667, fontWeight: 500 }}
-            >
-              <span className="text-ink-ghost">Get started with the</span>
-              <br />
-              <span className="text-ink">Synergy.AI today</span>
-            </h2>
-          </Reveal>
-          <Reveal delay={150} style={{ marginTop: fluid(40, 28) }}>
-            <RainbowButton label="Book a Demo" />
-          </Reveal>
-        </div>
-      </section>
-
-      {/* ---------------------------------------------------------- footer */}
-      <footer data-dark-section data-progressive-blur-hide className="relative overflow-hidden" style={{ background: "#0A0A0A" }}>
-        <div aria-hidden style={{ height: 2, backgroundImage: GRADIENT, backgroundSize: "200%" }} />
-
-        {/* header row — 80px, bottom hairline spans full width (Figma 1553:20545) */}
-        <div style={{ borderBottom: "1px solid rgba(255,255,255,0.1)", height: 80, boxSizing: "border-box" }}>
-          <div className="h-full" style={{ padding: pad }}>
-            <div className="mx-auto grid h-full w-full max-w-[1200px] grid-cols-2 items-center gap-9 md:grid-cols-4">
-              <div className="flex items-center justify-start gap-2">
-                <img
-                  src={logo.url}
-                  alt="Synergy.AI"
-                  style={{
-                    width: 28,
-                    height: 28,
-                    display: "block",
-                    borderRadius: 999,
-                    objectFit: "cover",
-                  }}
-                />
-                <span
-                  style={{ color: "#FFFFFF", fontSize: 18, lineHeight: "24px", fontWeight: 500 }}
-                >
-                  Synergy.AI
-                </span>
-              </div>
-              <div className="hidden md:block md:col-span-3 md:text-right">
-                <span
-                  style={{
-                    color: "rgba(255,255,255,0.5)",
-                    fontSize: 12,
-                    lineHeight: "20px",
-                  }}
-                >
-                  Revenue-Driven AI Support. Engineered on Synergy. Scale Securely.
-                </span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* footer body — Figma 1553:20553: fixed 400px, wordmark absolutely placed */}
-        <div className="relative overflow-hidden" style={{ height: 400 }}>
-          <div className="flex h-full items-center" style={{ padding: pad }}>
-            <div className="mx-auto w-full max-w-[1200px]">
-              <div className="grid grid-cols-2 gap-9 md:grid-cols-4">
-                {FOOTER_COLUMNS.map((col, i) => (
-                  <Reveal key={col.title} delay={i * 90} y={18} className="flex flex-col items-start text-left">
-                    <p
-                      className="capitalize"
-                      style={{
-                        margin: 0,
-                        color: "rgba(255,255,255,0.65)",
-                        fontSize: 12,
-                        lineHeight: "20px",
-                        fontWeight: 400,
-                        whiteSpace: "pre-wrap",
-                      }}
-                    >
-                      {col.title}
-                    </p>
-                    <ul className="mt-6 flex flex-col items-start gap-[18px]">
-                      {col.links.map((l) => (
-                        <li key={l}>
-                          <span
-                            className="cursor-pointer transition-opacity hover:opacity-70"
-                            style={{ color: "#FFFFFF", fontSize: 14, lineHeight: "22px" }}
-                          >
-                            {l}
-                          </span>
-                        </li>
-                      ))}
-                    </ul>
-                  </Reveal>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          {/* oversized wordmark watermark — uniform scale, never stretched */}
-          <div className="absolute left-0 w-full" style={{ top: 198 }}>
-            <FitWordmark text="Synergy.AI" />
-          </div>
-        </div>
-
-        {/* bottom bar — 68px, top hairline spans full width (Figma 1553:20582) */}
-        <div style={{ borderTop: "1px solid rgba(255,255,255,0.1)", boxSizing: "border-box" }} className="md:h-[68px]">
-          <div className="h-full" style={{ padding: pad }}>
-            <div className="mx-auto grid w-full max-w-[1200px] grid-cols-2 items-center gap-9 py-7 md:h-full md:grid-cols-4 md:py-0">
-              <span className="flex justify-start" style={{ color: "rgba(255,255,255,0.65)", fontSize: 12, lineHeight: "20px", fontWeight: 500 }}>
-
-                © {new Date().getFullYear()} Synergy.AI. All rights reserved.
-              </span>
-              <div className="hidden md:col-span-3 md:flex md:items-center md:justify-end md:gap-4">
-                {[Youtube, Twitter, Linkedin].map((Icon, i) => (
-                  <span
-                    key={i}
-                    className="cursor-pointer transition-opacity hover:opacity-70"
-                    style={{ color: "#FFFFFF", display: "inline-flex" }}
-                  >
-                    <Icon size={20} strokeWidth={1.5} />
-                  </span>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
-
-
-      </footer>
+      {/* CTA + brand footer, shared with the homepage */}
+      <SiteFooter />
 
       <FinChatDock alwaysVisible />
     </div>
@@ -808,55 +661,3 @@ function BusinessImpactPage() {
 }
 
 export default BusinessImpactPage;
-
-/** Wordmark that fills its container width by uniform font scaling (no glyph stretching). */
-function FitWordmark({ text }: { text: string }) {
-  const boxRef = useRef<HTMLDivElement>(null);
-  const textRef = useRef<HTMLSpanElement>(null);
-  const [size, setSize] = useState(200);
-
-  const fit = () => {
-    const box = boxRef.current;
-    const el = textRef.current;
-    if (!box || !el) return;
-    const probe = 200;
-    el.style.fontSize = `${probe}px`;
-    const w = el.scrollWidth;
-    const next = w > 0 ? (probe * box.clientWidth) / w : probe;
-    el.style.fontSize = `${next}px`;
-    setSize(next);
-  };
-
-
-  useLayoutEffect(fit);
-  useEffect(() => {
-    window.addEventListener("resize", fit);
-    if (document.fonts?.ready) document.fonts.ready.then(fit);
-    return () => window.removeEventListener("resize", fit);
-  }, []);
-
-  return (
-    <div
-      ref={boxRef}
-      aria-hidden
-      className="pointer-events-none w-full select-none overflow-hidden"
-      style={{ lineHeight: 0 }}
-    >
-      <span
-        ref={textRef}
-        className="font-sans block whitespace-nowrap"
-        style={{
-          fontSize: size,
-          lineHeight: 0.8,
-          fontWeight: 500,
-          letterSpacing: "-0.02em",
-          color: "rgba(255,255,255,0.08)",
-          display: "inline-block",
-          transform: "translateY(12%)",
-        }}
-      >
-        {text}
-      </span>
-    </div>
-  );
-}
