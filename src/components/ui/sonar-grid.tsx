@@ -6,8 +6,10 @@ export interface SonarGridProps extends React.ComponentProps<"div"> {
   spacing?: number;
   /** Dot radius at rest, in CSS pixels. */
   dotRadius?: number;
-  /** Resting dot opacity (0–1). Dots on a wavefront go to 1. */
+  /** Resting dot opacity (0–1). Dots on a wavefront rise toward `peakOpacity`. */
   baseOpacity?: number;
+  /** Opacity a dot reaches at the wave peak (0–1). Lower it to keep the field quiet. */
+  peakOpacity?: number;
   /** Any CSS color. Defaults to the theme's primary color, so it adapts to light/dark and brand themes. */
   color?: string;
   /** Seconds between ambient pings. Set 0 to disable them. */
@@ -47,6 +49,7 @@ export function SonarGrid({
   spacing = 26,
   dotRadius = 1.4,
   baseOpacity = 0.28,
+  peakOpacity = 1,
   color,
   pingEvery = 2.4,
   speed = 260,
@@ -71,6 +74,7 @@ export function SonarGrid({
     spacing,
     dotRadius,
     baseOpacity,
+    peakOpacity,
     pingEvery,
     speed,
     ringWidth,
@@ -84,6 +88,7 @@ export function SonarGrid({
     spacing,
     dotRadius,
     baseOpacity,
+    peakOpacity,
     pingEvery,
     speed,
     ringWidth,
@@ -179,7 +184,7 @@ export function SonarGrid({
       // Pass 2: only the dots on a wavefront get their own alpha and radius.
       for (let k = 0; k < hot.length; k += 3) {
         const energy = hot[k + 2] ?? 0;
-        ctx.globalAlpha = o.baseOpacity + (1 - o.baseOpacity) * energy;
+        ctx.globalAlpha = o.baseOpacity + (o.peakOpacity - o.baseOpacity) * energy;
         ctx.beginPath();
         ctx.arc(hot[k] ?? 0, hot[k + 1] ?? 0, o.dotRadius * (1 + o.amplitude * energy), 0, TAU);
         ctx.fill();
@@ -288,7 +293,7 @@ export function SonarGrid({
   // Prop changes while the loop is asleep still repaint immediately.
   React.useEffect(() => {
     refreshRef.current();
-  }, [spacing, dotRadius, baseOpacity, color, pingEvery, speed, ringWidth, amplitude, interactive, maxRings, pingArea]);
+  }, [spacing, dotRadius, baseOpacity, peakOpacity, color, pingEvery, speed, ringWidth, amplitude, interactive, maxRings, pingArea]);
 
   return (
     <div
