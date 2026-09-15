@@ -693,7 +693,7 @@ html.lenis body {
     linear-gradient(rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.2)),
     linear-gradient(#000000, #000000);
   will-change: clip-path;
-  animation-duration: 0.85s;
+  animation-duration: 1.2s;
   animation-timing-function: cubic-bezier(0.65, 0, 0.35, 1);
   animation-fill-mode: both;
 }
@@ -763,7 +763,7 @@ html.lenis body {
   background-position: 0 5px, 5px 0;
   z-index: 2;
   opacity: 0;
-  animation: artemis-converge-cross 0.2s 0.8s ease-out both;
+  animation: artemis-converge-cross 0.2s 1.15s ease-out both;
 }
 
 /* Right → left */
