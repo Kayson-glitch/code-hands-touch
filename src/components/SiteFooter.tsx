@@ -25,7 +25,7 @@ const GRADIENT =
   "linear-gradient(90deg, #137DFF 0%, #FF18AA 33.333%, #FFCD17 66.666%, #137DFF 100%)";
 
 /** Fraction of the dashboard image's lower half left visible above the footer. */
-const IMAGE_REVEAL = 0.45;
+const IMAGE_REVEAL = 0.6;
 
 const FOOTER_COLUMNS = [
   { title: "why  synergy", links: ["Features", "Pricing", "Book a demo"] },
@@ -155,7 +155,7 @@ export function SiteFooter() {
           pingEvery={5.5}
           speed={200}
           ringWidth={120}
-          amplitude={1.1}
+          amplitude={0.8}
           interactive={false}
           seedPing
           pingArea={[0.2, 0.15, 0.8, 0.85]}
@@ -199,6 +199,7 @@ export function SiteFooter() {
               top: 88,
               bottom: halfH * (1 - IMAGE_REVEAL) + 96,
               zIndex: 0,
+              opacity: 0.7,
             }}
           />
           <ContainerScroll>
