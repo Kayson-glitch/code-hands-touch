@@ -3,6 +3,7 @@ import { Linkedin, Twitter, Youtube } from "lucide-react";
 import { Reveal } from "@/components/Reveal";
 import { DotArrow } from "@/components/DotArrow";
 import { ContainerScroll } from "@/components/ui/container-scroll-animation";
+import { SonarGrid } from "@/components/ui/sonar-grid";
 
 import { logoAsset as logo } from "@/lib/media";
 import { dashboardAsset } from "@/lib/media";
@@ -141,13 +142,23 @@ export function SiteFooter() {
     <div className="relative" style={{ zIndex: 20, background: "#FAFAFA" }}>
       {/* ------------------------------------------------------------- CTA */}
       <section className="relative overflow-hidden" style={{ padding: `${fluid(200, 100)} 0 0` }}>
-        <div
+        {/* Same dot field as before (1px dots, 16% ink, 20px pitch, radial fade),
+            now drawn on a canvas so ambient sonar rings can ripple through it. */}
+        <SonarGrid
           aria-hidden
+          spacing={20}
+          dotRadius={1}
+          baseOpacity={0.16}
+          color="#0E0B22"
+          pingEvery={3.2}
+          speed={220}
+          ringWidth={120}
+          amplitude={1.6}
+          interactive={false}
+          seedPing
+          pingArea={[0.2, 0.15, 0.8, 0.85]}
           className="pointer-events-none absolute inset-0"
           style={{
-            backgroundImage:
-              "radial-gradient(circle, rgba(14,11,34,0.16) 1px, transparent 1px)",
-            backgroundSize: "20px 21px",
             maskImage: "radial-gradient(120% 80% at 50% 50%, #000 25%, transparent 78%)",
             WebkitMaskImage: "radial-gradient(120% 80% at 50% 50%, #000 25%, transparent 78%)",
           }}
