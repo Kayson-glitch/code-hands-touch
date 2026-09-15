@@ -25,6 +25,12 @@ const GRADIENT =
 
 /** Fraction of the dashboard image's lower half left visible above the footer. */
 const IMAGE_REVEAL = 0.75;
+/** Extra pixels of the image hidden under the footer on top of the fractional reveal. */
+const IMAGE_TUCK = 20;
+/** ContainerScroll's md:p-10 frame around the image. */
+const FRAME_PAD = 40;
+/** Card tilt at the start of the approach; flattens fully by the rest position. */
+const CARD_TILT_FROM = 24;
 
 const FOOTER_COLUMNS = [
   { title: "why  synergy", links: ["Features", "Pricing", "Book a demo"] },
@@ -127,6 +133,13 @@ export function SiteFooter() {
   const pad = `0 ${fluid(120, 24)}`;
   const imgRef = useRef<HTMLImageElement>(null);
   const [halfH, setHalfH] = useState(0);
+  // How far the footer climbs over the image (negative margin).
+  const footerOverlap = halfH * (1 - IMAGE_REVEAL) + 96 + IMAGE_TUCK;
+  // The ContainerScroll frame's travel is its own height; at rest its bottom
+  // still sits (overlap + frame padding) below the viewport, so the flip must
+  // finish at this fraction of the travel to be complete when the page stops.
+  const frameH = halfH * 2 + FRAME_PAD * 2;
+  const settleAt = frameH > 0 ? Math.max(0.2, 1 - (footerOverlap + FRAME_PAD) / frameH) : 1;
 
   useEffect(() => {
     const el = imgRef.current;
@@ -174,7 +187,7 @@ export function SiteFooter() {
           }}
           className="pointer-events-none absolute inset-x-0 top-0"
           style={{
-            bottom: halfH * (1 - IMAGE_REVEAL) + 96,
+            bottom: footerOverlap,
             maskImage: "linear-gradient(to bottom, transparent 0, #000 22%, #000 100%)",
             WebkitMaskImage: "linear-gradient(to bottom, transparent 0, #000 22%, #000 100%)",
           }}
@@ -204,7 +217,12 @@ export function SiteFooter() {
             An extra offset lifts the image so its top rests just below the
             fixed site nav, keeping the dashboard chrome visible. */}
         <div className="relative" style={{ marginTop: fluid(72, 40), zIndex: 1 }}>
-          <ContainerScroll rotateFrom={12} spring={{ stiffness: 90, damping: 26 }}>
+          <ContainerScroll
+            rotateFrom={CARD_TILT_FROM}
+            settleAt={settleAt}
+            perspective={800}
+            spring={{ stiffness: 120, damping: 28 }}
+          >
             <img
               ref={imgRef}
               src={dashboardAsset.url}
@@ -221,7 +239,7 @@ export function SiteFooter() {
         data-dark-section
         data-progressive-blur-hide
         className="relative overflow-hidden"
-        style={{ background: "#0A0A0A", marginTop: -(halfH * (1 - IMAGE_REVEAL) + 96), zIndex: 30 }}
+        style={{ background: "#0A0A0A", marginTop: -footerOverlap, zIndex: 30 }}
       >
         <div aria-hidden style={{ height: 2, backgroundImage: GRADIENT, backgroundSize: "200%" }} />
 

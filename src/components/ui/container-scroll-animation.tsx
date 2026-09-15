@@ -5,12 +5,23 @@ export const ContainerScroll = ({
   titleComponent,
   children,
   rotateFrom = 20,
+  settleAt = 1,
+  perspective = 1000,
   spring,
 }: {
   titleComponent?: string | React.ReactNode;
   children: React.ReactNode;
-  /** Initial X tilt in degrees before the card settles flat. Smaller = slower-looking flip. */
+  /** Initial X tilt in degrees before the card settles flat. */
   rotateFrom?: number;
+  /**
+   * Scroll progress (0–1 of the container's own travel) at which the card is
+   * fully flat. Lower it when the container's bottom never reaches the
+   * viewport bottom (e.g. it is covered by the next section), so the whole
+   * flip plays out over the visible approach instead of stalling mid-tilt.
+   */
+  settleAt?: number;
+  /** CSS perspective in px; smaller = stronger foreshortening. */
+  perspective?: number;
   /** Optional spring smoothing so the tilt eases behind the scroll instead of tracking it 1:1. */
   spring?: { stiffness?: number; damping?: number; mass?: number };
 }) => {
@@ -42,16 +53,17 @@ export const ContainerScroll = ({
     return isMobile ? [0.7, 0.9] : [1.05, 1];
   };
 
-  const rotate = useTransform(scrollYProgress, [0, 1], [rotateFrom, 0]);
-  const scale = useTransform(scrollYProgress, [0, 1], scaleDimensions());
-  const translate = useTransform(scrollYProgress, [0, 1], [0, -100]);
+  const end = Math.max(0.05, Math.min(1, settleAt));
+  const rotate = useTransform(scrollYProgress, [0, end], [rotateFrom, 0]);
+  const scale = useTransform(scrollYProgress, [0, end], scaleDimensions());
+  const translate = useTransform(scrollYProgress, [0, end], [0, -100]);
 
   return (
     <div
       ref={containerRef}
       className="relative flex items-center justify-center p-2 md:p-10"
     >
-      <div className="relative w-full" style={{ perspective: "1000px" }}>
+      <div className="relative w-full" style={{ perspective: `${perspective}px` }}>
         {titleComponent ? (
           <Header translate={translate} titleComponent={titleComponent} />
         ) : null}
