@@ -2,7 +2,7 @@ import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { MessageSquareCode, Map as MapIcon, Linkedin, Twitter, Youtube } from "lucide-react";
 import { SiteNav } from "@/components/SiteNav";
-import logo from "@/assets/synergy-logo-v3.png.asset.json";
+import { logoAsset as logo } from "@/lib/media";
 import { HalftoneHandStill } from "@/components/HalftoneHandStill";
 import { Reveal } from "@/components/Reveal";
 import { FinChatDock } from "@/components/FinChatDock";

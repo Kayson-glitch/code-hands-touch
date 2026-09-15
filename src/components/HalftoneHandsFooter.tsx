@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import handsFramesAsset from "@/assets/hands-frames.webp.asset.json";
+import { handsFramesAsset } from "@/lib/media";
 import { IntroVideo, type IntroProgressInfo } from "./IntroVideo";
 import { useHeroLayout, type HeroLayout } from "@/hooks/useHeroLayout";
 import { getLenis } from "@/lib/smoothScroll";

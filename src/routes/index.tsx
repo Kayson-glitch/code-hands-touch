@@ -15,7 +15,7 @@ import { ClosingSection } from "@/components/ClosingSection";
 import { SiteFooter } from "@/components/SiteFooter";
 
 
-import videoAsset from "@/assets/intro-hands.mp4.asset.json";
+import { introVideoAsset as videoAsset } from "@/lib/media";
 
 
 export const Route = createFileRoute("/")({

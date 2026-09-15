@@ -1,9 +1,6 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { getLenis } from "@/lib/smoothScroll";
-import cometAsset from "@/assets/kore-comet.svg.asset.json";
-import valueAsset from "@/assets/kore-value.svg.asset.json";
-import scaleAsset from "@/assets/kore-scale.svg.asset.json";
-import securityAsset from "@/assets/kore-security.svg.asset.json";
+import { cometAsset, valueAsset, scaleAsset, securityAsset } from "@/lib/media";
 
 const CARDS = [
   { image: valueAsset.url, title: "{ Outcomes in days }", body: "{ Artemis } handles the infrastructure; your team starts at the business logic. Team focuses on outcomes. Agents ship faster.", value: "+85", unit: "%", outcome: "faster time to value" },
