@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, type CSSProperties } from "react";
-import { AudioLines, Plus } from "lucide-react";
+import { AudioLines, ChevronDown, Plus } from "lucide-react";
 import { DotArrow } from "@/components/DotArrow";
+import { logoAsset as logo } from "@/lib/media";
 
 /* ----------------------------------------------------------------------------
  * Lightweight AI support assistant.
@@ -8,12 +9,14 @@ import { DotArrow } from "@/components/DotArrow";
  * States
  *   collapsed   → one rotating hint inside the pill
  *   expanded    → looping suggestion bubbles above the input
- *   chatting    → message thread + typing indicator + follow-up chips
- *   handoff     → assistant offers a human / demo when it cannot answer
+ *   chatting    → glass panel: greeting, streamed replies, follow-up chips
+ *   minimised   → panel collapsed via the chevron, thread kept, pill stays
  *
  * Replies are matched locally against a small knowledge base derived from the
  * site's own claims, so the assistant never promises anything the page
- * doesn't. Unknown questions fall back to a human handoff.
+ * doesn't. High-intent questions (pricing, demo, human) first ask for a work
+ * email so the team can follow up, then answer. Unknown questions fall back
+ * to a human handoff.
  * ------------------------------------------------------------------------- */
 
 const SUGGESTIONS = [
@@ -25,14 +28,18 @@ const SUGGESTIONS = [
   "What does pricing look like?",
 ];
 
+const GREETING = ["Hi there.", "What can I help you with today?"];
+
 type Intent = {
   id: string;
   keywords: string[];
   answer: string;
   followUps: string[];
+  /** Ask for a work email before answering (once per conversation). */
+  capture?: boolean;
+  /** Variant used when the visitor declined to share an email. */
+  answerNoEmail?: string;
 };
-
-const HANDOFF_FOLLOW_UPS = ["Talk to a human", "Book a demo"];
 
 const KNOWLEDGE: Intent[] = [
   {
@@ -122,18 +129,24 @@ const KNOWLEDGE: Intent[] = [
   {
     id: "pricing",
     keywords: ["pric", "cost", "plan", "how much", "budget", "fee", "subscription"],
+    capture: true,
     answer:
-      "Pricing scales with resolved conversations rather than seats, so you only pay for outcomes. The team can share a tailored quote based on your ticket volume.",
-    followUps: ["Book a demo", "Talk to a human"],
+      "Pricing scales with resolved conversations rather than seats, so you only pay for outcomes. A specialist will send a tailored quote based on your ticket volume.",
+    answerNoEmail:
+      "Pricing scales with resolved conversations rather than seats, so you only pay for outcomes. Book a demo whenever you'd like a tailored quote based on your ticket volume.",
+    followUps: ["Book a demo", "What can Synergy do for my support team?"],
   },
 ];
 
 const HANDOFF: Intent = {
   id: "handoff",
   keywords: ["talk to", "human", "sales", "contact", "someone", "person", "demo", "call"],
+  capture: true,
   answer:
-    "Happy to connect you. Book a demo and a specialist will walk through your setup, or leave your email here and the team will reach out within one business day.",
-  followUps: ["Book a demo", "What can Synergy do for my support team?"],
+    "A specialist will reach out within one business day to walk through your setup. In the meantime, feel free to keep asking me anything.",
+  answerNoEmail:
+    "You can book a demo directly and pick a time that suits you—a specialist will walk through your setup live. In the meantime, feel free to keep asking me anything.",
+  followUps: ["What can Synergy do for my support team?", "How fast can it resolve issues?"],
 };
 
 const FALLBACK: Intent = {
@@ -141,8 +154,17 @@ const FALLBACK: Intent = {
   keywords: [],
   answer:
     "I'm not certain about that one yet. I can connect you with the team, or you can ask me about resolution speed, brand voice, integrations, routing or pricing.",
-  followUps: [...HANDOFF_FOLLOW_UPS, "What can Synergy do for my support team?"],
+  followUps: ["Talk to a human", "Book a demo", "What can Synergy do for my support team?"],
 };
+
+const CAPTURE_PROMPT =
+  "Happy to help with that. First, could you share your work email? That way a specialist can follow up if you need to step away.";
+const CAPTURE_RETRY =
+  "That doesn't look like an email address—could you double-check it? You can also type \"skip\" to continue without one.";
+const CAPTURE_SKIPPED = "No problem, we can continue without it.";
+
+const EMAIL_RE = /[^\s@]+@[^\s@]+\.[^\s@]{2,}/;
+const SKIP_RE = /^\s*(skip|no|no thanks|not now|later|nope)\b/i;
 
 function matchIntent(text: string): Intent {
   const q = text.toLowerCase();
@@ -160,7 +182,20 @@ function matchIntent(text: string): Intent {
   return best ?? FALLBACK;
 }
 
-type Msg = { id: number; role: "user" | "assistant"; text: string; followUps?: string[] };
+type Msg = {
+  id: number;
+  role: "user" | "assistant";
+  text: string;
+  followUps?: string[];
+  streaming?: boolean;
+};
+
+type Lead = {
+  stage: "idle" | "asking" | "captured" | "declined";
+  email?: string;
+  pending?: Intent;
+  attempts: number;
+};
 
 /* Bubbles cycle upward like incoming chat: one enters from below every
    interval, the oldest drifts up and fades. Hovering pauses the loop. */
@@ -259,6 +294,47 @@ function TypingDots({ color }: { color: string }) {
   );
 }
 
+/* Reveals the reply word by word so it reads as streamed rather than pasted. */
+function StreamedText({
+  text,
+  active,
+  onProgress,
+  onDone,
+}: {
+  text: string;
+  active: boolean;
+  onProgress: () => void;
+  onDone: () => void;
+}) {
+  const [shown, setShown] = useState(active ? "" : text);
+  const doneRef = useRef(!active);
+
+  useEffect(() => {
+    if (!active || doneRef.current) return;
+    const tokens = text.match(/\S+\s*/g) ?? [text];
+    let i = 0;
+    let timer = 0;
+    const step = () => {
+      i += 1;
+      setShown(tokens.slice(0, i).join(""));
+      onProgress();
+      if (i < tokens.length) {
+        const tok = tokens[i - 1] ?? "";
+        const pause = /[.,;:—]\s*$/.test(tok) ? 120 : 0;
+        timer = window.setTimeout(step, 34 + Math.random() * 26 + pause);
+      } else {
+        doneRef.current = true;
+        onDone();
+      }
+    };
+    timer = window.setTimeout(step, 40);
+    return () => window.clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [active, text]);
+
+  return <>{shown}</>;
+}
+
 export function FinChatDock({ alwaysVisible = false }: { alwaysVisible?: boolean } = {}) {
   const [visible, setVisible] = useState(alwaysVisible);
   const [theme, setTheme] = useState<"light" | "dark">("light");
@@ -266,13 +342,17 @@ export function FinChatDock({ alwaysVisible = false }: { alwaysVisible?: boolean
   const [messages, setMessages] = useState<Msg[]>([]);
   const [typing, setTyping] = useState(false);
   const [expanded, setExpanded] = useState(false);
+  const [panelOpen, setPanelOpen] = useState(true);
+  const [panelClosing, setPanelClosing] = useState(false);
   const [hintIndex, setHintIndex] = useState(0);
-  const [focused, setFocused] = useState(false);
+  const [atBottom, setAtBottom] = useState(true);
+  const [lead, setLead] = useState<Lead>({ stage: "idle", attempts: 0 });
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const wrapperRef = useRef<HTMLDivElement>(null);
   const threadRef = useRef<HTMLDivElement>(null);
-  const focusTimeoutRef = useRef<number | null>(null);
+  const stickRef = useRef(true);
   const replyTimeoutRef = useRef<number | null>(null);
+  const closeTimeoutRef = useRef<number | null>(null);
   const idRef = useRef(0);
 
   useEffect(() => {
@@ -361,27 +441,48 @@ export function FinChatDock({ alwaysVisible = false }: { alwaysVisible?: boolean
     return () => window.clearInterval(id);
   }, [expanded, value]);
 
-  // Collapse when clicking outside if nothing has been typed or sent.
+  const chatting = messages.length > 0;
+
+  // Click outside: collapse entirely when nothing has happened yet, otherwise
+  // just minimise the panel and keep the thread.
   useEffect(() => {
     if (!expanded) return;
     const onDown = (e: MouseEvent) => {
       if (!wrapperRef.current) return;
       if (wrapperRef.current.contains(e.target as Node)) return;
-      if (!value && messages.length === 0) setExpanded(false);
+      if (!value && !chatting) setExpanded(false);
+      else if (chatting) closePanel();
     };
     window.addEventListener("mousedown", onDown);
     return () => window.removeEventListener("mousedown", onDown);
-  }, [expanded, value, messages.length]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [expanded, value, chatting]);
 
-  // Keep the newest message in view.
-  useEffect(() => {
+  const scrollToBottom = (smooth = false) => {
     const el = threadRef.current;
-    if (el) el.scrollTop = el.scrollHeight;
+    if (!el) return;
+    if (smooth) el.scrollTo({ top: el.scrollHeight, behavior: "smooth" });
+    else el.scrollTop = el.scrollHeight;
+  };
+
+  // Follow new content only while the reader is already at the bottom.
+  useEffect(() => {
+    if (stickRef.current) scrollToBottom();
   }, [messages, typing]);
+
+  const onThreadScroll = () => {
+    const el = threadRef.current;
+    if (!el) return;
+    const gap = el.scrollHeight - el.clientHeight - el.scrollTop;
+    const bottom = gap < 24;
+    stickRef.current = bottom;
+    setAtBottom(bottom);
+  };
 
   useEffect(
     () => () => {
       if (replyTimeoutRef.current) window.clearTimeout(replyTimeoutRef.current);
+      if (closeTimeoutRef.current) window.clearTimeout(closeTimeoutRef.current);
     },
     [],
   );
@@ -398,26 +499,84 @@ export function FinChatDock({ alwaysVisible = false }: { alwaysVisible?: boolean
     return idRef.current;
   };
 
+  const focusInput = () => requestAnimationFrame(() => inputRef.current?.focus());
+
+  const openPanel = () => {
+    if (closeTimeoutRef.current) window.clearTimeout(closeTimeoutRef.current);
+    setPanelClosing(false);
+    setPanelOpen(true);
+  };
+
+  const closePanel = () => {
+    if (!panelOpen || panelClosing) return;
+    setPanelClosing(true);
+    closeTimeoutRef.current = window.setTimeout(() => {
+      setPanelOpen(false);
+      setPanelClosing(false);
+    }, 220);
+  };
+
+  const pushAssistant = (text: string, followUps?: string[]) => {
+    setMessages((m) => [...m, { id: nextId(), role: "assistant", text, followUps, streaming: true }]);
+  };
+
+  const reply = (text: string, followUps?: string[]) => {
+    setTyping(true);
+    // First token lands after a short "thinking" pause; the rest streams.
+    replyTimeoutRef.current = window.setTimeout(() => {
+      setTyping(false);
+      pushAssistant(text, followUps);
+    }, 480 + Math.random() * 320);
+  };
+
   const ask = (raw: string) => {
     const text = raw.trim();
     if (!text || typing) return;
+    stickRef.current = true;
     setMessages((m) => [...m, { id: nextId(), role: "user", text }]);
     setValue("");
+    openPanel();
     requestAnimationFrame(() => {
       autoResize();
       inputRef.current?.focus();
     });
-    setTyping(true);
+
+    // Lead capture takes precedence while we're waiting for an email.
+    if (lead.stage === "asking") {
+      const email = text.match(EMAIL_RE)?.[0];
+      const pending = lead.pending ?? FALLBACK;
+      if (email) {
+        setLead({ stage: "captured", email, attempts: 0 });
+        reply(`Thanks, ${email} noted. ${pending.answer}`, pending.followUps);
+        return;
+      }
+      if (SKIP_RE.test(text) || lead.attempts >= 1) {
+        // Declining is remembered for the session so we never nag twice.
+        setLead({ stage: "declined", attempts: 0 });
+        reply(`${CAPTURE_SKIPPED} ${pending.answerNoEmail ?? pending.answer}`, pending.followUps);
+        return;
+      }
+      // Anything else that reads like a real question gets answered, and we
+      // gently re-ask once rather than blocking the conversation.
+      const other = matchIntent(text);
+      if (other !== FALLBACK && other.id !== "greeting") {
+        setLead((l) => ({ ...l, attempts: l.attempts + 1 }));
+        reply(`${other.answer} And whenever you're ready, drop your work email so a specialist can follow up.`, other.followUps);
+        return;
+      }
+      setLead((l) => ({ ...l, attempts: l.attempts + 1 }));
+      reply(CAPTURE_RETRY);
+      return;
+    }
+
     const intent = matchIntent(text);
-    // Longer answers "take longer to type" so the pacing feels considered.
-    const delay = 500 + Math.min(900, intent.answer.length * 3);
-    replyTimeoutRef.current = window.setTimeout(() => {
-      setTyping(false);
-      setMessages((m) => [
-        ...m,
-        { id: nextId(), role: "assistant", text: intent.answer, followUps: intent.followUps },
-      ]);
-    }, delay);
+    if (intent.capture && lead.stage === "idle") {
+      setLead({ stage: "asking", pending: intent, attempts: 0 });
+      reply(CAPTURE_PROMPT);
+      return;
+    }
+    const answer = lead.stage === "declined" ? intent.answerNoEmail ?? intent.answer : intent.answer;
+    reply(answer, intent.followUps);
   };
 
   const send = () => ask(value);
@@ -426,8 +585,9 @@ export function FinChatDock({ alwaysVisible = false }: { alwaysVisible?: boolean
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       send();
-    } else if (e.key === "Escape" && !value && messages.length === 0) {
-      setExpanded(false);
+    } else if (e.key === "Escape") {
+      if (chatting && panelOpen) closePanel();
+      else if (!value && !chatting) setExpanded(false);
     }
   };
 
@@ -442,36 +602,51 @@ export function FinChatDock({ alwaysVisible = false }: { alwaysVisible?: boolean
 
   const expand = () => {
     setExpanded(true);
-    requestAnimationFrame(() => inputRef.current?.focus());
+    if (chatting) openPanel();
+    focusInput();
   };
 
   const reset = () => {
     if (replyTimeoutRef.current) window.clearTimeout(replyTimeoutRef.current);
     setTyping(false);
     setMessages([]);
+    setLead({ stage: "idle", attempts: 0 });
     setValue("");
-    requestAnimationFrame(() => inputRef.current?.focus());
+    setPanelOpen(true);
+    setPanelClosing(false);
+    stickRef.current = true;
+    setAtBottom(true);
+    focusInput();
   };
 
-  const chatting = messages.length > 0;
+  const markStreamed = (id: number) => {
+    setMessages((m) => m.map((msg) => (msg.id === id ? { ...msg, streaming: false } : msg)));
+  };
+
   const showSuggestions = expanded && !chatting;
+  const showPanel = chatting && panelOpen;
+  const hasText = value.trim().length > 0;
 
   const onDark = theme === "dark" && darkSurface;
-  const dockBg = onDark ? "rgba(255,255,255,0.20)" : "#FFFFFF";
-  const dockBorder = onDark ? "1px solid rgba(255,255,255,0.12)" : "1px solid #F1F1F3";
-  const dockShadow = onDark ? "0 12px 40px rgba(0,0,0,0.05)" : "0 12px 20px rgba(0,0,0,0.05)";
+  const pillBg = onDark ? "rgba(255,255,255,0.20)" : "#FFFFFF";
+  const pillBorder = onDark ? "1px solid rgba(255,255,255,0.12)" : "1px solid #F1F1F3";
+  const pillShadow = onDark ? "0 12px 40px rgba(0,0,0,0.05)" : "0 12px 20px rgba(0,0,0,0.05)";
   const textMain = onDark ? "#FFFFFF" : "#0E0B22";
   const textPlaceholder = "#A1A0A9";
   const textMuted = onDark ? "rgba(255,255,255,0.70)" : "#7A7885";
   const suggestionBg = onDark ? "rgba(255,255,255,0.10)" : "rgba(0,0,0,0.06)";
   const suggestionHoverBg = onDark ? "rgba(255,255,255,0.18)" : "rgba(0,0,0,0.10)";
-  const threadBg = onDark ? "rgba(255,255,255,0.08)" : "#FFFFFF";
+  const glassBg = onDark ? "rgba(24,24,27,0.62)" : "rgba(255,255,255,0.72)";
+  const glassBorder = onDark ? "1px solid rgba(255,255,255,0.10)" : "1px solid rgba(14,11,34,0.08)";
+  const glassShadow = onDark ? "0 24px 60px rgba(0,0,0,0.35)" : "0 24px 60px rgba(14,11,34,0.12)";
   const userBubbleBg = onDark ? "rgba(255,255,255,0.16)" : "rgba(14,11,34,0.06)";
   const chipBorder = onDark ? "1px solid rgba(255,255,255,0.18)" : "1px solid rgba(14,11,34,0.12)";
-  const sendBg = focused ? "#FFFFFF" : "#C7C6CD";
-  const sendIcon = focused ? "#0E0B22" : "#FFFFFF";
+  const sendBg = hasText ? (onDark ? "#FFFFFF" : "#0E0B22") : onDark ? "rgba(255,255,255,0.35)" : "#C7C6CD";
+  const sendIcon = hasText && onDark ? "#0E0B22" : "#FFFFFF";
+  const iconBtnHover = onDark ? "hover:bg-white/[0.08]" : "hover:bg-black/[0.04]";
 
   const lastAssistant = [...messages].reverse().find((m) => m.role === "assistant");
+  const showFollowUps = !typing && lastAssistant?.followUps && !lastAssistant.streaming;
 
   const show = visible && !footerVisible;
   return (
@@ -501,23 +676,38 @@ export function FinChatDock({ alwaysVisible = false }: { alwaysVisible?: boolean
           />
         )}
 
-        {chatting && (
+        {showPanel && (
           <div
-            className="pointer-events-auto mb-3 overflow-hidden backdrop-blur-md"
+            className="pointer-events-auto relative mb-3 flex flex-col overflow-hidden"
             style={{
-              borderRadius: 20,
-              backgroundColor: threadBg,
-              border: dockBorder,
-              boxShadow: dockShadow,
-              animation: "finRise 400ms ease-out both",
+              height: "min(440px, calc(100vh - 220px))",
+              borderRadius: 24,
+              backgroundColor: glassBg,
+              border: glassBorder,
+              boxShadow: glassShadow,
+              backdropFilter: "blur(28px) saturate(1.4)",
+              WebkitBackdropFilter: "blur(28px) saturate(1.4)",
+              transformOrigin: "50% 100%",
+              animation: panelClosing
+                ? "finPanelOut 220ms cubic-bezier(0.4, 0, 1, 1) both"
+                : "finPanelIn 420ms cubic-bezier(0.22, 1, 0.36, 1) both",
             }}
           >
+            {/* Header */}
             <div
               className="flex items-center justify-between"
-              style={{ padding: "10px 16px 8px", fontSize: 12, lineHeight: "16px", color: textMuted }}
+              style={{ padding: "12px 12px 8px 16px", fontSize: 13, lineHeight: "18px", color: textMain }}
             >
-              <span className="inline-flex items-center gap-2">
+              <span className="inline-flex items-center gap-2.5">
+                <img
+                  src={logo.url}
+                  alt=""
+                  aria-hidden
+                  style={{ width: 22, height: 22, borderRadius: 999, objectFit: "cover", display: "block" }}
+                />
+                <span style={{ fontWeight: 500 }}>Synergy assistant</span>
                 <span
+                  aria-hidden
                   style={{
                     width: 6,
                     height: 6,
@@ -526,42 +716,51 @@ export function FinChatDock({ alwaysVisible = false }: { alwaysVisible?: boolean
                     boxShadow: "0 0 0 3px rgba(52,211,153,0.18)",
                   }}
                 />
-                Synergy assistant
               </span>
-              <span className="inline-flex items-center gap-3">
-                <button
-                  type="button"
-                  onClick={() => ask("Talk to a human")}
-                  className="transition-opacity hover:opacity-70"
-                  style={{ color: textMuted }}
-                >
-                  Talk to a human
-                </button>
+              <span className="inline-flex items-center gap-1">
                 <button
                   type="button"
                   onClick={reset}
-                  className="transition-opacity hover:opacity-70"
-                  style={{ color: textMuted }}
+                  className="rounded-full px-2.5 transition-opacity hover:opacity-70"
+                  style={{ color: textMuted, fontSize: 12, lineHeight: "28px" }}
                 >
                   Clear
+                </button>
+                <button
+                  type="button"
+                  aria-label="Minimise"
+                  onClick={closePanel}
+                  className={`grid h-8 w-8 place-items-center rounded-full ${iconBtnHover}`}
+                  style={{ color: textMuted }}
+                >
+                  <ChevronDown size={18} strokeWidth={1.75} />
                 </button>
               </span>
             </div>
 
+            {/* Thread */}
             <div
               ref={threadRef}
               data-lenis-prevent
-              className="fin-thread flex flex-col gap-2.5 overflow-y-auto"
+              onScroll={onThreadScroll}
+              className="fin-thread flex flex-1 flex-col gap-2.5 overflow-y-auto"
               style={{
-                maxHeight: 280,
-                padding: "10px 12px 12px",
+                padding: "8px 16px 20px",
                 overscrollBehavior: "contain",
                 WebkitMaskImage:
-                  "linear-gradient(to bottom, transparent 0, #000 12px, #000 calc(100% - 12px), transparent 100%)",
+                  "linear-gradient(to bottom, transparent 0, #000 12px, #000 calc(100% - 16px), transparent 100%)",
                 maskImage:
-                  "linear-gradient(to bottom, transparent 0, #000 12px, #000 calc(100% - 12px), transparent 100%)",
+                  "linear-gradient(to bottom, transparent 0, #000 12px, #000 calc(100% - 16px), transparent 100%)",
               }}
             >
+              <div style={{ color: textMain, fontSize: 14, lineHeight: "21px", padding: "4px 4px 8px" }}>
+                {GREETING.map((line) => (
+                  <p key={line} style={{ margin: 0 }}>
+                    {line}
+                  </p>
+                ))}
+              </div>
+
               {messages.map((m) => {
                 const mine = m.role === "user";
                 return (
@@ -572,8 +771,8 @@ export function FinChatDock({ alwaysVisible = false }: { alwaysVisible?: boolean
                   >
                     <div
                       style={{
-                        maxWidth: "84%",
-                        padding: mine ? "8px 14px" : "8px 4px",
+                        maxWidth: mine ? "84%" : "100%",
+                        padding: mine ? "8px 14px" : "6px 4px",
                         borderRadius: 18,
                         backgroundColor: mine ? userBubbleBg : "transparent",
                         color: textMain,
@@ -582,7 +781,18 @@ export function FinChatDock({ alwaysVisible = false }: { alwaysVisible?: boolean
                         whiteSpace: "pre-wrap",
                       }}
                     >
-                      {m.text}
+                      {mine ? (
+                        m.text
+                      ) : (
+                        <StreamedText
+                          text={m.text}
+                          active={!!m.streaming}
+                          onProgress={() => {
+                            if (stickRef.current) scrollToBottom();
+                          }}
+                          onDone={() => markStreamed(m.id)}
+                        />
+                      )}
                     </div>
                   </div>
                 );
@@ -594,9 +804,9 @@ export function FinChatDock({ alwaysVisible = false }: { alwaysVisible?: boolean
                 </div>
               )}
 
-              {!typing && lastAssistant?.followUps && (
-                <div className="flex flex-wrap gap-2" style={{ paddingTop: 4 }}>
-                  {lastAssistant.followUps.map((f) => (
+              {showFollowUps && (
+                <div className="flex flex-wrap gap-2" style={{ paddingTop: 4, animation: "finRise 320ms ease-out both" }}>
+                  {lastAssistant!.followUps!.map((f) => (
                     <button
                       key={f}
                       type="button"
@@ -618,12 +828,33 @@ export function FinChatDock({ alwaysVisible = false }: { alwaysVisible?: boolean
                 </div>
               )}
             </div>
+
+            {/* Jump to latest */}
+            <button
+              type="button"
+              aria-label="Scroll to latest"
+              onClick={() => scrollToBottom(true)}
+              className="absolute left-1/2 grid h-9 w-9 place-items-center rounded-full"
+              style={{
+                bottom: 12,
+                transform: `translate(-50%, ${atBottom ? 8 : 0}px)`,
+                opacity: atBottom ? 0 : 1,
+                pointerEvents: atBottom ? "none" : "auto",
+                backgroundColor: onDark ? "#FFFFFF" : "#FFFFFF",
+                color: "#0E0B22",
+                boxShadow: "0 6px 18px rgba(14,11,34,0.16)",
+                transition: "opacity 220ms ease, transform 220ms ease",
+              }}
+            >
+              <ChevronDown size={18} strokeWidth={2} />
+            </button>
           </div>
         )}
 
+        {/* Input pill */}
         <div
           className="pointer-events-auto flex justify-between"
-          onClick={() => !expanded && expand()}
+          onClick={() => (!expanded || (chatting && !panelOpen)) && expand()}
           style={{
             minHeight: 48,
             borderRadius: 666,
@@ -633,10 +864,10 @@ export function FinChatDock({ alwaysVisible = false }: { alwaysVisible?: boolean
             paddingBottom: 6,
             gap: 4,
             alignItems: expanded ? "flex-end" : "center",
-            backgroundColor: dockBg,
-            border: dockBorder,
+            backgroundColor: pillBg,
+            border: pillBorder,
             backdropFilter: onDark ? "blur(6px)" : "none",
-            boxShadow: dockShadow,
+            boxShadow: pillShadow,
             transition:
               "box-shadow 300ms ease, background-color 300ms ease, border-color 300ms ease",
             cursor: expanded ? "text" : "pointer",
@@ -649,15 +880,11 @@ export function FinChatDock({ alwaysVisible = false }: { alwaysVisible?: boolean
               onChange={(e) => {
                 setValue(e.target.value);
                 autoResize();
+                if (chatting && !panelOpen) openPanel();
               }}
               onKeyDown={onKeyDown}
               onFocus={() => {
-                if (focusTimeoutRef.current) window.clearTimeout(focusTimeoutRef.current);
-                setFocused(true);
-              }}
-              onBlur={() => {
-                if (focusTimeoutRef.current) window.clearTimeout(focusTimeoutRef.current);
-                focusTimeoutRef.current = window.setTimeout(() => setFocused(false), 120);
+                if (chatting && !panelOpen) openPanel();
               }}
               rows={1}
               placeholder={chatting ? "Ask a follow-up…" : "Ask Synergy anything…"}
@@ -689,9 +916,7 @@ export function FinChatDock({ alwaysVisible = false }: { alwaysVisible?: boolean
           <button
             type="button"
             aria-label="Voice input"
-            className={`grid h-9 shrink-0 place-items-center rounded-full ${
-              onDark ? "hover:bg-white/[0.08]" : "hover:bg-black/[0.04]"
-            }`}
+            className={`grid h-9 shrink-0 place-items-center rounded-full ${iconBtnHover}`}
             style={{
               width: expanded ? 36 : 0,
               opacity: expanded ? 1 : 0,
@@ -706,9 +931,7 @@ export function FinChatDock({ alwaysVisible = false }: { alwaysVisible?: boolean
           <button
             type="button"
             aria-label="Add attachment"
-            className={`grid h-9 shrink-0 place-items-center rounded-full ${
-              onDark ? "hover:bg-white/[0.08]" : "hover:bg-black/[0.04]"
-            }`}
+            className={`grid h-9 shrink-0 place-items-center rounded-full ${iconBtnHover}`}
             style={{
               width: expanded ? 36 : 0,
               opacity: expanded ? 1 : 0,
@@ -724,7 +947,7 @@ export function FinChatDock({ alwaysVisible = false }: { alwaysVisible?: boolean
             type="button"
             aria-label="Send"
             onClick={send}
-            disabled={typing}
+            disabled={typing || !hasText}
             className="grid shrink-0 place-items-center transition-colors hover:opacity-80"
             style={{
               width: 36,
@@ -734,6 +957,7 @@ export function FinChatDock({ alwaysVisible = false }: { alwaysVisible?: boolean
               backgroundColor: sendBg,
               color: sendIcon,
               opacity: typing ? 0.5 : 1,
+              cursor: hasText && !typing ? "pointer" : "default",
               transition: "background-color 200ms ease, color 200ms ease, opacity 200ms ease",
             }}
           >
@@ -755,6 +979,14 @@ export function FinChatDock({ alwaysVisible = false }: { alwaysVisible?: boolean
           0%, 80%, 100% { opacity: 0.35; transform: translateY(0); }
           40% { opacity: 1; transform: translateY(-2px); }
         }
+        @keyframes finPanelIn {
+          from { opacity: 0; transform: translateY(16px) scale(0.94); }
+          to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        @keyframes finPanelOut {
+          from { opacity: 1; transform: translateY(0) scale(1); }
+          to { opacity: 0; transform: translateY(12px) scale(0.96); }
+        }
         .fin-dock-input::placeholder {
           color: ${textPlaceholder};
           opacity: 1;
@@ -770,6 +1002,9 @@ export function FinChatDock({ alwaysVisible = false }: { alwaysVisible?: boolean
         }
         .fin-bubble:hover {
           background-color: var(--bubble-hover-bg);
+        }
+        @media (prefers-reduced-motion: reduce) {
+          .fin-bubble, .fin-thread * { transition: none !important; animation: none !important; }
         }
       `}</style>
     </div>
