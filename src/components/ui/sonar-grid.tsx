@@ -28,6 +28,31 @@ export interface SonarGridProps extends React.ComponentProps<"div"> {
   seedPing?: boolean;
   /** Where ambient pings (and the seed ping) may spawn, as fractions of width/height: [x0, y0, x1, y1]. */
   pingArea?: [number, number, number, number];
+  /**
+   * Optional halftone "shoreline": dots swell toward the bottom of the field,
+   * with a slowly drifting noise edge and per-dot breathing, echoing a
+   * halftone illustration. Omit to keep the plain grid.
+   */
+  shore?: ShoreOptions;
+}
+
+export interface ShoreOptions {
+  /** Fraction of the height where the swell begins (0 = top, 1 = bottom). */
+  start?: number;
+  /** Largest dot radius at full coverage, in CSS pixels. Keep below spacing/2 so paper shows between dots. */
+  maxRadius?: number;
+  /** Ink ramp from the lightest to the darkest dot, as CSS hex colours. */
+  ink?: [string, string];
+  /** Coverage reached at the very bottom (0–1). */
+  strength?: number;
+  /** Noise feature size in CSS pixels; larger = broader, calmer edge. */
+  noiseScale?: number;
+  /** Noise drift speed in feature-lengths per second. */
+  drift?: number;
+  /** Per-dot radius wobble as a fraction (0.08 = ±8%). */
+  jitter?: number;
+  /** Per-dot alpha breathing range. */
+  breathe?: [number, number];
 }
 
 interface Ring {
@@ -38,6 +63,52 @@ interface Ring {
 
 const MAX_DPR = 2;
 const TAU = Math.PI * 2;
+
+const SHORE_DEFAULTS: Required<ShoreOptions> = {
+  start: 0.55,
+  maxRadius: 9,
+  ink: ["#E8E8E8", "#B8B8B8"],
+  strength: 0.55,
+  noiseScale: 180,
+  drift: 0.035,
+  jitter: 0.08,
+  breathe: [0.8, 1],
+};
+
+/** Deterministic per-cell hash in 0..1 (same family as the hero halftone). */
+const hash2 = (i: number, j: number) => {
+  const s = Math.sin(i * 127.1 + j * 311.7) * 43758.5453;
+  return s - Math.floor(s);
+};
+
+const smooth = (t: number) => t * t * (3 - 2 * t);
+
+/** 2-D value noise in 0..1 with a slow time offset folded into the lattice. */
+const valueNoise = (x: number, y: number, t: number) => {
+  const xi = Math.floor(x);
+  const yi = Math.floor(y);
+  const ti = Math.floor(t);
+  const fx = smooth(x - xi);
+  const fy = smooth(y - yi);
+  const ft = smooth(t - ti);
+  const layer = (k: number) => {
+    const a = hash2(xi + k * 57, yi);
+    const b = hash2(xi + 1 + k * 57, yi);
+    const c = hash2(xi + k * 57, yi + 1);
+    const d = hash2(xi + 1 + k * 57, yi + 1);
+    return (a + (b - a) * fx) * (1 - fy) + (c + (d - c) * fx) * fy;
+  };
+  const n0 = layer(ti);
+  const n1 = layer(ti + 1);
+  return n0 + (n1 - n0) * ft;
+};
+
+const hexToRgb = (hex: string): [number, number, number] => {
+  const h = hex.replace("#", "");
+  const v = h.length === 3 ? h.split("").map((c) => c + c).join("") : h;
+  const n = parseInt(v, 16);
+  return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
+};
 
 /**
  * SonarGrid — a decorative dot field that answers taps with expanding rings.
@@ -59,6 +130,7 @@ export function SonarGrid({
   maxRings = 6,
   seedPing = true,
   pingArea = [0.15, 0.2, 0.85, 0.8],
+  shore,
   className,
   children,
   ref,
@@ -83,6 +155,7 @@ export function SonarGrid({
     maxRings,
     seedPing,
     pingArea,
+    shore,
   });
   opts.current = {
     spacing,
@@ -97,6 +170,7 @@ export function SonarGrid({
     maxRings,
     seedPing,
     pingArea,
+    shore,
   };
 
   const setHost = React.useCallback(
@@ -154,8 +228,16 @@ export function SonarGrid({
       const offsetX = (width - (cols - 1) * o.spacing) / 2;
       const offsetY = (height - (rows - 1) * o.spacing) / 2;
 
+      const sh = o.shore ? { ...SHORE_DEFAULTS, ...o.shore } : null;
+      const still = reduceMotion.matches;
+      const tSec = now / 1000;
+      const inkA = sh ? hexToRgb(sh.ink[0]) : null;
+      const inkB = sh ? hexToRgb(sh.ink[1]) : null;
+
       // Pass 1: every resting dot in a single path and a single fill.
+      // Dots on a wavefront or inside the shoreline are deferred to pass 2.
       const hot: number[] = [];
+      const shoreDots: number[] = [];
       ctx.globalAlpha = o.baseOpacity;
       ctx.beginPath();
       for (let i = 0; i < cols; i++) {
@@ -171,7 +253,24 @@ export function SonarGrid({
             const k = t * t * (3 - 2 * t) * r.fade; // smoothstep, fading with age
             if (k > energy) energy = k;
           }
-          if (energy < 0.01) {
+
+          let coverage = 0;
+          if (sh) {
+            const v = (cy / height - sh.start) / (1 - sh.start);
+            if (v > 0) {
+              // Vertical swell shaped by drifting noise, so the edge frays
+              // unevenly instead of reading as a straight tide line.
+              const n = valueNoise(cx / sh.noiseScale, cy / sh.noiseScale, still ? 0 : tSec * sh.drift);
+              const ramp = smooth(Math.min(1, v));
+              coverage = Math.min(1, ramp * sh.strength * (0.45 + 1.1 * n));
+              // Scattered dissolve: the faintest cells survive only sometimes.
+              if (coverage < 0.16 && hash2(i, j) > coverage / 0.16) coverage = 0;
+            }
+          }
+
+          if (coverage >= 0.02) {
+            shoreDots.push(i, j, cx, cy, coverage, energy);
+          } else if (energy < 0.01) {
             ctx.moveTo(cx + o.dotRadius, cy);
             ctx.arc(cx, cy, o.dotRadius, 0, TAU);
           } else {
@@ -181,13 +280,42 @@ export function SonarGrid({
       }
       ctx.fill();
 
-      // Pass 2: only the dots on a wavefront get their own alpha and radius.
+      // Pass 2a: only the dots on a wavefront get their own alpha and radius.
       for (let k = 0; k < hot.length; k += 3) {
         const energy = hot[k + 2] ?? 0;
         ctx.globalAlpha = o.baseOpacity + (o.peakOpacity - o.baseOpacity) * energy;
         ctx.beginPath();
         ctx.arc(hot[k] ?? 0, hot[k + 1] ?? 0, o.dotRadius * (1 + o.amplitude * energy), 0, TAU);
         ctx.fill();
+      }
+
+      // Pass 2b: shoreline dots — area carries tone, ink deepens with coverage,
+      // each dot breathes and wobbles on its own slow phase.
+      if (sh && inkA && inkB) {
+        for (let k = 0; k < shoreDots.length; k += 6) {
+          const i = shoreDots[k] ?? 0;
+          const j = shoreDots[k + 1] ?? 0;
+          const cx = shoreDots[k + 2] ?? 0;
+          const cy = shoreDots[k + 3] ?? 0;
+          const coverage = shoreDots[k + 4] ?? 0;
+          const energy = shoreDots[k + 5] ?? 0;
+          const phase = hash2(i * 3 + 11, j * 7 + 5) * TAU;
+          const period = 4 + hash2(i + 101, j + 37) * 3; // 4–7s per dot
+          const osc = still ? 0 : Math.sin((tSec / period) * TAU + phase);
+          const wobble = 1 + sh.jitter * osc;
+          const breathe = sh.breathe[0] + (sh.breathe[1] - sh.breathe[0]) * (0.5 + 0.5 * osc);
+          const radius = Math.max(o.dotRadius, sh.maxRadius * Math.sqrt(coverage)) * wobble * (1 + o.amplitude * energy * 0.5);
+          const mix = Math.min(1, coverage);
+          const r = Math.round(inkA[0] + (inkB[0] - inkA[0]) * mix);
+          const g = Math.round(inkA[1] + (inkB[1] - inkA[1]) * mix);
+          const b = Math.round(inkA[2] + (inkB[2] - inkA[2]) * mix);
+          ctx.fillStyle = `rgb(${r},${g},${b})`;
+          ctx.globalAlpha = Math.min(1, breathe + energy * 0.2);
+          ctx.beginPath();
+          ctx.arc(cx, cy, radius, 0, TAU);
+          ctx.fill();
+        }
+        ctx.fillStyle = stroke;
       }
       ctx.globalAlpha = 1;
     };
@@ -230,7 +358,8 @@ export function SonarGrid({
         nextPing = now + o.pingEvery * 1000;
       }
       draw(now);
-      if (ringsRef.current.length > 0) raf = requestAnimationFrame(tick);
+      // The shoreline breathes continuously, so it never idles.
+      if (ringsRef.current.length > 0 || o.shore) raf = requestAnimationFrame(tick);
       else if (o.pingEvery > 0) scheduleIdle(nextPing - now);
     };
 
@@ -293,7 +422,7 @@ export function SonarGrid({
   // Prop changes while the loop is asleep still repaint immediately.
   React.useEffect(() => {
     refreshRef.current();
-  }, [spacing, dotRadius, baseOpacity, peakOpacity, color, pingEvery, speed, ringWidth, amplitude, interactive, maxRings, pingArea]);
+  }, [spacing, dotRadius, baseOpacity, peakOpacity, color, pingEvery, speed, ringWidth, amplitude, interactive, maxRings, pingArea, shore]);
 
   return (
     <div

@@ -4,7 +4,6 @@ import { Reveal } from "@/components/Reveal";
 import { DotArrow } from "@/components/DotArrow";
 import { ContainerScroll } from "@/components/ui/container-scroll-animation";
 import { SonarGrid } from "@/components/ui/sonar-grid";
-import { GradientBackground } from "@/components/ui/gradient-backgrounds";
 
 import { logoAsset as logo } from "@/lib/media";
 import { dashboardAsset } from "@/lib/media";
@@ -143,8 +142,11 @@ export function SiteFooter() {
     <div className="relative" style={{ zIndex: 20, background: "#FAFAFA" }}>
       {/* ------------------------------------------------------------- CTA */}
       <section className="relative overflow-hidden" style={{ padding: `${fluid(240, 120)} 0 0` }}>
-        {/* Same dot field as before (1px dots, 16% ink, 20px pitch, radial fade),
-            now drawn on a canvas so ambient sonar rings can ripple through it. */}
+        {/* Dot field (1px dots, 16% ink, 20px pitch) drawn on a canvas so ambient
+            sonar rings can ripple through it. Toward the footer the same grid
+            swells into a grey halftone "shoreline" that echoes the hero hands.
+            The layer ends at the footer's top edge so the swell peaks where
+            it is actually visible. */}
         <SonarGrid
           aria-hidden
           spacing={20}
@@ -159,10 +161,21 @@ export function SiteFooter() {
           interactive={false}
           seedPing
           pingArea={[0.2, 0.15, 0.8, 0.85]}
-          className="pointer-events-none absolute inset-0"
+          shore={{
+            start: 0.6,
+            maxRadius: 7.5,
+            ink: ["#EBEBEB", "#C4C4C4"],
+            strength: 0.4,
+            noiseScale: 200,
+            drift: 0.035,
+            jitter: 0.08,
+            breathe: [0.8, 1],
+          }}
+          className="pointer-events-none absolute inset-x-0 top-0"
           style={{
-            maskImage: "radial-gradient(120% 80% at 50% 50%, #000 25%, transparent 78%)",
-            WebkitMaskImage: "radial-gradient(120% 80% at 50% 50%, #000 25%, transparent 78%)",
+            bottom: halfH * (1 - IMAGE_REVEAL) + 96,
+            maskImage: "linear-gradient(to bottom, transparent 0, #000 22%, #000 100%)",
+            WebkitMaskImage: "linear-gradient(to bottom, transparent 0, #000 22%, #000 100%)",
           }}
         />
 
@@ -190,18 +203,6 @@ export function SiteFooter() {
             An extra offset lifts the image so its top rests just below the
             fixed site nav, keeping the dashboard chrome visible. */}
         <div className="relative" style={{ marginTop: fluid(72, 40), zIndex: 1 }}>
-          {/* Soft brand wash behind the dashboard: starts just under the
-              browser chrome and runs down to the footer's top edge (the part
-              of this frame under the footer's negative margin is hidden). */}
-          <GradientBackground
-            className="absolute inset-x-0"
-            style={{
-              top: 88,
-              bottom: halfH * (1 - IMAGE_REVEAL) + 96,
-              zIndex: 0,
-              opacity: 0.7,
-            }}
-          />
           <ContainerScroll>
             <img
               ref={imgRef}
