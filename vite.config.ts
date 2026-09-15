@@ -12,4 +12,12 @@ export default defineConfig({
     // nitro/vite builds from this
     server: { entry: "server" },
   },
+  vite: {
+    server: {
+      // The dev server is reached through forwarded/proxied hostnames (cloud
+      // previews, tunnels); Vite would otherwise answer 403 for any Host that
+      // isn't localhost.
+      allowedHosts: true,
+    },
+  },
 });
