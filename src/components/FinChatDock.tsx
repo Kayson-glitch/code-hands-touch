@@ -170,7 +170,7 @@ export function FinChatDock({ alwaysVisible = false }: { alwaysVisible?: boolean
   const onDark = theme === "dark" && darkSurface;
   const dockBg = onDark ? "rgba(255,255,255,0.20)" : "#FFFFFF";
   const dockBorder = onDark
-    ? "1px solid rgba(255,255,255,0.35)"
+    ? "1px solid rgba(255,255,255,0.12)"
     : "1px solid #F1F1F3";
   const dockShadow = onDark
     ? "0 12px 40px rgba(0,0,0,0.05)"
@@ -333,7 +333,7 @@ export function FinChatDock({ alwaysVisible = false }: { alwaysVisible?: boolean
               transition: "background-color 200ms ease, color 200ms ease, opacity 200ms ease",
             }}
           >
-            <DotArrow size={24} direction="up" connectOnHover={false} />
+            <DotArrow size={24} direction="up" connectOnHover={false} dotRadius={0.5} />
           </button>
         </div>
 
