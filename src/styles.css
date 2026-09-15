@@ -672,118 +672,86 @@ html.lenis body {
   z-index: 0;
 }
 
-/* Left boundary rules (16%): one per feature panel. They live in a layer that
-   shares the horizontal track's transform, so each rule travels left together
-   with its module and acts as the visible scroll reference. */
-.artemis-closing__edges {
+/* On every panel change, the two stronger boundary rules redraw from the
+   outer endpoints and meet at the upper-left lattice intersection. */
+.artemis-closing__converge {
   position: absolute;
   inset: 0;
   overflow: hidden;
   pointer-events: none;
-  /* Above the dots ::after horizontal layer so the edge's #000 occluder also
-     erases the 8% horizontal rules where they cross the 20% edge. */
   z-index: 2;
 }
 
-.artemis-closing__edges-inner {
+.artemis-closing__converge-horizontal,
+.artemis-closing__converge-vertical {
   position: absolute;
-  inset: 0;
+  display: block;
+  background: rgba(255, 255, 255, 0.24);
   will-change: transform;
+  animation-duration: 0.85s;
+  animation-timing-function: cubic-bezier(0.65, 0, 0.35, 1);
+  animation-fill-mode: both;
 }
 
-/* Each rule spans nav → stage bottom so it can carry the same vertical fade
-   the static grid had: fading in over --grid-y-inset above the top lattice
-   boundary and fading out over --grid-y-inset below the bottom boundary. */
-.artemis-closing__edge {
-  position: absolute;
-  top: 0;
-  bottom: 0;
+.artemis-closing__converge-horizontal {
+  top: var(--grid-y-start);
+  right: 0;
+  left: var(--grid-x-inset);
+  height: 1px;
+  transform-origin: right center;
+  animation-name: artemis-converge-horizontal;
+}
+
+.artemis-closing__converge-vertical {
+  top: var(--grid-y-start);
+  bottom: calc(100% - var(--grid-y-end));
+  left: var(--grid-x-inset);
   width: 1px;
+  transform-origin: center bottom;
+  animation-name: artemis-converge-vertical;
 }
 
-/* The rule itself: 20% white over an opaque #000 occluder that erases the 8%
-   static vertical grid in this column, with the original vertical fade. */
-.artemis-closing__edge::before {
-  content: "";
+.artemis-closing__converge-target {
   position: absolute;
-  inset: 0;
-  background:
-    linear-gradient(rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.2)),
-    linear-gradient(#000000, #000000);
-  -webkit-mask-image: linear-gradient(
-    to bottom,
-    transparent calc(var(--grid-y-start) - var(--grid-y-fade)),
-    #000 var(--grid-y-start),
-    #000 var(--grid-y-end),
-    transparent calc(var(--grid-y-end) + var(--grid-y-fade))
-  );
-  mask-image: linear-gradient(
-    to bottom,
-    transparent calc(var(--grid-y-start) - var(--grid-y-fade)),
-    #000 var(--grid-y-start),
-    #000 var(--grid-y-end),
-    transparent calc(var(--grid-y-end) + var(--grid-y-fade))
-  );
-}
-
-/* Exact Figma crosshair asset: 10×10, 1px strokes at 20% opacity, centred on
-   the upper and lower boundary intersections. */
-.artemis-closing__edge::after {
-  content: "";
-  position: absolute;
-  left: -5px;
-  width: 11px;
   top: calc(var(--grid-y-start) - 5px);
-  bottom: calc(100% - var(--grid-y-end) - 5px);
-  /* Only the top crosshair is drawn; the bottom crosshair was removed
-     together with the bottom horizontal boundary line. */
+  left: calc(var(--grid-x-inset) - 5px);
+  width: 11px;
+  height: 11px;
+  display: block;
+  opacity: 0;
   background-image:
-    linear-gradient(rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.2)),
-    linear-gradient(rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.2));
+    linear-gradient(rgba(255, 255, 255, 0.38), rgba(255, 255, 255, 0.38)),
+    linear-gradient(rgba(255, 255, 255, 0.38), rgba(255, 255, 255, 0.38));
   background-repeat: no-repeat;
   background-size: 11px 1px, 1px 11px;
   background-position: 0 5px, 5px 0;
-  z-index: 2;
+  animation: artemis-converge-target 0.32s 0.78s ease-out both;
 }
 
-/* Per-module horizontal boundary rules: each panel's edge carries the 20%
-   top/bottom lines, so they slide left in lockstep with the module and its
-   vertical rule. The element spans from the edge column to well past the
-   right viewport edge (clipped by .artemis-closing__edges). Each rule sits
-   on an opaque #000 occluder that erases the 8% lattice where they cross. */
-.artemis-closing__edge-lines {
-  position: absolute;
-  left: calc(-1 * var(--grid-x-inset));
-  width: 100vw;
-  top: var(--grid-y-start);
-  /* Extend 1px past the bottom boundary: percentage background-position
-     subtracts the tile height, so this makes the bottom tile land exactly on
-     the --grid-y-end lattice coordinate. */
-  bottom: calc(100% - var(--grid-y-end) - 1px);
-  /* Only the top 20% boundary rule is drawn; the bottom rule and its
-     occluder were removed, so the 8% lattice shows through normally there. */
-  background-image:
-    linear-gradient(rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.2)),
-    linear-gradient(#000000, #000000);
-  background-repeat: no-repeat;
-  background-size: 100% 1px, 100% 1px;
-  background-position:
-    0 0,
-    0 0;
-  -webkit-mask-image: linear-gradient(
-    to right,
-    transparent 0,
-    #000 var(--grid-x-inset),
-    #000 calc(100% - var(--grid-x-inset)),
-    transparent 100%
-  );
-  mask-image: linear-gradient(
-    to right,
-    transparent 0,
-    #000 var(--grid-x-inset),
-    #000 calc(100% - var(--grid-x-inset)),
-    transparent 100%
-  );
+@keyframes artemis-converge-horizontal {
+  from { transform: scaleX(0); }
+  to { transform: scaleX(1); }
+}
+
+@keyframes artemis-converge-vertical {
+  from { transform: scaleY(0); }
+  to { transform: scaleY(1); }
+}
+
+@keyframes artemis-converge-target {
+  0% { opacity: 0; transform: scale(1.8); }
+  55% { opacity: 1; }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .artemis-closing__converge-horizontal,
+  .artemis-closing__converge-vertical,
+  .artemis-closing__converge-target {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
 }
 
 
@@ -823,10 +791,8 @@ html.lenis body {
   );
 }
 
-/* Horizontal rules — 8% lattice only. The 20% top/bottom boundary rules are
-   no longer static: each feature panel carries its own set (drawn in
-   .artemis-closing__edge::after) that slides in from the right together with
-   the module, so the title state shows a clean 8% grid with no 20% rules. */
+/* Horizontal rules — 8% lattice only. The stronger boundary rule is drawn by
+   the convergence animation, so the title state keeps a clean 8% grid. */
 .artemis-closing__dots::after {
   content: "";
   position: absolute;

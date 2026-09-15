@@ -240,13 +240,6 @@ export function ClosingSection() {
   const lead = pinned
     ? Math.max(0, viewportW - (titleLeft + titleW * TITLE_SCALE) - 2 * 128 - 200)
     : 0;
-  // The 16% boundary rules belong to the panels: one per module, laid out in
-  // track coordinates and moved by the same offset, so each rule travels left
-  // with its module instead of appearing in place.
-
-
-
-
   // Panel offsets shift while the headline shrinks (its layout width is
   // compensated with a negative margin), so re-measure whenever scale changes.
   useLayoutEffect(() => {
@@ -298,22 +291,15 @@ export function ClosingSection() {
             {/* Dots are inside the pinned stage, so they stay locked while the
                 headline shrinks and the panels slide through. */}
             <div ref={dotsRef} className="artemis-closing__dots">
-              {pinned && (
-                <div className="artemis-closing__edges" aria-hidden>
-                  <div
-                    className="artemis-closing__edges-inner"
-                    style={{ transform: `translate3d(${-smoothX}px, 0, 0)` }}
-                  >
-                    {offsets.map((offset, index) => (
-                      <div
-                        key={PANELS[index]?.id ?? index}
-                        className="artemis-closing__edge"
-                        style={{ left: `${offset}px` }}
-                      >
-                        <div className="artemis-closing__edge-lines" />
-                      </div>
-                    ))}
-                  </div>
+              {pinned && state > 0 && (
+                <div
+                  key={PANELS[state - 1]?.id ?? state}
+                  className="artemis-closing__converge"
+                  aria-hidden
+                >
+                  <span className="artemis-closing__converge-horizontal" />
+                  <span className="artemis-closing__converge-vertical" />
+                  <span className="artemis-closing__converge-target" />
                 </div>
               )}
             </div>
