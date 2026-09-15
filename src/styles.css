@@ -686,7 +686,9 @@ html.lenis body {
 .artemis-closing__converge-vertical {
   position: absolute;
   display: block;
-  background: rgba(255, 255, 255, 0.24);
+  background:
+    linear-gradient(rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.2)),
+    linear-gradient(#000000, #000000);
   will-change: transform;
   animation-duration: 0.85s;
   animation-timing-function: cubic-bezier(0.65, 0, 0.35, 1);
@@ -700,6 +702,18 @@ html.lenis body {
   height: 1px;
   transform-origin: right center;
   animation-name: artemis-converge-horizontal;
+  -webkit-mask-image: linear-gradient(
+    to right,
+    #000 0,
+    #000 calc(100% - var(--grid-x-inset)),
+    transparent 100%
+  );
+  mask-image: linear-gradient(
+    to right,
+    #000 0,
+    #000 calc(100% - var(--grid-x-inset)),
+    transparent 100%
+  );
 }
 
 .artemis-closing__converge-vertical {
@@ -709,23 +723,6 @@ html.lenis body {
   width: 1px;
   transform-origin: center bottom;
   animation-name: artemis-converge-vertical;
-}
-
-.artemis-closing__converge-target {
-  position: absolute;
-  top: calc(var(--grid-y-start) - 5px);
-  left: calc(var(--grid-x-inset) - 5px);
-  width: 11px;
-  height: 11px;
-  display: block;
-  opacity: 0;
-  background-image:
-    linear-gradient(rgba(255, 255, 255, 0.38), rgba(255, 255, 255, 0.38)),
-    linear-gradient(rgba(255, 255, 255, 0.38), rgba(255, 255, 255, 0.38));
-  background-repeat: no-repeat;
-  background-size: 11px 1px, 1px 11px;
-  background-position: 0 5px, 5px 0;
-  animation: artemis-converge-target 0.32s 0.78s ease-out both;
 }
 
 @keyframes artemis-converge-horizontal {
@@ -738,18 +735,10 @@ html.lenis body {
   to { transform: scaleY(1); }
 }
 
-@keyframes artemis-converge-target {
-  0% { opacity: 0; transform: scale(1.8); }
-  55% { opacity: 1; }
-  100% { opacity: 1; transform: scale(1); }
-}
-
 @media (prefers-reduced-motion: reduce) {
   .artemis-closing__converge-horizontal,
-  .artemis-closing__converge-vertical,
-  .artemis-closing__converge-target {
+  .artemis-closing__converge-vertical {
     animation: none;
-    opacity: 1;
     transform: none;
   }
 }
