@@ -140,7 +140,7 @@ export function SiteFooter() {
   return (
     <div className="relative" style={{ zIndex: 20, background: "#FAFAFA" }}>
       {/* ------------------------------------------------------------- CTA */}
-      <section className="relative overflow-hidden" style={{ padding: `${fluid(160, 80)} 0 0` }}>
+      <section className="relative overflow-hidden" style={{ padding: `${fluid(200, 100)} 0 0` }}>
         <div
           aria-hidden
           className="pointer-events-none absolute inset-0"
