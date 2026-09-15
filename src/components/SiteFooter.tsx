@@ -150,12 +150,12 @@ export function SiteFooter() {
           spacing={20}
           dotRadius={1}
           baseOpacity={0.16}
-          peakOpacity={0.3}
+          peakOpacity={0.25}
           color="#0E0B22"
           pingEvery={5.5}
           speed={200}
           ringWidth={120}
-          amplitude={0.8}
+          amplitude={0.6}
           interactive={false}
           seedPing
           pingArea={[0.2, 0.15, 0.8, 0.85]}
