@@ -14,6 +14,11 @@ const START_Y = 320;
 // complete dot artwork is readable before the card starts travelling upward.
 const ARTWORK_REVEAL_VH = 0.46;
 const SCROLL_LENGTH_MULTIPLIER = 1.25;
+// At the end of the pinned scroll every column is lifted by `copyTop`, which
+// leaves a hole of that height under the numbers. Pull the next section up by
+// a fraction of it so the hand-off is tighter without touching the layout of
+// either block; the remainder keeps the closing headline's centred composition.
+const HOLE_COMPENSATION = 0.4;
 const clamp = (value: number) => Math.max(0, Math.min(1, value));
 // Reference site eases each column's reveal instead of translating linearly.
 const easeOutCubic = (x: number) => 1 - Math.pow(1 - x, 3);
@@ -135,7 +140,18 @@ export function MetricsSection() {
 
   return (
     <section className="kore-outcomes" aria-labelledby="outcomes-heading">
-      <div ref={wrapperRef} className="kore-outcomes__wrapper" style={desktop ? { height: cardHeight * CARDS.length * SCROLL_LENGTH_MULTIPLIER } : undefined}>
+      <div
+        ref={wrapperRef}
+        className="kore-outcomes__wrapper"
+        style={
+          desktop
+            ? {
+                height: cardHeight * CARDS.length * SCROLL_LENGTH_MULTIPLIER,
+                marginBottom: reducedMotion ? undefined : -Math.round(copyTop * HOLE_COMPENSATION),
+              }
+            : undefined
+        }
+      >
         <div ref={stickyRef} className="kore-outcomes__sticky">
           <header className="kore-outcomes__header">
             <div className="kore-outcomes__header-inner">
