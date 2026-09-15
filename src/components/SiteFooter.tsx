@@ -141,7 +141,7 @@ export function SiteFooter() {
   return (
     <div className="relative" style={{ zIndex: 20, background: "#FAFAFA" }}>
       {/* ------------------------------------------------------------- CTA */}
-      <section className="relative overflow-hidden" style={{ padding: `${fluid(200, 100)} 0 0` }}>
+      <section className="relative overflow-hidden" style={{ padding: `${fluid(240, 120)} 0 0` }}>
         {/* Same dot field as before (1px dots, 16% ink, 20px pitch, radial fade),
             now drawn on a canvas so ambient sonar rings can ripple through it. */}
         <SonarGrid
@@ -149,7 +149,7 @@ export function SiteFooter() {
           spacing={20}
           dotRadius={1}
           baseOpacity={0.16}
-          peakOpacity={0.42}
+          peakOpacity={0.3}
           color="#0E0B22"
           pingEvery={5.5}
           speed={200}
