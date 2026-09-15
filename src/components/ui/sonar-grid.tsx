@@ -34,6 +34,12 @@ export interface SonarGridProps extends React.ComponentProps<"div"> {
    * halftone illustration. Omit to keep the plain grid.
    */
   shore?: ShoreOptions;
+  /**
+   * Optional colour stops (CSS hex) for dots on a wavefront. The gradient is
+   * sampled left→right across the field and blended in with the wave energy,
+   * so rings sweep through as translucent colour instead of darker ink.
+   */
+  waveGradient?: string[];
 }
 
 export interface ShoreOptions {
@@ -106,7 +112,25 @@ const valueNoise = (x: number, y: number, t: number) => {
   return n0 + (n1 - n0) * ft;
 };
 
-const hexToRgb = (hex: string): [number, number, number] => {
+type Rgb = [number, number, number];
+
+/** Sample a list of colour stops at t in 0..1 (linear, evenly spaced). */
+const sampleStops = (stops: Rgb[], t: number): Rgb => {
+  if (stops.length === 1) return stops[0]!;
+  const u = Math.min(1, Math.max(0, t)) * (stops.length - 1);
+  const i = Math.min(stops.length - 2, Math.floor(u));
+  const f = u - i;
+  const a = stops[i]!;
+  const b = stops[i + 1]!;
+  return [a[0] + (b[0] - a[0]) * f, a[1] + (b[1] - a[1]) * f, a[2] + (b[2] - a[2]) * f];
+};
+
+const parseRgb = (css: string): Rgb | null => {
+  const m = css.match(/rgba?\(\s*([\d.]+)[,\s]+([\d.]+)[,\s]+([\d.]+)/);
+  return m ? [Number(m[1]), Number(m[2]), Number(m[3])] : null;
+};
+
+const hexToRgb = (hex: string): Rgb => {
   const h = hex.replace("#", "");
   const v = h.length === 3 ? h.split("").map((c) => c + c).join("") : h;
   const n = parseInt(v, 16);
@@ -134,6 +158,7 @@ export function SonarGrid({
   seedPing = true,
   pingArea = [0.15, 0.2, 0.85, 0.8],
   shore,
+  waveGradient,
   className,
   children,
   ref,
@@ -159,6 +184,7 @@ export function SonarGrid({
     seedPing,
     pingArea,
     shore,
+    waveGradient,
   });
   opts.current = {
     spacing,
@@ -174,6 +200,7 @@ export function SonarGrid({
     seedPing,
     pingArea,
     shore,
+    waveGradient,
   };
 
   const setHost = React.useCallback(
@@ -284,13 +311,27 @@ export function SonarGrid({
       ctx.fill();
 
       // Pass 2a: only the dots on a wavefront get their own alpha and radius.
+      // With a wave gradient, the ink blends toward the sampled colour as the
+      // energy rises, so the ring reads as translucent colour passing through.
+      const waveStops = o.waveGradient && o.waveGradient.length > 0 ? o.waveGradient.map(hexToRgb) : null;
+      const inkRgb = waveStops ? parseRgb(stroke) : null;
       for (let k = 0; k < hot.length; k += 3) {
+        const cx = hot[k] ?? 0;
+        const cy = hot[k + 1] ?? 0;
         const energy = hot[k + 2] ?? 0;
+        if (waveStops && inkRgb) {
+          const c = sampleStops(waveStops, cx / Math.max(1, width));
+          const r = Math.round(inkRgb[0] + (c[0] - inkRgb[0]) * energy);
+          const g = Math.round(inkRgb[1] + (c[1] - inkRgb[1]) * energy);
+          const b = Math.round(inkRgb[2] + (c[2] - inkRgb[2]) * energy);
+          ctx.fillStyle = `rgb(${r},${g},${b})`;
+        }
         ctx.globalAlpha = o.baseOpacity + (o.peakOpacity - o.baseOpacity) * energy;
         ctx.beginPath();
-        ctx.arc(hot[k] ?? 0, hot[k + 1] ?? 0, o.dotRadius * (1 + o.amplitude * energy), 0, TAU);
+        ctx.arc(cx, cy, o.dotRadius * (1 + o.amplitude * energy), 0, TAU);
         ctx.fill();
       }
+      ctx.fillStyle = stroke;
 
       // Pass 2b: shoreline dots — area carries tone, ink deepens with coverage,
       // each dot breathes and wobbles on its own slow phase.
@@ -425,7 +466,7 @@ export function SonarGrid({
   // Prop changes while the loop is asleep still repaint immediately.
   React.useEffect(() => {
     refreshRef.current();
-  }, [spacing, dotRadius, baseOpacity, peakOpacity, color, pingEvery, speed, ringWidth, amplitude, interactive, maxRings, pingArea, shore]);
+  }, [spacing, dotRadius, baseOpacity, peakOpacity, color, pingEvery, speed, ringWidth, amplitude, interactive, maxRings, pingArea, shore, waveGradient]);
 
   return (
     <div

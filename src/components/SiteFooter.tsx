@@ -20,8 +20,8 @@ import { dashboardAsset } from "@/lib/media";
 const fluid = (px: number, min = px * 0.7) =>
   `clamp(${Math.round(min)}px, ${((px / 1440) * 100).toFixed(4)}vw, ${px}px)`;
 
-const GRADIENT =
-  "linear-gradient(90deg, #137DFF 0%, #FF18AA 33.333%, #FFCD17 66.666%, #137DFF 100%)";
+const GRADIENT_STOPS = ["#137DFF", "#FF18AA", "#FFCD17", "#137DFF"];
+const GRADIENT = `linear-gradient(90deg, ${GRADIENT_STOPS[0]} 0%, ${GRADIENT_STOPS[1]} 33.333%, ${GRADIENT_STOPS[2]} 66.666%, ${GRADIENT_STOPS[3]} 100%)`;
 
 /** Fraction of the dashboard image's lower half left visible above the footer. */
 const IMAGE_REVEAL = 0.75;
@@ -165,8 +165,9 @@ export function SiteFooter() {
           spacing={20}
           dotRadius={1}
           baseOpacity={0.16}
-          peakOpacity={0.25}
+          peakOpacity={0.7}
           color="#0E0B22"
+          waveGradient={GRADIENT_STOPS}
           pingEvery={5.5}
           speed={200}
           ringWidth={120}
