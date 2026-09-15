@@ -690,7 +690,7 @@ html.lenis body {
   position: absolute;
   display: block;
   background:
-    linear-gradient(rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.2)),
+    linear-gradient(rgba(255, 255, 255, 0.15), rgba(255, 255, 255, 0.15)),
     linear-gradient(#000000, #000000);
   will-change: clip-path;
   animation-duration: 1s;
@@ -756,8 +756,8 @@ html.lenis body {
   width: 11px;
   height: 11px;
   background-image:
-    linear-gradient(rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.2)),
-    linear-gradient(rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.2));
+    linear-gradient(rgba(255, 255, 255, 0.15), rgba(255, 255, 255, 0.15)),
+    linear-gradient(rgba(255, 255, 255, 0.15), rgba(255, 255, 255, 0.15));
   background-repeat: no-repeat;
   background-size: 11px 1px, 1px 11px;
   background-position: 0 5px, 5px 0;
@@ -807,7 +807,7 @@ html.lenis body {
     /* inner rules (8%) — same origin and strict 40px pitch */
     linear-gradient(
       to right,
-      rgba(255, 255, 255, 0.1) 0 1px,
+      rgba(255, 255, 255, 0.08) 0 1px,
       transparent 1px var(--grid-step)
     );
   background-repeat: repeat-x;
@@ -844,7 +844,7 @@ html.lenis body {
   background-image:
     linear-gradient(
       to bottom,
-      rgba(255, 255, 255, 0.1) 0 1px,
+      rgba(255, 255, 255, 0.08) 0 1px,
       transparent 1px var(--grid-step)
     );
   background-repeat: repeat-y;
