@@ -22,6 +22,9 @@ const fluid = (px: number, min = px * 0.7) =>
 const GRADIENT =
   "linear-gradient(90deg, #137DFF 0%, #FF18AA 33.333%, #FFCD17 66.666%, #137DFF 100%)";
 
+/** Fraction of the dashboard image's lower half left visible above the footer. */
+const IMAGE_REVEAL = 0.3;
+
 const FOOTER_COLUMNS = [
   { title: "why  synergy", links: ["Features", "Pricing", "Book a demo"] },
   { title: "platform", links: ["Features", "Pricing", "Book a demo"] },
@@ -191,7 +194,7 @@ export function SiteFooter() {
         data-dark-section
         data-progressive-blur-hide
         className="relative overflow-hidden"
-        style={{ background: "#0A0A0A", marginTop: -(halfH + 96), zIndex: 30 }}
+        style={{ background: "#0A0A0A", marginTop: -(halfH * (1 - IMAGE_REVEAL) + 96), zIndex: 30 }}
       >
         <div aria-hidden style={{ height: 2, backgroundImage: GRADIENT, backgroundSize: "200%" }} />
 
