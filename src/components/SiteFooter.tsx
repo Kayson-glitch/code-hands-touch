@@ -168,6 +168,7 @@ export function SiteFooter() {
           peakOpacity={0.7}
           color="#0E0B22"
           waveGradient={GRADIENT_STOPS}
+          waveGradientMode="angular"
           pingEvery={5.5}
           speed={200}
           ringWidth={120}
@@ -184,7 +185,7 @@ export function SiteFooter() {
             drift: 0.035,
             noiseMix: 0.35,
             jitter: 0.08,
-            breathe: [0.8, 1],
+            breathe: [1, 1],
           }}
           className="pointer-events-none absolute inset-x-0 top-0"
           style={{

@@ -40,6 +40,12 @@ export interface SonarGridProps extends React.ComponentProps<"div"> {
    * so rings sweep through as translucent colour instead of darker ink.
    */
   waveGradient?: string[];
+  /**
+   * How `waveGradient` is sampled: "horizontal" (default) maps left→right
+   * across the field, so a ring takes the hue of where it is; "angular" maps
+   * the stops around each ring's origin, so every ring shows the full sweep.
+   */
+  waveGradientMode?: "horizontal" | "angular";
 }
 
 export interface ShoreOptions {
@@ -159,6 +165,7 @@ export function SonarGrid({
   pingArea = [0.15, 0.2, 0.85, 0.8],
   shore,
   waveGradient,
+  waveGradientMode = "horizontal",
   className,
   children,
   ref,
@@ -185,6 +192,7 @@ export function SonarGrid({
     pingArea,
     shore,
     waveGradient,
+    waveGradientMode,
   });
   opts.current = {
     spacing,
@@ -201,6 +209,7 @@ export function SonarGrid({
     pingArea,
     shore,
     waveGradient,
+    waveGradientMode,
   };
 
   const setHost = React.useCallback(
@@ -275,13 +284,18 @@ export function SonarGrid({
         for (let j = 0; j < rows; j++) {
           const cy = offsetY + j * o.spacing;
           let energy = 0;
+          let angleT = 0;
           for (const r of live) {
             if (Math.abs(cx - r.x) > r.reach || Math.abs(cy - r.y) > r.reach) continue;
             const dist = Math.abs(Math.hypot(cx - r.x, cy - r.y) - r.radius);
             if (dist >= o.ringWidth) continue;
             const t = 1 - dist / o.ringWidth;
             const k = t * t * (3 - 2 * t) * r.fade; // smoothstep, fading with age
-            if (k > energy) energy = k;
+            if (k > energy) {
+              energy = k;
+              // Angle around the ring's origin, 0..1, for angular colour sampling.
+              angleT = Math.atan2(cy - r.y, cx - r.x) / TAU + 0.5;
+            }
           }
 
           let coverage = 0;
@@ -304,7 +318,7 @@ export function SonarGrid({
             ctx.moveTo(cx + o.dotRadius, cy);
             ctx.arc(cx, cy, o.dotRadius, 0, TAU);
           } else {
-            hot.push(cx, cy, energy);
+            hot.push(cx, cy, energy, angleT);
           }
         }
       }
@@ -315,12 +329,14 @@ export function SonarGrid({
       // energy rises, so the ring reads as translucent colour passing through.
       const waveStops = o.waveGradient && o.waveGradient.length > 0 ? o.waveGradient.map(hexToRgb) : null;
       const inkRgb = waveStops ? parseRgb(stroke) : null;
-      for (let k = 0; k < hot.length; k += 3) {
+      for (let k = 0; k < hot.length; k += 4) {
         const cx = hot[k] ?? 0;
         const cy = hot[k + 1] ?? 0;
         const energy = hot[k + 2] ?? 0;
+        const angleT = hot[k + 3] ?? 0;
         if (waveStops && inkRgb) {
-          const c = sampleStops(waveStops, cx / Math.max(1, width));
+          const t = o.waveGradientMode === "angular" ? angleT : cx / Math.max(1, width);
+          const c = sampleStops(waveStops, t);
           const r = Math.round(inkRgb[0] + (c[0] - inkRgb[0]) * energy);
           const g = Math.round(inkRgb[1] + (c[1] - inkRgb[1]) * energy);
           const b = Math.round(inkRgb[2] + (c[2] - inkRgb[2]) * energy);
@@ -466,7 +482,7 @@ export function SonarGrid({
   // Prop changes while the loop is asleep still repaint immediately.
   React.useEffect(() => {
     refreshRef.current();
-  }, [spacing, dotRadius, baseOpacity, peakOpacity, color, pingEvery, speed, ringWidth, amplitude, interactive, maxRings, pingArea, shore, waveGradient]);
+  }, [spacing, dotRadius, baseOpacity, peakOpacity, color, pingEvery, speed, ringWidth, amplitude, interactive, maxRings, pingArea, shore, waveGradient, waveGradientMode]);
 
   return (
     <div
