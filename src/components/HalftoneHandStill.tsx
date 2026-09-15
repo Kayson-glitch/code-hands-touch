@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react";
-import handsFramesAsset from "@/assets/hands-frames.webp.asset.json";
+import { handsFramesAsset } from "@/lib/media";
 import {
   FluidField,
   breathWave,

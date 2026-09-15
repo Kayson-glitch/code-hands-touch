@@ -10,7 +10,7 @@ import {
   Twitter,
   Youtube,
 } from "lucide-react";
-import logo from "@/assets/synergy-logo-v3.png.asset.json";
+import { logoAsset as logo } from "@/lib/media";
 import { SiteNav } from "@/components/SiteNav";
 import { HalftoneHandStill } from "@/components/HalftoneHandStill";
 import { Reveal } from "@/components/Reveal";

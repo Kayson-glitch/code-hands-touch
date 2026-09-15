@@ -4,8 +4,8 @@ import { Reveal } from "@/components/Reveal";
 import { DotArrow } from "@/components/DotArrow";
 import { ContainerScroll } from "@/components/ui/container-scroll-animation";
 
-import logo from "@/assets/synergy-logo-v3.png.asset.json";
-import dashboardAsset from "@/assets/ask-synergy-dashboard.png.asset.json";
+import { logoAsset as logo } from "@/lib/media";
+import { dashboardAsset } from "@/lib/media";
 
 /**
  * Footer rises to cover the dashboard image so that it enters the viewport

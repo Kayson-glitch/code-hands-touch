@@ -8,7 +8,7 @@ import {
   Youtube,
 } from "lucide-react";
 import { SiteNav } from "@/components/SiteNav";
-import logo from "@/assets/synergy-logo-v3.png.asset.json";
+import { logoAsset as logo } from "@/lib/media";
 import { HalftoneHandStill } from "@/components/HalftoneHandStill";
 import { Reveal } from "@/components/Reveal";
 import { RollingNumber } from "@/components/RollingNumber";

@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
-import logo from "@/assets/synergy-logo-v3.png.asset.json";
+import { logoAsset as logo } from "@/lib/media";
 
 export function SiteNav({ revealDelay = 4000 }: { revealDelay?: number } = {}) {
   const [theme, setTheme] = useState<"light" | "dark">("light");
