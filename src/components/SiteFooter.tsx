@@ -23,7 +23,7 @@ const GRADIENT =
   "linear-gradient(90deg, #137DFF 0%, #FF18AA 33.333%, #FFCD17 66.666%, #137DFF 100%)";
 
 /** Fraction of the dashboard image's lower half left visible above the footer. */
-const IMAGE_REVEAL = 0.3;
+const IMAGE_REVEAL = 0.45;
 
 const FOOTER_COLUMNS = [
   { title: "why  synergy", links: ["Features", "Pricing", "Book a demo"] },
