@@ -1,18 +1,30 @@
 import React, { useRef } from "react";
-import { useScroll, useTransform, motion, type MotionValue } from "motion/react";
+import { useScroll, useTransform, useSpring, motion, type MotionValue } from "motion/react";
 
 export const ContainerScroll = ({
   titleComponent,
   children,
+  rotateFrom = 20,
+  spring,
 }: {
   titleComponent?: string | React.ReactNode;
   children: React.ReactNode;
+  /** Initial X tilt in degrees before the card settles flat. Smaller = slower-looking flip. */
+  rotateFrom?: number;
+  /** Optional spring smoothing so the tilt eases behind the scroll instead of tracking it 1:1. */
+  spring?: { stiffness?: number; damping?: number; mass?: number };
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
-  const { scrollYProgress } = useScroll({
+  const { scrollYProgress: rawProgress } = useScroll({
     target: containerRef,
     offset: ["start end", "end end"],
   });
+  const smoothed = useSpring(rawProgress, {
+    stiffness: spring?.stiffness ?? 300,
+    damping: spring?.damping ?? 40,
+    mass: spring?.mass ?? 1,
+  });
+  const scrollYProgress = spring ? smoothed : rawProgress;
   const [isMobile, setIsMobile] = React.useState(false);
 
   React.useEffect(() => {
@@ -30,7 +42,7 @@ export const ContainerScroll = ({
     return isMobile ? [0.7, 0.9] : [1.05, 1];
   };
 
-  const rotate = useTransform(scrollYProgress, [0, 1], [20, 0]);
+  const rotate = useTransform(scrollYProgress, [0, 1], [rotateFrom, 0]);
   const scale = useTransform(scrollYProgress, [0, 1], scaleDimensions());
   const translate = useTransform(scrollYProgress, [0, 1], [0, -100]);
 
