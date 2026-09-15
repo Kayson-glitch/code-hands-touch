@@ -550,8 +550,17 @@ export function FinChatDock({ alwaysVisible = false }: { alwaysVisible?: boolean
 
             <div
               ref={threadRef}
-              className="flex flex-col gap-2.5 overflow-y-auto"
-              style={{ maxHeight: 280, padding: "4px 12px 12px", scrollbarWidth: "thin" }}
+              data-lenis-prevent
+              className="fin-thread flex flex-col gap-2.5 overflow-y-auto"
+              style={{
+                maxHeight: 280,
+                padding: "10px 12px 12px",
+                overscrollBehavior: "contain",
+                WebkitMaskImage:
+                  "linear-gradient(to bottom, transparent 0, #000 12px, #000 calc(100% - 12px), transparent 100%)",
+                maskImage:
+                  "linear-gradient(to bottom, transparent 0, #000 12px, #000 calc(100% - 12px), transparent 100%)",
+              }}
             >
               {messages.map((m) => {
                 const mine = m.role === "user";
@@ -749,6 +758,12 @@ export function FinChatDock({ alwaysVisible = false }: { alwaysVisible?: boolean
         .fin-dock-input::placeholder {
           color: ${textPlaceholder};
           opacity: 1;
+        }
+        .fin-thread {
+          scrollbar-width: none;
+        }
+        .fin-thread::-webkit-scrollbar {
+          display: none;
         }
         .fin-bubble {
           background-color: var(--bubble-bg);
