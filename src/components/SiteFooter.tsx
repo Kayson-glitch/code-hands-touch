@@ -4,6 +4,7 @@ import { Reveal } from "@/components/Reveal";
 import { DotArrow } from "@/components/DotArrow";
 import { ContainerScroll } from "@/components/ui/container-scroll-animation";
 import { SonarGrid } from "@/components/ui/sonar-grid";
+import { GradientBackground } from "@/components/ui/gradient-backgrounds";
 
 import { logoAsset as logo } from "@/lib/media";
 import { dashboardAsset } from "@/lib/media";
@@ -189,6 +190,17 @@ export function SiteFooter() {
             An extra offset lifts the image so its top rests just below the
             fixed site nav, keeping the dashboard chrome visible. */}
         <div className="relative" style={{ marginTop: fluid(72, 40), zIndex: 1 }}>
+          {/* Soft brand wash behind the dashboard: starts just under the
+              browser chrome and runs down to the footer's top edge (the part
+              of this frame under the footer's negative margin is hidden). */}
+          <GradientBackground
+            className="absolute inset-x-0"
+            style={{
+              top: 88,
+              bottom: halfH * (1 - IMAGE_REVEAL) + 96,
+              zIndex: 0,
+            }}
+          />
           <ContainerScroll>
             <img
               ref={imgRef}
