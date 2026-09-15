@@ -178,7 +178,7 @@ export function SiteFooter() {
           pingArea={[0.2, 0.15, 0.8, 0.85]}
           shore={{
             start: 0.55,
-            maxRadius: 4,
+            maxRadius: 3,
             ink: ["#E6E6E6", "#C8C8C8"],
             strength: 0.6,
             noiseScale: 220,
@@ -196,7 +196,7 @@ export function SiteFooter() {
         />
 
         <div className="relative mx-auto flex w-full max-w-[800px] flex-col items-center px-6 text-center">
-          <Reveal>
+          <Reveal variant="hero">
             <h2
               className="font-display"
               style={{ margin: 0, fontSize: fluid(48, 28), lineHeight: 1.1667, fontWeight: 500 }}
@@ -206,7 +206,7 @@ export function SiteFooter() {
               <span className="text-ink">Synergy.AI today</span>
             </h2>
           </Reveal>
-          <Reveal delay={150} style={{ marginTop: fluid(40, 28) }}>
+          <Reveal variant="hero" delay={150} style={{ marginTop: fluid(40, 28) }}>
             <RainbowButton label="Book a Demo" />
           </Reveal>
         </div>
