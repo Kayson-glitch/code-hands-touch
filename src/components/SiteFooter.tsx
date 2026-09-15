@@ -162,12 +162,13 @@ export function SiteFooter() {
           seedPing
           pingArea={[0.2, 0.15, 0.8, 0.85]}
           shore={{
-            start: 0.6,
-            maxRadius: 7.5,
-            ink: ["#EBEBEB", "#C4C4C4"],
-            strength: 0.4,
-            noiseScale: 200,
+            start: 0.55,
+            maxRadius: 4,
+            ink: ["#E6E6E6", "#C8C8C8"],
+            strength: 0.6,
+            noiseScale: 220,
             drift: 0.035,
+            noiseMix: 0.35,
             jitter: 0.08,
             breathe: [0.8, 1],
           }}

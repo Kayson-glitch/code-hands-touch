@@ -49,6 +49,8 @@ export interface ShoreOptions {
   noiseScale?: number;
   /** Noise drift speed in feature-lengths per second. */
   drift?: number;
+  /** How much the noise disturbs the vertical ramp (0 = smooth gradient, 1 = full blotchy edge). */
+  noiseMix?: number;
   /** Per-dot radius wobble as a fraction (0.08 = ±8%). */
   jitter?: number;
   /** Per-dot alpha breathing range. */
@@ -71,6 +73,7 @@ const SHORE_DEFAULTS: Required<ShoreOptions> = {
   strength: 0.55,
   noiseScale: 180,
   drift: 0.035,
+  noiseMix: 1,
   jitter: 0.08,
   breathe: [0.8, 1],
 };
@@ -262,7 +265,7 @@ export function SonarGrid({
               // unevenly instead of reading as a straight tide line.
               const n = valueNoise(cx / sh.noiseScale, cy / sh.noiseScale, still ? 0 : tSec * sh.drift);
               const ramp = smooth(Math.min(1, v));
-              coverage = Math.min(1, ramp * sh.strength * (0.45 + 1.1 * n));
+              coverage = Math.min(1, ramp * sh.strength * (1 + sh.noiseMix * (1.1 * n - 0.55)));
               // Scattered dissolve: the faintest cells survive only sometimes.
               if (coverage < 0.16 && hash2(i, j) > coverage / 0.16) coverage = 0;
             }
