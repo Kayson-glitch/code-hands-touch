@@ -625,6 +625,8 @@ export function FinChatDock({ alwaysVisible = false }: { alwaysVisible?: boolean
 
   const showSuggestions = expanded && !chatting;
   const showPanel = chatting && panelOpen;
+  // Minimised (panel closed but thread kept) returns to the short pill.
+  const wide = expanded && (!chatting || panelOpen || panelClosing);
   const hasText = value.trim().length > 0;
 
   const onDark = theme === "dark" && darkSurface;
@@ -663,7 +665,7 @@ export function FinChatDock({ alwaysVisible = false }: { alwaysVisible?: boolean
         ref={wrapperRef}
         className="w-full"
         style={{
-          maxWidth: expanded ? 520 : 400,
+          maxWidth: wide ? 520 : 400,
           transition: "max-width 420ms cubic-bezier(0.22, 1, 0.36, 1)",
         }}
       >
@@ -678,9 +680,9 @@ export function FinChatDock({ alwaysVisible = false }: { alwaysVisible?: boolean
 
         {showPanel && (
           <div
-            className="pointer-events-auto relative mb-3 flex flex-col overflow-hidden"
+            className="pointer-events-auto relative mb-4 flex flex-col overflow-hidden"
             style={{
-              height: "min(440px, calc(100vh - 220px))",
+              height: "min(480px, calc(100vh - 220px))",
               borderRadius: 24,
               backgroundColor: glassBg,
               border: glassBorder,
@@ -696,7 +698,7 @@ export function FinChatDock({ alwaysVisible = false }: { alwaysVisible?: boolean
             {/* Header */}
             <div
               className="flex items-center justify-between"
-              style={{ padding: "12px 12px 8px 16px", fontSize: 13, lineHeight: "18px", color: textMain }}
+              style={{ padding: "16px 16px 10px 20px", fontSize: 13, lineHeight: "18px", color: textMain }}
             >
               <span className="inline-flex items-center gap-2.5">
                 <img
@@ -743,9 +745,9 @@ export function FinChatDock({ alwaysVisible = false }: { alwaysVisible?: boolean
               ref={threadRef}
               data-lenis-prevent
               onScroll={onThreadScroll}
-              className="fin-thread flex flex-1 flex-col gap-2.5 overflow-y-auto"
+              className="fin-thread flex flex-1 flex-col gap-4 overflow-y-auto"
               style={{
-                padding: "8px 16px 20px",
+                padding: "12px 20px 28px",
                 overscrollBehavior: "contain",
                 WebkitMaskImage:
                   "linear-gradient(to bottom, transparent 0, #000 12px, #000 calc(100% - 16px), transparent 100%)",
@@ -753,7 +755,7 @@ export function FinChatDock({ alwaysVisible = false }: { alwaysVisible?: boolean
                   "linear-gradient(to bottom, transparent 0, #000 12px, #000 calc(100% - 16px), transparent 100%)",
               }}
             >
-              <div style={{ color: textMain, fontSize: 14, lineHeight: "21px", padding: "4px 4px 8px" }}>
+              <div style={{ color: textMain, fontSize: 14, lineHeight: "22px", padding: "8px 4px 12px" }}>
                 {GREETING.map((line) => (
                   <p key={line} style={{ margin: 0 }}>
                     {line}
@@ -771,13 +773,13 @@ export function FinChatDock({ alwaysVisible = false }: { alwaysVisible?: boolean
                   >
                     <div
                       style={{
-                        maxWidth: mine ? "84%" : "100%",
-                        padding: mine ? "8px 14px" : "6px 4px",
-                        borderRadius: 18,
+                        maxWidth: mine ? "80%" : "100%",
+                        padding: mine ? "10px 16px" : "4px 4px",
+                        borderRadius: 20,
                         backgroundColor: mine ? userBubbleBg : "transparent",
                         color: textMain,
                         fontSize: 14,
-                        lineHeight: "21px",
+                        lineHeight: "22px",
                         whiteSpace: "pre-wrap",
                       }}
                     >
@@ -799,13 +801,13 @@ export function FinChatDock({ alwaysVisible = false }: { alwaysVisible?: boolean
               })}
 
               {typing && (
-                <div className="flex justify-start" style={{ padding: "6px 4px" }}>
+                <div className="flex justify-start" style={{ padding: "8px 4px" }}>
                   <TypingDots color={textMuted} />
                 </div>
               )}
 
               {showFollowUps && (
-                <div className="flex flex-wrap gap-2" style={{ paddingTop: 4, animation: "finRise 320ms ease-out both" }}>
+                <div className="flex flex-wrap gap-2" style={{ padding: "4px 0 0 4px", animation: "finRise 320ms ease-out both" }}>
                   {lastAssistant!.followUps!.map((f) => (
                     <button
                       key={f}
@@ -813,12 +815,12 @@ export function FinChatDock({ alwaysVisible = false }: { alwaysVisible?: boolean
                       onClick={() => ask(f)}
                       className="transition-opacity hover:opacity-70"
                       style={{
-                        padding: "6px 12px",
+                        padding: "8px 14px",
                         borderRadius: 999,
                         border: chipBorder,
                         color: textMain,
-                        fontSize: 12,
-                        lineHeight: "16px",
+                        fontSize: 13,
+                        lineHeight: "18px",
                         backgroundColor: "transparent",
                       }}
                     >
@@ -863,14 +865,14 @@ export function FinChatDock({ alwaysVisible = false }: { alwaysVisible?: boolean
             paddingTop: 6,
             paddingBottom: 6,
             gap: 4,
-            alignItems: expanded ? "flex-end" : "center",
+            alignItems: wide ? "flex-end" : "center",
             backgroundColor: pillBg,
             border: pillBorder,
             backdropFilter: onDark ? "blur(6px)" : "none",
             boxShadow: pillShadow,
             transition:
               "box-shadow 300ms ease, background-color 300ms ease, border-color 300ms ease",
-            cursor: expanded ? "text" : "pointer",
+            cursor: wide ? "text" : "pointer",
           }}
         >
           {expanded ? (
@@ -918,10 +920,10 @@ export function FinChatDock({ alwaysVisible = false }: { alwaysVisible?: boolean
             aria-label="Voice input"
             className={`grid h-9 shrink-0 place-items-center rounded-full ${iconBtnHover}`}
             style={{
-              width: expanded ? 36 : 0,
-              opacity: expanded ? 1 : 0,
+              width: wide ? 36 : 0,
+              opacity: wide ? 1 : 0,
               overflow: "hidden",
-              pointerEvents: expanded ? "auto" : "none",
+              pointerEvents: wide ? "auto" : "none",
               transition: "width 320ms ease, opacity 240ms ease",
               color: textMuted,
             }}
@@ -933,10 +935,10 @@ export function FinChatDock({ alwaysVisible = false }: { alwaysVisible?: boolean
             aria-label="Add attachment"
             className={`grid h-9 shrink-0 place-items-center rounded-full ${iconBtnHover}`}
             style={{
-              width: expanded ? 36 : 0,
-              opacity: expanded ? 1 : 0,
+              width: wide ? 36 : 0,
+              opacity: wide ? 1 : 0,
               overflow: "hidden",
-              pointerEvents: expanded ? "auto" : "none",
+              pointerEvents: wide ? "auto" : "none",
               transition: "width 320ms ease 40ms, opacity 240ms ease 40ms",
               color: textMuted,
             }}
