@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { AudioLines, Plus } from "lucide-react";
 import { DotArrow } from "@/components/DotArrow";
 
@@ -169,15 +169,16 @@ const BUBBLE_GAP = 8;
 const BUBBLE_ROWS = 3;
 const BUBBLE_PITCH = BUBBLE_H + BUBBLE_GAP;
 const BUBBLE_INTERVAL = 2600;
-const BUBBLE_OFFSETS = [0, 28, 10];
 
 function SuggestionBubbles({
   onPick,
   bg,
+  hoverBg,
   color,
 }: {
   onPick: (s: string) => void;
   bg: string;
+  hoverBg: string;
   color: string;
 }) {
   const [cursor, setCursor] = useState(BUBBLE_ROWS - 1);
@@ -214,20 +215,22 @@ function SuggestionBubbles({
             type="button"
             tabIndex={visible ? 0 : -1}
             onClick={() => onPick(text)}
-            className="pointer-events-auto absolute left-0 whitespace-nowrap rounded-[21px] px-4 text-left backdrop-blur-md"
-            style={{
-              height: BUBBLE_H,
-              marginLeft: BUBBLE_OFFSETS[i % BUBBLE_OFFSETS.length],
-              fontSize: 14,
-              lineHeight: `${BUBBLE_H}px`,
-              backgroundColor: bg,
-              color,
-              opacity: visible ? 1 : 0,
-              transform: `translateY(${y}px) scale(${visible ? 1 : 0.96})`,
-              pointerEvents: visible ? "auto" : "none",
-              transition:
-                "transform 620ms cubic-bezier(0.22, 1, 0.36, 1), opacity 480ms ease",
-            }}
+            className="fin-bubble pointer-events-auto absolute left-0 whitespace-nowrap rounded-[21px] px-4 text-left backdrop-blur-md"
+            style={
+              {
+                height: BUBBLE_H,
+                fontSize: 14,
+                lineHeight: `${BUBBLE_H}px`,
+                color,
+                opacity: visible ? 1 : 0,
+                transform: `translateY(${y}px) scale(${visible ? 1 : 0.96})`,
+                pointerEvents: visible ? "auto" : "none",
+                transition:
+                  "transform 620ms cubic-bezier(0.22, 1, 0.36, 1), opacity 480ms ease, background-color 200ms ease",
+                "--bubble-bg": bg,
+                "--bubble-hover-bg": hoverBg,
+              } as CSSProperties
+            }
           >
             {text}
           </button>
@@ -461,6 +464,7 @@ export function FinChatDock({ alwaysVisible = false }: { alwaysVisible?: boolean
   const textPlaceholder = "#A1A0A9";
   const textMuted = onDark ? "rgba(255,255,255,0.70)" : "#7A7885";
   const suggestionBg = onDark ? "rgba(255,255,255,0.10)" : "rgba(0,0,0,0.06)";
+  const suggestionHoverBg = onDark ? "rgba(255,255,255,0.18)" : "rgba(0,0,0,0.10)";
   const threadBg = onDark ? "rgba(255,255,255,0.08)" : "#FFFFFF";
   const userBubbleBg = onDark ? "rgba(255,255,255,0.16)" : "rgba(14,11,34,0.06)";
   const chipBorder = onDark ? "1px solid rgba(255,255,255,0.18)" : "1px solid rgba(14,11,34,0.12)";
@@ -489,7 +493,12 @@ export function FinChatDock({ alwaysVisible = false }: { alwaysVisible?: boolean
         }}
       >
         {showSuggestions && (
-          <SuggestionBubbles onPick={pickSuggestion} bg={suggestionBg} color={textMain} />
+          <SuggestionBubbles
+            onPick={pickSuggestion}
+            bg={suggestionBg}
+            hoverBg={suggestionHoverBg}
+            color={textMain}
+          />
         )}
 
         {chatting && (
@@ -740,6 +749,12 @@ export function FinChatDock({ alwaysVisible = false }: { alwaysVisible?: boolean
         .fin-dock-input::placeholder {
           color: ${textPlaceholder};
           opacity: 1;
+        }
+        .fin-bubble {
+          background-color: var(--bubble-bg);
+        }
+        .fin-bubble:hover {
+          background-color: var(--bubble-hover-bg);
         }
       `}</style>
     </div>
