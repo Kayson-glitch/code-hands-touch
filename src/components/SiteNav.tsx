@@ -257,6 +257,7 @@ const WHY_SYNERGY_ITEMS: Array<{
     dot: "#FFCE91",
     kicker: "Commitment",
     title: "Security & Partnership",
+    to: "/why-synergy/security",
     desc: "Private deployment, customer-controlled data, and expert support after launch.",
   },
 ];

@@ -13,6 +13,7 @@ import { Route as WhySynergyRouteImport } from './routes/why-synergy'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as WhySynergyTechnologyRouteImport } from './routes/why-synergy.technology'
 import { Route as WhySynergyStoriesRouteImport } from './routes/why-synergy.stories'
+import { Route as WhySynergySecurityRouteImport } from './routes/why-synergy.security'
 import { Route as WhySynergyBusinessImpactRouteImport } from './routes/why-synergy.business-impact'
 
 const WhySynergyRoute = WhySynergyRouteImport.update({
@@ -35,6 +36,11 @@ const WhySynergyStoriesRoute = WhySynergyStoriesRouteImport.update({
   path: '/stories',
   getParentRoute: () => WhySynergyRoute,
 } as any)
+const WhySynergySecurityRoute = WhySynergySecurityRouteImport.update({
+  id: '/security',
+  path: '/security',
+  getParentRoute: () => WhySynergyRoute,
+} as any)
 const WhySynergyBusinessImpactRoute =
   WhySynergyBusinessImpactRouteImport.update({
     id: '/business-impact',
@@ -46,6 +52,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/why-synergy': typeof WhySynergyRouteWithChildren
   '/why-synergy/business-impact': typeof WhySynergyBusinessImpactRoute
+  '/why-synergy/security': typeof WhySynergySecurityRoute
   '/why-synergy/stories': typeof WhySynergyStoriesRoute
   '/why-synergy/technology': typeof WhySynergyTechnologyRoute
 }
@@ -53,6 +60,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/why-synergy': typeof WhySynergyRouteWithChildren
   '/why-synergy/business-impact': typeof WhySynergyBusinessImpactRoute
+  '/why-synergy/security': typeof WhySynergySecurityRoute
   '/why-synergy/stories': typeof WhySynergyStoriesRoute
   '/why-synergy/technology': typeof WhySynergyTechnologyRoute
 }
@@ -61,6 +69,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/why-synergy': typeof WhySynergyRouteWithChildren
   '/why-synergy/business-impact': typeof WhySynergyBusinessImpactRoute
+  '/why-synergy/security': typeof WhySynergySecurityRoute
   '/why-synergy/stories': typeof WhySynergyStoriesRoute
   '/why-synergy/technology': typeof WhySynergyTechnologyRoute
 }
@@ -70,6 +79,7 @@ export interface FileRouteTypes {
     | '/'
     | '/why-synergy'
     | '/why-synergy/business-impact'
+    | '/why-synergy/security'
     | '/why-synergy/stories'
     | '/why-synergy/technology'
   fileRoutesByTo: FileRoutesByTo
@@ -77,6 +87,7 @@ export interface FileRouteTypes {
     | '/'
     | '/why-synergy'
     | '/why-synergy/business-impact'
+    | '/why-synergy/security'
     | '/why-synergy/stories'
     | '/why-synergy/technology'
   id:
@@ -84,6 +95,7 @@ export interface FileRouteTypes {
     | '/'
     | '/why-synergy'
     | '/why-synergy/business-impact'
+    | '/why-synergy/security'
     | '/why-synergy/stories'
     | '/why-synergy/technology'
   fileRoutesById: FileRoutesById
@@ -123,6 +135,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof WhySynergyStoriesRouteImport
       parentRoute: typeof WhySynergyRoute
     }
+    '/why-synergy/security': {
+      id: '/why-synergy/security'
+      path: '/security'
+      fullPath: '/why-synergy/security'
+      preLoaderRoute: typeof WhySynergySecurityRouteImport
+      parentRoute: typeof WhySynergyRoute
+    }
     '/why-synergy/business-impact': {
       id: '/why-synergy/business-impact'
       path: '/business-impact'
@@ -135,12 +154,14 @@ declare module '@tanstack/react-router' {
 
 interface WhySynergyRouteChildren {
   WhySynergyBusinessImpactRoute: typeof WhySynergyBusinessImpactRoute
+  WhySynergySecurityRoute: typeof WhySynergySecurityRoute
   WhySynergyStoriesRoute: typeof WhySynergyStoriesRoute
   WhySynergyTechnologyRoute: typeof WhySynergyTechnologyRoute
 }
 
 const WhySynergyRouteChildren: WhySynergyRouteChildren = {
   WhySynergyBusinessImpactRoute: WhySynergyBusinessImpactRoute,
+  WhySynergySecurityRoute: WhySynergySecurityRoute,
   WhySynergyStoriesRoute: WhySynergyStoriesRoute,
   WhySynergyTechnologyRoute: WhySynergyTechnologyRoute,
 }
