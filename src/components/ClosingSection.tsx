@@ -299,6 +299,7 @@ export function ClosingSection() {
                 >
                   <span className="artemis-closing__converge-horizontal" />
                   <span className="artemis-closing__converge-vertical" />
+                  <span className="artemis-closing__converge-cross" />
                 </div>
               )}
             </div>

@@ -682,6 +682,9 @@ html.lenis body {
   z-index: 2;
 }
 
+/* Both rules keep the original treatment: 20% white over an opaque #000
+   occluder that erases the 8% lattice, plus the original fade masks. The
+   reveal uses clip-path so the masks are never scaled with the animation. */
 .artemis-closing__converge-horizontal,
 .artemis-closing__converge-vertical {
   position: absolute;
@@ -689,57 +692,104 @@ html.lenis body {
   background:
     linear-gradient(rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.2)),
     linear-gradient(#000000, #000000);
-  will-change: transform;
+  will-change: clip-path;
   animation-duration: 0.85s;
   animation-timing-function: cubic-bezier(0.65, 0, 0.35, 1);
   animation-fill-mode: both;
 }
 
+/* Horizontal rule: full stage width, fading in over --grid-x-inset on the
+   left and out over --grid-x-inset on the right, exactly as before. */
 .artemis-closing__converge-horizontal {
   top: var(--grid-y-start);
-  right: 0;
-  left: var(--grid-x-inset);
+  left: 0;
+  width: 100%;
   height: 1px;
-  transform-origin: right center;
   animation-name: artemis-converge-horizontal;
   -webkit-mask-image: linear-gradient(
     to right,
-    #000 0,
+    transparent 0,
+    #000 var(--grid-x-inset),
     #000 calc(100% - var(--grid-x-inset)),
     transparent 100%
   );
   mask-image: linear-gradient(
     to right,
-    #000 0,
+    transparent 0,
+    #000 var(--grid-x-inset),
     #000 calc(100% - var(--grid-x-inset)),
     transparent 100%
   );
 }
 
+/* Vertical rule: nav → stage bottom with the original vertical fade above the
+   top lattice boundary and below the bottom boundary. */
 .artemis-closing__converge-vertical {
-  top: var(--grid-y-start);
-  bottom: calc(100% - var(--grid-y-end));
+  top: 0;
+  bottom: 0;
   left: var(--grid-x-inset);
   width: 1px;
-  transform-origin: center bottom;
   animation-name: artemis-converge-vertical;
+  -webkit-mask-image: linear-gradient(
+    to bottom,
+    transparent calc(var(--grid-y-start) - var(--grid-y-fade)),
+    #000 var(--grid-y-start),
+    #000 var(--grid-y-end),
+    transparent calc(var(--grid-y-end) + var(--grid-y-fade))
+  );
+  mask-image: linear-gradient(
+    to bottom,
+    transparent calc(var(--grid-y-start) - var(--grid-y-fade)),
+    #000 var(--grid-y-start),
+    #000 var(--grid-y-end),
+    transparent calc(var(--grid-y-end) + var(--grid-y-fade))
+  );
 }
 
+/* Original Figma crosshair (10×10, 1px strokes at 20%) on the upper-left
+   intersection; it appears once both rules have arrived. */
+.artemis-closing__converge-cross {
+  position: absolute;
+  display: block;
+  left: calc(var(--grid-x-inset) - 5px);
+  top: calc(var(--grid-y-start) - 5px);
+  width: 11px;
+  height: 11px;
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.2)),
+    linear-gradient(rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.2));
+  background-repeat: no-repeat;
+  background-size: 11px 1px, 1px 11px;
+  background-position: 0 5px, 5px 0;
+  z-index: 2;
+  opacity: 0;
+  animation: artemis-converge-cross 0.2s 0.8s ease-out both;
+}
+
+/* Right → left */
 @keyframes artemis-converge-horizontal {
-  from { transform: scaleX(0); }
-  to { transform: scaleX(1); }
+  from { clip-path: inset(0 0 0 100%); }
+  to { clip-path: inset(0 0 0 0); }
 }
 
+/* Bottom → top */
 @keyframes artemis-converge-vertical {
-  from { transform: scaleY(0); }
-  to { transform: scaleY(1); }
+  from { clip-path: inset(100% 0 0 0); }
+  to { clip-path: inset(0 0 0 0); }
+}
+
+@keyframes artemis-converge-cross {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .artemis-closing__converge-horizontal,
-  .artemis-closing__converge-vertical {
+  .artemis-closing__converge-vertical,
+  .artemis-closing__converge-cross {
     animation: none;
-    transform: none;
+    clip-path: none;
+    opacity: 1;
   }
 }
 
