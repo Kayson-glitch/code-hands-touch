@@ -684,7 +684,6 @@ function TechnologyPage() {
           cropW={0.903}
           cropY={0.08}
           cropH={0.92}
-          pitch={6}
           className="pointer-events-none absolute select-none"
           style={{
             // Soften the box edges the subject bleeds through (left arm, lower arm).

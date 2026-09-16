@@ -37,7 +37,7 @@ const SQUARE_AT = 0.88;
 // Ink ramp: the previous single mid-grey is now the deepest tone; from there
 // the value decreases evenly toward near-paper light grey. Tone is carried
 // almost entirely by dot AREA, keeping the halftone read clean and neutral.
-const INK_STOPS: Array<[number, number, number]> = [
+export const INK_STOPS: Array<[number, number, number]> = [
   [0xe8, 0xe8, 0xe8],
   [0xc8, 0xc8, 0xc8],
   [0xa8, 0xa8, 0xa8],

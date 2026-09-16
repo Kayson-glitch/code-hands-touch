@@ -418,7 +418,6 @@ function BusinessImpactPage() {
           cropW={0.834}
           cropY={0.095}
           cropH={0.85}
-          pitch={6}
           className="pointer-events-none absolute select-none"
           style={{
             // Soften the box edges the subject bleeds through (left arm, lower arm).

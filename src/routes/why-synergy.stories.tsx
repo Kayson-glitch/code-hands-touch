@@ -602,7 +602,6 @@ function StoriesPage() {
           cropW={0.883}
           cropY={0.03}
           cropH={0.9}
-          pitch={6}
           className="pointer-events-none absolute select-none"
           style={{
             // Soften the box edges the subject bleeds through (left arm, lower arm).

@@ -2,9 +2,11 @@ import { useEffect, useRef } from "react";
 import { handsFramesAsset } from "@/lib/media";
 import {
   FluidField,
+  INK_STOPS,
   breathWave,
   dyeAt,
 } from "@/components/HalftoneHandsFooter";
+import { useHeroLayout } from "@/hooks/useHeroLayout";
 
 /**
  * Halftone rendering of ONE hand, taken from the same sprite atlas the homepage
@@ -21,12 +23,10 @@ const FRAME_H = 178;
 const DOT_FILL = 0.9;
 const MIN_DENSITY = 0.05;
 const SQUARE_AT = 0.88;
-/** Light ink stops — for dark backgrounds (the homepage hero). */
-const INK_STOPS_LIGHT: Array<[number, number, number]> = [
-  [0xdc, 0xdc, 0xdc],
-  [0xb4, 0xb4, 0xb4],
-  [0x82, 0x82, 0x82],
-];
+/** Light ink stops — the homepage hands' ramp, so tone matches the first screen. */
+const INK_STOPS_LIGHT: Array<[number, number, number]> = INK_STOPS;
+/** Homepage fluid grid: 110 cells across the viewport → dye radius in CSS px. */
+const FLUID_TARGET_COLS = 110;
 /** Dark ink stops — mirror of the light set, for light/white backgrounds. */
 const INK_STOPS_DARK: Array<[number, number, number]> = [
   [0x7d, 0x7d, 0x7d],
@@ -109,7 +109,7 @@ type Props = {
   /** Vertical crop of the source frame, 0..1. */
   cropY?: number;
   cropH?: number;
-  /** Dot pitch in CSS px. */
+  /** Dot pitch in CSS px. Defaults to the homepage hands' pitch for the current viewport. */
   pitch?: number;
   /** Ink tone: "light" (default, for dark backgrounds) or "dark" (for light backgrounds). */
   ink?: "light" | "dark";
@@ -125,11 +125,14 @@ export function HalftoneHandStill({
   cropW = 0.56,
   cropY = 0,
   cropH = 1,
-  pitch = 5,
+  pitch: pitchProp,
   ink = "light",
   className,
   style,
 }: Props) {
+  const layout = useHeroLayout();
+  // Same rule as HalftoneHandsFooter, so dots are the same size on every page.
+  const pitch = pitchProp ?? Math.max(5, Math.round(layout.cellSize * 0.62));
   const hostRef = useRef<HTMLDivElement | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const pointerRef = useRef({ tx: 0, ty: 0, x: 0, y: 0 });
@@ -163,7 +166,10 @@ export function HalftoneHandStill({
       if (!ctx) return;
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
-      fluidRef.current = new FluidField(w, h);
+      // Match the homepage's fluid cell size in CSS px (its grid spans the
+      // viewport), so the cursor's dye trail covers the same area here.
+      const fluidCols = Math.round((FLUID_TARGET_COLS * w) / Math.max(w, window.innerWidth));
+      fluidRef.current = new FluidField(w, h, Math.max(16, fluidCols));
 
       // Source rectangle: a frame of the hands atlas, or the whole custom image.
       const baseW = src ? atlas.naturalWidth : FRAME_W;

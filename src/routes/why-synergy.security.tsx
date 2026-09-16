@@ -259,7 +259,6 @@ function SecurityPage() {
           cropW={0.648}
           cropY={0.145}
           cropH={0.66}
-          pitch={6}
           className="pointer-events-none absolute select-none"
           style={{
             // Soften the box edges the subject bleeds through (left arm, lower arm).
