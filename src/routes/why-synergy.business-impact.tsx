@@ -206,7 +206,7 @@ const ARTICLES: Record<"roi" | "impact", ArticleSet> = {
   },
   impact: {
     eyebrow: "Overall Impact · Resolution",
-    titleAccent: "Resolution At Scale:",
+    titleAccent: "Resolution at Scale:",
     titleRest: "How AI Absorbs 200K Conversations",
     intro:
       "For support and business leads. How the 55% auto-handling rate and 70% reply rate are defined, where they come from, and why they are a boundary the team chose rather than a technical ceiling.",
@@ -441,14 +441,10 @@ function BusinessImpactPage() {
               <Reveal immediate className="flex items-center gap-2">
                 <span aria-hidden style={{ width: 8, height: 8, background: ACCENT }} />
                 <span
-                  style={{
-                    fontSize: 14,
-                    lineHeight: "22px",
-                    letterSpacing: "0.01em",
-                    color: "#7A7885",
-                  }}
+                  className="uppercase"
+                  style={{ fontSize: 14, lineHeight: "22px", color: "#7A7885" }}
                 >
-                  Impact
+                  impact
                 </span>
               </Reveal>
 
@@ -456,13 +452,13 @@ function BusinessImpactPage() {
                 <GradientHoverHeading
                   as="h1"
                   className="font-display text-ink"
-                  text={"From AI Support To\nMeasurable Business Value"}
+                  text={"From AI Support to\nMeasurable Business Value"}
+                  breakFrom="md"
                   style={{
                     margin: "10px 0 0",
                     fontSize: fluid(48, 30),
                     lineHeight: 1.1667,
                     fontWeight: 500,
-                    letterSpacing: "-0.01em",
                     cursor: "default",
                   }}
                 />
@@ -582,10 +578,8 @@ function BusinessImpactPage() {
                   style={{
                     margin: 0,
                     fontSize: fluid(48, 30),
-                    lineHeight: "56px",
+                    lineHeight: "1.1667",
                     fontWeight: 400,
-
-                    letterSpacing: "-0.01em",
                   }}
                 >
                   <span style={{ color: "#9E8CFF" }}>{article.titleAccent}</span>{" "}

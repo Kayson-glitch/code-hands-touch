@@ -1272,3 +1272,12 @@ html.lenis body {
 @media (prefers-reduced-motion: reduce) {
   .stories-rail-flow { animation: none; }
 }
+
+/* Why Synergy long-form pages: no one-word last lines in copy, even-length
+   title lines. Hero titles carry hand-set breaks from md up, so they are only
+   balanced where they wrap on their own. */
+.why-synergy p { text-wrap: pretty; }
+.why-synergy h2, .why-synergy h3 { text-wrap: balance; }
+@media (max-width: 767px) {
+  .why-synergy h1 { text-wrap: balance; }
+}

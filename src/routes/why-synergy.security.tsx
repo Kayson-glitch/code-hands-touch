@@ -125,9 +125,9 @@ const TESTIMONIAL = {
 };
 
 const HEADER = {
-  eyebrow: "private deployment",
+  eyebrow: "Private Deployment",
   titleAccent: "Private Deployment ",
-  titleRest: "and Long-Term Partnership",
+  titleRest: "and Long\u2060-\u2060Term Partnership",
   intro:
     "For data-security and procurement leads. Two things decide the vendor question for sensitive businesses — data security and long-term service. Here is our private deployment option and the model that keeps the system improving after launch.",
 };
@@ -290,8 +290,9 @@ function SecurityPage() {
               <Reveal immediate delay={120}>
                 <GradientHoverHeading
                   as="h1"
-                  className="font-display text-ink capitalize"
+                  className="font-display text-ink"
                   text={"Private by Design, Supported\nfor the Long Term"}
+                  breakFrom="md"
                   style={{
                     margin: "10px 0 0",
                     maxWidth: 680,
@@ -338,10 +339,7 @@ function SecurityPage() {
           {/* header — eyebrow, rule, 48px title, intro, CTA */}
           <div style={{ padding: `${fluid(100, 56)} ${fluid(60, 24)} 0` }}>
             <Reveal y={32} duration={1600}>
-              <p
-                className="capitalize"
-                style={{ margin: 0, fontSize: 12, lineHeight: "20px", fontWeight: 500, color: "var(--ink, #0E0B22)" }}
-              >
+              <p style={{ margin: 0, fontSize: 12, lineHeight: "20px", fontWeight: 500, color: "var(--ink, #0E0B22)" }}>
                 {HEADER.eyebrow}
               </p>
               <div style={{ marginTop: 10 }}>
@@ -354,7 +352,7 @@ function SecurityPage() {
               >
                 <div style={{ maxWidth: 760, minWidth: 0 }}>
                   <h2
-                    className="font-display capitalize"
+                    className="font-display"
                     style={{ margin: 0, fontSize: fluid(48, 30), lineHeight: "1.1667", fontWeight: 400 }}
                   >
                     <span style={{ color: AMBER }}>{HEADER.titleAccent}</span>

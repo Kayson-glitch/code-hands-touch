@@ -155,7 +155,7 @@ const MODULES: Module[] = [
     id: "zero-hallucinations",
     index: "01",
     tab: "Zero Hallucinations",
-    eyebrow: "zero hallucinations",
+    eyebrow: "Zero Hallucinations",
     titleAccent: "Grounded Answers, ",
     titleRest: "Not Confident Guesses",
     intro: [
@@ -209,7 +209,7 @@ const MODULES: Module[] = [
     id: "knowledge-governance",
     index: "02",
     tab: "Knowledge Governance",
-    eyebrow: "knowledge governance",
+    eyebrow: "Knowledge Governance",
     titleAccent: "Scripts and Rules, ",
     titleRest: "Kept Structurally Apart",
     intro: [
@@ -263,7 +263,7 @@ const MODULES: Module[] = [
     id: "precision-retrieval",
     index: "03",
     tab: "Precision Retrieval",
-    eyebrow: "precision retrieval",
+    eyebrow: "Precision Retrieval",
     titleAccent: "Retrieval by Structure, ",
     titleRest: "Not Just Vectors",
     intro: [
@@ -317,9 +317,9 @@ const MODULES: Module[] = [
     id: "workflow-orchestration",
     index: "04",
     tab: "Workflow Orchestration",
-    eyebrow: "workflow orchestration",
+    eyebrow: "Workflow Orchestration",
     titleAccent: "Multi-Agent Coordination ",
-    titleRest: "With a Human Ceiling",
+    titleRest: "with a Human Ceiling",
     intro: [
       "56 fiat ticket scenarios with deep branches across CRM, ERM and the order system.",
       "For operations leads: how they are orchestrated and where a person stays in the loop.",
@@ -418,14 +418,14 @@ function StatsCard({ module }: { module: Module }) {
   return (
     <Reveal y={32} duration={1600} style={{ background: "#F8F9FA" }}>
       <div
-        className="relative flex"
+        className="relative flex flex-col md:flex-row"
         style={{
           padding: `${fluid(56, 36)} ${fluid(40, 16)}`,
           gap: fluid(40, 20),
         }}
       >
         {/* left column — primary metric */}
-        <div className="shrink-0" style={{ width: "35%" }}>
+        <div className="shrink-0 md:w-[35%]">
           <p
             className="font-sans uppercase tracking-wide"
             style={{
@@ -455,10 +455,13 @@ function StatsCard({ module }: { module: Module }) {
           </p>
         </div>
 
+        {/* phones: horizontal rule where the dashed vertical divider would be */}
+        <div aria-hidden className="md:hidden" style={{ height: 1, background: "#E5E7EB" }} />
+
         {/* right column — bullet details */}
         <ul
-          className="flex flex-1 flex-col justify-between"
-          style={{ gap: 22, paddingLeft: fluid(40, 20), margin: 0 }}
+          className="flex flex-1 flex-col md:justify-between md:pl-[clamp(20px,2.7778vw,40px)]"
+          style={{ gap: 22, margin: 0 }}
         >
           {module.bullets.map((b, i) => (
             <li key={b} className="flex items-start gap-3">
@@ -473,6 +476,7 @@ function StatsCard({ module }: { module: Module }) {
         {/* dashed vertical divider — absolutely positioned for precise edge control */}
         <div
           aria-hidden
+          className="hidden md:block"
           style={{
             position: "absolute",
             top: "30%",
@@ -517,10 +521,7 @@ function ModuleArticle({ module }: { module: Module }) {
       {/* header — eyebrow, rule, 48px title, intro, CTA */}
       <div style={{ padding: `${fluid(80, 40)} ${fluid(60, 24)} 0` }}>
         <Reveal y={32} duration={1600}>
-          <p
-            className="capitalize"
-            style={{ margin: 0, fontSize: 12, lineHeight: "20px", color: "var(--ink, #0E0B22)" }}
-          >
+          <p style={{ margin: 0, fontSize: 12, lineHeight: "20px", color: "var(--ink, #0E0B22)" }}>
             {module.eyebrow}
           </p>
           <div style={{ marginTop: 10 }}>
@@ -533,7 +534,7 @@ function ModuleArticle({ module }: { module: Module }) {
           >
             <div style={{ maxWidth: 680, minWidth: 0 }}>
               <h2
-                className="font-display capitalize"
+                className="font-display"
                 style={{
                   margin: 0,
                   fontSize: fluid(48, 30),
@@ -718,8 +719,9 @@ function TechnologyPage() {
               <Reveal immediate delay={120}>
                 <GradientHoverHeading
                   as="h1"
-                  className="font-display text-ink capitalize"
+                  className="font-display text-ink"
                   text={"How the System Stays\nAccurate and Safe"}
+                  breakFrom="md"
                   style={{
                     margin: "10px 0 0",
                     maxWidth: 680,
@@ -757,10 +759,11 @@ function TechnologyPage() {
       <section style={{ padding: pad }}>
         <div className="mx-auto flex w-full max-w-[1200px] flex-col md:flex-row md:items-start">
           {/* sticky index — white panel stays pinned, gradient rails track scroll */}
+          {/* phones: a single scrollable row of chips instead of a stacked list */}
           <nav
             aria-label="Engineering modules"
-            className="shrink-0 md:sticky"
-            style={{ width: 220, top: 83, marginRight: 20 }}
+            className="-mx-1 mb-8 flex shrink-0 gap-2 overflow-x-auto px-1 md:sticky md:mx-0 md:mb-0 md:mr-5 md:block md:w-[220px] md:overflow-visible md:px-0"
+            style={{ top: 83, scrollbarWidth: "none" }}
           >
             {MODULES.map((s) => {
               const on = active === s.id;
@@ -788,21 +791,19 @@ function TechnologyPage() {
                       });
                     }
                   }}
-                  className="relative flex items-center transition-colors duration-300"
+                  className="relative flex h-9 shrink-0 items-center gap-1.5 whitespace-nowrap border px-3 transition-colors duration-300 md:h-[54px] md:border-0 md:p-3"
                   style={{
-                    height: 54,
-                    padding: 12,
-                    gap: 6,
                     fontSize: 12,
                     lineHeight: "20px",
                     color: "#0E0B22",
                     opacity: on ? 1 : 0.55,
+                    borderColor: on ? "#0E0B22" : "#E1E0E4",
                   }}
                 >
                   {/* base rail; gradient fill only on the active module */}
                   <span
                     aria-hidden
-                    className="pointer-events-none absolute inset-x-0 top-0"
+                    className="pointer-events-none absolute inset-x-0 top-0 hidden md:block"
                     style={{ height: 1, background: "#E1E0E4" }}
                   />
                   <span
@@ -810,7 +811,7 @@ function TechnologyPage() {
                       railRefs.current[s.id] = node;
                     }}
                     aria-hidden
-                    className="stories-rail-flow pointer-events-none absolute left-0 top-0"
+                    className="stories-rail-flow pointer-events-none absolute left-0 top-0 hidden md:block"
                     style={{
                       height: 1.5,
                       width: "100%",
