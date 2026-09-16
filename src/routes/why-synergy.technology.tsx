@@ -168,10 +168,10 @@ const MODULES: Module[] = [
     stats: ["55%", "0"],
     caption: "Auto-handling rate · fabricated answers",
     bullets: [
-      "Has the knowledge: answer directly. Doesn't: hand to a human — never make it up",
-      "Better a real person than a plausible but wrong answer",
-      "This is why the rate is 55%, not a forced 95% — the line is drawn on purpose",
-      "Coverage grows as knowledge grows, never by loosening the rule",
+      "Has the knowledge: answer. Doesn't: hand over, never invent",
+      "Better a real person than a plausible wrong answer",
+      "55%, not a forced 95% — the line is drawn on purpose",
+      "Coverage grows with knowledge, never by loosening the rule",
     ],
     light: [
       {
@@ -222,10 +222,10 @@ const MODULES: Module[] = [
     stats: ["50+", "2"],
     caption: "Long documents · layers: scripts / rules",
     bullets: [
-      "Region × time-bound × pre/after-sales content stacked in 50+ long documents",
-      "A configuration Skill separates reply scripts (knowledge base) from constraint rules (rules layer)",
-      "Every entry verified by human review and AI automated tests",
-      "Each session is tagged, turning support traffic into a business radar",
+      "Region × time window × pre/after-sales in 50+ long documents",
+      "Configuration Skill splits reply scripts from constraint rules",
+      "Every entry verified by human review and AI tests",
+      "Sessions tagged: support traffic becomes a business radar",
     ],
     light: [
       {
@@ -276,10 +276,10 @@ const MODULES: Module[] = [
     stats: ["3", "2"],
     caption: "Retrieval layers · rerank stages",
     bullets: [
-      "PageIndex vector-free hybrid retrieval locates answers by document structure and hierarchy",
-      "Highest-precision embedding model as the underlying representation",
-      "Self-built rerank model: coarse then fine ranking puts the right passage first",
-      "Explicit response boundaries per scenario — no over-answering, latency optimised within precision",
+      "PageIndex vector-free retrieval locates answers by structure",
+      "Highest-precision embedding as the underlying representation",
+      "Self-built rerank, coarse then fine, right passage first",
+      "Explicit boundaries per scenario — no over-answering",
     ],
     light: [
       {
@@ -330,10 +330,10 @@ const MODULES: Module[] = [
     stats: ["56", "2"],
     caption: "Fiat ticket scenarios · systems connected",
     bullets: [
-      "56 fiat ticket scenarios divided across cooperating agents and run as business flows",
-      "CRM and ERM fully connected — orders, messages and change notices flow automatically",
+      "56 fiat ticket scenarios split across cooperating agents",
+      "CRM and ERM connected — orders and notices flow automatically",
       "Top-ups, withdrawals and order checks close automatically",
-      "Refunds and other high-risk steps: AI gathers the evidence, a human double-checks",
+      "Refunds: AI gathers the evidence, a human double-checks",
     ],
     light: [
       {

@@ -122,10 +122,10 @@ const KPI_LEFT = {
   unit: "/ yr",
   caption: "Projected annual labour-cost saving · not yet executed",
   bullets: [
-    "Today: 150 agents at ≈¥10K each — ≈¥1.5M a month, ¥18M a year",
-    "Data supports ≈50: 20 VIP leads + 30 monitoring and fallback staff",
-    "Headcount moves from repetitive replies to VIP service and business monitoring",
-    "Restructuring not yet executed — capability is met, only pacing remains",
+    "150 agents today · ≈¥1.5M a month",
+    "≈50 is enough: 20 VIP + 30 monitoring",
+    "Replies → VIP service and monitoring",
+    "Capability met; rollout is a pacing decision",
   ],
 };
 
@@ -135,10 +135,10 @@ const KPI_RIGHT = {
   unit: "%",
   caption: "AI auto-handling rate · 200K conversations a month",
   bullets: [
-    "55% of conversations closed by AI end-to-end, no human in the thread",
-    "70% of customer messages answered by AI — about 110K a month",
-    "Both figures were zero before the June 2026 launch",
-    "No inflated numbers: VIP conversations always keep a human in the loop",
+    "55% of conversations closed by AI end-to-end",
+    "70% of messages by AI · ≈110K a month",
+    "Both were zero before the June 2026 launch",
+    "VIP threads always keep a human in the loop",
   ],
 };
 

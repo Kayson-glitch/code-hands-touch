@@ -165,9 +165,9 @@ const STORIES: Story[] = [
     stats: ["68%", "86%"],
     caption: "India translation accuracy, general API → targeted model · 1 month",
     bullets: [
-      "Trained a targeted translation model for the Indian region, removing the English pivot",
-      "Multi-model voting produces the final reading, tuned to payment and order phrasing",
-      "Low-resource-language users were understood for the first time",
+      "Targeted Indian model, no English pivot in the middle",
+      "Multi-model voting, tuned to payment and order phrasing",
+      "Low-resource-language users understood for the first time",
     ],
     light: [
       {
@@ -218,8 +218,8 @@ const STORIES: Story[] = [
     stats: ["88%", "3"],
     caption: "Forged-proof detection accuracy · months to reach it · PDF / video / image",
     bullets: [
-      "Multimodal detection across PDF, video and image payment proofs",
-      "Tiered handling: only suspicious cases reach a human — no more item-by-item review",
+      "Multimodal detection across PDF, video and image proofs",
+      "Tiered handling: only suspicious cases reach a human",
       "Days of outsourced KYC checks compressed to near real time",
     ],
     light: [
@@ -271,9 +271,9 @@ const STORIES: Story[] = [
     stats: ["7", "3"],
     caption: "Days per model release · proof formats covered (PDF, image, video)",
     bullets: [
-      "Online human labels are the input; a new model version ships every Friday",
-      "Follows evolving forgery techniques instead of freezing at the launch version",
-      "Engineered for production: runs at QPS 20–50, updates decoupled from live service",
+      "Online human labels in, a new model version every Friday",
+      "Follows evolving forgery techniques instead of freezing",
+      "Runs at QPS 20–50; updates decoupled from live service",
     ],
     light: [
       {
