@@ -157,7 +157,7 @@ const STORIES: Story[] = [
     tab: "Multilingual",
     eyebrow: "multilingual",
     titleAccent: "Targeted Translation for ",
-    titleRest: "Low-Resource Language Semantic Drift",
+    titleRest: "Low-Resource Languages",
     intro: [
       "BCGame supports 22 languages and runs reliably across the major ones. In low-resource languages, though, systematic semantic drift was breaking service for users in the Indian market: a customer asking why an order was still 'pending' arrived at the model asking why they were still 'pregnant'.",
       "For international and multilingual operations teams: the root cause, the targeted model we trained, and how the result was validated.",
@@ -209,14 +209,14 @@ const STORIES: Story[] = [
     index: "02",
     tab: "Payment Risk Control",
     eyebrow: "payment risk control",
-    titleAccent: "Stopping Forged Payment Proofs ",
-    titleRest: "Before They Become Payouts",
+    titleAccent: "Catching Forged Payment Proofs ",
+    titleRest: "Before Payout",
     intro: [
       "In BCGame's Indian after-sales flow, organised rings doctored payment screenshots, PDFs and videos to claim compensation and move money. Verification was outsourced to a KYC team and took days per case.",
       "For risk, KYC and finance-security teams: the fraud pattern, why manual review kept losing, and the custom image-forensics model that replaced it.",
     ],
-    stats: ["88%", "3"],
-    caption: "Forged-proof detection accuracy · months to reach it · PDF / video / image",
+    stats: ["88%", ""],
+    caption: "Forged-proof detection accuracy · about 3 months · PDF / video / image",
     bullets: [
       "Multimodal detection across PDF, video and image proofs",
       "Tiered handling: only suspicious cases reach a human",
@@ -268,8 +268,8 @@ const STORIES: Story[] = [
       "Most AI deliveries peak on launch day and drift afterwards as data and adversaries change. This is the closed loop that keeps BCGame's payment-forgery model improving — a customised deliverable built for one market's specific risk, not a generic feature.",
       "For technical leads, and for anyone who fears 'launch is the peak': how production labels become Friday releases without touching live service.",
     ],
-    stats: ["7", "3"],
-    caption: "Days per model release · proof formats covered (PDF, image, video)",
+    stats: ["Friday", ""],
+    caption: "A new model version every Friday · PDF, image and video",
     bullets: [
       "Online human labels in, a new model version every Friday",
       "Follows evolving forgery techniques instead of freezing",
@@ -362,8 +362,14 @@ function StatsCard({ story, dark = false }: { story: Story; dark?: boolean }) {
       <div style={{ padding: `${fluid(40, 28)} ${fluid(68, 24)}` }}>
         <div className="flex items-center" style={{ gap: fluid(74, 24) }}>
           <StatValue value={story.stats[0]} dark={dark} />
-          <span aria-hidden style={{ width: 56, height: 56, background: dark ? "rgba(255,255,255,0.18)" : "#E1E0E4" }} />
-          <StatValue value={story.stats[1]} dark={dark} />
+          {story.stats[1] ? (
+            <>
+              <span aria-hidden style={{ color: dark ? "rgba(255,255,255,0.5)" : "#A1A0A9", display: "inline-flex" }}>
+                <DotArrow size={56} connectOnHover={false} />
+              </span>
+              <StatValue value={story.stats[1]} dark={dark} />
+            </>
+          ) : null}
         </div>
 
         <p
@@ -406,7 +412,7 @@ function StatValue({ value, dark = false }: { value: string; dark?: boolean }) {
       className="font-display whitespace-nowrap capitalize"
       style={{ margin: 0, fontSize: fluid(100, 52), lineHeight: 1.2, fontWeight: 400, color: dark ? "#FFFFFF" : "var(--ink, #0E0B22)" }}
     >
-      <RollingNumber value={digits} />
+      {match ? <RollingNumber value={digits} /> : digits}
       {unit ? (
         <span style={{ fontSize: fluid(60, 32), fontWeight: 400, color: dark ? "rgba(255,255,255,0.5)" : "#A1A0A9" }}>{unit}</span>
       ) : null}
