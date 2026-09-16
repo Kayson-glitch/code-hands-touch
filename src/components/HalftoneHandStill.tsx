@@ -1,6 +1,7 @@
 import { useEffect, useRef } from "react";
 import { handsFramesAsset } from "@/lib/media";
 import {
+  DYE_STRENGTH,
   FluidField,
   INK_STOPS,
   breathWave,
@@ -41,6 +42,10 @@ const BREATH_AMP = 0.035;
 const BREATH_PERIOD = 5200;
 const DOT_ALPHA_AMP = 0.2;
 const DOT_ALPHA_PERIOD = 5000;
+// Entrance: the print "develops" — dots grow in from nothing on a scattered
+// stagger with a gentle left → right drift, in step with the hero copy reveal.
+const ENTER_MS = 1400;
+const ENTER_WINDOW = 0.35;
 
 const BAYER = [0, 8, 2, 10, 12, 4, 14, 6, 3, 11, 1, 9, 15, 7, 13, 5].map(
   (v) => (v + 0.5) / 16,
@@ -87,6 +92,8 @@ type Dot = {
   cx: number;
   alphaPhase: number;
   alphaSpeed: number;
+  /** Entrance stagger, 0..1 − ENTER_WINDOW (fraction of the entrance). */
+  enterDelay: number;
 };
 
 type Props = {
@@ -143,6 +150,9 @@ export function HalftoneHandStill({
     let raf = 0;
     let atlas: HTMLImageElement | null = null;
     let dots: Dot[] = [];
+    // Set on the first successful build; resizes later on rebuild the field
+    // without replaying the entrance.
+    let enterStart = 0;
     const stops = ink === "dark" ? INK_STOPS_DARK : INK_STOPS_LIGHT;
     const prefersReduce = window.matchMedia(
       "(prefers-reduced-motion: reduce)",
@@ -238,10 +248,12 @@ export function HalftoneHandStill({
             cx: 1 - Math.abs(nx * 2 - 1),
             alphaPhase: hash2(i * 3.7, j * 1.9) * Math.PI * 2,
             alphaSpeed: 0.7 + hash2(j * 5.1, i * 2.3) * 0.6,
+            enterDelay: (1 - ENTER_WINDOW) * (0.7 * hash2(i * 1.3 + 7, j * 2.1 + 3) + 0.3 * nx),
           });
         }
       }
       dots = next;
+      if (!enterStart && next.length) enterStart = performance.now();
     };
 
     const draw = (now: number, last: { t: number }) => {
@@ -271,8 +283,22 @@ export function HalftoneHandStill({
       const fluid = fluidRef.current;
       if (fluid && !prefersReduce) fluid.step(dt);
 
+      const enter =
+        prefersReduce || !enterStart ? 1 : Math.min(1, (now - enterStart) / ENTER_MS);
+
       for (let k = 0; k < dots.length; k++) {
         const dot = dots[k];
+
+        // Entrance: each dot grows and fades in over its own slice of the run.
+        let grow = 1;
+        let fade = 1;
+        if (enter < 1) {
+          const local = (enter - dot.enterDelay) / ENTER_WINDOW;
+          if (local <= 0) continue;
+          fade = local >= 1 ? 1 : local;
+          grow = 1 - Math.pow(1 - fade, 3);
+        }
+
         const weight = 0.35 + dot.cx * 0.65;
         const x = dot.x + p.x * PARALLAX_X * weight;
         const y = dot.y + p.y * PARALLAX_Y * weight;
@@ -282,20 +308,21 @@ export function HalftoneHandStill({
 
         const raw = Math.min(1, dot.d * breath);
         const d = raw < 0.8 ? raw : 0.8 + (raw - 0.8) * 0.7;
-        const r = Math.max(0.35, maxR * Math.sqrt(d) * radiusScale);
+        const r = Math.max(0.35, maxR * Math.sqrt(d) * radiusScale * grow);
 
-        ctx.globalAlpha = prefersReduce
-          ? 1
-          : 1 -
-            breathWave(
-              (now / DOT_ALPHA_PERIOD) * dot.alphaSpeed +
-                dot.alphaPhase / (Math.PI * 2),
-            ) *
-              DOT_ALPHA_AMP;
+        ctx.globalAlpha =
+          (prefersReduce
+            ? 1
+            : 1 -
+              breathWave(
+                (now / DOT_ALPHA_PERIOD) * dot.alphaSpeed +
+                  dot.alphaPhase / (Math.PI * 2),
+              ) *
+                DOT_ALPHA_AMP) * fade;
 
         const [ir, ig, ib] = inkAt(d, stops);
         if (dye > 0.004) {
-          const mix = smoothstep(dye) * (0.45 + d * 0.55);
+          const mix = smoothstep(dye) * (0.45 + d * 0.55) * DYE_STRENGTH;
           const [dr, dg, db] = dyeAt(Math.min(1, dye * 0.9 + d * 0.02));
           ctx.fillStyle = `rgb(${Math.round(ir + (dr - ir) * mix)},${Math.round(
             ig + (dg - ig) * mix,

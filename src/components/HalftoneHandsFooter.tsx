@@ -110,6 +110,12 @@ type Grid = {
 };
 
 // ------------------------------------------------------------- ink fluid
+/**
+ * How far a fully dyed dot moves from its grey toward the dye colour. Below 1
+ * the trail reads as a tint over the halftone rather than a saturated smear.
+ * Shared with the Why Synergy stills so every hand tints the same way.
+ */
+export const DYE_STRENGTH = 0.6;
 // Vivid fluid dye gradient: yellow (outer/diffuse) → magenta → blue (core).
 const DYE_STOPS: Array<[number, number, number]> = [
   [0xff, 0xcd, 0x17],
@@ -891,7 +897,7 @@ export function HalftoneHandsFooter({
           const [ir, ig, ib] = inkAt(d);
           if (dye > 0.004) {
             // Deeper dots take more colour, so volume survives the tint.
-            const mix = smoothstep(dye) * (0.45 + d * 0.55);
+            const mix = smoothstep(dye) * (0.45 + d * 0.55) * DYE_STRENGTH;
             const [dr, dg, db] = dyeAt(Math.min(1, dye * 0.9 + d * 0.02));
             ctx.fillStyle = `rgb(${Math.round(ir + (dr - ir) * mix)},${Math.round(
               ig + (dg - ig) * mix,
