@@ -262,7 +262,7 @@ const MODULES: Module[] = [
     index: "03",
     tab: "Precision Retrieval",
     eyebrow: "precision retrieval",
-    titleAccent: "Structure-Aware Retrieval, ",
+    titleAccent: "Retrieval by Structure, ",
     titleRest: "Not Just Vectors",
     intro: [
       "Retrieval precision is the deciding step in a RAG system — and RAG alone does not reach the optimum. Cutting long documents into vector chunks throws away their structure and context, which in a very long, time-sensitive knowledge base is exactly where errors come from.",
@@ -527,9 +527,9 @@ function ModuleArticle({ module }: { module: Module }) {
 
           <div
             className="flex flex-col gap-8 md:flex-row md:items-start md:justify-between"
-            style={{ marginTop: fluid(24, 18) }}
+            style={{ marginTop: fluid(24, 18), columnGap: fluid(72, 40) }}
           >
-            <div style={{ maxWidth: 680 }}>
+            <div style={{ maxWidth: 680, minWidth: 0 }}>
               <h2
                 className="font-display capitalize"
                 style={{

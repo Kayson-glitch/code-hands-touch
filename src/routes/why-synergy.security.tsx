@@ -125,7 +125,7 @@ const TESTIMONIAL = {
 const HEADER = {
   eyebrow: "private deployment",
   titleAccent: "Private Deployment ",
-  titleRest: "and Long-Term Partnership Models",
+  titleRest: "and Long-Term Partnership",
   intro:
     "For data-security and procurement decision-makers. For data-sensitive businesses, choosing an AI customer-service vendor comes down to two things first: data security guarantees and long-term service capability. This article describes our private deployment option and the service model that keeps the system improving after launch — the same model behind BCGame's results since June 2026.",
 };
@@ -342,9 +342,9 @@ function SecurityPage() {
 
               <div
                 className="flex flex-col gap-8 md:flex-row md:items-start md:justify-between"
-                style={{ marginTop: fluid(24, 18) }}
+                style={{ marginTop: fluid(24, 18), columnGap: fluid(72, 40) }}
               >
-                <div style={{ maxWidth: 800 }}>
+                <div style={{ maxWidth: 760, minWidth: 0 }}>
                   <h2
                     className="font-display capitalize"
                     style={{ margin: 0, fontSize: fluid(48, 30), lineHeight: "1.1667", fontWeight: 400 }}

@@ -446,9 +446,9 @@ function StoryArticle({ story, dark = false }: { story: Story; dark?: boolean })
 
           <div
             className="flex flex-col gap-8 md:flex-row md:items-start md:justify-between"
-            style={{ marginTop: fluid(24, 18) }}
+            style={{ marginTop: fluid(24, 18), columnGap: fluid(72, 40) }}
           >
-            <div style={{ maxWidth: 680 }}>
+            <div style={{ maxWidth: 680, minWidth: 0 }}>
               <h2
                 className="font-display capitalize"
                 style={{

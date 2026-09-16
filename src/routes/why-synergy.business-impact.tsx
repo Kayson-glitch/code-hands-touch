@@ -206,7 +206,7 @@ const ARTICLES: Record<"roi" | "impact", ArticleSet> = {
   impact: {
     eyebrow: "Overall Impact · Resolution",
     titleAccent: "Resolution At Scale:",
-    titleRest: "How AI Absorbs 200K Conversations A Month",
+    titleRest: "How AI Absorbs 200K Conversations",
     intro:
       "For support and business leads. This article reports the system's core production metrics — how the 55% auto-handling rate and 70% reply rate are defined, where they come from, and why they are a boundary the team chose rather than the ceiling of what the technology can do.",
     light: [
@@ -567,9 +567,9 @@ function BusinessImpactPage() {
 
             <div
               className="flex flex-col gap-8 md:flex-row md:items-start md:justify-between"
-              style={{ marginTop: fluid(24, 18) }}
+              style={{ marginTop: fluid(24, 18), columnGap: fluid(72, 40) }}
             >
-              <div style={{ maxWidth: 800 }}>
+              <div style={{ maxWidth: 760, minWidth: 0 }}>
                 <h2
                   className="font-display"
                   style={{
