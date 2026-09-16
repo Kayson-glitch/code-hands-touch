@@ -115,9 +115,9 @@ function Hairline({ dark = false }: { dark?: boolean }) {
 type Block = { icon: typeof Server; title: string; body: string; divider: boolean };
 
 const TESTIMONIAL = {
-  lead: "We run Synergy inside our own cloud, ",
+  lead: "Synergy runs inside our own AWS account, ",
   rest:
-    "so customer data never leaves our perimeter. The team stayed on after launch, tuning workflows with us week by week instead of handing over a manual and disappearing.",
+    "so customer and transaction data never leave our boundary. When we needed changes, their FDE team flew in and sat with us until it shipped — and the model kept getting better every week after that.",
   name: "Natalie Hurst",
   role: "Sr. Director of Customer Success",
 };
@@ -127,20 +127,20 @@ const HEADER = {
   titleAccent: "Private Deployment ",
   titleRest: "and Long-Term Partnership Models",
   intro:
-    "For data-sensitive businesses, selecting an AI customer service vendor ultimately comes down to data security guarantees and long-term service capabilities. This article details our private deployment options and the partnership model that keeps the system improving after launch.",
+    "For data-security and procurement decision-makers. For data-sensitive businesses, choosing an AI customer-service vendor comes down to two things first: data security guarantees and long-term service capability. This article describes our private deployment option and the service model that keeps the system improving after launch — the same model behind BCGame's results since June 2026.",
 };
 
 const DARK_BLOCKS: Block[] = [
   {
     icon: Server,
-    title: "Deployment Inside Your Perimeter",
-    body: "Synergy runs in the customer's own VPC or on-premise environment. Models, retrieval indexes, and conversation logs live on infrastructure the customer controls; nothing is trained on customer data and nothing is shared across tenants. Network egress is limited to the endpoints the customer approves, and every external call is logged. The system is designed so that a security team can audit exactly where data lives and who can reach it.",
+    title: "Deployed in Your Own AWS",
+    body: "The product supports private deployment directly inside the customer's own AWS environment. User data, transaction data and payment proofs stay within the customer's infrastructure boundary and are not transmitted outside it. For iGaming, payments, finance and other data-sensitive businesses this is not an add-on; it is the baseline requirement for compliance and security — and it is how BCGame runs today.",
     divider: true,
   },
   {
     icon: ShieldCheck,
-    title: "Data Control and Governance",
-    body: "Knowledge sources, retention windows, and access roles are configured by the customer, not by us. Personally identifiable information is masked before it reaches the model layer, retention is enforced automatically at the configured horizon, and full audit trails are preserved for compliance reviews. Deletion requests propagate to indexes and logs, so a record that is removed is removed everywhere.",
+    title: "Data Stays Inside Your Boundary",
+    body: "Because models, knowledge base and conversation logs live in the customer's account, the customer — not the vendor — controls where data sits and who can reach it. Custom models such as the Indian payment-forgery detector are trained on the customer's own labelled production data and serve the customer alone. Nothing is pooled across tenants, and a security team can audit the whole path end to end.",
     divider: false,
   },
 ];
@@ -148,14 +148,14 @@ const DARK_BLOCKS: Block[] = [
 const LIGHT_BLOCKS: Block[] = [
   {
     icon: Handshake,
-    title: "A Partnership, Not a Handover",
-    body: "Launch is the start of the engagement, not the end. A dedicated engineer stays embedded with the customer's team through the first observation cycles, reviewing resolved and escalated conversations together, adjusting routing rules, and tightening the knowledge base where gaps appear. Model and policy changes are proposed with evidence from production data and shipped only after the customer signs off.",
+    title: "FDE On Site, Not a Handover",
+    body: "Service does not stop at go-live. When the customer has an iteration need, the FDE team provides support on site: mapping the knowledge base, connecting ticket flows across CRM and ERM, tuning models, and working through the change with the customer's own team until it is in production. This is the team that connected BCGame's 56 fiat ticket scenarios — and the team that stayed. We do not do one-off deals; we take long-term responsibility for the customer.",
     divider: true,
   },
   {
     icon: LifeBuoy,
-    title: "Support After Launch",
-    body: "Ongoing support covers monitoring, incident response, and a fixed cadence of capability reviews. When a new product line, market, or language is added, the same team scopes the rollout, validates accuracy on a representative corpus, and stages the release. The commitment is measured in outcomes the customer already tracks — resolution rate, handoff quality, and time to update — rather than in tickets closed.",
+    title: "Weekly Iteration as a Service Commitment",
+    body: "Private deployment, on-site FDE support and weekly model iteration together form our long-term service model. The weekly loop — production labels in, a new version out every Friday — gives 'continuous improvement' a deployment method and a service promise behind it, not just a phrase. What the customer receives is not a system frozen at delivery, but the engineering support for its long-term evolution. Every figure on these pages is a snapshot of the current cycle and will keep moving.",
     divider: false,
   },
 ];
