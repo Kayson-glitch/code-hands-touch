@@ -9,6 +9,7 @@ import { SiteNav } from "@/components/SiteNav";
 import { whySecurityAsset } from "@/lib/media";
 import { HalftoneHandStill } from "@/components/HalftoneHandStill";
 import { Reveal } from "@/components/Reveal";
+import { GradientHoverHeading } from "@/components/GradientHoverHeading";
 import { FinChatDock } from "@/components/FinChatDock";
 import { SiteFooter } from "@/components/SiteFooter";
 import { DotArrow } from "@/components/DotArrow";
@@ -287,8 +288,10 @@ function SecurityPage() {
               </Reveal>
 
               <Reveal immediate delay={120}>
-                <h1
+                <GradientHoverHeading
+                  as="h1"
                   className="font-display text-ink capitalize"
+                  text={"Private by Design, Supported\nfor the Long Term"}
                   style={{
                     margin: "10px 0 0",
                     maxWidth: 680,
@@ -296,9 +299,7 @@ function SecurityPage() {
                     lineHeight: 1.1667,
                     fontWeight: 500,
                   }}
-                >
-                  Private by Design, Supported for the Long Term
-                </h1>
+                />
               </Reveal>
 
               <Reveal immediate delay={240}>

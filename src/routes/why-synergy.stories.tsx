@@ -6,6 +6,7 @@ import { SiteNav } from "@/components/SiteNav";
 import { whyStoriesAsset } from "@/lib/media";
 import { HalftoneHandStill } from "@/components/HalftoneHandStill";
 import { Reveal } from "@/components/Reveal";
+import { GradientHoverHeading } from "@/components/GradientHoverHeading";
 import { RollingNumber } from "@/components/RollingNumber";
 import { FinChatDock } from "@/components/FinChatDock";
 import { SiteFooter } from "@/components/SiteFooter";
@@ -633,8 +634,10 @@ function StoriesPage() {
               </Reveal>
 
               <Reveal immediate delay={120}>
-                <h1
+                <GradientHoverHeading
+                  as="h1"
                   className="font-display text-ink capitalize"
+                  text={"Three Stories from\nthe Front Lines"}
                   style={{
                     margin: "10px 0 0",
                     maxWidth: 539,
@@ -642,9 +645,7 @@ function StoriesPage() {
                     lineHeight: 1.1667,
                     fontWeight: 500,
                   }}
-                >
-                  Three Stories from the Front Lines
-                </h1>
+                />
               </Reveal>
 
               <Reveal immediate delay={240}>

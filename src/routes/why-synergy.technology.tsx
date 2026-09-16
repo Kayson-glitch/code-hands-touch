@@ -6,6 +6,7 @@ import { SiteNav } from "@/components/SiteNav";
 import { whyTechnologyAsset } from "@/lib/media";
 import { HalftoneHandStill } from "@/components/HalftoneHandStill";
 import { Reveal } from "@/components/Reveal";
+import { GradientHoverHeading } from "@/components/GradientHoverHeading";
 import { RollingNumber } from "@/components/RollingNumber";
 import { FinChatDock } from "@/components/FinChatDock";
 import { SiteFooter } from "@/components/SiteFooter";
@@ -715,8 +716,10 @@ function TechnologyPage() {
               </Reveal>
 
               <Reveal immediate delay={120}>
-                <h1
+                <GradientHoverHeading
+                  as="h1"
                   className="font-display text-ink capitalize"
+                  text={"How the System Stays\nAccurate and Safe"}
                   style={{
                     margin: "10px 0 0",
                     maxWidth: 680,
@@ -724,9 +727,7 @@ function TechnologyPage() {
                     lineHeight: 1.1667,
                     fontWeight: 500,
                   }}
-                >
-                  How the System Stays Accurate and Safe
-                </h1>
+                />
               </Reveal>
 
               <Reveal immediate delay={240}>
