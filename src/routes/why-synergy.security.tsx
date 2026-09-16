@@ -255,16 +255,16 @@ function SecurityPage() {
         <HalftoneHandStill
           src={whySecurityAsset.url}
           contrast={1.7}
-          cropX={0.166}
-          cropW={0.834}
-          cropY={0.05}
-          cropH={0.85}
+          cropX={0.254}
+          cropW={0.746}
+          cropY={0.095}
+          cropH={0.76}
           pitch={6}
           className="pointer-events-none absolute select-none"
           style={{
             // Soften the box edges the subject bleeds through (left arm, lower arm).
-            maskImage: "linear-gradient(to right, transparent 0, #000 14%), linear-gradient(to top, transparent 0, #000 14%)",
-            WebkitMaskImage: "linear-gradient(to right, transparent 0, #000 14%), linear-gradient(to top, transparent 0, #000 14%)",
+            maskImage: "linear-gradient(to right, transparent 0, #000 14%), linear-gradient(to top, transparent 0, #000 14%), linear-gradient(to bottom, transparent 0, #000 12%)",
+            WebkitMaskImage: "linear-gradient(to right, transparent 0, #000 14%), linear-gradient(to top, transparent 0, #000 14%), linear-gradient(to bottom, transparent 0, #000 12%)",
             maskComposite: "intersect",
             WebkitMaskComposite: "source-in",
             top: fluid(115, 66),

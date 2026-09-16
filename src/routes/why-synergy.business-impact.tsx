@@ -414,7 +414,7 @@ function BusinessImpactPage() {
         <HalftoneHandStill
           src={whyImpactAsset.url}
           contrast={1.25}
-          cropX={0.0}
+          cropX={0.019}
           cropW={0.981}
           cropY={0.0}
           cropH={1.0}
