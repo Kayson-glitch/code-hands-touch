@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { MessageSquareCode, Map as MapIcon } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
+import { Calculator, ChartPie, ClipboardCheck, Gauge, Headset, TrendingDown, Users } from "lucide-react";
 import { SiteNav } from "@/components/SiteNav";
 import { HalftoneHandStill } from "@/components/HalftoneHandStill";
 import { Reveal } from "@/components/Reveal";
@@ -144,7 +145,7 @@ const KPI_RIGHT = {
 
 type BodySegment = { text: string; highlight?: boolean };
 type ArticleBlockData = {
-  icon: typeof MapIcon;
+  icon: LucideIcon;
   title: string;
   body: string | BodySegment[];
   divider: boolean;
@@ -167,7 +168,7 @@ const ARTICLES: Record<"roi" | "impact", ArticleSet> = {
       "For the people who sign the budget — CEO, CFO and operations leadership. This article quantifies how the AI support system changes BCGame's operating cost, using its customer-service workforce as the subject. The global CS team is 150 agents at a fully loaded cost (equipment and office space included) of about $10K per person per month: roughly $1.5M a month, $18M a year, and growing linearly with the business.",
     light: [
       {
-        icon: MessageSquareCode,
+        icon: Calculator,
         title: "Analysis of Current Cost Structure",
         body: [
           { text: "Within the existing agent structure, the vast majority of labour hours are consumed by high-repetition, low-judgement inquiries: order tracking, payment progress, promotion rules, withdrawal status checks. These dominate inbound volume but need almost no human judgement. " },
@@ -177,7 +178,7 @@ const ARTICLES: Record<"roi" | "impact", ArticleSet> = {
         divider: true,
       },
       {
-        icon: MapIcon,
+        icon: Users,
         title: "Target Structure: Reallocating Agent Functions",
         body: [
           { text: "After integration, based on business data from the current observation cycle, the CS team can be optimised to about 50 agents: 20 VIP agents (supervisor-level, dedicated to high-value customers) and 30 general agents. Crucially, the 30 general agents move from front-line Q&A to online data monitoring, anomaly handling and human fallback. " },
@@ -189,13 +190,13 @@ const ARTICLES: Record<"roi" | "impact", ArticleSet> = {
     ],
     dark: [
       {
-        icon: MessageSquareCode,
+        icon: TrendingDown,
         title: "Cost Impact Projection",
         body: "Under the target structure the team shrinks by roughly 50%, which translates to about $1M a month and roughly $12M a year in labour cost. This is not cost reduction at the expense of service quality: VIP customers are served by dedicated agents, strengthening continuity and response quality, while general agents move into monitoring roles and the whole team shifts from a scale-driven to an efficiency-driven model.",
         divider: true,
       },
       {
-        icon: MapIcon,
+        icon: ClipboardCheck,
         title: "Conclusion and Clarifications",
         body: "This projection is based on the AI system's actual absorption capacity during the current observation cycle — it describes the optimisation space the data supports; the organisational adjustment itself has not been executed. The system's capacity already meets the level required for this structure; when and how headcount changes is the client's operating decision. Capability is met; implementation is a matter of pacing. Figures describe BCGame's results since the June 2026 launch and will move as the system iterates week by week.",
         divider: false,
@@ -210,13 +211,13 @@ const ARTICLES: Record<"roi" | "impact", ArticleSet> = {
       "For support and business leads. This article reports the system's core production metrics — how the 55% auto-handling rate and 70% reply rate are defined, where they come from, and why they are a boundary the team chose rather than the ceiling of what the technology can do.",
     light: [
       {
-        icon: MessageSquareCode,
+        icon: Gauge,
         title: "How Resolution Is Measured",
         body: "Two independent metrics are tracked. The AI auto-handling rate — 55% — is the share of conversations completed entirely by AI with no human agent in the thread. The AI reply rate — 70% — is the share of customer messages answered by AI, including turns inside conversations that later escalate. At the current monthly volume that is about 110K conversations handled independently every month. Both figures were zero before launch; nothing here is smoothed, weighted, or inherited from earlier automation.",
         divider: true,
       },
       {
-        icon: MapIcon,
+        icon: ChartPie,
         title: "Traffic Composition Across 200K Conversations",
         body: "Monthly inbound sits at roughly 200K conversations with concurrency holding at QPS 20–50 — a genuinely high-volume production load that tests stability, precision and absorption capacity. The mix is dominated by order tracking, payment and withdrawal status, promotion rules and account verification: repetitive intents with stable resolution paths, which is why they are absorbed first. Disputes, risk review, VIP negotiation and anything needing a policy exception are routed to people by design and excluded from the AI target rather than counted as failures.",
         divider: false,
@@ -224,13 +225,13 @@ const ARTICLES: Record<"roi" | "impact", ArticleSet> = {
     ],
     dark: [
       {
-        icon: MessageSquareCode,
+        icon: Headset,
         title: "Escalation And Fallback Behaviour",
         body: "The handover policy is explicit. Anything beyond the current knowledge boundary, or involving a high-risk judgement, goes to a human — every time. VIP conversations keep a human in the loop by default. Handover carries the full context so the agent never restarts the exchange. Human-likeness is engineered rather than prompted: the target market's slang, abbreviations and scenario-specific phrasing are configured into the response layer, so most customers cannot tell they are talking to a system.",
         divider: true,
       },
       {
-        icon: MapIcon,
+        icon: ClipboardCheck,
         title: "Baseline And Clarifications",
         body: "Both metrics were zero before launch, so today's figures are net new absorption, not a migration of existing automation. 55% and 70% describe stable capacity within the range the system is confident about — not a technical maximum. Holding this level at 200K conversations a month is what makes the workforce restructuring in the previous article possible: it changes the staffing logic of the whole team, not the fate of individual agents. Why the rate is 55% rather than a forced 95% is covered under Technology → Zero Hallucinations. All numbers are a snapshot of the current observation cycle and will change as the system iterates weekly.",
         divider: false,
@@ -343,7 +344,7 @@ function ArticleBlock({
   delay = 0,
   duration,
 }: {
-  icon: typeof MapIcon;
+  icon: LucideIcon;
   title: string;
   body: string | BodySegment[];
   divider: boolean;

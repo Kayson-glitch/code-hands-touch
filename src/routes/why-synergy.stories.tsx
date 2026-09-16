@@ -1,9 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import {
-  MessageSquareCode,
-  Map as MapIcon,
-} from "lucide-react";
+import type { LucideIcon } from "lucide-react";
+import { Activity, CalendarCheck, ClipboardCheck, FileWarning, Hourglass, Languages, Lock, MessageCircle, RefreshCw, Route as RouteIcon, ScanSearch, TrendingDown, TrendingUp, UserCheck } from "lucide-react";
 import { SiteNav } from "@/components/SiteNav";
 import { HalftoneHandStill } from "@/components/HalftoneHandStill";
 import { Reveal } from "@/components/Reveal";
@@ -132,7 +130,7 @@ function Hairline({ dark = false }: { dark?: boolean }) {
 
 /* ------------------------------------------------------------------ data */
 
-type Block = { icon: typeof MapIcon; title: string; body: string; divider: boolean };
+type Block = { icon: LucideIcon; title: string; body: string; divider: boolean };
 
 type Story = {
   id: string;
@@ -171,13 +169,13 @@ const STORIES: Story[] = [
     ],
     light: [
       {
-        icon: MessageSquareCode,
+        icon: Languages,
         title: "Where General-Purpose Translation Breaks Down",
         body: "The multilingual pipeline used English as an intermediate layer: Hindi or Urdu text was first translated to English, then passed to intent recognition and response generation. Meaning was lost in that hop. Order tracking, withdrawals and top-ups — the high-sensitivity after-sales questions — are exactly where low-resource-language users concentrate, so a mistranslation went straight to lost trust and churn. The limitation is structural, not a tuning problem: general APIs are trained on corpora that do not reflect how payment and trading terms are actually used in these languages, and even the best of them could not recover the meaning.",
         divider: true,
       },
       {
-        icon: MapIcon,
+        icon: RouteIcon,
         title: "Building a Region-Specific Translation Path",
         body: "We trained a targeted translation model for India with three design choices. The English pivot was removed, mapping source languages directly into the target semantic space to eliminate the accumulated error of a second translation. A multi-model voting layer produces the final reading, reducing the variance of any single model on long-tail phrasing. And high-frequency, high-risk transaction terms — pending, withdraw, refund — were calibrated with dedicated corpus so the words that decide money are the words the system gets right.",
         divider: false,
@@ -185,20 +183,20 @@ const STORIES: Story[] = [
     ],
     dark: [
       {
-        icon: MessageSquareCode,
+        icon: TrendingUp,
         title: "Measured Impact",
         body: "Training and rollout took about one month. Benchmarked against human labels on live traffic, translation accuracy for the Indian region rose from 68% with the general-purpose API to 86% with the targeted model. Intent recognition for low-resource-language users improved accordingly, and the broken links in the after-sales conversation were repaired.",
         divider: true,
       },
       {
-        icon: MapIcon,
+        icon: ClipboardCheck,
         title: "Conclusion and Clarifications",
         body: "These figures come from the current observation cycle in the Indian market and are not extrapolated to every supported language. The method is portable, but each region needs its own corpus and its own validation pass before we quote a number. When a general translation service hits its precision ceiling in a specific scenario, a targeted model trained on the customer's real business data can lift accuracy substantially within a controlled timeframe — this capability is part of our customised model service.",
         divider: false,
       },
     ],
     tail: {
-      icon: MapIcon,
+      icon: MessageCircle,
       title: "What Changed for Users",
       body: "Low-resource-language users stopped rephrasing themselves in English to be understood. Because the model reads the original message directly, tone and urgency survive, and the reply comes back in the language the customer actually wrote in.",
       divider: false,
@@ -224,13 +222,13 @@ const STORIES: Story[] = [
     ],
     light: [
       {
-        icon: MessageSquareCode,
+        icon: FileWarning,
         title: "An Industrialised Forgery Chain",
         body: "The behaviour had all the marks of an industry, not an individual. Payment proofs were edited to a high standard of realism, submitted to support as evidence of a completed payment, and followed by a compensation claim. Forgeries arrived as PDFs, videos and images, and human agents could not reliably tell them apart by eye. Because the work was done in batches, the response had to be fast as well as accurate.",
         divider: true,
       },
       {
-        icon: MapIcon,
+        icon: Hourglass,
         title: "Why Manual Verification Kept Losing",
         body: "The existing process relied on an outsourced KYC team. Two limits made it unwinnable: a single verification typically took days, hopelessly mismatched against batch forgery, and cost rose linearly with the volume checked. In an attacker–defender contest, manual review was permanently on the back foot.",
         divider: false,
@@ -238,20 +236,20 @@ const STORIES: Story[] = [
     ],
     dark: [
       {
-        icon: MessageSquareCode,
+        icon: ScanSearch,
         title: "Measured Impact",
         body: "We built a custom image-forensics model for BCGame's Indian payment scenario: multimodal detection across PDF, video and image; detection of image tampering, element substitution and template forgery; and tiered handling in which only suspicious items are passed to human review. Benchmarked against human labels on live traffic, accuracy reached 88% within about three months. Verification that took days now happens in near real time, and the cost of running a forgery operation went up sharply.",
         divider: true,
       },
       {
-        icon: MapIcon,
+        icon: Lock,
         title: "Deliberate Limits",
         body: "The model flags; people decide. The system never moves funds, closes an account or issues a final refusal on its own — the AI's role ends at evidence and recommendation, which is what makes automation acceptable inside a regulated payment flow. 88% is the accuracy of a specific observation cycle: behind it is a weekly model-update mechanism (see Iteration Flywheel), so the figure keeps moving with each cycle.",
         divider: false,
       },
     ],
     tail: {
-      icon: MapIcon,
+      icon: UserCheck,
       title: "What Changed for Agents",
       body: "Risk agents stopped checking every item and started reviewing the suspicious subset with the evidence already attached. The support system's remit extended from answering questions to controlling fund risk.",
       divider: false,
@@ -277,13 +275,13 @@ const STORIES: Story[] = [
     ],
     light: [
       {
-        icon: MessageSquareCode,
+        icon: TrendingDown,
         title: "Why Static Delivery Decays",
         body: "A model trained once and delivered once stops adapting the moment it is deployed. In a forgery scenario where techniques keep evolving, that guarantees decay: new methods are not covered by the old version, and the value of the delivery shrinks with time. BCGame raised the requirement explicitly — the anti-forgery algorithm had to evolve with the attackers — and the weekly mechanism was designed to meet it.",
         divider: true,
       },
       {
-        icon: MapIcon,
+        icon: RefreshCw,
         title: "The Closed Loop",
         body: "Human labels from production — on PDF, image and video proofs — are the training input. The algorithm retrains on them weekly and a new version is released every Friday, flowing back into production. Labelling, training, weekly release, higher accuracy, more labels: the loop means detection improves as new forgery samples accumulate, rather than stalling at the delivery date.",
         divider: false,
@@ -291,20 +289,20 @@ const STORIES: Story[] = [
     ],
     dark: [
       {
-        icon: MessageSquareCode,
+        icon: Activity,
         title: "Measured Impact",
         body: "The 88% detection figure in the previous story is an observation from one iteration cycle, not a fixed property of the model; it rises as samples accumulate. The mechanism is engineered for production: it runs at QPS 20–50, and model updates are decoupled from the serving path, so iterating never affects availability. What is delivered is a self-improving production system, not a static algorithm.",
         divider: true,
       },
       {
-        icon: MapIcon,
+        icon: ClipboardCheck,
         title: "Conclusion and Clarifications",
         body: "This cadence is a customised delivery for BCGame's Indian market and depends on production traffic and labelled outcomes; a pilot without volume cannot sustain it. Together with private deployment and on-site FDE support it forms our long-term service model (see Security & Partnership). Every accuracy figure quoted should be read as the value within a specific iteration cycle.",
         divider: false,
       },
     ],
     tail: {
-      icon: MapIcon,
+      icon: CalendarCheck,
       title: "What Changed for the Roadmap",
       body: "The numbers stopped being a finish line. Each Friday's release is the new baseline, and the conversation with the customer moved from 'what did you deliver' to 'what did it learn this week'.",
       divider: false,

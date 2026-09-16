@@ -1,12 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import {
-  MessageSquareCode,
-  Map as MapIcon,
-  Shield,
-  Search,
-  Workflow,
-} from "lucide-react";
+import type { LucideIcon } from "lucide-react";
+import { Database, FileWarning, FolderTree, Gauge, Handshake, Layers, Link2, ListOrdered, Maximize2, MessageCircle, Network, Radar, Scissors, ShieldCheck, Target, Timer, TriangleAlert, UserCheck, Users, Workflow } from "lucide-react";
 import { SiteNav } from "@/components/SiteNav";
 import { HalftoneHandStill } from "@/components/HalftoneHandStill";
 import { Reveal } from "@/components/Reveal";
@@ -135,7 +130,7 @@ function Hairline({ dark = false }: { dark?: boolean }) {
 
 /* ------------------------------------------------------------------ data */
 
-type Block = { icon: typeof MapIcon; title: string; body: string; divider: boolean };
+type Block = { icon: LucideIcon; title: string; body: string; divider: boolean };
 
 type Module = {
   id: string;
@@ -175,13 +170,13 @@ const MODULES: Module[] = [
     ],
     light: [
       {
-        icon: Shield,
+        icon: TriangleAlert,
         title: "Why Hallucination Outranks Automation Rate",
         body: "In scenarios that touch money or compliance — top-ups, withdrawals, compensation — a hallucinated reply can translate directly into a wrong fund movement, a compliance breach, or a lost high-value customer. That cost is far higher than the cost of passing one more conversation to a person. The design therefore treats certainty as more important than coverage: the automatic response range is deliberately narrowed rather than allowing unreliable output.",
         divider: true,
       },
       {
-        icon: Search,
+        icon: ShieldCheck,
         title: "The Boundary Rule: Answer or Hand Over",
         body: "The system follows an explicit response boundary. If the knowledge base holds an answer, it responds directly. If a question falls outside the current knowledge boundary, it hands over to a human — every time — and does not generate a speculative reply. The rule is only as reliable as the engineering under it: knowledge governance keeps the content accurate, precision retrieval makes sure answerable content is actually found, and boundary control keeps the system silent when it is unsure.",
         divider: false,
@@ -189,20 +184,20 @@ const MODULES: Module[] = [
     ],
     dark: [
       {
-        icon: Shield,
+        icon: Gauge,
         title: "Measured Impact",
         body: "This rule is the direct reason the auto-handling rate sits at 55%. The number is not a technical limit; it is the result of active restraint — the system automates only inside the range it is confident about. For an operator, 55% describes stable capacity within a reliable boundary, which is worth more than a higher figure driven by coverage. Across the current observation cycle no fabricated answer has been confirmed.",
         divider: true,
       },
       {
-        icon: MapIcon,
+        icon: Maximize2,
         title: "How the Boundary Moves",
         body: "As knowledge governance and model iteration continue, the range the system can answer reliably widens, and the auto-handling rate rises naturally while the zero-hallucination constraint holds. The boundary expands with knowledge coverage — it is never widened by relaxing the rule.",
         divider: false,
       },
     ],
     tail: {
-      icon: MapIcon,
+      icon: MessageCircle,
       title: "What Changed for Customers",
       body: "Customers stopped receiving confidently wrong answers. When the system does not know, it says so and connects them to a person who already has the context. That honesty is what makes the 55% trustworthy — the rest is handled, not hidden.",
       divider: false,
@@ -229,13 +224,13 @@ const MODULES: Module[] = [
     ],
     light: [
       {
-        icon: Shield,
+        icon: Layers,
         title: "Where the Complexity Comes From",
         body: "Regionally, every market has its own promotions, game rules and reward terms. Temporally, promotions carry explicit validity windows, so past, current and upcoming content coexist. By scenario, the base covers pre-sales through after-sales, and after-sales branches deeply — top-ups and withdrawals, order verification, refunds. On top of that, dozens of long documents contain two different kinds of content side by side: how to reply, and what the system must never do.",
         divider: true,
       },
       {
-        icon: MapIcon,
+        icon: FileWarning,
         title: "Why Plain Upload Pollutes the Knowledge Base",
         body: "Uploading those documents as-is pollutes the base: behavioural rules and retrievable content end up stored together, so retrieval precision drops and rules stop binding. With many regions and time windows side by side, the system is prone to cross-scenario recall — returning one region's expired promotion to another region's current user. Governance has to happen before retrieval can be trusted.",
         divider: false,
@@ -243,20 +238,20 @@ const MODULES: Module[] = [
     ],
     dark: [
       {
-        icon: Shield,
+        icon: FolderTree,
         title: "The Governance Method",
         body: "A configuration Skill we built structures every document into two layers. Reply scripts go into the knowledge base and carry the retrieval job; constraint rules go into a rules layer and carry the behavioural job. The result is verified twice — by human review and by AI-driven automated tests — checking response accuracy entry by entry. Slang, abbreviations and local phrasing are configured deeply enough that customers rarely notice they are talking to a system.",
         divider: true,
       },
       {
-        icon: MapIcon,
+        icon: Radar,
         title: "Derived Capability: Business Monitoring",
         body: "On top of the governed base, every session is tagged. Shifts in the distribution of inbound topics point back to business problems and market trends: an unusual spike on one topic usually corresponds to a change in a promotion, a region or a process. Support data becomes a monitoring source for the business, not just a service log.",
         divider: false,
       },
     ],
     tail: {
-      icon: MapIcon,
+      icon: Database,
       title: "What Changed for Operations",
       body: "The knowledge base stopped being a pile of long documents nobody trusted. Scripts and rules live where they belong, each entry has been verified, and the same data now tells the business where something just changed. The more complex the base, the more that governance is worth.",
       divider: false,
@@ -283,13 +278,13 @@ const MODULES: Module[] = [
     ],
     light: [
       {
-        icon: Search,
+        icon: Scissors,
         title: "Where Chunk-and-Embed Falls Short",
         body: "Standard RAG splits long documents into fragments, embeds them and searches by similarity. The split discards the document's structure and the links between its parts. When the base holds many pieces of content that are regionally close but differ in time, similarity search readily returns a fragment that is semantically near yet factually wrong. Recall precision is capped by the method itself.",
         divider: true,
       },
       {
-        icon: MapIcon,
+        icon: ListOrdered,
         title: "The Retrieval Stack",
         body: "Recall runs through several layers. PageIndex vector-free hybrid retrieval locates content by the document's own structure and hierarchy, avoiding the context loss of chunking and giving precise recall across scenarios. A high-precision embedding model provides the underlying representation. A rerank model we built ourselves scores the candidates in two stages — coarse, then fine — so the most relevant result lands first.",
         divider: false,
@@ -297,20 +292,20 @@ const MODULES: Module[] = [
     ],
     dark: [
       {
-        icon: Search,
+        icon: Link2,
         title: "Governance and Retrieval Together",
         body: "Governance guarantees the content is correct; retrieval and re-ranking guarantee the correct content is what gets pulled out. One is data quality, the other extraction precision, and reliability needs the whole chain — neither works without the other. This stack is the technical base for the response precision achieved on BCGame's complex knowledge base, and the precondition for the zero-hallucination rule to hold.",
         divider: true,
       },
       {
-        icon: MapIcon,
+        icon: Timer,
         title: "Boundaries and Latency",
         body: "Every scenario carries an explicit response boundary so the system never over-answers beyond it. Within that precision constraint, latency is optimised so retrieval is not the bottleneck in the customer-facing path. In a complex knowledge base, response precision is a property of the whole chain — from data governance to ranking — not of any single model.",
         divider: false,
       },
     ],
     tail: {
-      icon: MapIcon,
+      icon: Target,
       title: "What Changed for Customers",
       body: "Customers stopped getting answers to a slightly different question than the one they asked. The system finds the passage that addresses their situation, not the one that shares the most words — and that precision is what gives the boundary rule something solid to stand on.",
       divider: false,
@@ -337,13 +332,13 @@ const MODULES: Module[] = [
     ],
     light: [
       {
-        icon: Workflow,
+        icon: Network,
         title: "56 Scenarios, Deep Branches, Many Systems",
         body: "A single fiat ticket often has to pass through CRM, ERM and the order system several times before it is done. Branches are deep and cross-system dependencies are strong; moving and reconciling information between systems by hand is slow and error-prone. No single flow — and no single model call — could hold the whole space.",
         divider: true,
       },
       {
-        icon: MapIcon,
+        icon: Workflow,
         title: "The Orchestration",
         body: "Our on-site FDE team mapped and connected the CRM and ERM ticket flows, then a multi-agent architecture orchestrates the complex tasks. The 56 scenarios are divided across agents that cooperate along the business process; orders, messages and change notifications are connected end to end so information moves between systems automatically and data silos disappear. Standardised flows — top-ups, withdrawals, order verification — close automatically.",
         divider: false,
@@ -351,20 +346,20 @@ const MODULES: Module[] = [
     ],
     dark: [
       {
-        icon: Workflow,
+        icon: UserCheck,
         title: "High-Risk Steps Stay Human",
         body: "Refunds and other high-risk, high-complexity scenarios are never fully automated. The AI collects and organises all relevant information through tools, assembles a complete basis for the decision, and a person performs the final double check. The AI owns gathering, organising and preliminary checks; the human owns the decision. That split balances automation efficiency with control over the steps that matter.",
         divider: true,
       },
       {
-        icon: MapIcon,
+        icon: Handshake,
         title: "Why On-Site FDE Mattered",
         body: "Connecting 56 scenarios across CRM and ERM is business-process work before it is AI work. It was done by an FDE team embedded with the customer, walking each flow with the people who run it. That depth of integration is what separates this system from a surface-level chat layer — and it is the same team that stays on after launch (see Security & Partnership).",
         divider: false,
       },
     ],
     tail: {
-      icon: MapIcon,
+      icon: Users,
       title: "What Changed for the Team",
       body: "From front-line questions to back-office tickets, the division of labour is now explicit: standardised steps are handled by AI, key decisions stay with people. Agents stopped being switchboard operators between systems and started focusing on the one judgement that actually needs them.",
       divider: false,
