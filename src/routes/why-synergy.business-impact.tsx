@@ -165,7 +165,7 @@ const ARTICLES: Record<"roi" | "impact", ArticleSet> = {
     titleAccent: "Scaling Support Smarter:",
     titleRest: "Cost Analysis from 150 to 50 Agents",
     intro:
-      "For the people who sign the budget — CEO, CFO and operations leadership. This article quantifies how the AI support system changes BCGame's operating cost, using its customer-service workforce as the subject. The global CS team is 150 agents at a fully loaded cost (equipment and office space included) of about $10K per person per month: roughly $1.5M a month, $18M a year, and growing linearly with the business.",
+      "For the people who sign the budget. BCGame's 150-agent support team costs about $1.5M a month; this article quantifies how the AI system changes that structure and what the data already supports.",
     light: [
       {
         icon: Coins,
@@ -208,7 +208,7 @@ const ARTICLES: Record<"roi" | "impact", ArticleSet> = {
     titleAccent: "Resolution At Scale:",
     titleRest: "How AI Absorbs 200K Conversations",
     intro:
-      "For support and business leads. This article reports the system's core production metrics — how the 55% auto-handling rate and 70% reply rate are defined, where they come from, and why they are a boundary the team chose rather than the ceiling of what the technology can do.",
+      "For support and business leads. How the 55% auto-handling rate and 70% reply rate are defined, where they come from, and why they are a boundary the team chose rather than a technical ceiling.",
     light: [
       {
         icon: Gauge,

@@ -157,8 +157,8 @@ const STORIES: Story[] = [
     titleAccent: "Targeted Translation for ",
     titleRest: "Low-Resource Languages",
     intro: [
-      "BCGame supports 22 languages and runs reliably across the major ones. In low-resource languages, though, systematic semantic drift was breaking service for users in the Indian market: a customer asking why an order was still 'pending' arrived at the model asking why they were still 'pregnant'.",
-      "For international and multilingual operations teams: the root cause, the targeted model we trained, and how the result was validated.",
+      "In Hindi and Urdu, 'why is my order still pending' reached the model as 'why am I still pregnant'.",
+      "For multilingual ops teams: root cause, targeted model, validation.",
     ],
     stats: ["68%", "86%"],
     caption: "India translation accuracy, general API → targeted model · 1 month",
@@ -210,8 +210,8 @@ const STORIES: Story[] = [
     titleAccent: "Catching Forged Payment Proofs ",
     titleRest: "Before Payout",
     intro: [
-      "In BCGame's Indian after-sales flow, organised rings doctored payment screenshots, PDFs and videos to claim compensation and move money. Verification was outsourced to a KYC team and took days per case.",
-      "For risk, KYC and finance-security teams: the fraud pattern, why manual review kept losing, and the custom image-forensics model that replaced it.",
+      "Organised rings doctored payment proofs to claim compensation; outsourced KYC checks took days.",
+      "For risk and KYC teams: why manual review lost, and the model that replaced it.",
     ],
     stats: ["88%", ""],
     caption: "Forged-proof detection accuracy · about 3 months · PDF / video / image",
@@ -263,8 +263,8 @@ const STORIES: Story[] = [
     titleAccent: "A Machine That Gets Stronger ",
     titleRest: "Every Friday",
     intro: [
-      "Most AI deliveries peak on launch day and drift afterwards as data and adversaries change. This is the closed loop that keeps BCGame's payment-forgery model improving — a customised deliverable built for one market's specific risk, not a generic feature.",
-      "For technical leads, and for anyone who fears 'launch is the peak': how production labels become Friday releases without touching live service.",
+      "Most AI deliveries peak at launch and drift. This loop keeps BCGame's forgery model improving every week.",
+      "For technical leads: production labels in, Friday releases out, live service untouched.",
     ],
     stats: ["Friday", ""],
     caption: "A new model version every Friday · PDF, image and video",

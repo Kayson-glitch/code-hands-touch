@@ -127,7 +127,7 @@ const HEADER = {
   titleAccent: "Private Deployment ",
   titleRest: "and Long-Term Partnership",
   intro:
-    "For data-security and procurement decision-makers. For data-sensitive businesses, choosing an AI customer-service vendor comes down to two things first: data security guarantees and long-term service capability. This article describes our private deployment option and the service model that keeps the system improving after launch — the same model behind BCGame's results since June 2026.",
+    "For data-security and procurement leads. Two things decide the vendor question for sensitive businesses — data security and long-term service. Here is our private deployment option and the model that keeps the system improving after launch.",
 };
 
 const DARK_BLOCKS: Block[] = [

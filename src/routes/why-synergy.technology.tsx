@@ -157,8 +157,8 @@ const MODULES: Module[] = [
     titleAccent: "Grounded Answers, ",
     titleRest: "Not Confident Guesses",
     intro: [
-      "In top-ups, withdrawals and compensation, one hallucinated answer costs far more than a few extra handovers. Fabricated content that sounds right is a real risk in financial and payment scenarios, so hallucination control sits above automation rate in this system's priorities.",
-      "For compliance, risk and support-quality leads: the rule the system follows, and how it shows up in the operating numbers.",
+      "In top-ups, withdrawals and compensation, one hallucinated answer costs more than a few extra handovers.",
+      "For compliance and risk leads: the rule, and how it shows up in the numbers.",
     ],
     stats: ["55%", "0"],
     caption: "Auto-handling rate, drawn on purpose",
@@ -211,8 +211,8 @@ const MODULES: Module[] = [
     titleAccent: "Scripts and Rules, ",
     titleRest: "Kept Structurally Apart",
     intro: [
-      "The size and structure of the knowledge base decide response quality. BCGame's stacks complexity on three axes at once — 50+ long documents spanning many markets, strict time windows, and the full pre- and after-sales flow — and mixes reply scripts with constraint rules in the same files.",
-      "For knowledge operations and technical leads: where the complexity comes from, why plain upload fails, and the governance method that holds it together.",
+      "50+ long documents across markets and time windows, with reply scripts and constraint rules mixed together.",
+      "For knowledge operations: why plain upload fails and what holds it together.",
     ],
     stats: ["50+", "2"],
     caption: "Long docs across markets and windows",
@@ -265,8 +265,8 @@ const MODULES: Module[] = [
     titleAccent: "Retrieval by Structure, ",
     titleRest: "Not Just Vectors",
     intro: [
-      "Retrieval precision is the deciding step in a RAG system — and RAG alone does not reach the optimum. Cutting long documents into vector chunks throws away their structure and context, which in a very long, time-sensitive knowledge base is exactly where errors come from.",
-      "For technical leads and architecture decision-makers: the limits of single-vector search and the hybrid retrieval and re-ranking stack we use instead.",
+      "Chunking long documents into vectors discards structure and context — exactly where errors come from.",
+      "For technical leads: the limits of vector-only search and the stack we use instead.",
     ],
     stats: ["3", "2"],
     caption: "Retrieval layers, PageIndex to rerank",
@@ -319,8 +319,8 @@ const MODULES: Module[] = [
     titleAccent: "Multi-Agent Coordination ",
     titleRest: "With a Human Ceiling",
     intro: [
-      "After-sales tickets are where AI support usually stalls. BCGame's fiat ticket system holds 56 scenarios — top-ups and withdrawals, order queries, identity checks, order-change notifications — with deep branches and hard dependencies across CRM, ERM and the order system.",
-      "For operations and systems-integration leads: how the scenarios are orchestrated, what is closed automatically, and where a person stays in the loop by design.",
+      "56 fiat ticket scenarios with deep branches across CRM, ERM and the order system.",
+      "For operations leads: how they are orchestrated and where a person stays in the loop.",
     ],
     stats: ["56", "2"],
     caption: "Fiat ticket scenarios, multi-agent",
