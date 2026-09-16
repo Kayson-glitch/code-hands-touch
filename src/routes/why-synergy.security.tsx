@@ -255,10 +255,10 @@ function SecurityPage() {
         <HalftoneHandStill
           src={whySecurityAsset.url}
           contrast={1.7}
-          cropX={0.254}
-          cropW={0.746}
-          cropY={0.095}
-          cropH={0.76}
+          cropX={0.352}
+          cropW={0.648}
+          cropY={0.145}
+          cropH={0.66}
           pitch={6}
           className="pointer-events-none absolute select-none"
           style={{
