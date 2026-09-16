@@ -118,11 +118,11 @@ function Hairline({ dark = false, dashed = false }: { dark?: boolean; dashed?: b
 
 const KPI_LEFT = {
   kicker: "Business Value · ROI",
-  value: "¥12M",
+  value: "$12M",
   unit: "/ yr",
   caption: "Projected annual labour-cost saving · not yet executed",
   bullets: [
-    "150 agents today · ≈¥1.5M a month",
+    "150 agents today · ≈$1.5M a month",
     "≈50 is enough: 20 VIP + 30 monitoring",
     "Replies → VIP service and monitoring",
     "Capability met; rollout is a pacing decision",
@@ -164,7 +164,7 @@ const ARTICLES: Record<"roi" | "impact", ArticleSet> = {
     titleAccent: "Scaling Support Smarter:",
     titleRest: "Cost Analysis from 150 to 50 Agents",
     intro:
-      "For the people who sign the budget — CEO, CFO and operations leadership. This article quantifies how the AI support system changes BCGame's operating cost, using its customer-service workforce as the subject. The global CS team is 150 agents at a fully loaded cost (equipment and office space included) of about ¥10K per person per month: roughly ¥1.5M a month, ¥18M a year, and growing linearly with the business.",
+      "For the people who sign the budget — CEO, CFO and operations leadership. This article quantifies how the AI support system changes BCGame's operating cost, using its customer-service workforce as the subject. The global CS team is 150 agents at a fully loaded cost (equipment and office space included) of about $10K per person per month: roughly $1.5M a month, $18M a year, and growing linearly with the business.",
     light: [
       {
         icon: MessageSquareCode,
@@ -191,7 +191,7 @@ const ARTICLES: Record<"roi" | "impact", ArticleSet> = {
       {
         icon: MessageSquareCode,
         title: "Cost Impact Projection",
-        body: "Under the target structure the team shrinks by roughly 50%, which translates to about ¥1M a month and roughly ¥12M a year in labour cost. This is not cost reduction at the expense of service quality: VIP customers are served by dedicated agents, strengthening continuity and response quality, while general agents move into monitoring roles and the whole team shifts from a scale-driven to an efficiency-driven model.",
+        body: "Under the target structure the team shrinks by roughly 50%, which translates to about $1M a month and roughly $12M a year in labour cost. This is not cost reduction at the expense of service quality: VIP customers are served by dedicated agents, strengthening continuity and response quality, while general agents move into monitoring roles and the whole team shifts from a scale-driven to an efficiency-driven model.",
         divider: true,
       },
       {
