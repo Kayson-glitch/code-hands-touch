@@ -87,16 +87,26 @@ const BAYER = [
   0, 8, 2, 10, 12, 4, 14, 6, 3, 11, 1, 9, 15, 7, 13, 5,
 ].map((v) => (v + 0.5) / 16);
 
-type Dot = {
-  x: number;
-  y: number;
-  d: number; // 0..1 density (1 = darkest)
+/**
+ * Static per-cell attributes of the dot grid. Every video frame is sampled
+ * onto this same grid, so a cell keeps its position, breathing phase and
+ * dissolve threshold while only its coverage changes between frames — that is
+ * what lets two neighbouring frames be blended into a continuous scrub.
+ */
+type Grid = {
+  cols: number;
+  rows: number;
+  x: Float32Array;
+  y: Float32Array;
   /** 0 = frame edge, 1 = centre of the composition — drives parallax weight. */
-  cx: number;
-  /** Independent transparency breathing phase (radians). */
-  alphaPhase: number;
-  /** Independent transparency breathing speed multiplier (kept slow). */
-  alphaSpeed: number;
+  cx: Float32Array;
+  /** Transparency breathing phase (0..1 turn) and speed multiplier. */
+  phase: Float32Array;
+  speed: Float32Array;
+  /** Ordered-dither offset on the coverage threshold. */
+  dither: Float32Array;
+  /** Deterministic 0..1 per-cell value for the scattered dissolve. */
+  hash: Float32Array;
 };
 
 // ------------------------------------------------------------- ink fluid
@@ -295,24 +305,62 @@ function getHandsVisualRect(layout: HeroLayout, viewportW: number, viewportH: nu
   };
 }
 
-/** Downsample one atlas frame onto the dot grid. */
-function sampleDots(
-  atlas: HTMLImageElement,
-  frame: number,
-  rect: { x: number; y: number; w: number; h: number },
-  pitch: number,
-): Dot[] {
+/** Lay the dot grid over the hands band. Independent of any video frame. */
+function buildGrid(rect: { x: number; y: number; w: number; h: number }, pitch: number): Grid {
   const cols = Math.max(1, Math.floor(rect.w / pitch));
   const rows = Math.max(1, Math.floor(rect.h / pitch));
-  const off = document.createElement("canvas");
-  off.width = cols;
-  off.height = rows;
-  const octx = off.getContext("2d", { willReadFrequently: true });
-  if (!octx) return [];
+  const n = cols * rows;
+  const grid: Grid = {
+    cols,
+    rows,
+    x: new Float32Array(n),
+    y: new Float32Array(n),
+    cx: new Float32Array(n),
+    phase: new Float32Array(n),
+    speed: new Float32Array(n),
+    dither: new Float32Array(n),
+    hash: new Float32Array(n),
+  };
+  for (let j = 0; j < rows; j++) {
+    for (let i = 0; i < cols; i++) {
+      const k = j * cols + i;
+      const u = (i + 0.5) / cols;
+      grid.x[k] = rect.x + (i + 0.5) * pitch;
+      grid.y[k] = rect.y + (j + 0.5) * pitch;
+      grid.cx[k] = Math.min(1, Math.min(u, 1 - u) * 2.2);
+      // Deterministic per-cell randomness: a cell breathes on the same phase
+      // whichever frame is showing, so frame changes never re-roll the field.
+      grid.phase[k] = hash2(i * 3 + 1, j * 7 + 2);
+      grid.speed[k] = 0.08 + hash2(i + 11, j + 5) * 0.17;
+      // Ordered dither on the threshold only — keeps continuous tone in the
+      // midtones instead of stepping into visible bands of equal dots.
+      grid.dither[k] = (BAYER[(j & 3) * 4 + (i & 3)] - 0.5) * 0.07;
+      grid.hash[k] = hash2(i, j);
+    }
+  }
+  return grid;
+}
+
+/** Downsample one atlas frame onto the grid → per-cell ink coverage (0..1). */
+function sampleField(
+  atlas: HTMLImageElement,
+  frame: number,
+  grid: Grid,
+  scratch: HTMLCanvasElement,
+): Float32Array {
+  const { cols, rows } = grid;
+  const field = new Float32Array(cols * rows);
+  if (scratch.width !== cols || scratch.height !== rows) {
+    scratch.width = cols;
+    scratch.height = rows;
+  }
+  const octx = scratch.getContext("2d", { willReadFrequently: true });
+  if (!octx) return field;
   octx.imageSmoothingEnabled = true;
   const idx = Math.min(FRAME_COUNT - 1, Math.max(0, frame));
   const sx = (idx % ATLAS_COLS) * FRAME_W;
   const sy = Math.floor(idx / ATLAS_COLS) * FRAME_H;
+  octx.clearRect(0, 0, cols, rows);
   // Slight blur before the downsample keeps the coarse grid from aliasing the
   // finger edges into stair-steps.
   (octx as unknown as { filter: string }).filter = "blur(0.5px)";
@@ -320,39 +368,14 @@ function sampleDots(
   (octx as unknown as { filter: string }).filter = "none";
   const data = octx.getImageData(0, 0, cols, rows).data;
 
-  const dots: Dot[] = [];
-  for (let j = 0; j < rows; j++) {
-    for (let i = 0; i < cols; i++) {
-      const p = (j * cols + i) * 4;
-      const u = (i + 0.5) / cols;
-      const luma = (0.2126 * data[p] + 0.7152 * data[p + 1] + 0.0722 * data[p + 2]) / 255;
-      // Source is dark subject on white paper → ink is the INVERSE of luma.
-      const t = Math.min(1, Math.max(0, (1 - luma - 0.02) / 0.88));
-      let density = Math.pow(t, 0.8);
-
-      // Ordered dither on the threshold only — keeps continuous tone in the
-      // midtones instead of stepping into visible bands of equal dots.
-      const dither = (BAYER[(j & 3) * 4 + (i & 3)] - 0.5) * 0.07;
-      density = Math.min(1, Math.max(0, density + dither));
-
-      if (density < MIN_DENSITY) continue;
-
-      // Scattered dissolve: faint cells survive only sometimes, so the mass
-      // frays into isolated single dots instead of fading out as a block.
-      const keep = smoothstep((density - MIN_DENSITY) / 0.22);
-      if (hash2(i, j) > 0.16 + keep * 0.84) continue;
-
-      dots.push({
-        x: rect.x + (i + 0.5) * pitch,
-        y: rect.y + (j + 0.5) * pitch,
-        d: density,
-        cx: Math.min(1, Math.min(u, 1 - u) * 2.2),
-        alphaPhase: Math.random() * Math.PI * 2,
-        alphaSpeed: 0.08 + Math.random() * 0.17,
-      });
-    }
+  for (let k = 0; k < cols * rows; k++) {
+    const p = k * 4;
+    const luma = (0.2126 * data[p] + 0.7152 * data[p + 1] + 0.0722 * data[p + 2]) / 255;
+    // Source is dark subject on white paper → ink is the INVERSE of luma.
+    const t = Math.min(1, Math.max(0, (1 - luma - 0.02) / 0.88));
+    field[k] = Math.pow(t, 0.8);
   }
-  return dots;
+  return field;
 }
 
 export function HalftoneHandsFooter({
@@ -387,18 +410,40 @@ export function HalftoneHandsFooter({
 
     const pitch = Math.max(5, Math.round(layout.cellSize * 0.62));
 
-    // Per-frame dot cache — scrubbing back and forth never recomputes a frame.
-    let cache = new Map<number, Dot[]>();
-    let bandRect = { x: 0, y: 0, w: 0, h: 0 };
+    // One shared grid plus a per-frame coverage field. Fields are cached and
+    // warmed in the background right after the atlas loads, so scrubbing never
+    // pays for a downsample mid-gesture.
+    let grid: Grid | null = null;
+    let fields: Array<Float32Array | null> = new Array(FRAME_COUNT).fill(null);
+    const scratch = document.createElement("canvas");
+    let warmTimer = 0;
 
-    const dotsForFrame = (frame: number): Dot[] => {
+    const fieldFor = (frame: number): Float32Array | null => {
       const img = imageRef.current;
-      if (!img || bandRect.w <= 0) return [];
-      const hit = cache.get(frame);
-      if (hit) return hit;
-      const built = sampleDots(img, frame, bandRect, pitch);
-      cache.set(frame, built);
-      return built;
+      if (!img || !grid) return null;
+      const idx = Math.min(FRAME_COUNT - 1, Math.max(0, frame));
+      let f = fields[idx];
+      if (!f) {
+        f = sampleField(img, idx, grid, scratch);
+        fields[idx] = f;
+      }
+      return f;
+    };
+
+    const warmFields = () => {
+      window.clearTimeout(warmTimer);
+      const step = () => {
+        if (!imageRef.current || !grid) return;
+        let built = 0;
+        for (let i = 0; i < FRAME_COUNT && built < 4; i++) {
+          if (!fields[i]) {
+            fieldFor(i);
+            built++;
+          }
+        }
+        if (built === 4) warmTimer = window.setTimeout(step, 0);
+      };
+      warmTimer = window.setTimeout(step, 0);
     };
 
     const recomputeBand = () => {
@@ -408,13 +453,17 @@ export function HalftoneHandsFooter({
       const visualRect = getHandsVisualRect(layout, w, h);
       const bandW = visualRect.w;
       const bandH = bandW / FRAME_AR;
-      bandRect = {
-        x: visualRect.x,
-        y: visualRect.y + visualRect.h * 0.5 - bandH * 0.5,
-        w: bandW,
-        h: bandH,
-      };
-      cache = new Map();
+      grid = buildGrid(
+        {
+          x: visualRect.x,
+          y: visualRect.y + visualRect.h * 0.5 - bandH * 0.5,
+          w: bandW,
+          h: bandH,
+        },
+        pitch,
+      );
+      fields = new Array(FRAME_COUNT).fill(null);
+      warmFields();
     };
 
     const resize = () => {
@@ -741,11 +790,15 @@ export function HalftoneHandsFooter({
         // phase progressRef.v stays at 1, so the last frame remains frozen.
         ph.target = progressRef.v * (FRAME_COUNT - 1);
         ph.current += (ph.target - ph.current) * (1 - Math.exp(-dt / 0.05));
-        if (Math.abs(ph.target - ph.current) < 0.01) ph.current = ph.target;
+        if (Math.abs(ph.target - ph.current) < 0.001) ph.current = ph.target;
       }
 
-
-
+      // Fractional playhead → blend the two neighbouring frames' coverage
+      // fields. The 49 stills become a continuous morph instead of 49 pops.
+      const phClamped = Math.min(FRAME_COUNT - 1, Math.max(0, ph.current));
+      const f0 = Math.floor(phClamped);
+      const f1 = Math.min(FRAME_COUNT - 1, f0 + 1);
+      const ft = phClamped - f0;
 
       const p = pointerRef.current;
       if (prefersReduce) {
@@ -760,12 +813,108 @@ export function HalftoneHandsFooter({
         ? 1
         : 1 + Math.sin((now / BREATH_PERIOD) * Math.PI * 2) * BREATH_AMP;
 
-      const dots = dotsForFrame(Math.round(ph.current));
-
       // Step the ink-fluid field: dye advects along the velocity it was pushed
       // with, diffuses slightly and fades back to nothing.
       const fluid = fluidRef.current;
       if (fluid && !prefersReduce) fluid.step(dt);
+
+      let ghostAlpha = 0;
+      /**
+       * Paint the grid at coverage lerp(a, b, t). `ghost` skips the dye,
+       * square-off and per-dot breathing (the entry preview is a flat tint).
+       */
+      const paintField = (
+        a: Float32Array,
+        b: Float32Array,
+        t: number,
+        ghost: boolean,
+      ) => {
+        const g = grid;
+        if (!g) return;
+        const n = g.cols * g.rows;
+        for (let k = 0; k < n; k++) {
+          const base = t > 0 ? a[k] + (b[k] - a[k]) * t : a[k];
+          if (base <= 0) continue;
+          const density = Math.min(1, Math.max(0, base * breath + g.dither[k]));
+          if (density < MIN_DENSITY) continue;
+
+          // Scattered dissolve: faint cells survive only sometimes, so the mass
+          // frays into isolated single dots instead of fading out as a block.
+          // The survival edge is a short ramp rather than a hard cut, so a dot
+          // at the fray fades in over a few frames instead of popping.
+          const keep = smoothstep((density - MIN_DENSITY) / 0.22);
+          const survive = (0.16 + keep * 0.84 - g.hash[k]) / 0.1;
+          if (survive <= 0) continue;
+          const vis = survive >= 1 ? 1 : survive;
+
+          // Centre dots drift more than edge dots → a shallow depth read.
+          const weight = 0.35 + g.cx[k] * 0.65;
+          const x = g.x[k] + p.x * PARALLAX_X * weight;
+          const y = g.y[k] + p.y * PARALLAX_Y * weight;
+
+          // Soft ceiling: large shadow regions no longer all clamp to 1.0,
+          // which is what made them fuse into one flat slab.
+          const d = density < 0.8 ? density : 0.8 + (density - 0.8) * 0.7;
+
+          if (ghost) {
+            const gr = maxR * Math.sqrt(d);
+            if (gr < 0.16) continue;
+            const [gr0, gg0, gb0] = inkAt(d);
+            ctx.globalAlpha = ghostAlpha * vis;
+            ctx.fillStyle = `rgb(${gr0},${gg0},${gb0})`;
+            ctx.beginPath();
+            ctx.arc(x, y, gr, 0, Math.PI * 2);
+            ctx.fill();
+            continue;
+          }
+
+          // Dye coverage under this dot (0 when the pointer never passed here).
+          const dye = fluid ? Math.min(1, fluid.sample(x, y)) : 0;
+          // Area ∝ coverage — the physically correct halftone response.
+          const r = maxR * Math.sqrt(d) * (1 + dye * 0.06);
+          if (r < 0.16) continue;
+
+          // Each dot breathes opacity on its own phase/speed, as a smooth
+          // ease-in-out swell rather than a sharp flash.
+          const dotAlpha = prefersReduce
+            ? 1
+            : 1 -
+              breathWave((now / DOT_ALPHA_PERIOD) * g.speed[k] + g.phase[k]) *
+                DOT_ALPHA_AMP;
+          ctx.globalAlpha = dotAlpha * vis;
+
+          // Value carries volume alongside area: light grey on the paper-facing
+          // planes, deeper grey in the shadows. Where the ink-fluid has been
+          // pushed, that grey blends toward the warm dye gradient.
+          const [ir, ig, ib] = inkAt(d);
+          if (dye > 0.004) {
+            // Deeper dots take more colour, so volume survives the tint.
+            const mix = smoothstep(dye) * (0.45 + d * 0.55);
+            const [dr, dg, db] = dyeAt(Math.min(1, dye * 0.9 + d * 0.02));
+            ctx.fillStyle = `rgb(${Math.round(ir + (dr - ir) * mix)},${Math.round(
+              ig + (dg - ig) * mix,
+            )},${Math.round(ib + (db - ib) * mix)})`;
+          } else {
+            ctx.fillStyle = `rgb(${ir},${ig},${ib})`;
+          }
+
+          if (d <= SQUARE_AT) {
+            ctx.beginPath();
+            ctx.arc(x, y, r, 0, Math.PI * 2);
+            ctx.fill();
+          } else {
+            // High coverage: the dot squares off with a shrinking corner
+            // radius, but never grows — the paper gap between cells is kept.
+            const sq = (d - SQUARE_AT) / (1 - SQUARE_AT);
+            const s = r * (1 - 0.04 * sq);
+            const corner = r * (1 - 0.6 * sq);
+            ctx.beginPath();
+            ctx.roundRect(x - s, y - s, s * 2, s * 2, corner);
+            ctx.fill();
+          }
+        }
+        ctx.globalAlpha = 1;
+      };
 
       // ---- ghost preview of the last frame (10% ink) --------------------
       if (!prefersReduce) {
@@ -795,95 +944,17 @@ export function HalftoneHandsFooter({
         const gA = gAlphaBase * ghost.in * ghost.out;
 
         if (gA > 0.001) {
-          const gDots = dotsForFrame(FRAME_COUNT - 1);
-          ctx.globalAlpha = gA;
-          for (let k = 0; k < gDots.length; k++) {
-            const dot = gDots[k];
-            const weight = 0.35 + dot.cx * 0.65;
-            const gx = dot.x + p.x * PARALLAX_X * weight;
-            const gy = dot.y + p.y * PARALLAX_Y * weight;
-            const raw = Math.min(1, dot.d * breath);
-            const gd = raw < 0.8 ? raw : 0.8 + (raw - 0.8) * 0.7;
-            const gr = maxR * Math.sqrt(gd);
-            if (gr < 0.16) continue;
-            const [gr0, gg0, gb0] = inkAt(gd);
-            ctx.fillStyle = `rgb(${gr0},${gg0},${gb0})`;
-            ctx.beginPath();
-            ctx.arc(gx, gy, gr, 0, Math.PI * 2);
-            ctx.fill();
+          const last = fieldFor(FRAME_COUNT - 1);
+          if (last) {
+            ghostAlpha = gA;
+            paintField(last, last, 0, true);
           }
-          ctx.globalAlpha = 1;
         }
       }
 
-
-
-      for (let k = 0; k < dots.length; k++) {
-        const dot = dots[k];
-        // Centre dots drift more than edge dots → a shallow depth read.
-        const weight = 0.35 + dot.cx * 0.65;
-        const x = dot.x + p.x * PARALLAX_X * weight;
-        const y = dot.y + p.y * PARALLAX_Y * weight;
-
-        const density = dot.d * breath;
-
-        // Dye coverage under this dot (0 when the pointer never passed here).
-        const dye = fluid ? Math.min(1, fluid.sample(x, y) * 1.0) : 0;
-        const radiusScale = 1 + dye * 0.06;
-
-        const raw = Math.min(1, density);
-        // Soft ceiling: large shadow regions no longer all clamp to 1.0, which
-        // is what made them fuse into one flat slab.
-        const d = raw < 0.8 ? raw : 0.8 + (raw - 0.8) * 0.7;
-        // Area ∝ coverage — the physically correct halftone response.
-        const r = maxR * Math.sqrt(d) * radiusScale;
-        if (r < 0.16) continue;
-
-        // Each dot breathes opacity on its own random phase/speed.
-        // Use a smooth ease-in-out wave so the fade feels like a gentle swell.
-        const dotAlpha = prefersReduce
-          ? 1
-          : 1 -
-            breathWave(
-              (now / DOT_ALPHA_PERIOD) * dot.alphaSpeed +
-                dot.alphaPhase / (Math.PI * 2),
-            ) *
-              DOT_ALPHA_AMP;
-        ctx.globalAlpha = dotAlpha;
-
-        // Value carries volume alongside area: light grey on the paper-facing
-        // planes, deeper grey in the shadows. Where the ink-fluid has been
-        // pushed, that grey blends toward the warm dye gradient.
-        const [ir, ig, ib] = inkAt(d);
-        if (dye > 0.004) {
-          // Deeper dots take more colour, so volume survives the tint.
-          const mix = smoothstep(dye) * (0.45 + d * 0.55);
-          const [dr, dg, db] = dyeAt(Math.min(1, dye * 0.9 + d * 0.02));
-          ctx.fillStyle = `rgb(${Math.round(ir + (dr - ir) * mix)},${Math.round(
-            ig + (dg - ig) * mix,
-          )},${Math.round(ib + (db - ib) * mix)})`;
-        } else {
-          ctx.fillStyle = `rgb(${ir},${ig},${ib})`;
-        }
-
-
-        if (d <= SQUARE_AT) {
-          ctx.beginPath();
-          ctx.arc(x, y, r, 0, Math.PI * 2);
-          ctx.fill();
-        } else {
-          // High coverage: the dot squares off with a shrinking corner radius,
-          // but never grows — the paper gap between cells is preserved.
-          const sq = (d - SQUARE_AT) / (1 - SQUARE_AT);
-          const s = r * (1 - 0.04 * sq);
-          const corner = r * (1 - 0.6 * sq);
-          ctx.beginPath();
-          ctx.roundRect(x - s, y - s, s * 2, s * 2, corner);
-          ctx.fill();
-        }
-
-      }
-      ctx.globalAlpha = 1;
+      const fieldA = fieldFor(f0);
+      const fieldB = ft > 0 ? fieldFor(f1) : fieldA;
+      if (fieldA && fieldB) paintField(fieldA, fieldB, ft, false);
 
       raf = requestAnimationFrame(draw);
     };
@@ -892,6 +963,7 @@ export function HalftoneHandsFooter({
     return () => {
       cancelAnimationFrame(raf);
       window.clearTimeout(resizeTimer);
+      window.clearTimeout(warmTimer);
       ro.disconnect();
       window.removeEventListener("wheel", onWheel);
       setHijack(false);
