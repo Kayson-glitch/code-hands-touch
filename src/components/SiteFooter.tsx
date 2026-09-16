@@ -115,11 +115,11 @@ function FitWordmark({ text }: { text: string }) {
         style={{
           fontSize: size,
           lineHeight: 0.8,
-          fontWeight: 500,
+          fontWeight: 600,
           letterSpacing: "-0.02em",
           color: "rgba(255,255,255,0.08)",
           display: "inline-block",
-          transform: "translateY(12%)",
+          transform: "translateY(22%)",
         }}
       >
         {text}
