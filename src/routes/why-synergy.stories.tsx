@@ -598,13 +598,18 @@ function StoriesPage() {
         <HalftoneHandStill
           src={whyStoriesAsset.url}
           contrast={1.7}
-          cropX={0}
-          cropW={1}
-          cropY={0}
-          cropH={1}
+          cropX={0.148}
+          cropW={0.765}
+          cropY={0.1}
+          cropH={0.78}
           pitch={6}
           className="pointer-events-none absolute select-none"
           style={{
+            // Soften the box edges the subject bleeds through (left arm, lower arm).
+            maskImage: "linear-gradient(to right, transparent 0, #000 14%), linear-gradient(to top, transparent 0, #000 14%)",
+            WebkitMaskImage: "linear-gradient(to right, transparent 0, #000 14%), linear-gradient(to top, transparent 0, #000 14%)",
+            maskComposite: "intersect",
+            WebkitMaskComposite: "source-in",
             top: fluid(115, 66),
             left: fluid(780, 420),
             width: fluid(741, 400),
