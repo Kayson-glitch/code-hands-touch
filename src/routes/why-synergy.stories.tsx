@@ -598,10 +598,10 @@ function StoriesPage() {
         <HalftoneHandStill
           src={whyStoriesAsset.url}
           contrast={1.7}
-          cropX={0.0}
-          cropW={0.981}
-          cropY={0.0}
-          cropH={1.0}
+          cropX={0.117}
+          cropW={0.883}
+          cropY={0.03}
+          cropH={0.9}
           pitch={6}
           className="pointer-events-none absolute select-none"
           style={{

@@ -680,10 +680,10 @@ function TechnologyPage() {
         <HalftoneHandStill
           src={whyTechnologyAsset.url}
           contrast={1.7}
-          cropX={0.019}
-          cropW={0.981}
-          cropY={0.0}
-          cropH={1.0}
+          cropX={0.097}
+          cropW={0.903}
+          cropY={0.08}
+          cropH={0.92}
           pitch={6}
           className="pointer-events-none absolute select-none"
           style={{
