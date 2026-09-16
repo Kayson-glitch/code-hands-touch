@@ -166,7 +166,7 @@ const MODULES: Module[] = [
       "For compliance, risk and support-quality leads: the rule the system follows, and how it shows up in the operating numbers.",
     ],
     stats: ["55%", "0"],
-    caption: "Auto-handling rate · fabricated answers",
+    caption: "AI auto-handling rate — a boundary drawn on purpose",
     bullets: [
       "Has the knowledge: answer. Doesn't: hand over, never invent",
       "Better a real person than a plausible wrong answer",
@@ -220,7 +220,7 @@ const MODULES: Module[] = [
       "For knowledge operations and technical leads: where the complexity comes from, why plain upload fails, and the governance method that holds it together.",
     ],
     stats: ["50+", "2"],
-    caption: "Long documents · layers: scripts / rules",
+    caption: "Long documents across markets and time windows",
     bullets: [
       "Region × time window × pre/after-sales in 50+ long documents",
       "Configuration Skill splits reply scripts from constraint rules",
@@ -274,7 +274,7 @@ const MODULES: Module[] = [
       "For technical leads and architecture decision-makers: the limits of single-vector search and the hybrid retrieval and re-ranking stack we use instead.",
     ],
     stats: ["3", "2"],
-    caption: "Retrieval layers · rerank stages",
+    caption: "Retrieval layers: PageIndex, embedding, rerank",
     bullets: [
       "PageIndex vector-free retrieval locates answers by structure",
       "Highest-precision embedding as the underlying representation",
@@ -328,7 +328,7 @@ const MODULES: Module[] = [
       "For operations and systems-integration leads: how the scenarios are orchestrated, what is closed automatically, and where a person stays in the loop by design.",
     ],
     stats: ["56", "2"],
-    caption: "Fiat ticket scenarios · systems connected",
+    caption: "Fiat ticket scenarios orchestrated by multi-agent",
     bullets: [
       "56 fiat ticket scenarios split across cooperating agents",
       "CRM and ERM connected — orders and notices flow automatically",
