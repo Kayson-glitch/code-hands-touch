@@ -3,6 +3,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import type { LucideIcon } from "lucide-react";
 import { Coins, ChartPie, ClipboardCheck, Gauge, Headset, TrendingDown, Users } from "lucide-react";
 import { SiteNav } from "@/components/SiteNav";
+import { whyImpactAsset } from "@/lib/media";
 import { HalftoneHandStill } from "@/components/HalftoneHandStill";
 import { Reveal } from "@/components/Reveal";
 import { FinChatDock } from "@/components/FinChatDock";
@@ -411,10 +412,12 @@ function BusinessImpactPage() {
       <header className="relative overflow-hidden">
         {/* single halftone hand — bleeds off the right viewport edge */}
         <HalftoneHandStill
-          cropX={0.5}
-          cropW={0.5}
-          cropY={0.32}
-          cropH={0.52}
+          src={whyImpactAsset.url}
+          contrast={1.7}
+          cropX={0}
+          cropW={1}
+          cropY={0}
+          cropH={1}
           pitch={6}
           className="pointer-events-none absolute select-none"
           style={{

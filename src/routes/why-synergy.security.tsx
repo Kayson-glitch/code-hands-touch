@@ -6,6 +6,7 @@ import {
   LifeBuoy,
 } from "lucide-react";
 import { SiteNav } from "@/components/SiteNav";
+import { whySecurityAsset } from "@/lib/media";
 import { HalftoneHandStill } from "@/components/HalftoneHandStill";
 import { Reveal } from "@/components/Reveal";
 import { FinChatDock } from "@/components/FinChatDock";
@@ -252,10 +253,12 @@ function SecurityPage() {
       {/* ------------------------------------------------------------ hero */}
       <header className="relative overflow-hidden">
         <HalftoneHandStill
-          cropX={0.5}
-          cropW={0.5}
-          cropY={0.32}
-          cropH={0.52}
+          src={whySecurityAsset.url}
+          contrast={1.7}
+          cropX={0}
+          cropW={1}
+          cropY={0}
+          cropH={1}
           pitch={6}
           className="pointer-events-none absolute select-none"
           style={{

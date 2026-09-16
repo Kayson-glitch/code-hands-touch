@@ -3,6 +3,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import type { LucideIcon } from "lucide-react";
 import { Database, FileWarning, FolderTree, Gauge, Handshake, Layers, Link2, ListFilter, Maximize2, MessageCircle, Network, Radar, Scissors, ShieldCheck, Target, Timer, TriangleAlert, UserCheck, Users, Workflow } from "lucide-react";
 import { SiteNav } from "@/components/SiteNav";
+import { whyTechnologyAsset } from "@/lib/media";
 import { HalftoneHandStill } from "@/components/HalftoneHandStill";
 import { Reveal } from "@/components/Reveal";
 import { RollingNumber } from "@/components/RollingNumber";
@@ -677,10 +678,12 @@ function TechnologyPage() {
       {/* ------------------------------------------------------------ hero */}
       <header className="relative overflow-hidden">
         <HalftoneHandStill
-          cropX={0.5}
-          cropW={0.5}
-          cropY={0.32}
-          cropH={0.52}
+          src={whyTechnologyAsset.url}
+          contrast={1.7}
+          cropX={0}
+          cropW={1}
+          cropY={0}
+          cropH={1}
           pitch={6}
           className="pointer-events-none absolute select-none"
           style={{

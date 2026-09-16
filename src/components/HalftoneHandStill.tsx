@@ -90,6 +90,17 @@ type Dot = {
 };
 
 type Props = {
+  /**
+   * Any grayscale image on a white background to halftone instead of the hands
+   * atlas. Dark = ink. When set, `frame` is ignored and the crop fractions
+   * apply to this image.
+   */
+  src?: string;
+  /**
+   * Tone multiplier applied to darkness before dot sizing (1 = as drawn).
+   * Marble renders are very light; ~1.7 brings them to the hands' weight.
+   */
+  contrast?: number;
   /** Atlas frame to freeze on (defaults to the last frame). */
   frame?: number;
   /** Horizontal crop of the source frame, 0..1. Defaults to the right hand. */
@@ -107,6 +118,8 @@ type Props = {
 };
 
 export function HalftoneHandStill({
+  src,
+  contrast = 1,
   frame = FRAME_COUNT - 1,
   cropX = 0.44,
   cropW = 0.56,
@@ -152,8 +165,11 @@ export function HalftoneHandStill({
 
       fluidRef.current = new FluidField(w, h);
 
-      // Contain-fit the cropped source so the hand keeps its aspect ratio.
-      const srcAr = (cropW * FRAME_W) / (cropH * FRAME_H);
+      // Source rectangle: a frame of the hands atlas, or the whole custom image.
+      const baseW = src ? atlas.naturalWidth : FRAME_W;
+      const baseH = src ? atlas.naturalHeight : FRAME_H;
+      // Contain-fit the cropped source so the subject keeps its aspect ratio.
+      const srcAr = (cropW * baseW) / (cropH * baseH);
       let drawW = w;
       let drawH = drawW / srcAr;
       if (drawH > h) {
@@ -175,15 +191,15 @@ export function HalftoneHandStill({
       octx.fillRect(0, 0, cols, rows);
       octx.imageSmoothingEnabled = true;
       const idx = Math.min(FRAME_COUNT - 1, Math.max(0, frame));
-      const sx = (idx % ATLAS_COLS) * FRAME_W + cropX * FRAME_W;
-      const sy = Math.floor(idx / ATLAS_COLS) * FRAME_H + cropY * FRAME_H;
+      const sx = src ? cropX * baseW : (idx % ATLAS_COLS) * FRAME_W + cropX * FRAME_W;
+      const sy = src ? cropY * baseH : Math.floor(idx / ATLAS_COLS) * FRAME_H + cropY * FRAME_H;
       (octx as unknown as { filter: string }).filter = "blur(0.5px)";
       octx.drawImage(
         atlas,
         sx,
         sy,
-        cropW * FRAME_W,
-        cropH * FRAME_H,
+        cropW * baseW,
+        cropH * baseH,
         0,
         0,
         cols,
@@ -196,9 +212,10 @@ export function HalftoneHandStill({
       for (let j = 0; j < rows; j++) {
         for (let i = 0; i < cols; i++) {
           const p = (j * cols + i) * 4;
-          const luma =
+          const rawLuma =
             (0.2126 * data[p] + 0.7152 * data[p + 1] + 0.0722 * data[p + 2]) /
             255;
+          const luma = 1 - Math.min(1, (1 - rawLuma) * contrast);
           const t = Math.min(1, Math.max(0, (1 - luma - 0.02) / 0.88));
           let density = Math.pow(t, 0.8);
           const dither = (BAYER[(j & 3) * 4 + (i & 3)] - 0.5) * 0.07;
@@ -306,7 +323,7 @@ export function HalftoneHandStill({
       raf = requestAnimationFrame(loop);
     };
 
-    loadImage(handsFramesAsset.url)
+    loadImage(src ?? handsFramesAsset.url)
       .then((img) => {
         if (!alive) return;
         atlas = img;
@@ -376,7 +393,7 @@ export function HalftoneHandStill({
       window.removeEventListener("mousemove", onMove);
       window.removeEventListener("mouseleave", onLeave);
     };
-  }, [frame, cropX, cropW, cropY, cropH, pitch, ink]);
+  }, [src, contrast, frame, cropX, cropW, cropY, cropH, pitch, ink]);
 
   return (
     <div ref={hostRef} className={className} style={style} aria-hidden>
