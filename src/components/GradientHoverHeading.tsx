@@ -19,9 +19,21 @@ type Props = {
   className?: string;
   style?: CSSProperties;
   as?: "h1" | "h2";
+  /**
+   * Only honour the "\n" breaks from this breakpoint up; below it the heading
+   * wraps naturally, so a break tuned for desktop can't strand a single word
+   * on a phone.
+   */
+  breakFrom?: "md" | "lg";
 };
 
-export function GradientHoverHeading({ text, className, style, as: Tag = "h1" }: Props) {
+export function GradientHoverHeading({
+  text,
+  className,
+  style,
+  as: Tag = "h1",
+  breakFrom,
+}: Props) {
   const ref = useRef<HTMLDivElement>(null);
   const timer = useRef<number | null>(null);
   const target = useRef<{ x: number; y: number } | null>(null);
@@ -56,11 +68,23 @@ export function GradientHoverHeading({ text, className, style, as: Tag = "h1" }:
   );
 
   const lines = text.split("\n");
-  const content = lines.map((line, i) => (
-    <span key={i} style={{ display: "block" }}>
-      {line}
-    </span>
-  ));
+  const content = breakFrom
+    ? lines.map((line, i) => (
+        <span key={i}>
+          {i > 0 ? (
+            <>
+              {" "}
+              <br className={breakFrom === "md" ? "hidden md:inline" : "hidden lg:inline"} />
+            </>
+          ) : null}
+          {line}
+        </span>
+      ))
+    : lines.map((line, i) => (
+        <span key={i} style={{ display: "block" }}>
+          {line}
+        </span>
+      ));
 
   const mask = pos
     ? `radial-gradient(circle ${RADIUS}px at ${pos.x}px ${pos.y}px, #000 0%, rgba(0,0,0,0.75) 55%, transparent 100%)`
