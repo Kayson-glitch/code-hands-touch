@@ -166,7 +166,7 @@ const MODULES: Module[] = [
       "For compliance, risk and support-quality leads: the rule the system follows, and how it shows up in the operating numbers.",
     ],
     stats: ["55%", "0"],
-    caption: "AI auto-handling rate — a deliberately drawn boundary — with zero fabricated answers.",
+    caption: "Auto-handling rate · fabricated answers",
     bullets: [
       "Has the knowledge: answer directly. Doesn't: hand to a human — never make it up",
       "Better a real person than a plausible but wrong answer",
@@ -220,7 +220,7 @@ const MODULES: Module[] = [
       "For knowledge operations and technical leads: where the complexity comes from, why plain upload fails, and the governance method that holds it together.",
     ],
     stats: ["50+", "2"],
-    caption: "Long documents across markets and time windows, split into two layers — reply scripts and constraint rules.",
+    caption: "Long documents · layers: scripts / rules",
     bullets: [
       "Region × time-bound × pre/after-sales content stacked in 50+ long documents",
       "A configuration Skill separates reply scripts (knowledge base) from constraint rules (rules layer)",
@@ -274,7 +274,7 @@ const MODULES: Module[] = [
       "For technical leads and architecture decision-makers: the limits of single-vector search and the hybrid retrieval and re-ranking stack we use instead.",
     ],
     stats: ["3", "2"],
-    caption: "Three retrieval layers — PageIndex structural retrieval, high-precision embedding, self-built rerank — with two-stage ranking.",
+    caption: "Retrieval layers · rerank stages",
     bullets: [
       "PageIndex vector-free hybrid retrieval locates answers by document structure and hierarchy",
       "Highest-precision embedding model as the underlying representation",
@@ -328,7 +328,7 @@ const MODULES: Module[] = [
       "For operations and systems-integration leads: how the scenarios are orchestrated, what is closed automatically, and where a person stays in the loop by design.",
     ],
     stats: ["56", "2"],
-    caption: "Fiat ticket scenarios orchestrated across cooperating agents, spanning 2 systems — CRM and ERM — end to end.",
+    caption: "Fiat ticket scenarios · systems connected",
     bullets: [
       "56 fiat ticket scenarios divided across cooperating agents and run as business flows",
       "CRM and ERM fully connected — orders, messages and change notices flow automatically",

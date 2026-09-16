@@ -163,7 +163,7 @@ const STORIES: Story[] = [
       "For international and multilingual operations teams: the root cause, the targeted model we trained, and how the result was validated.",
     ],
     stats: ["68%", "86%"],
-    caption: "India translation accuracy, before → after the targeted model — about one month, benchmarked against online human labels versus a general-purpose translation API.",
+    caption: "India translation accuracy, general API → targeted model · 1 month",
     bullets: [
       "Trained a targeted translation model for the Indian region, removing the English pivot",
       "Multi-model voting produces the final reading, tuned to payment and order phrasing",
@@ -216,7 +216,7 @@ const STORIES: Story[] = [
       "For risk, KYC and finance-security teams: the fraud pattern, why manual review kept losing, and the custom image-forensics model that replaced it.",
     ],
     stats: ["88%", "3"],
-    caption: "Forged-proof detection accuracy (left) reached in about 3 months (right), benchmarked against online human verification, across PDF, video and image.",
+    caption: "Forged-proof detection accuracy · months to reach it · PDF / video / image",
     bullets: [
       "Multimodal detection across PDF, video and image payment proofs",
       "Tiered handling: only suspicious cases reach a human — no more item-by-item review",
@@ -269,7 +269,7 @@ const STORIES: Story[] = [
       "For technical leads, and for anyone who fears 'launch is the peak': how production labels become Friday releases without touching live service.",
     ],
     stats: ["7", "3"],
-    caption: "A new model version every 7 days, covering 3 proof formats — PDF, image and video — without interrupting live service.",
+    caption: "Days per model release · proof formats covered (PDF, image, video)",
     bullets: [
       "Online human labels are the input; a new model version ships every Friday",
       "Follows evolving forgery techniques instead of freezing at the launch version",

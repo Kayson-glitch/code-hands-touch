@@ -120,7 +120,7 @@ const KPI_LEFT = {
   kicker: "Business Value · ROI",
   value: "¥12M",
   unit: "/ yr",
-  caption: "Labour-cost optimisation the data already supports (projection, not yet executed)",
+  caption: "Projected annual labour-cost saving · not yet executed",
   bullets: [
     "Today: 150 agents at ≈¥10K each — ≈¥1.5M a month, ¥18M a year",
     "Data supports ≈50: 20 VIP leads + 30 monitoring and fallback staff",
@@ -133,7 +133,7 @@ const KPI_RIGHT = {
   kicker: "Overall Impact",
   value: "55",
   unit: "%",
-  caption: "AI auto-handling rate under a real load of 200K conversations a month at QPS 20–50",
+  caption: "AI auto-handling rate · 200K conversations a month",
   bullets: [
     "55% of conversations closed by AI end-to-end, no human in the thread",
     "70% of customer messages answered by AI — about 110K a month",
