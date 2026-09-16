@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import type { LucideIcon } from "lucide-react";
-import { Database, FileWarning, FolderTree, Gauge, Handshake, Layers, Link2, ListOrdered, Maximize2, MessageCircle, Network, Radar, Scissors, ShieldCheck, Target, Timer, TriangleAlert, UserCheck, Users, Workflow } from "lucide-react";
+import { Database, FileWarning, FolderTree, Gauge, Handshake, Layers, Link2, ListFilter, Maximize2, MessageCircle, Network, Radar, Scissors, ShieldCheck, Target, Timer, TriangleAlert, UserCheck, Users, Workflow } from "lucide-react";
 import { SiteNav } from "@/components/SiteNav";
 import { HalftoneHandStill } from "@/components/HalftoneHandStill";
 import { Reveal } from "@/components/Reveal";
@@ -284,7 +284,7 @@ const MODULES: Module[] = [
         divider: true,
       },
       {
-        icon: ListOrdered,
+        icon: ListFilter,
         title: "The Retrieval Stack",
         body: "Recall runs through several layers. PageIndex vector-free hybrid retrieval locates content by the document's own structure and hierarchy, avoiding the context loss of chunking and giving precise recall across scenarios. A high-precision embedding model provides the underlying representation. A rerank model we built ourselves scores the candidates in two stages — coarse, then fine — so the most relevant result lands first.",
         divider: false,

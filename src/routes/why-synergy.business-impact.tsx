@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import type { LucideIcon } from "lucide-react";
-import { Calculator, ChartPie, ClipboardCheck, Gauge, Headset, TrendingDown, Users } from "lucide-react";
+import { Coins, ChartPie, ClipboardCheck, Gauge, Headset, TrendingDown, Users } from "lucide-react";
 import { SiteNav } from "@/components/SiteNav";
 import { HalftoneHandStill } from "@/components/HalftoneHandStill";
 import { Reveal } from "@/components/Reveal";
@@ -168,7 +168,7 @@ const ARTICLES: Record<"roi" | "impact", ArticleSet> = {
       "For the people who sign the budget — CEO, CFO and operations leadership. This article quantifies how the AI support system changes BCGame's operating cost, using its customer-service workforce as the subject. The global CS team is 150 agents at a fully loaded cost (equipment and office space included) of about $10K per person per month: roughly $1.5M a month, $18M a year, and growing linearly with the business.",
     light: [
       {
-        icon: Calculator,
+        icon: Coins,
         title: "Analysis of Current Cost Structure",
         body: [
           { text: "Within the existing agent structure, the vast majority of labour hours are consumed by high-repetition, low-judgement inquiries: order tracking, payment progress, promotion rules, withdrawal status checks. These dominate inbound volume but need almost no human judgement. " },
