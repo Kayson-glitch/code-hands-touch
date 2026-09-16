@@ -840,10 +840,12 @@ export function HalftoneHandsFooter({
 
           // Scattered dissolve: faint cells survive only sometimes, so the mass
           // frays into isolated single dots instead of fading out as a block.
-          // The survival edge is a short ramp rather than a hard cut, so a dot
-          // at the fray fades in over a few frames instead of popping.
+          // The survival edge is a short ramp (0.1 wide in hash space, centred
+          // on the old hard cut) so a dot at the fray fades in over a few
+          // frames instead of popping. The ramp tops out above 1 so cells in
+          // solid areas are always fully opaque, as before.
           const keep = smoothstep((density - MIN_DENSITY) / 0.22);
-          const survive = (0.16 + keep * 0.84 - g.hash[k]) / 0.1;
+          const survive = (0.21 + keep * 0.89 - g.hash[k]) / 0.1;
           if (survive <= 0) continue;
           const vis = survive >= 1 ? 1 : survive;
 
