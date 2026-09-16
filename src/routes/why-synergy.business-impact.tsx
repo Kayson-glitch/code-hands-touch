@@ -413,11 +413,11 @@ function BusinessImpactPage() {
         {/* single halftone hand — bleeds off the right viewport edge */}
         <HalftoneHandStill
           src={whyImpactAsset.url}
-          contrast={1.7}
-          cropX={0.17}
-          cropW={0.775}
-          cropY={0.126}
-          cropH={0.79}
+          contrast={1.25}
+          cropX={0.065}
+          cropW={0.867}
+          cropY={0.069}
+          cropH={0.884}
           pitch={6}
           className="pointer-events-none absolute select-none"
           style={{
