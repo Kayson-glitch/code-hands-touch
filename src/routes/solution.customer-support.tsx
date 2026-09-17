@@ -7,6 +7,7 @@ import { SiteFooter } from "@/components/SiteFooter";
 import { RollingNumber } from "@/components/RollingNumber";
 import { GRADIENT, ProductHero, RainbowButton } from "@/components/ProductHero";
 import { solutionChannelsAsset, solutionConsoleAsset, solutionFlowAsset } from "@/lib/media";
+import { HoverTilt } from "@/components/HoverTilt";
 
 export const Route = createFileRoute("/solution/customer-support")({
   head: () => ({
@@ -125,16 +126,18 @@ const FIGURES = {
   flow: { src: solutionFlowAsset.url, alt: "Self-service flow: inbound request, intent detection, automated solution, instant resolution" },
 } as const;
 
-function Figure({ kind }: { kind: Feature["figure"] }) {
+function Figure({ kind, from }: { kind: Feature["figure"]; from: "left" | "right" }) {
   const f = FIGURES[kind];
   return (
-    <img
-      src={f.src}
-      alt={f.alt}
-      draggable={false}
-      className="block h-auto w-full select-none"
-      style={{ maxWidth: 540, aspectRatio: "1 / 1" }}
-    />
+    <HoverTilt from={from} className="w-full" style={{ maxWidth: 540 }}>
+      <img
+        src={f.src}
+        alt={f.alt}
+        draggable={false}
+        className="block h-auto w-full select-none"
+        style={{ aspectRatio: "1 / 1" }}
+      />
+    </HoverTilt>
   );
 }
 
@@ -191,7 +194,7 @@ function FeatureSection({ feature, flip }: { feature: Feature; flip: boolean }) 
             className={`flex flex-1 ${flip ? "md:order-1 md:justify-start" : "md:justify-end"}`}
             style={{ minWidth: 0 }}
           >
-            <Figure kind={feature.figure} />
+            <Figure kind={feature.figure} from={flip ? "right" : "left"} />
           </Reveal>
         </div>
       </div>
