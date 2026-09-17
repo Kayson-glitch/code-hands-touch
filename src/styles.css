@@ -1281,3 +1281,10 @@ html.lenis body {
 @media (max-width: 767px) {
   .why-synergy h1 { text-wrap: balance; }
 }
+
+/* Why Synergy step diagram: a vertical timeline on phones, one column per
+   step (--steps, set inline) from md up. */
+.why-steps { grid-template-columns: minmax(0, 1fr); }
+@media (min-width: 768px) {
+  .why-steps { grid-template-columns: repeat(var(--steps, 4), minmax(0, 1fr)); }
+}

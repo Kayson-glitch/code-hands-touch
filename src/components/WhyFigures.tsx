@@ -40,35 +40,32 @@ function tone(dark: boolean): Tone {
 export type Step = {
   label: string;
   sub?: string;
-  /** Outcome node: accent border and marker. */
+  /** Outcome node: filled accent marker and accent numeral. */
   emphasis?: boolean;
 };
 
-function Connector({ rule, accent }: { rule: string; accent: string }) {
+/** Dotted connector — the DotArrow's dot language stretched into a rail. */
+function DottedRail({ color, vertical }: { color: string; vertical?: boolean }) {
   return (
-    <div
+    <span
       aria-hidden
-      className="relative flex shrink-0 items-center justify-center md:w-8 md:self-stretch"
-      style={{ minHeight: 24 }}
-    >
-      {/* horizontal on md+, vertical below */}
-      <span className="hidden md:block" style={{ height: 1, width: "100%", background: rule }} />
-      <span className="md:hidden" style={{ width: 1, height: 24, background: rule }} />
-      <span
-        className="absolute"
-        style={{
-          left: "50%",
-          top: "50%",
-          width: 6,
-          height: 6,
-          background: accent,
-          transform: "translate(-50%, -50%) rotate(45deg)",
-        }}
-      />
-    </div>
+      className={vertical ? "block w-[3px] flex-1 md:hidden" : "hidden h-[3px] flex-1 md:block"}
+      style={{
+        backgroundImage: `radial-gradient(circle, ${color} 1px, transparent 1.6px)`,
+        backgroundSize: vertical ? "3px 8px" : "8px 3px",
+        backgroundRepeat: vertical ? "repeat-y" : "repeat-x",
+        backgroundPosition: "center",
+        margin: vertical ? "6px 0" : "0 6px",
+      }}
+    />
   );
 }
 
+/**
+ * Editorial rail: markers on a dotted line, each step hanging below its
+ * marker with a display-face numeral — no boxes. On phones the rail turns
+ * vertical and the steps read as a timeline.
+ */
 export function StepDiagram({
   steps,
   caption,
@@ -88,53 +85,75 @@ export function StepDiagram({
   return (
     <Reveal y={20} duration={1600} className={className} style={style}>
       <figure style={{ margin: 0 }}>
-        <div className="flex flex-col md:flex-row md:items-stretch">
-          {steps.map((step, i) => (
-            <Fragment key={step.label}>
-              {i > 0 ? <Connector rule={t.rule} accent={accent} /> : null}
-              <div
-                className="flex min-w-0 flex-1 flex-col"
-                style={{
-                  padding: "14px 16px 16px",
-                  border: `1px solid ${step.emphasis ? accent : t.rule}`,
-                  background: step.emphasis ? "transparent" : t.surface,
-                  gap: 8,
-                }}
-              >
-                <span
-                  className="font-sans"
-                  style={{
-                    fontSize: 11,
-                    lineHeight: "16px",
-                    letterSpacing: "0.08em",
-                    color: step.emphasis ? accent : t.muted,
-                  }}
-                >
-                  {String(i + 1).padStart(2, "0")}
-                </span>
-                <p
-                  style={{
-                    margin: 0,
-                    fontSize: 14,
-                    lineHeight: "20px",
-                    fontWeight: 500,
-                    color: t.ink,
-                  }}
-                >
-                  {step.label}
-                </p>
-                {step.sub ? (
-                  <p style={{ margin: 0, fontSize: 12, lineHeight: "18px", color: t.muted }}>
-                    {step.sub}
+        {/* .why-steps (styles.css): one column on phones, one per step from md up */}
+        <ol
+          className="why-steps m-0 grid list-none p-0 md:gap-x-6"
+          style={{ "--steps": steps.length } as CSSProperties}
+        >
+          {steps.map((step, i) => {
+            const last = i === steps.length - 1;
+            const leadsToOutcome = !last && steps[i + 1].emphasis;
+            // 1px dots need a touch more contrast than a solid hairline to read.
+            const railColor = leadsToOutcome ? accent : dark ? "rgba(255,255,255,0.4)" : "#C6C5CB";
+            return (
+              <li key={step.label} className="flex gap-4 md:block">
+                {/* marker + rail: vertical column on phones, horizontal row from md */}
+                <div className="flex shrink-0 flex-col items-center self-stretch md:h-[12px] md:w-full md:flex-row md:self-auto">
+                  <span
+                    aria-hidden
+                    className="block shrink-0"
+                    style={{
+                      width: 10,
+                      height: 10,
+                      background: step.emphasis ? accent : "transparent",
+                      border: step.emphasis ? "none" : `1px solid ${dark ? "rgba(255,255,255,0.6)" : "#0E0B22"}`,
+                    }}
+                  />
+                  {!last ? (
+                    <>
+                      <DottedRail color={railColor} vertical />
+                      <DottedRail color={railColor} />
+                    </>
+                  ) : null}
+                </div>
+
+                <div className={last ? "pb-0" : "pb-8 md:pb-0"} style={{ paddingRight: 8 }}>
+                  <p
+                    className="font-display"
+                    style={{
+                      margin: 0,
+                      fontSize: fluid(32, 26),
+                      lineHeight: 1.1,
+                      fontWeight: 400,
+                      color: step.emphasis ? accent : t.muted,
+                    }}
+                  >
+                    {String(i + 1).padStart(2, "0")}
                   </p>
-                ) : null}
-              </div>
-            </Fragment>
-          ))}
-        </div>
+                  <p
+                    style={{
+                      margin: "10px 0 0",
+                      fontSize: 14,
+                      lineHeight: "20px",
+                      fontWeight: 500,
+                      color: t.ink,
+                    }}
+                  >
+                    {step.label}
+                  </p>
+                  {step.sub ? (
+                    <p style={{ margin: "4px 0 0", fontSize: 12, lineHeight: "18px", color: t.muted }}>
+                      {step.sub}
+                    </p>
+                  ) : null}
+                </div>
+              </li>
+            );
+          })}
+        </ol>
         {caption ? (
           <figcaption
-            style={{ marginTop: 14, fontSize: 12, lineHeight: "18px", color: t.muted }}
+            style={{ marginTop: 28, fontSize: 12, lineHeight: "18px", color: t.muted, maxWidth: 560 }}
           >
             {caption}
           </figcaption>
