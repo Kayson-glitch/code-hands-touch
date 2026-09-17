@@ -207,9 +207,12 @@ function RagPage() {
             <div className="flex flex-1 flex-col" style={{ gap: fluid(56, 36), paddingRight: fluid(56, 0) }}>
               <div>
                 <Reveal y={24} duration={1600}>
-                  <h2 className="font-display text-ink" style={{ margin: 0, fontSize: fluid(44, 30), lineHeight: 1.2273, fontWeight: 400 }}>
-  <BreakLines text={ENGINE.title} />
-</h2>
+                  <h2
+                    className="font-display text-ink"
+                    style={{ margin: 0, fontSize: fluid(44, 30), lineHeight: 1.2273, fontWeight: 400 }}
+                  >
+                    <BreakLines text={ENGINE.title} />
+                  </h2>
                 </Reveal>
                 <Reveal y={24} duration={1600} delay={120}>
                   <p
