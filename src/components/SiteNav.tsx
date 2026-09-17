@@ -640,6 +640,7 @@ const PLATFORM_PRODUCTS: RichItem[] = [
     kicker: "Engine",
     title: "Self-Developed RAG 2.0",
     desc: "Intelligent knowledge engine for accurate, context-aware responses.",
+    to: "/platform/rag",
   },
   {
     dot: "#9E8CFF",

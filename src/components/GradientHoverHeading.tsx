@@ -25,6 +25,14 @@ type Props = {
    * on a phone.
    */
   breakFrom?: "md" | "lg";
+  /**
+   * Content set beside the last line (e.g. a short intro hanging off the
+   * headline). Rendered in the ink layer only; the gradient copy keeps the
+   * same line box so the glyphs still line up.
+   */
+  trailing?: React.ReactNode;
+  /** Gap between the last line and `trailing`. */
+  trailingGap?: number;
 };
 
 export function GradientHoverHeading({
@@ -33,6 +41,8 @@ export function GradientHoverHeading({
   style,
   as: Tag = "h1",
   breakFrom,
+  trailing,
+  trailingGap = 24,
 }: Props) {
   const ref = useRef<HTMLDivElement>(null);
   const timer = useRef<number | null>(null);
@@ -68,23 +78,47 @@ export function GradientHoverHeading({
   );
 
   const lines = text.split("\n");
-  const content = breakFrom
-    ? lines.map((line, i) => (
-        <span key={i}>
-          {i > 0 ? (
-            <>
-              {" "}
-              <br className={breakFrom === "md" ? "hidden md:inline" : "hidden lg:inline"} />
-            </>
-          ) : null}
-          {line}
-        </span>
-      ))
-    : lines.map((line, i) => (
-        <span key={i} style={{ display: "block" }}>
-          {line}
-        </span>
-      ));
+  const renderLines = (withTrailing: boolean) =>
+    breakFrom
+      ? lines.map((line, i) => {
+          const last = i === lines.length - 1;
+          return (
+            <span key={i}>
+              {i > 0 ? (
+                <>
+                  {" "}
+                  <br className={breakFrom === "md" ? "hidden md:inline" : "hidden lg:inline"} />
+                </>
+              ) : null}
+              {line}
+              {last && withTrailing && trailing ? (
+                <span
+                  // no indent when the trailing block wraps onto its own line on phones
+                  className="inline-flex md:ml-[var(--trailing-gap)]"
+                  style={{ "--trailing-gap": `${trailingGap}px`, verticalAlign: "middle" } as CSSProperties}
+                >
+                  {trailing}
+                </span>
+              ) : null}
+            </span>
+          );
+        })
+      : lines.map((line, i) => {
+          const last = i === lines.length - 1;
+          const hasTrailing = last && trailing;
+          return (
+            <span
+              key={i}
+              className={hasTrailing ? "flex flex-wrap items-end" : undefined}
+              style={{ display: hasTrailing ? undefined : "block", gap: hasTrailing ? trailingGap : undefined }}
+            >
+              {line}
+              {hasTrailing && withTrailing ? trailing : null}
+            </span>
+          );
+        });
+  const content = renderLines(true);
+  const ghost = renderLines(false);
 
   const mask = pos
     ? `radial-gradient(circle ${RADIUS}px at ${pos.x}px ${pos.y}px, #000 0%, rgba(0,0,0,0.75) 55%, transparent 100%)`
@@ -143,7 +177,7 @@ export function GradientHoverHeading({
             : "opacity 160ms ease-out",
         }}
       >
-        {content}
+        {ghost}
       </span>
     </Tag>
   );

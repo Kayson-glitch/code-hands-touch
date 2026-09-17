@@ -10,15 +10,22 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as WhySynergyRouteImport } from './routes/why-synergy'
+import { Route as PlatformRouteImport } from './routes/platform'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as WhySynergyTechnologyRouteImport } from './routes/why-synergy.technology'
 import { Route as WhySynergyStoriesRouteImport } from './routes/why-synergy.stories'
 import { Route as WhySynergySecurityRouteImport } from './routes/why-synergy.security'
 import { Route as WhySynergyBusinessImpactRouteImport } from './routes/why-synergy.business-impact'
+import { Route as PlatformRagRouteImport } from './routes/platform.rag'
 
 const WhySynergyRoute = WhySynergyRouteImport.update({
   id: '/why-synergy',
   path: '/why-synergy',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PlatformRoute = PlatformRouteImport.update({
+  id: '/platform',
+  path: '/platform',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IndexRoute = IndexRouteImport.update({
@@ -47,10 +54,17 @@ const WhySynergyBusinessImpactRoute =
     path: '/business-impact',
     getParentRoute: () => WhySynergyRoute,
   } as any)
+const PlatformRagRoute = PlatformRagRouteImport.update({
+  id: '/rag',
+  path: '/rag',
+  getParentRoute: () => PlatformRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/platform': typeof PlatformRouteWithChildren
   '/why-synergy': typeof WhySynergyRouteWithChildren
+  '/platform/rag': typeof PlatformRagRoute
   '/why-synergy/business-impact': typeof WhySynergyBusinessImpactRoute
   '/why-synergy/security': typeof WhySynergySecurityRoute
   '/why-synergy/stories': typeof WhySynergyStoriesRoute
@@ -58,7 +72,9 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/platform': typeof PlatformRouteWithChildren
   '/why-synergy': typeof WhySynergyRouteWithChildren
+  '/platform/rag': typeof PlatformRagRoute
   '/why-synergy/business-impact': typeof WhySynergyBusinessImpactRoute
   '/why-synergy/security': typeof WhySynergySecurityRoute
   '/why-synergy/stories': typeof WhySynergyStoriesRoute
@@ -67,7 +83,9 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/platform': typeof PlatformRouteWithChildren
   '/why-synergy': typeof WhySynergyRouteWithChildren
+  '/platform/rag': typeof PlatformRagRoute
   '/why-synergy/business-impact': typeof WhySynergyBusinessImpactRoute
   '/why-synergy/security': typeof WhySynergySecurityRoute
   '/why-synergy/stories': typeof WhySynergyStoriesRoute
@@ -77,7 +95,9 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/platform'
     | '/why-synergy'
+    | '/platform/rag'
     | '/why-synergy/business-impact'
     | '/why-synergy/security'
     | '/why-synergy/stories'
@@ -85,7 +105,9 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/platform'
     | '/why-synergy'
+    | '/platform/rag'
     | '/why-synergy/business-impact'
     | '/why-synergy/security'
     | '/why-synergy/stories'
@@ -93,7 +115,9 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
+    | '/platform'
     | '/why-synergy'
+    | '/platform/rag'
     | '/why-synergy/business-impact'
     | '/why-synergy/security'
     | '/why-synergy/stories'
@@ -102,6 +126,7 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  PlatformRoute: typeof PlatformRouteWithChildren
   WhySynergyRoute: typeof WhySynergyRouteWithChildren
 }
 
@@ -112,6 +137,13 @@ declare module '@tanstack/react-router' {
       path: '/why-synergy'
       fullPath: '/why-synergy'
       preLoaderRoute: typeof WhySynergyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/platform': {
+      id: '/platform'
+      path: '/platform'
+      fullPath: '/platform'
+      preLoaderRoute: typeof PlatformRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/': {
@@ -149,8 +181,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof WhySynergyBusinessImpactRouteImport
       parentRoute: typeof WhySynergyRoute
     }
+    '/platform/rag': {
+      id: '/platform/rag'
+      path: '/rag'
+      fullPath: '/platform/rag'
+      preLoaderRoute: typeof PlatformRagRouteImport
+      parentRoute: typeof PlatformRoute
+    }
   }
 }
+
+interface PlatformRouteChildren {
+  PlatformRagRoute: typeof PlatformRagRoute
+}
+
+const PlatformRouteChildren: PlatformRouteChildren = {
+  PlatformRagRoute: PlatformRagRoute,
+}
+
+const PlatformRouteWithChildren = PlatformRoute._addFileChildren(
+  PlatformRouteChildren,
+)
 
 interface WhySynergyRouteChildren {
   WhySynergyBusinessImpactRoute: typeof WhySynergyBusinessImpactRoute
@@ -172,6 +223,7 @@ const WhySynergyRouteWithChildren = WhySynergyRoute._addFileChildren(
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  PlatformRoute: PlatformRouteWithChildren,
   WhySynergyRoute: WhySynergyRouteWithChildren,
 }
 export const routeTree = rootRouteImport
