@@ -193,11 +193,12 @@ function RagPage() {
 
       {/* ---------------------------------------------------- engine module */}
       <section className="relative" style={{ background: "#FAFAFA" }}>
-        <CropFrame inset={fluid(86, 16)} insetBottom={fluid(120, 40)} />
+        {/* 80px of air inside the frame, then 200px of plain background before the footer */}
+        <CropFrame inset={fluid(86, 16)} insetBottom={fluid(200, 72)} />
 
         <div
           className="relative"
-          style={{ padding: `${fluid(166, 80)} ${fluid(120, 24)} ${fluid(200, 104)}` }}
+          style={{ padding: `${fluid(166, 80)} ${fluid(120, 24)} ${fluid(280, 136)}` }}
         >
           <div
             className="mx-auto flex w-full max-w-[1200px] flex-col md:flex-row md:items-center"
