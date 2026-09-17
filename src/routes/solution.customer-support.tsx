@@ -142,7 +142,9 @@ function Figure({ kind }: { kind: Feature["figure"] }) {
 
 function FeatureSection({ feature, flip }: { feature: Feature; flip: boolean }) {
   return (
-    <section style={{ borderTop: `1px solid ${HAIRLINE}` }}>
+    // White, not paper: the illustrations fade to pure white at their edges,
+    // so on #FAFAFA their bounding box would read as a faint lighter block.
+    <section style={{ borderTop: `1px solid ${HAIRLINE}`, background: "#FFFFFF" }}>
       <div style={{ padding: `${fluid(100, 56)} ${fluid(120, 24)}` }}>
         <div
           className="mx-auto flex w-full max-w-[1200px] flex-col md:flex-row md:items-center"
