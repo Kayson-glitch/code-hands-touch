@@ -490,6 +490,10 @@ function FigureSlot({ figure }: { figure: Figure }) {
  * every row, dashed rules between rows, a dashed centre line, and a small
  * square where they cross. Below md the rows stack: text, then figure.
  */
+/** Figma's 4/4 dash — browsers' `dashed` keyword picks its own rhythm, so draw it. */
+const DASH_X = "repeating-linear-gradient(90deg, #E1E0E4 0 4px, transparent 4px 8px)";
+const DASH_Y = "repeating-linear-gradient(180deg, #E1E0E4 0 4px, transparent 4px 8px)";
+
 function ArticleRows({ rows }: { rows: ArticleRow[] }) {
   const cell = `${fluid(60, 32)} ${fluid(60, 24)}`;
   return (
@@ -498,29 +502,33 @@ function ArticleRows({ rows }: { rows: ArticleRow[] }) {
       <div
         aria-hidden
         className="pointer-events-none absolute inset-y-0 left-1/2 hidden md:block"
-        style={{ width: 0, borderLeft: "1px dashed #E1E0E4" }}
+        style={{ width: 1, backgroundImage: DASH_Y }}
       />
       {rows.map((row, i) => {
         const flip = i % 2 === 1;
         return (
-          <div
-            key={row.block.title}
-            className="relative grid md:grid-cols-2"
-            style={{ borderTop: i > 0 ? "1px dashed #E1E0E4" : undefined }}
-          >
+          <div key={row.block.title} className="relative grid md:grid-cols-2">
             {i > 0 ? (
-              <span
-                aria-hidden
-                className="absolute left-1/2 hidden md:block"
-                style={{
-                  top: -5.5,
-                  width: 10,
-                  height: 10,
-                  transform: "translateX(-50%)",
-                  background: "#FFFFFF",
-                  border: "1px solid #A1A0A9",
-                }}
-              />
+              <>
+                <span
+                  aria-hidden
+                  className="pointer-events-none absolute inset-x-0 top-0"
+                  style={{ height: 1, backgroundImage: DASH_X }}
+                />
+                {/* crossing marker — same 6px white square as the Platform frame */}
+                <span
+                  aria-hidden
+                  className="absolute left-1/2 hidden md:block"
+                  style={{
+                    top: -3,
+                    width: 6,
+                    height: 6,
+                    transform: "translateX(-50%)",
+                    background: "#FFFFFF",
+                    border: "1px solid #DCDCDC",
+                  }}
+                />
+              </>
             ) : null}
 
             <div className={flip ? "md:order-2" : ""} style={{ padding: cell }}>
