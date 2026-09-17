@@ -1,13 +1,11 @@
 import { useEffect, useState } from "react";
 import { useHeroLayout } from "@/hooks/useHeroLayout";
-import { DotArrow } from "@/components/DotArrow";
+import { RainbowButton } from "@/components/RainbowButton";
 
 
 export function HeroCopy() {
   const [visible, setVisible] = useState(false);
   const layout = useHeroLayout();
-  const btnFace = "#0E0B22";
-  const btnFaceRgb = "14,11,34";
 
 
 
@@ -39,10 +37,10 @@ export function HeroCopy() {
         willChange: "opacity, filter, transform",
       }}
     >
-      <div className="flex w-full max-w-[min(800px,55.5556vw)] flex-col items-center gap-10">
+      <div className="flex w-full max-w-[min(900px,62.5vw)] flex-col items-center gap-10">
         <div className="flex w-full flex-col items-center gap-2.5">
           <h1
-            className="font-display capitalize text-ink-ghost"
+            className="font-display text-ink-ghost"
             style={{
               fontSize: layout.titleFontSize,
               lineHeight: layout.titleLineHeight,
@@ -50,9 +48,9 @@ export function HeroCopy() {
               margin: 0,
             }}
           >
-            Support that drives revenue,
+            Support That Drives Revenue,
             <br />
-            <span className="text-ink">powered by Synergy.AI.</span>
+            <span className="text-ink">Powered by Synergy.AI.</span>
           </h1>
 
           <p
@@ -69,39 +67,7 @@ export function HeroCopy() {
           </p>
         </div>
 
-        <button
-          className="pointer-events-auto group relative inline-flex shrink-0 cursor-pointer items-center justify-center font-normal transition-all"
-          style={{
-            height: 36,
-            boxSizing: "content-box",
-            fontSize: 14,
-            lineHeight: "20px",
-            fontWeight: 400,
-            padding: "0 20px",
-
-            borderRadius: 0,
-            borderBottom: "1.5px solid transparent",
-            color: "#FFFFFF",
-            backgroundImage: [
-              `linear-gradient(${btnFace},${btnFace})`,
-              `linear-gradient(${btnFace} 50%, rgba(${btnFaceRgb},0.6) 80%, rgba(${btnFaceRgb},0))`,
-              "linear-gradient(90deg, #137DFF 0%, #FF18AA 33.333%, #FFCD17 66.666%, #137DFF 100%)",
-            ].join(","),
-            backgroundClip: "padding-box, border-box, border-box",
-            backgroundColor: btnFace,
-            backgroundOrigin: "border-box",
-            backgroundSize: "200%",
-            animation: "rainbow-btn-flow var(--rainbow-speed, 9s) infinite linear",
-          }}
-        >
-          <span className="relative z-10 inline-flex items-center gap-0">
-            Book a Demo
-            <span className="inline-flex items-center ml-1.5">
-              <DotArrow size={16} className="flex-shrink-0" />
-            </span>
-          </span>
-
-        </button>
+        <RainbowButton label="Book a Demo" className="pointer-events-auto" />
 
 
       </div>

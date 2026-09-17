@@ -17,10 +17,11 @@ export type HeroLayout = {
 // Fluid type: 1440 is the design baseline (48/56, 16/24, 14/22),
 // every size tracks the viewport width from there.
 const FLUID = {
-  titleFontSize: "clamp(28px, 3.3333vw, 64px)",
-  titleLineHeight: "clamp(34px, 3.8889vw, 74px)",
-  subtitleFontSize: "clamp(13px, 1.1111vw, 21px)",
-  subtitleLineHeight: "clamp(20px, 1.6667vw, 32px)",
+  // Site-wide hero scale: 60px / 1.1 at 1440, floor 36px; leads 16 / 24.
+  titleFontSize: "clamp(36px, 4.1667vw, 60px)",
+  titleLineHeight: "1.1",
+  subtitleFontSize: "16px",
+  subtitleLineHeight: "24px",
   bodyFontSize: "clamp(12px, 0.9722vw, 18px)",
   bodyLineHeight: "clamp(20px, 1.5278vw, 29px)",
 };

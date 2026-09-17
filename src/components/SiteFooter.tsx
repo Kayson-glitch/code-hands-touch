@@ -160,7 +160,7 @@ export function SiteFooter({ cta = true }: { cta?: boolean } = {}) {
           <Reveal variant="hero">
             <h2
               className="font-display"
-              style={{ margin: 0, fontSize: fluid(48, 28), lineHeight: 1.1667, fontWeight: 400 }}
+              style={{ margin: 0, fontSize: fluid(48, 30), lineHeight: 1.1667, fontWeight: 400 }}
             >
               <span className="text-ink-ghost">Get started with the</span>
               <br />
