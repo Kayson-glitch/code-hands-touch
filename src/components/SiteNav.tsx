@@ -695,6 +695,7 @@ const SOLUTION_USE_CASES: RichItem[] = [
     kicker: "Customer service",
     title: "Scale & Stabilise Customer Support",
     desc: "Absorb the repetitive volume; keep people on the judgement calls.",
+    to: "/solution/customer-support",
   },
   {
     dot: "#FF9ED8",
