@@ -125,7 +125,7 @@ export function SloganSection() {
       data-dark-section=""
       className="relative w-full"
       style={{
-        backgroundColor: "#0A0A0A",
+        backgroundColor: "#000000",
         height: "260vh",
         position: "relative",
         zIndex: 10,
@@ -292,7 +292,7 @@ export function SloganSection() {
               width: 80,
               pointerEvents: "none",
               background:
-                "linear-gradient(to right, #0A0A0A 0%, rgba(10,10,10,0) 100%)",
+                "linear-gradient(to right, #000000 0%, rgba(0,0,0,0) 100%)",
             }}
           />
           <div
@@ -303,7 +303,7 @@ export function SloganSection() {
               width: 80,
               pointerEvents: "none",
               background:
-                "linear-gradient(to left, #0A0A0A 0%, rgba(10,10,10,0) 100%)",
+                "linear-gradient(to left, #000000 0%, rgba(0,0,0,0) 100%)",
             }}
           />
         </div>

@@ -7,13 +7,13 @@ import { whyTechnologyAsset } from "@/lib/media";
 import { HalftoneHandStill } from "@/components/HalftoneHandStill";
 import { Reveal } from "@/components/Reveal";
 import { GradientHoverHeading } from "@/components/GradientHoverHeading";
-import { RollingNumber } from "@/components/RollingNumber";
 import { FinChatDock } from "@/components/FinChatDock";
 import { SiteFooter } from "@/components/SiteFooter";
 
 import { getLenis } from "@/lib/smoothScroll";
-import { DotArrow } from "@/components/DotArrow";
-import { StepDiagram, type Step } from "@/components/WhyFigures";
+import { fluid } from "@/lib/fluid";
+import { RainbowButton } from "@/components/RainbowButton";
+import { StatsCard, StepDiagram, type Step } from "@/components/WhyFigures";
 
 /** Nav (60) + breathing room, so a targeted module never hugs the header. */
 const ANCHOR_OFFSET = 60 + 40;
@@ -42,88 +42,11 @@ export const Route = createFileRoute("/why-synergy/technology")({
 
 /* --------------------------------------------------------------- helpers */
 
-/** 1440px design width → fluid value. */
-const fluid = (px: number, min = px * 0.7) =>
-  `clamp(${Math.round(min)}px, ${((px / 1440) * 100).toFixed(4)}vw, ${px}px)`;
 
-const GRADIENT =
-  "linear-gradient(90deg, #137DFF 0%, #FF18AA 33.333%, #FFCD17 66.666%, #137DFF 100%)";
 const SKY = "#8CE0FF";
 
-function RainbowButton({ label }: { label: string }) {
-  const face = "#0E0B22";
-  const faceRgb = "14,11,34";
-  return (
-    <button
-      className="group relative inline-flex shrink-0 cursor-pointer items-center justify-center font-normal transition-all"
-      style={{
-        height: 36,
-        fontSize: 14,
-        lineHeight: "20px",
-        fontWeight: 400,
-        padding: "0 20px",
-        borderRadius: 0,
-        borderBottom: "1.5px solid transparent",
-        color: "#FFFFFF",
-        backgroundImage: [
-          `linear-gradient(${face},${face})`,
-          `linear-gradient(${face} 50%, rgba(${faceRgb},0.6) 80%, rgba(${faceRgb},0))`,
-          GRADIENT,
-        ].join(","),
-        backgroundClip: "padding-box, border-box, border-box",
-        backgroundColor: face,
-        backgroundOrigin: "border-box",
-        backgroundSize: "200%",
-        animation: "rainbow-btn-flow var(--rainbow-speed, 9s) infinite linear",
-      }}
-    >
-      <span className="relative z-10 inline-flex items-center gap-0">
-        {label}
-        <span className="inline-flex items-center ml-1.5">
-          <DotArrow size={16} className="flex-shrink-0" />
-        </span>
-      </span>
-    </button>
-  );
-}
 
-/** Small dark CTA inside the article header (Figma 1569:103625). */
-function InlineDemoButton() {
-  return (
-    <button
-      className="shrink-0 cursor-pointer transition-opacity hover:opacity-90"
-      style={{
-        background: "#0E0B22",
-        borderBottom: "1.5px solid #137DFF",
-        borderRadius: 0,
-        height: 36,
-        padding: "0 24px",
-        fontSize: 12,
-        lineHeight: "20px",
-        fontWeight: 500,
-        color: "#FFFFFF",
-      }}
-    >
-      Book a Demo
-    </button>
-  );
-}
 
-/** Alternating sky diamond / ink square bullet (ref: image-134). */
-function Bullet({ diamond }: { diamond: boolean }) {
-  return (
-    <span
-      aria-hidden
-      className="mt-[7px] inline-block shrink-0"
-      style={{
-        width: 6,
-        height: 6,
-        background: diamond ? "#93C5FD" : "#374151",
-        transform: diamond ? "rotate(45deg)" : undefined,
-      }}
-    />
-  );
-}
 
 function Hairline({ dark = false }: { dark?: boolean }) {
   return (
@@ -451,102 +374,7 @@ function ArticleBlock({
   );
 }
 
-/** Stats card — two-column split: left primary stat, right bullet list,
- *  separated by a dashed vertical rule (ref: image-134). */
-function StatsCard({ module }: { module: Module }) {
-  return (
-    <Reveal y={32} duration={1600} style={{ background: "#F8F9FA" }}>
-      <div
-        className="relative flex flex-col md:flex-row"
-        style={{
-          padding: `${fluid(56, 36)} ${fluid(40, 16)}`,
-          gap: fluid(40, 20),
-        }}
-      >
-        {/* left column — primary metric */}
-        <div className="shrink-0 md:w-[35%]">
-          <p
-            className="font-sans uppercase tracking-wide"
-            style={{
-              margin: 0,
-              fontSize: 13,
-              lineHeight: "18px",
-              fontWeight: 600,
-              letterSpacing: "0.08em",
-              color: "#374151",
-            }}
-          >
-            Overall Impact
-          </p>
-          <div style={{ marginTop: fluid(20, 14) }}>
-            <StatValue value={module.stats[0]} />
-          </div>
-          <p
-            style={{
-              margin: `${fluid(20, 14)} 0 0`,
-              fontSize: 14,
-              lineHeight: "22px",
-              color: "#6B7280",
-              maxWidth: 340,
-            }}
-          >
-            {module.caption}
-          </p>
-        </div>
 
-        {/* phones: horizontal rule where the dashed vertical divider would be */}
-        <div aria-hidden className="md:hidden" style={{ height: 1, background: "#E5E7EB" }} />
-
-        {/* right column — bullet details */}
-        <ul
-          className="flex flex-1 flex-col md:justify-between md:pl-[clamp(20px,2.7778vw,40px)]"
-          style={{ gap: 22, margin: 0 }}
-        >
-          {module.bullets.map((b, i) => (
-            <li key={b} className="flex items-start gap-3">
-              <Bullet diamond={i % 2 === 0} />
-              <span style={{ fontSize: 14, lineHeight: "22px", color: "#374151" }}>
-                {b}
-              </span>
-            </li>
-          ))}
-        </ul>
-
-        {/* dashed vertical divider — absolutely positioned for precise edge control */}
-        <div
-          aria-hidden
-          className="hidden md:block"
-          style={{
-            position: "absolute",
-            top: "30%",
-            bottom: "30%",
-            left: "38%",
-            width: 0,
-            borderLeft: "1px dashed #D1D5DB",
-          }}
-        />
-      </div>
-    </Reveal>
-  );
-}
-
-/** 100px Clash Display digits with a 60px regular unit (ref: image-134). */
-function StatValue({ value }: { value: string }) {
-  const match = /^([\d.]+)(.*)$/.exec(value);
-  const digits = match ? match[1] : value;
-  const unit = match ? match[2] : "";
-  return (
-    <p
-      className="font-display whitespace-nowrap capitalize"
-      style={{ margin: 0, fontSize: fluid(100, 52), lineHeight: 1.2, fontWeight: 400, color: "#111827" }}
-    >
-      <RollingNumber value={digits} />
-      {unit ? (
-        <span style={{ fontSize: fluid(60, 32), fontWeight: 400, color: "#9CA3AF" }}>{unit}</span>
-      ) : null}
-    </p>
-  );
-}
 
 function ModuleArticle({ module }: { module: Module }) {
   return (
@@ -554,7 +382,12 @@ function ModuleArticle({ module }: { module: Module }) {
       {/* module top hairline — Figma: full-width rule opening every module */}
       <Hairline />
       <div style={{ padding: `${fluid(60, 28)} ${fluid(60, 24)} 0` }}>
-        <StatsCard module={module} />
+        <StatsCard
+          value={module.stats[0]}
+          caption={module.caption}
+          bullets={module.bullets}
+          accent={SKY}
+        />
       </div>
 
       {/* header — eyebrow, rule, 48px title, intro, CTA */}
@@ -600,7 +433,7 @@ function ModuleArticle({ module }: { module: Module }) {
                 ))}
               </div>
             </div>
-            <InlineDemoButton />
+            <RainbowButton label="Book a Demo" />
           </div>
         </Reveal>
       </div>
@@ -744,7 +577,7 @@ function TechnologyPage() {
           <div className="relative mx-auto w-full max-w-[1200px]">
             <div
               className="relative z-10"
-              style={{ maxWidth: 680, paddingTop: fluid(163, 104), paddingBottom: fluid(172, 100) }}
+              style={{ maxWidth: 680, paddingTop: fluid(160, 104), paddingBottom: fluid(172, 100) }}
             >
               <Reveal immediate className="flex items-center gap-2">
                 <span aria-hidden style={{ width: 8, height: 8, background: SKY }} />
@@ -765,9 +598,9 @@ function TechnologyPage() {
                   style={{
                     margin: "10px 0 0",
                     maxWidth: 680,
-                    fontSize: fluid(48, 30),
-                    lineHeight: 1.1667,
-                    fontWeight: 500,
+                    fontSize: fluid(60, 36),
+                    lineHeight: 1.1,
+                    fontWeight: 400,
                   }}
                 />
               </Reveal>

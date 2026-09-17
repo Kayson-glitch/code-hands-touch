@@ -7,6 +7,7 @@ import { FinChatDock } from "@/components/FinChatDock";
 import { SiteFooter } from "@/components/SiteFooter";
 import { DotArrow } from "@/components/DotArrow";
 import { BreakLines, HeroDots, RainbowButton } from "@/components/ProductHero";
+import { fluid } from "@/lib/fluid";
 
 export const Route = createFileRoute("/pricing")({
   head: () => ({
@@ -28,8 +29,6 @@ export const Route = createFileRoute("/pricing")({
 
 /* --------------------------------------------------------------- helpers */
 
-const fluid = (px: number, min = px * 0.7) =>
-  `clamp(${Math.round(min)}px, ${((px / 1440) * 100).toFixed(4)}vw, ${px}px)`;
 
 const INK = "#0E0B22";
 const MUTED = "#7A7885";
@@ -61,7 +60,7 @@ const PLANS: Plan[] = [
   { id: "free", name: "Free", dot: "#C6C5CB", monthly: 0, messages: 10_000, features: ["10k AI messages / mo", "AI message volume add-on"], cta: "Book a Demo" },
   { id: "basic", name: "Basic", dot: "#8CE0FF", monthly: 1500, messages: 100_000, features: ["100k AI messages / mo", "AI message volume add-on"], cta: "Book a Demo" },
   { id: "growth", name: "Growth", dot: LIME, monthly: 15000, messages: 1_000_000, features: ["1M AI messages / mo", "AI message volume add-on"], cta: "Book a Demo" },
-  { id: "enterprise", name: "Enterprise", dot: "#FFCE91", monthly: null, messages: null, features: ["Unlimited AI messages", "Private deployment · on-site FDE"], cta: "Contact us" },
+  { id: "enterprise", name: "Enterprise", dot: "#EBA753", monthly: null, messages: null, features: ["Unlimited AI messages", "Private deployment · on-site FDE"], cta: "Contact us" },
 ];
 
 const ANNUAL_DISCOUNT = 0.1;
@@ -264,8 +263,8 @@ function PlanCard({ plan, annual, index }: { plan: Plan; annual: boolean; index:
         className="flex h-full flex-col"
         style={{
           padding: fluid(28, 20),
-          background: dark ? INK : "#FFFFFF",
-          border: `1px solid ${dark ? INK : HAIRLINE}`,
+          background: dark ? "#000000" : "#FFFFFF",
+          border: `1px solid ${dark ? "#000000" : HAIRLINE}`,
           minHeight: 372,
         }}
       >
@@ -449,7 +448,7 @@ function Calculator() {
       </div>
 
       {/* estimate */}
-      <div className="flex flex-col" style={{ padding: fluid(40, 24), background: INK, color: "#FFFFFF", gap: 28 }}>
+      <div className="flex flex-col" style={{ padding: fluid(40, 24), background: "#000000", color: "#FFFFFF", gap: 28 }}>
         <p className="flex items-center" style={{ margin: 0, gap: 8 }}>
           <span aria-hidden style={{ width: 8, height: 8, background: LIME }} />
           <span className="uppercase" style={{ fontSize: 12, lineHeight: "18px", letterSpacing: "0.06em", color: "rgba(255,255,255,0.6)" }}>
@@ -506,7 +505,7 @@ function PricingPage() {
       <header className="relative overflow-hidden">
         <HeroDots />
         <div className="relative" style={{ padding: pad }}>
-          <div className="mx-auto flex w-full max-w-[1200px] flex-col items-center text-center" style={{ paddingTop: fluid(140, 96) }}>
+          <div className="mx-auto flex w-full max-w-[1200px] flex-col items-center text-center" style={{ paddingTop: fluid(160, 104) }}>
             <Reveal immediate className="flex items-center gap-2">
               <span aria-hidden style={{ width: 8, height: 8, background: LIME }} />
               <span className="uppercase" style={{ fontSize: 14, lineHeight: "22px", color: MUTED }}>
@@ -519,11 +518,11 @@ function PricingPage() {
                 className="font-display text-ink"
                 text={"Choose the plan that's\nright for you"}
                 breakFrom="md"
-                style={{ margin: "16px 0 0", fontSize: fluid(54, 34), lineHeight: 1.15, fontWeight: 500 }}
+                style={{ margin: "16px 0 0", fontSize: fluid(60, 36), lineHeight: 1.1, fontWeight: 400 }}
               />
             </Reveal>
             <Reveal immediate delay={240}>
-              <p style={{ margin: "16px 0 0", fontSize: fluid(18, 15), lineHeight: 1.5, color: MUTED }}>
+              <p style={{ margin: "16px 0 0", fontSize: 16, lineHeight: "24px", color: MUTED }}>
                 Transparent pricing that scales with your business.
               </p>
             </Reveal>
@@ -546,12 +545,12 @@ function PricingPage() {
           <div className="mx-auto w-full max-w-[1200px]">
             <div className="flex flex-col md:flex-row md:items-end md:justify-between" style={{ gap: 24 }}>
               <Reveal y={24} duration={1600}>
-                <h2 className="font-display text-ink" style={{ margin: 0, fontSize: fluid(44, 30), lineHeight: 1.2273, fontWeight: 400 }}>
+                <h2 className="font-display text-ink" style={{ margin: 0, fontSize: fluid(48, 30), lineHeight: 1.1667, fontWeight: 400 }}>
                   <BreakLines text={"See how much\nyou could save"} />
                 </h2>
               </Reveal>
               <Reveal y={24} duration={1600} delay={120}>
-                <p style={{ margin: 0, maxWidth: 480, fontSize: 14, lineHeight: "24px", color: MUTED }}>
+                <p style={{ margin: 0, maxWidth: 480, fontSize: 14, lineHeight: "22px", color: MUTED }}>
                   Drag or type. The model is in the open: your team grows with volume, AI closes its share of conversations end to end, and the plan that covers that volume is already deducted.
                 </p>
               </Reveal>

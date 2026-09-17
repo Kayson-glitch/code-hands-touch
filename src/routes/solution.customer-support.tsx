@@ -7,6 +7,7 @@ import { RollingNumber } from "@/components/RollingNumber";
 import { BreakLines, ProductHero, RainbowButton } from "@/components/ProductHero";
 import { solutionChannelsAsset, solutionConsoleAsset, solutionFlowAsset } from "@/lib/media";
 import { HoverTilt } from "@/components/HoverTilt";
+import { fluid } from "@/lib/fluid";
 
 export const Route = createFileRoute("/solution/customer-support")({
   head: () => ({
@@ -32,11 +33,9 @@ export const Route = createFileRoute("/solution/customer-support")({
 
 /* --------------------------------------------------------------- helpers */
 
-const fluid = (px: number, min = px * 0.7) =>
-  `clamp(${Math.round(min)}px, ${((px / 1440) * 100).toFixed(4)}vw, ${px}px)`;
 
 /** Page accent — the Solution menu's "Customer service" square. */
-const AMBER = "#FFCE91";
+const AMBER = "#EBA753";
 const HAIRLINE = "#E1E0E4";
 const INK = "#0E0B22";
 const MUTED = "#7A7885";
@@ -94,7 +93,7 @@ const OUTCOMES = {
   title: "Support that feels\nimmediate\nand dependable.",
   body: "synergy.ai removes friction from every customer interaction — responding faster, staying consistent, and helping customers move forward without delay.",
   stats: [
-    { sign: "-", value: "70", unit: "%", label: "First response time", dot: "#FFCE91" },
+    { sign: "-", value: "70", unit: "%", label: "First response time", dot: "#EBA753" },
     { sign: "+", value: "28", unit: "%", label: "First contact resolution", dot: "#D1E486" },
     { sign: "+", value: "40", unit: "%", label: "Self-service resolution", dot: "#8CE0FF" },
     { sign: "-", value: "17", unit: "%", label: "Customer satisfaction", dot: "#9E8CFF" },
@@ -156,13 +155,13 @@ function FeatureSection({ feature, flip }: { feature: Feature; flip: boolean }) 
             <Reveal y={24} duration={1600}>
               <h2
                 className="font-display text-ink"
-                style={{ margin: 0, maxWidth: 580, fontSize: fluid(44, 30), lineHeight: 1.2273, fontWeight: 400 }}
+                style={{ margin: 0, maxWidth: 580, fontSize: fluid(48, 30), lineHeight: 1.1667, fontWeight: 400 }}
               >
                 <BreakLines text={feature.title} />
               </h2>
             </Reveal>
             <Reveal y={24} duration={1600} delay={120}>
-              <p style={{ margin: "20px 0 0", maxWidth: 580, fontSize: 14, lineHeight: "24px", color: MUTED }}>
+              <p style={{ margin: "20px 0 0", maxWidth: 580, fontSize: 14, lineHeight: "22px", color: MUTED }}>
                 {feature.body}
               </p>
             </Reveal>
@@ -262,13 +261,13 @@ function Outcomes() {
             <Reveal y={24} duration={1600} className="md:w-1/2">
               <h2
                 className="font-display text-ink"
-                style={{ margin: 0, fontSize: fluid(44, 30), lineHeight: 1.2273, fontWeight: 400 }}
+                style={{ margin: 0, fontSize: fluid(48, 30), lineHeight: 1.1667, fontWeight: 400 }}
               >
                 <BreakLines text={OUTCOMES.title} />
               </h2>
             </Reveal>
             <Reveal y={24} duration={1600} delay={120} className="md:w-1/2">
-              <p style={{ margin: 0, maxWidth: 532, fontSize: 16, lineHeight: "27px", color: INK }}>{OUTCOMES.body}</p>
+              <p style={{ margin: 0, maxWidth: 532, fontSize: 14, lineHeight: "22px", color: MUTED }}>{OUTCOMES.body}</p>
               <div style={{ marginTop: fluid(32, 24) }}>
                 <RainbowButton label="Book a Demo" />
               </div>

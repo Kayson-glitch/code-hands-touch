@@ -1,8 +1,10 @@
 import type { ReactNode } from "react";
 import { Reveal } from "@/components/Reveal";
 import { GradientHoverHeading } from "@/components/GradientHoverHeading";
-import { DotArrow } from "@/components/DotArrow";
 import { SonarGrid } from "@/components/ui/sonar-grid";
+import { fluid } from "@/lib/fluid";
+import { GRADIENT_STOPS, RainbowButton } from "@/components/RainbowButton";
+export { GRADIENT, GRADIENT_STOPS, RainbowButton } from "@/components/RainbowButton";
 
 /**
  * First screen shared by the Platform and Solution product pages: the CTA
@@ -11,49 +13,6 @@ import { SonarGrid } from "@/components/ui/sonar-grid";
  * rainbow Book a Demo. Fades the dots in under the nav and out into the next
  * section.
  */
-
-const fluid = (px: number, min = px * 0.7) =>
-  `clamp(${Math.round(min)}px, ${((px / 1440) * 100).toFixed(4)}vw, ${px}px)`;
-
-export const GRADIENT_STOPS = ["#137DFF", "#FF18AA", "#FFCD17", "#137DFF"];
-export const GRADIENT = `linear-gradient(90deg, ${GRADIENT_STOPS[0]} 0%, ${GRADIENT_STOPS[1]} 33.333%, ${GRADIENT_STOPS[2]} 66.666%, ${GRADIENT_STOPS[3]} 100%)`;
-
-export function RainbowButton({ label }: { label: string }) {
-  const face = "#0E0B22";
-  const faceRgb = "14,11,34";
-  return (
-    <button
-      className="group relative inline-flex shrink-0 cursor-pointer items-center justify-center font-normal transition-all"
-      style={{
-        height: 36,
-        fontSize: 14,
-        lineHeight: "20px",
-        fontWeight: 400,
-        padding: "0 20px",
-        borderRadius: 0,
-        borderBottom: "1.5px solid transparent",
-        color: "#FFFFFF",
-        backgroundImage: [
-          `linear-gradient(${face},${face})`,
-          `linear-gradient(${face} 50%, rgba(${faceRgb},0.6) 80%, rgba(${faceRgb},0))`,
-          GRADIENT,
-        ].join(","),
-        backgroundClip: "padding-box, border-box, border-box",
-        backgroundColor: face,
-        backgroundOrigin: "border-box",
-        backgroundSize: "200%",
-        animation: "rainbow-btn-flow var(--rainbow-speed, 9s) infinite linear",
-      }}
-    >
-      <span className="relative z-10 inline-flex items-center gap-0">
-        {label}
-        <span className="inline-flex items-center ml-1.5">
-          <DotArrow size={16} className="flex-shrink-0" />
-        </span>
-      </span>
-    </button>
-  );
-}
 
 /** Text with "\n" breaks honoured from md up — for module titles that don't take the hero's hover. */
 export function BreakLines({ text }: { text: string }) {
@@ -145,8 +104,8 @@ export function ProductHero({
                 style={{
                   margin: "20px 0 0",
                   maxWidth: 1040,
-                  fontSize: fluid(72, 40),
-                  lineHeight: 1.1111,
+                  fontSize: fluid(60, 36),
+                  lineHeight: 1.1,
                   fontWeight: 400,
                 }}
                 trailing={
@@ -154,9 +113,9 @@ export function ProductHero({
                     className="font-sans"
                     style={{
                       display: "block",
-                      maxWidth: 512,
-                      fontSize: fluid(18, 15),
-                      lineHeight: 1.3,
+                      maxWidth: 480,
+                      fontSize: 16,
+                      lineHeight: "24px",
                       fontWeight: 400,
                       color: "var(--ink-muted, #7A7885)",
                       textWrap: "balance",

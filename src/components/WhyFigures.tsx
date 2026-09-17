@@ -1,6 +1,8 @@
 import { Fragment, type CSSProperties } from "react";
 import { DotArrow } from "@/components/DotArrow";
 import { Reveal } from "@/components/Reveal";
+import { RollingNumber } from "@/components/RollingNumber";
+import { fluid } from "@/lib/fluid";
 
 /**
  * Visual anchors for the Why Synergy long-form pages. All three reuse the
@@ -9,8 +11,6 @@ import { Reveal } from "@/components/Reveal";
  * than as illustrations dropped into it.
  */
 
-const fluid = (px: number, min = px * 0.7) =>
-  `clamp(${Math.round(min)}px, ${((px / 1440) * 100).toFixed(4)}vw, ${px}px)`;
 
 type Tone = {
   ink: string;
@@ -333,5 +333,106 @@ export function StatFigure({
         {caption}
       </p>
     </div>
+  );
+}
+
+/* ------------------------------------------------------------- stats card */
+
+/** Alternating accent diamond / ink square, the bullet used in every list. */
+export function ListBullet({ diamond, accent, dark = false }: { diamond: boolean; accent: string; dark?: boolean }) {
+  return (
+    <span
+      aria-hidden
+      className="mt-[8px] inline-block shrink-0"
+      style={{
+        width: 6,
+        height: 6,
+        background: diamond ? accent : dark ? "#FFFFFF" : "#0E0B22",
+        transform: diamond ? "rotate(45deg)" : undefined,
+      }}
+    />
+  );
+}
+
+/** 100px Clash Display digits with a 60px unit. */
+export function StatValue({ value, dark = false }: { value: string; dark?: boolean }) {
+  const t = tone(dark);
+  const match = /^([\d.]+)(.*)$/.exec(value);
+  const digits = match ? match[1] : value;
+  const unit = match ? match[2] : "";
+  return (
+    <p
+      className="font-display whitespace-nowrap"
+      style={{ margin: 0, fontSize: fluid(100, 52), lineHeight: 1.2, fontWeight: 400, color: t.ink }}
+    >
+      {match ? <RollingNumber value={digits} /> : digits}
+      {unit ? <span style={{ fontSize: fluid(60, 32), fontWeight: 400, color: dark ? "rgba(255,255,255,0.5)" : "#A1A0A9" }}>{unit}</span> : null}
+    </p>
+  );
+}
+
+/**
+ * Module stats card — primary stat left, bullet list right, a dashed vertical
+ * rule between them; stacked with a horizontal rule on phones. Shared by the
+ * Stories and Technology pages (light and black variants).
+ */
+export function StatsCard({
+  label = "Overall Impact",
+  value,
+  caption,
+  bullets,
+  accent,
+  dark = false,
+}: {
+  label?: string;
+  value: string;
+  caption: string;
+  bullets: string[];
+  accent: string;
+  dark?: boolean;
+}) {
+  const t = tone(dark);
+  return (
+    <Reveal y={32} duration={1600} style={{ background: dark ? "#0E0B22" : "#F8F9FA" }}>
+      <div
+        className="relative flex flex-col md:flex-row"
+        style={{ padding: `${fluid(56, 36)} ${fluid(40, 16)}`, gap: fluid(40, 20) }}
+      >
+        <div className="shrink-0 md:w-[35%]">
+          <p
+            className="font-sans uppercase"
+            style={{ margin: 0, fontSize: 12, lineHeight: "18px", fontWeight: 500, letterSpacing: "0.08em", color: t.muted }}
+          >
+            {label}
+          </p>
+          <div style={{ marginTop: fluid(20, 14) }}>
+            <StatValue value={value} dark={dark} />
+          </div>
+          <p style={{ margin: `${fluid(20, 14)} 0 0`, fontSize: 14, lineHeight: "22px", color: t.muted, maxWidth: 340 }}>
+            {caption}
+          </p>
+        </div>
+
+        <div aria-hidden className="md:hidden" style={{ height: 1, background: t.rule }} />
+
+        <ul
+          className="flex flex-1 flex-col md:justify-between md:pl-[clamp(20px,2.7778vw,40px)]"
+          style={{ gap: 22, margin: 0 }}
+        >
+          {bullets.map((b, i) => (
+            <li key={b} className="flex items-start gap-3">
+              <ListBullet diamond={i % 2 === 0} accent={accent} dark={dark} />
+              <span style={{ fontSize: 14, lineHeight: "22px", color: t.ink }}>{b}</span>
+            </li>
+          ))}
+        </ul>
+
+        <div
+          aria-hidden
+          className="hidden md:block"
+          style={{ position: "absolute", top: "30%", bottom: "30%", left: "38%", width: 0, borderLeft: `1px dashed ${t.rule}` }}
+        />
+      </div>
+    </Reveal>
   );
 }

@@ -16,12 +16,8 @@ import { dashboardAsset } from "@/lib/media";
  */
 
 
-/** 1440px design width → fluid value. */
-const fluid = (px: number, min = px * 0.7) =>
-  `clamp(${Math.round(min)}px, ${((px / 1440) * 100).toFixed(4)}vw, ${px}px)`;
-
-const GRADIENT_STOPS = ["#137DFF", "#FF18AA", "#FFCD17", "#137DFF"];
-const GRADIENT = `linear-gradient(90deg, ${GRADIENT_STOPS[0]} 0%, ${GRADIENT_STOPS[1]} 33.333%, ${GRADIENT_STOPS[2]} 66.666%, ${GRADIENT_STOPS[3]} 100%)`;
+import { fluid } from "@/lib/fluid";
+import { GRADIENT, GRADIENT_STOPS, RainbowButton } from "@/components/RainbowButton";
 
 /** Fraction of the dashboard image's lower half left visible above the footer. */
 const IMAGE_REVEAL = 0.75;
@@ -39,43 +35,6 @@ const FOOTER_COLUMNS = [
   { title: "Company", links: ["About us", "Contact us"] },
 ];
 
-function RainbowButton({ label, size = "lg" }: { label: string; size?: "lg" | "sm" }) {
-  const face = "#0E0B22";
-  const faceRgb = "14,11,34";
-  const lg = size === "lg";
-  return (
-    <button
-      className="group relative inline-flex shrink-0 cursor-pointer items-center justify-center font-normal transition-all"
-      style={{
-        height: 36,
-        fontSize: lg ? 14 : 13,
-        lineHeight: "20px",
-        fontWeight: 500,
-        padding: lg ? "0 24px" : "0 22px",
-        borderRadius: 0,
-        borderBottom: "1.5px solid transparent",
-        color: "#FFFFFF",
-        backgroundImage: [
-          `linear-gradient(${face},${face})`,
-          `linear-gradient(${face} 50%, rgba(${faceRgb},0.6) 80%, rgba(${faceRgb},0))`,
-          GRADIENT,
-        ].join(","),
-        backgroundClip: "padding-box, border-box, border-box",
-        backgroundColor: face,
-        backgroundOrigin: "border-box",
-        backgroundSize: "200%",
-        animation: "rainbow-btn-flow var(--rainbow-speed, 9s) infinite linear",
-      }}
-    >
-      <span className="relative z-10 inline-flex items-center gap-0">
-        {label}
-        <span className="inline-flex items-center ml-1.5">
-          <DotArrow size={16} className="flex-shrink-0" />
-        </span>
-      </span>
-    </button>
-  );
-}
 
 /** Wordmark that fills its container width by uniform font scaling (no glyph stretching). */
 function FitWordmark({ text }: { text: string }) {
@@ -244,7 +203,7 @@ export function SiteFooter({ cta = true }: { cta?: boolean } = {}) {
         data-dark-section
         data-progressive-blur-hide
         className="relative overflow-hidden"
-        style={{ background: "#0A0A0A", marginTop: -footerOverlap, zIndex: 30 }}
+        style={{ background: "#000000", marginTop: -footerOverlap, zIndex: 30 }}
       >
         <div aria-hidden style={{ height: 2, backgroundImage: GRADIENT, backgroundSize: "200%" }} />
 

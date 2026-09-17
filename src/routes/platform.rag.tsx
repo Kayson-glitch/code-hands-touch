@@ -6,6 +6,7 @@ import { SiteFooter } from "@/components/SiteFooter";
 import { RollingNumber } from "@/components/RollingNumber";
 import { BreakLines, ProductHero } from "@/components/ProductHero";
 import { platformRagDemoAsset } from "@/lib/media";
+import { fluid } from "@/lib/fluid";
 import { HoverTilt } from "@/components/HoverTilt";
 
 export const Route = createFileRoute("/platform/rag")({
@@ -32,9 +33,6 @@ export const Route = createFileRoute("/platform/rag")({
 
 /* --------------------------------------------------------------- helpers */
 
-/** 1440px design width → fluid value. */
-const fluid = (px: number, min = px * 0.7) =>
-  `clamp(${Math.round(min)}px, ${((px / 1440) * 100).toFixed(4)}vw, ${px}px)`;
 
 /** Page accent — the Platform menu's "Engine" square. */
 const SKY = "#8CE0FF";
@@ -123,7 +121,7 @@ function DemoCard() {
  * to the viewport edge at each corner.
  */
 function CropFrame({ inset, insetBottom = inset }: { inset: string; insetBottom?: string }) {
-  const rule = "#DCDCDC";
+  const rule = HAIRLINE;
   const edge = (y: "top" | "bottom") => (y === "bottom" ? insetBottom : inset);
   const corner = (x: "left" | "right", y: "top" | "bottom") => (
     <span
@@ -210,7 +208,7 @@ function RagPage() {
                 <Reveal y={24} duration={1600}>
                   <h2
                     className="font-display text-ink"
-                    style={{ margin: 0, fontSize: fluid(44, 30), lineHeight: 1.2273, fontWeight: 400 }}
+                    style={{ margin: 0, fontSize: fluid(48, 30), lineHeight: 1.1667, fontWeight: 400 }}
                   >
                     <BreakLines text={ENGINE.title} />
                   </h2>
@@ -220,8 +218,8 @@ function RagPage() {
                     style={{
                       margin: "20px 0 0",
                       maxWidth: 532,
-                      fontSize: fluid(18, 15),
-                      lineHeight: 1.7,
+                      fontSize: 14,
+                      lineHeight: "22px",
                       color: "var(--ink-muted, #7A7885)",
                     }}
                   >

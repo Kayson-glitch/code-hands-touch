@@ -4,13 +4,12 @@ import { logoAsset as logo } from "@/lib/media";
 
 export function SiteNav({
   revealDelay = 4000,
-  solid = false,
+  solid = true,
 }: {
   revealDelay?: number;
   /**
-   * Keep the frosted bar at the very top too. The homepage lets its hero show
-   * through until the first scroll; pages with a patterned first screen need
-   * the bar to read as a bar from the start.
+   * Keep the frosted bar at the very top too (default). Pass false to let a
+   * hero show through until the first scroll.
    */
   solid?: boolean;
 } = {}) {
@@ -88,7 +87,7 @@ export function SiteNav({
   const navItem =
     "flex cursor-pointer items-center gap-1.5 p-4 capitalize transition-colors duration-200";
   // Light variant (first screen) / dark variant (black second screen, per Figma).
-  const glassBg = onDark ? "rgba(10,10,10,0.72)" : "rgba(250,250,250,0.72)";
+  const glassBg = onDark ? "rgba(0,0,0,0.72)" : "rgba(250,250,250,0.72)";
   const inkStrong = onDark ? "#FFFFFF" : "#0E0B22";
   const inkSoft = "#7A7885";
   const hairline = onDark ? "rgba(255,255,255,0.15)" : "#F1F1F3";
@@ -273,7 +272,7 @@ const WHY_SYNERGY_ITEMS: Array<{
     desc: "Governed knowledge, precise retrieval, and human oversight.",
   },
   {
-    dot: "#FFCE91",
+    dot: "#EBA753",
     kicker: "Commitment",
     title: "Security & Partnership",
     to: "/why-synergy/security",
@@ -697,7 +696,7 @@ function PlatformMenu({ open }: { open: boolean }) {
 /** Two use cases (left) and four industries (right). */
 const SOLUTION_USE_CASES: RichItem[] = [
   {
-    dot: "#FFCE91",
+    dot: "#EBA753",
     kicker: "Customer service",
     title: "Scale & Stabilise Customer Support",
     desc: "Absorb the repetitive volume; keep people on the judgement calls.",

@@ -9,7 +9,8 @@ import { Reveal } from "@/components/Reveal";
 import { FinChatDock } from "@/components/FinChatDock";
 import { SiteFooter } from "@/components/SiteFooter";
 import { GradientHoverHeading } from "@/components/GradientHoverHeading";
-import { DotArrow } from "@/components/DotArrow";
+import { fluid } from "@/lib/fluid";
+import { RainbowButton } from "@/components/RainbowButton";
 import { BeforeAfter, PullQuote, StatFigure } from "@/components/WhyFigures";
 import { RollingNumber } from "@/components/RollingNumber";
 
@@ -39,49 +40,8 @@ export const Route = createFileRoute("/why-synergy/business-impact")({
 
 /* --------------------------------------------------------------- helpers */
 
-/** 1440px design width → fluid value. */
-const fluid = (px: number, min = px * 0.7) =>
-  `clamp(${Math.round(min)}px, ${((px / 1440) * 100).toFixed(4)}vw, ${px}px)`;
 
-const GRADIENT = "linear-gradient(90deg, #137DFF 0%, #FF18AA 33.333%, #FFCD17 66.666%, #137DFF 100%)";
 
-function RainbowButton({ label, size = "lg" }: { label: string; size?: "lg" | "sm" }) {
-  const face = "#0E0B22";
-  const faceRgb = "14,11,34";
-  const lg = size === "lg";
-  return (
-    <button
-      className="group relative inline-flex shrink-0 cursor-pointer items-center justify-center font-normal transition-all"
-      style={{
-        height: 36,
-        fontSize: lg ? 14 : 13,
-        lineHeight: "20px",
-        fontWeight: 400,
-        padding: lg ? "0 20px" : "0 20px",
-        borderRadius: 0,
-        borderBottom: "1.5px solid transparent",
-        color: "#FFFFFF",
-        backgroundImage: [
-          `linear-gradient(${face},${face})`,
-          `linear-gradient(${face} 50%, rgba(${faceRgb},0.6) 80%, rgba(${faceRgb},0))`,
-          GRADIENT,
-        ].join(","),
-        backgroundClip: "padding-box, border-box, border-box",
-        backgroundColor: face,
-        backgroundOrigin: "border-box",
-        backgroundSize: "200%",
-        animation: "rainbow-btn-flow var(--rainbow-speed, 9s) infinite linear",
-      }}
-    >
-      <span className="relative z-10 inline-flex items-center gap-0">
-        {label}
-        <span className="inline-flex items-center ml-1.5">
-          <DotArrow size={16} className="flex-shrink-0" />
-        </span>
-      </span>
-    </button>
-  );
-}
 
 const ACCENT = "#5749FF";
 
@@ -526,7 +486,7 @@ function ArticleRows({ rows }: { rows: ArticleRow[] }) {
                     height: 6,
                     transform: "translateX(-50%)",
                     background: "#FFFFFF",
-                    border: "1px solid #DCDCDC",
+                    border: "1px solid #E1E0E4",
                   }}
                 />
               </>
@@ -584,7 +544,7 @@ function BusinessImpactPage() {
           <div className="relative mx-auto w-full max-w-[1200px]">
             <div
               className="relative z-10"
-              style={{ maxWidth: 680, paddingTop: fluid(162, 104), paddingBottom: fluid(172, 100) }}
+              style={{ maxWidth: 680, paddingTop: fluid(160, 104), paddingBottom: fluid(172, 100) }}
             >
               <Reveal immediate className="flex items-center gap-2">
                 <span aria-hidden style={{ width: 8, height: 8, background: ACCENT }} />
@@ -600,13 +560,13 @@ function BusinessImpactPage() {
                 <GradientHoverHeading
                   as="h1"
                   className="font-display text-ink"
-                  text={"From AI Support to\nMeasurable Business Value"}
+                  text={"From AI Support\nto Measurable\nBusiness Value"}
                   breakFrom="md"
                   style={{
                     margin: "10px 0 0",
-                    fontSize: fluid(48, 30),
-                    lineHeight: 1.1667,
-                    fontWeight: 500,
+                    fontSize: fluid(60, 36),
+                    lineHeight: 1.1,
+                    fontWeight: 400,
                     cursor: "default",
                   }}
                 />
@@ -753,23 +713,7 @@ function BusinessImpactPage() {
               </div>
 
               <div className="shrink-0">
-                <button
-                  style={{
-                    background: "#0E0B22",
-                    borderBottom: "1.5px solid #137DFF",
-                    borderRadius: 0,
-                    height: 36,
-                    padding: "0 24px",
-                    fontSize: 12,
-                    lineHeight: "20px",
-                    fontWeight: 500,
-                    color: "#FFFFFF",
-                    cursor: "pointer",
-                    transition: "opacity 0.2s",
-                  }}
-                >
-                  Book a Demo
-                </button>
+                <RainbowButton label="Book a Demo" />
               </div>
             </div>
           </div>
