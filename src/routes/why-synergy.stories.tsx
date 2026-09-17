@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { Fragment, useEffect, useRef, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import type { LucideIcon } from "lucide-react";
 import { Activity, CalendarCheck, ClipboardCheck, FileWarning, Hourglass, Languages, Lock, MessageCircle, RefreshCw, Route as RouteIcon, ScanSearch, TrendingDown, TrendingUp, UserCheck } from "lucide-react";
@@ -13,6 +13,7 @@ import { SiteFooter } from "@/components/SiteFooter";
 
 import { getLenis } from "@/lib/smoothScroll";
 import { DotArrow } from "@/components/DotArrow";
+import { BeforeAfter } from "@/components/WhyFigures";
 
 /** Nav (60) + breathing room, so a targeted module never hugs the header. */
 const ANCHOR_OFFSET = 60 + 40;
@@ -142,10 +143,12 @@ type Story = {
   titleAccent: string;
   titleRest: string;
   intro: string[];
-  stats: [string, string];
+  stat: string;
   caption: string;
   bullets: string[];
   blocks: Block[];
+  /** Before → after figure, shown right after the "Measured Impact" block. */
+  figure: { before: string; after: string; beforeLabel: string; afterLabel: string };
 };
 
 const STORIES: Story[] = [
@@ -160,13 +163,19 @@ const STORIES: Story[] = [
       "In Hindi and Urdu, 'why is my order still pending' reached the model as 'why am I still pregnant'.",
       "For multilingual ops teams: root cause, targeted model, validation.",
     ],
-    stats: ["68%", "86%"],
-    caption: "India translation accuracy, general API → targeted model · 1 month",
+    stat: "86%",
+    caption: "India translation accuracy with the targeted model, up from 68% on the general API · 1 month",
     bullets: [
       "Targeted Indian model, no English pivot in the middle",
       "Multi-model voting, tuned to payment and order phrasing",
       "Low-resource-language users understood for the first time",
     ],
+    figure: {
+      before: "68%",
+      after: "86%",
+      beforeLabel: "General-purpose API",
+      afterLabel: "Targeted Indian model · 1 month",
+    },
     blocks: [
       {
         icon: Languages,
@@ -206,13 +215,19 @@ const STORIES: Story[] = [
       "Organised rings doctored payment proofs to claim compensation; outsourced KYC checks took days.",
       "For risk and KYC teams: why manual review lost, and the model that replaced it.",
     ],
-    stats: ["88%", ""],
+    stat: "88%",
     caption: "Forged-proof detection accuracy · about 3 months · PDF / video / image",
     bullets: [
       "Multimodal detection across PDF, video and image proofs",
       "Tiered handling: only suspicious cases reach a human",
       "Days of outsourced KYC checks compressed to near real time",
     ],
+    figure: {
+      before: "Days",
+      after: "Real time",
+      beforeLabel: "Outsourced KYC verification",
+      afterLabel: "Image-forensics model · 88% accuracy",
+    },
     blocks: [
       {
         icon: FileWarning,
@@ -252,13 +267,19 @@ const STORIES: Story[] = [
       "Most AI deliveries peak at launch and drift. This loop keeps BCGame's forgery model improving every week.",
       "For technical leads: production labels in, Friday releases out, live service untouched.",
     ],
-    stats: ["Friday", ""],
-    caption: "A new model version every Friday · PDF, image and video",
+    stat: "Friday",
+    caption: "A new model version every week · PDF, image and video",
     bullets: [
       "Online human labels in, a new model version every Friday",
       "Follows evolving forgery techniques instead of freezing",
       "Runs at QPS 20–50; updates decoupled from live service",
     ],
+    figure: {
+      before: "Once",
+      after: "Every Friday",
+      beforeLabel: "Static delivery, decays after launch",
+      afterLabel: "New model version from production labels",
+    },
     blocks: [
       {
         icon: TrendingDown,
@@ -332,48 +353,82 @@ function ArticleBlock({
   );
 }
 
-/** Stats card — Figma 1569:103640 (880×440, #FAFAFA). */
+/** Stats card — same two-column split as the Technology page: primary stat
+ *  left, bullet list right, dashed vertical rule between (stacked on phones). */
 function StatsCard({ story, dark = false }: { story: Story; dark?: boolean }) {
+  const label = dark ? "rgba(255,255,255,0.7)" : "#374151";
+  const caption = dark ? "rgba(255,255,255,0.5)" : "#6B7280";
+  const bullet = dark ? "rgba(255,255,255,0.75)" : "#374151";
+  const rule = dark ? "rgba(255,255,255,0.22)" : "#D1D5DB";
   return (
-    <Reveal y={32} duration={1600} style={{ background: dark ? "#0E0B22" : "#FAFAFA" }}>
-      <div style={{ padding: `${fluid(40, 28)} ${fluid(68, 24)}` }}>
-        <div className="flex items-center" style={{ gap: fluid(74, 24) }}>
-          <StatValue value={story.stats[0]} dark={dark} />
-          {story.stats[1] ? (
-            <>
-              <span aria-hidden style={{ color: dark ? "rgba(255,255,255,0.5)" : "#A1A0A9", display: "inline-flex" }}>
-                <DotArrow size={56} connectOnHover={false} />
-              </span>
-              <StatValue value={story.stats[1]} dark={dark} />
-            </>
-          ) : null}
+    <Reveal y={32} duration={1600} style={{ background: dark ? "#0E0B22" : "#F8F9FA" }}>
+      <div
+        className="relative flex flex-col md:flex-row"
+        style={{
+          padding: `${fluid(56, 36)} ${fluid(40, 16)}`,
+          gap: fluid(40, 20),
+        }}
+      >
+        {/* left column — primary metric */}
+        <div className="shrink-0 md:w-[35%]">
+          <p
+            className="font-sans uppercase tracking-wide"
+            style={{
+              margin: 0,
+              fontSize: 13,
+              lineHeight: "18px",
+              fontWeight: 600,
+              letterSpacing: "0.08em",
+              color: label,
+            }}
+          >
+            Overall Impact
+          </p>
+          <div style={{ marginTop: fluid(20, 14) }}>
+            <StatValue value={story.stat} dark={dark} />
+          </div>
+          <p
+            style={{
+              margin: `${fluid(20, 14)} 0 0`,
+              fontSize: 14,
+              lineHeight: "22px",
+              color: caption,
+              maxWidth: 340,
+            }}
+          >
+            {story.caption}
+          </p>
         </div>
 
-        <p
-          style={{
-            margin: `${fluid(20, 14)} 0 0`,
-            fontSize: 14,
-            lineHeight: "24px",
-            color: dark ? "rgba(255,255,255,0.5)" : "var(--ink-faint, #A1A0A9)",
-          }}
+        {/* phones: horizontal rule where the dashed vertical divider would be */}
+        <div aria-hidden className="md:hidden" style={{ height: 1, background: rule }} />
+
+        {/* right column — bullet details */}
+        <ul
+          className="flex flex-1 flex-col md:justify-between md:pl-[clamp(20px,2.7778vw,40px)]"
+          style={{ gap: 22, margin: 0 }}
         >
-          {story.caption}
-        </p>
-
-        <div style={{ margin: `${fluid(40, 24)} 0 ${fluid(40, 24)}`, maxWidth: 680 }}>
-          <Hairline dark={dark} />
-        </div>
-
-        <ul className="flex flex-col" style={{ gap: 24 }}>
           {story.bullets.map((b, i) => (
-            <li key={b} className="flex items-start gap-2">
+            <li key={b} className="flex items-start gap-3">
               <Bullet diamond={i % 2 === 0} dark={dark} />
-              <span style={{ fontSize: 14, lineHeight: "22px", color: dark ? "rgba(255,255,255,0.75)" : "var(--ink, #0E0B22)" }}>
-                {b}
-              </span>
+              <span style={{ fontSize: 14, lineHeight: "22px", color: bullet }}>{b}</span>
             </li>
           ))}
         </ul>
+
+        {/* dashed vertical divider — absolutely positioned for precise edge control */}
+        <div
+          aria-hidden
+          className="hidden md:block"
+          style={{
+            position: "absolute",
+            top: "30%",
+            bottom: "30%",
+            left: "38%",
+            width: 0,
+            borderLeft: `1px dashed ${rule}`,
+          }}
+        />
       </div>
     </Reveal>
   );
@@ -468,13 +523,20 @@ function StoryArticle({ story, dark = false }: { story: Story; dark?: boolean })
         }}
       >
         {story.blocks.map((b, i) => (
-          <ArticleBlock
-            key={b.title}
-            {...b}
-            divider={i < story.blocks.length - 1}
-            dark={dark}
-            delay={Math.min(i, 1) * 260}
-          />
+          <Fragment key={b.title}>
+            <ArticleBlock
+              {...b}
+              divider={i < story.blocks.length - 1 && b.title !== "Measured Impact"}
+              dark={dark}
+              delay={Math.min(i, 1) * 260}
+            />
+            {b.title === "Measured Impact" ? (
+              <>
+                <BeforeAfter {...story.figure} accent={LIME} dark={dark} />
+                <Hairline dark={dark} />
+              </>
+            ) : null}
+          </Fragment>
         ))}
       </div>
     </article>
