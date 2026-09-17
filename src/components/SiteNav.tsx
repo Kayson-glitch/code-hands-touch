@@ -175,7 +175,7 @@ export function SiteNav({
               { label: "Why Synergy", chevron: true },
               { label: "Platform", chevron: true },
               { label: "Solution", chevron: true },
-              { label: "Pricing", chevron: false },
+              { label: "Pricing", chevron: false, to: "/pricing" },
               { label: "Company Hub", chevron: false },
             ].map((item, i) => (
               <li
@@ -184,10 +184,16 @@ export function SiteNav({
                 onMouseEnter={() => setHovered(i)}
                 onMouseLeave={() => setHovered(null)}
               >
-                <div className={navItem} style={itemStyle(i)}>
-                  {item.label}
-                  {item.chevron && <Chevron flipped={hovered === i} />}
-                </div>
+                {item.to ? (
+                  <Link to={item.to} preload="intent" className={navItem} style={itemStyle(i)}>
+                    {item.label}
+                  </Link>
+                ) : (
+                  <div className={navItem} style={itemStyle(i)}>
+                    {item.label}
+                    {item.chevron && <Chevron flipped={hovered === i} />}
+                  </div>
+                )}
                 {i === 0 && <WhySynergyMenu open={hovered === 0} />}
                 {i === 1 && <PlatformMenu open={hovered === 1} />}
                 {i === 2 && <SolutionMenu open={hovered === 2} />}

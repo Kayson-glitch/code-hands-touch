@@ -75,6 +75,35 @@ export function BreakLines({ text }: { text: string }) {
   );
 }
 
+/** The first-screen dot field on its own, for heroes with a different layout. */
+export function HeroDots() {
+  return (
+    <SonarGrid
+      aria-hidden
+      spacing={20}
+      dotRadius={1}
+      baseOpacity={0.16}
+      peakOpacity={0.7}
+      color="#0E0B22"
+      waveGradient={GRADIENT_STOPS}
+      waveGradientMode="angular"
+      pingEvery={5.5}
+      speed={200}
+      ringWidth={120}
+      amplitude={0.6}
+      interactive={false}
+      seedPing
+      pingArea={[0.2, 0.15, 0.8, 0.85]}
+      className="pointer-events-none absolute inset-0"
+      style={{
+        maskImage: "linear-gradient(to bottom, transparent 0, #000 18%, #000 62%, transparent 100%)",
+        WebkitMaskImage:
+          "linear-gradient(to bottom, transparent 0, #000 18%, #000 62%, transparent 100%)",
+      }}
+    />
+  );
+}
+
 export function ProductHero({
   eyebrow,
   accent,
@@ -95,30 +124,7 @@ export function ProductHero({
   const pad = `0 ${fluid(120, 24)}`;
   return (
     <header className="relative overflow-hidden">
-      <SonarGrid
-        aria-hidden
-        spacing={20}
-        dotRadius={1}
-        baseOpacity={0.16}
-        peakOpacity={0.7}
-        color="#0E0B22"
-        waveGradient={GRADIENT_STOPS}
-        waveGradientMode="angular"
-        pingEvery={5.5}
-        speed={200}
-        ringWidth={120}
-        amplitude={0.6}
-        interactive={false}
-        seedPing
-        pingArea={[0.2, 0.15, 0.8, 0.85]}
-        className="pointer-events-none absolute inset-0"
-        style={{
-          maskImage:
-            "linear-gradient(to bottom, transparent 0, #000 18%, #000 62%, transparent 100%)",
-          WebkitMaskImage:
-            "linear-gradient(to bottom, transparent 0, #000 18%, #000 62%, transparent 100%)",
-        }}
-      />
+      <HeroDots />
 
       <div className="relative" style={{ padding: pad }}>
         <div className="mx-auto w-full max-w-[1200px]">

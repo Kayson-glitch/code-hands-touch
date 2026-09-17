@@ -1293,3 +1293,44 @@ html.lenis body {
     grid-template-rows: auto auto auto auto;
   }
 }
+
+/* Pricing calculator sliders: 2px hairline track, ink fill up to the value
+   (--p, 0–100%), square ink thumb. */
+.calc-range {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 20px;
+  margin: 0;
+  background: transparent;
+  cursor: pointer;
+}
+.calc-range:focus-visible { outline: none; }
+.calc-range::-webkit-slider-runnable-track {
+  height: 2px;
+  background: linear-gradient(90deg, #0E0B22 0 var(--p, 0%), #E1E0E4 var(--p, 0%) 100%);
+}
+.calc-range::-moz-range-track { height: 2px; background: #E1E0E4; }
+.calc-range::-moz-range-progress { height: 2px; background: #0E0B22; }
+.calc-range::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 12px;
+  height: 12px;
+  margin-top: -5px;
+  background: #0E0B22;
+  border: 2px solid #FFFFFF;
+  box-shadow: 0 0 0 1px #0E0B22;
+  border-radius: 0;
+  transition: transform 160ms ease;
+}
+.calc-range::-moz-range-thumb {
+  width: 12px;
+  height: 12px;
+  background: #0E0B22;
+  border: 2px solid #FFFFFF;
+  box-shadow: 0 0 0 1px #0E0B22;
+  border-radius: 0;
+}
+.calc-range:hover::-webkit-slider-thumb,
+.calc-range:focus-visible::-webkit-slider-thumb { transform: scale(1.25); }

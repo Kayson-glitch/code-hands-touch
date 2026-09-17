@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as WhySynergyRouteImport } from './routes/why-synergy'
 import { Route as SolutionRouteImport } from './routes/solution'
+import { Route as PricingRouteImport } from './routes/pricing'
 import { Route as PlatformRouteImport } from './routes/platform'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as WhySynergyTechnologyRouteImport } from './routes/why-synergy.technology'
@@ -28,6 +29,11 @@ const WhySynergyRoute = WhySynergyRouteImport.update({
 const SolutionRoute = SolutionRouteImport.update({
   id: '/solution',
   path: '/solution',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PricingRoute = PricingRouteImport.update({
+  id: '/pricing',
+  path: '/pricing',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PlatformRoute = PlatformRouteImport.update({
@@ -75,6 +81,7 @@ const PlatformRagRoute = PlatformRagRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/platform': typeof PlatformRouteWithChildren
+  '/pricing': typeof PricingRoute
   '/solution': typeof SolutionRouteWithChildren
   '/why-synergy': typeof WhySynergyRouteWithChildren
   '/platform/rag': typeof PlatformRagRoute
@@ -87,6 +94,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/platform': typeof PlatformRouteWithChildren
+  '/pricing': typeof PricingRoute
   '/solution': typeof SolutionRouteWithChildren
   '/why-synergy': typeof WhySynergyRouteWithChildren
   '/platform/rag': typeof PlatformRagRoute
@@ -100,6 +108,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/platform': typeof PlatformRouteWithChildren
+  '/pricing': typeof PricingRoute
   '/solution': typeof SolutionRouteWithChildren
   '/why-synergy': typeof WhySynergyRouteWithChildren
   '/platform/rag': typeof PlatformRagRoute
@@ -114,6 +123,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/platform'
+    | '/pricing'
     | '/solution'
     | '/why-synergy'
     | '/platform/rag'
@@ -126,6 +136,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/platform'
+    | '/pricing'
     | '/solution'
     | '/why-synergy'
     | '/platform/rag'
@@ -138,6 +149,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/platform'
+    | '/pricing'
     | '/solution'
     | '/why-synergy'
     | '/platform/rag'
@@ -151,6 +163,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   PlatformRoute: typeof PlatformRouteWithChildren
+  PricingRoute: typeof PricingRoute
   SolutionRoute: typeof SolutionRouteWithChildren
   WhySynergyRoute: typeof WhySynergyRouteWithChildren
 }
@@ -169,6 +182,13 @@ declare module '@tanstack/react-router' {
       path: '/solution'
       fullPath: '/solution'
       preLoaderRoute: typeof SolutionRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/pricing': {
+      id: '/pricing'
+      path: '/pricing'
+      fullPath: '/pricing'
+      preLoaderRoute: typeof PricingRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/platform': {
@@ -275,6 +295,7 @@ const WhySynergyRouteWithChildren = WhySynergyRoute._addFileChildren(
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   PlatformRoute: PlatformRouteWithChildren,
+  PricingRoute: PricingRoute,
   SolutionRoute: SolutionRouteWithChildren,
   WhySynergyRoute: WhySynergyRouteWithChildren,
 }
