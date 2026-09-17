@@ -137,7 +137,8 @@ function CropFrame({ inset, insetBottom = inset }: { inset: string; insetBottom?
         height: 6,
         background: "#FFFFFF",
         border: `1px solid ${rule}`,
-        transform: `translate(${x === "left" ? "-50%" : "50%"}, ${y === "top" ? "-50%" : "50%"})`,
+        // the frame's 1px border is centred half a pixel inside the inset
+        transform: `translate(calc(${x === "left" ? "-50% + 0.5px" : "50% - 0.5px"}), calc(${y === "top" ? "-50% + 0.5px" : "50% - 0.5px"}))`,
       }}
     />
   );

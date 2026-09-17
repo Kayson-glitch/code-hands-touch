@@ -501,8 +501,8 @@ function ArticleRows({ rows }: { rows: ArticleRow[] }) {
       {/* centre line */}
       <div
         aria-hidden
-        className="pointer-events-none absolute inset-y-0 left-1/2 hidden md:block"
-        style={{ width: 1, backgroundImage: DASH_Y }}
+        className="pointer-events-none absolute inset-y-0 hidden md:block"
+        style={{ left: "calc(50% - 0.5px)", width: 1, backgroundImage: DASH_Y }}
       />
       {rows.map((row, i) => {
         const flip = i % 2 === 1;
@@ -520,7 +520,8 @@ function ArticleRows({ rows }: { rows: ArticleRow[] }) {
                   aria-hidden
                   className="absolute left-1/2 hidden md:block"
                   style={{
-                    top: -3,
+                    // the 1px rules are centred at 0.5px; sit the square on those centres
+                    top: -2.5,
                     width: 6,
                     height: 6,
                     transform: "translateX(-50%)",
