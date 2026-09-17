@@ -178,6 +178,7 @@ export function SiteNav({ revealDelay = 4000 }: { revealDelay?: number } = {}) {
                   {item.chevron && <Chevron flipped={hovered === i} />}
                 </div>
                 {i === 0 && <WhySynergyMenu open={hovered === 0} />}
+                {i === 1 && <PlatformMenu open={hovered === 1} />}
               </li>
             ))}
 
@@ -262,21 +263,37 @@ const WHY_SYNERGY_ITEMS: Array<{
   },
 ];
 
-function WhySynergyMenu({ open }: { open: boolean }) {
-  const [hover, setHover] = useState<number | null>(null);
-  const navigate = useNavigate();
-  // Spring-ish easing for the panel reveal.
-  const PANEL_EASE = "cubic-bezier(0.22, 1, 0.36, 1)";
+// Spring-ish easing for the panel reveal.
+const PANEL_EASE = "cubic-bezier(0.22, 1, 0.36, 1)";
 
+/**
+ * Shared dropdown shell: white card that wipes open from its anchor corner,
+ * a "/ section" kicker, then whatever grid the menu needs.
+ */
+function MenuPanel({
+  open,
+  kicker,
+  align = "left",
+  children,
+}: {
+  open: boolean;
+  kicker: string;
+  /** Anchor the panel to the item's left edge, or centre it under the item. */
+  align?: "left" | "center";
+  children: React.ReactNode;
+}) {
+  const centered = align === "center";
+  const closedTransform = centered
+    ? "translate(-50%, -10px) scale(0.96)"
+    : "translateY(-10px) scale(0.96)";
+  const openTransform = centered ? "translate(-50%, 0) scale(1)" : "translateY(0) scale(1)";
   return (
     <div
-      className="absolute left-0 top-full pt-2"
+      className={`absolute top-full pt-2 ${centered ? "left-1/2" : "left-0"}`}
       style={{
         opacity: open ? 1 : 0,
-        transform: open
-          ? "translateY(0) scale(1)"
-          : "translateY(-10px) scale(0.96)",
-        transformOrigin: "top left",
+        transform: open ? openTransform : closedTransform,
+        transformOrigin: centered ? "top center" : "top left",
         pointerEvents: open ? "auto" : "none",
         transition: `opacity 420ms ${PANEL_EASE}, transform 560ms ${PANEL_EASE}`,
       }}
@@ -290,10 +307,12 @@ function WhySynergyMenu({ open }: { open: boolean }) {
           background: "#FFFFFF",
           border: "1px solid #F1F1F3",
           boxShadow: "0px 12px 36px 0px rgba(0,0,0,0.10)",
-          // Clip-path wipe so the card grows open from the top-left corner.
+          // Clip-path wipe so the card grows open from its anchor edge.
           clipPath: open
             ? "inset(0 0 0 0 round 16px)"
-            : "inset(0 100% 100% 0 round 16px)",
+            : centered
+              ? "inset(0 50% 100% 50% round 16px)"
+              : "inset(0 100% 100% 0 round 16px)",
           transition: `clip-path 620ms ${PANEL_EASE}`,
         }}
       >
@@ -308,65 +327,258 @@ function WhySynergyMenu({ open }: { open: boolean }) {
             transition: `opacity 360ms ${PANEL_EASE} 140ms, transform 440ms ${PANEL_EASE} 140ms`,
           }}
         >
-          / why synergy
+          {kicker}
         </span>
-        <div
-          className="grid grid-cols-2 overflow-hidden"
-          style={{
-            width: 620,
-            height: 315,
-            border: "1px solid #E1E0E4",
-          }}
-        >
-          {WHY_SYNERGY_ITEMS.map((it, i) => (
-            <div
-              key={it.title}
-              className="flex cursor-pointer flex-col items-start"
-              onClick={() => {
-                if (it.to) navigate({ to: it.to });
-              }}
-              onMouseEnter={() => setHover(i)}
-              onMouseLeave={() => setHover(null)}
-
-              style={{
-                padding: 30,
-                gap: 8,
-                background: hover === i ? "#F8F8F9" : "transparent",
-                borderRight: i % 2 === 0 ? "1px solid #E1E0E4" : "none",
-                borderBottom: i < 2 ? "1px solid #E1E0E4" : "none",
-                opacity: open ? 1 : 0,
-                transform: open ? "translateY(0)" : "translateY(8px)",
-                transition: `background 180ms ease, opacity 460ms ${PANEL_EASE} ${220 + i * 110}ms, transform 540ms ${PANEL_EASE} ${220 + i * 110}ms`,
-              }}
-            >
-              <div className="flex items-center" style={{ gap: 8 }}>
-                <span style={{ width: 8, height: 8, background: it.dot, display: "block" }} />
-                <span
-                  className="uppercase whitespace-nowrap"
-                  style={{ fontSize: 10, lineHeight: "18px", color: "#A1A0A9" }}
-                >
-                  {it.kicker}
-                </span>
-              </div>
-              <div className="flex w-full flex-col items-start" style={{ gap: 8 }}>
-                <p
-                  className="w-full font-medium"
-                  style={{ fontSize: 16, lineHeight: "22px", color: "#000000" }}
-                >
-                  {it.title}
-                </p>
-                <p
-                  className="w-full"
-                  style={{ fontSize: 12, lineHeight: "20px", color: "#7A7885" }}
-                >
-                  {it.desc}
-                </p>
-              </div>
-            </div>
-          ))}
-        </div>
+        {children}
       </div>
     </div>
+  );
+}
+
+/** Staggered entrance for a menu cell. */
+function cellReveal(open: boolean, i: number) {
+  return {
+    opacity: open ? 1 : 0,
+    transform: open ? "translateY(0)" : "translateY(8px)",
+    transition: `background 180ms ease, opacity 460ms ${PANEL_EASE} ${220 + i * 110}ms, transform 540ms ${PANEL_EASE} ${220 + i * 110}ms`,
+  };
+}
+
+function WhySynergyMenu({ open }: { open: boolean }) {
+  const [hover, setHover] = useState<number | null>(null);
+  const navigate = useNavigate();
+
+  return (
+    <MenuPanel open={open} kicker="/ why synergy">
+      <div
+        className="grid grid-cols-2 overflow-hidden"
+        style={{
+          width: 620,
+          height: 315,
+          border: "1px solid #E1E0E4",
+        }}
+      >
+        {WHY_SYNERGY_ITEMS.map((it, i) => (
+          <div
+            key={it.title}
+            className="flex cursor-pointer flex-col items-start"
+            onClick={() => {
+              if (it.to) navigate({ to: it.to });
+            }}
+            onMouseEnter={() => setHover(i)}
+            onMouseLeave={() => setHover(null)}
+            style={{
+              padding: 30,
+              gap: 8,
+              background: hover === i ? "#F8F8F9" : "transparent",
+              borderRight: i % 2 === 0 ? "1px solid #E1E0E4" : "none",
+              borderBottom: i < 2 ? "1px solid #E1E0E4" : "none",
+              ...cellReveal(open, i),
+            }}
+          >
+            <div className="flex items-center" style={{ gap: 8 }}>
+              <span style={{ width: 8, height: 8, background: it.dot, display: "block" }} />
+              <span
+                className="uppercase whitespace-nowrap"
+                style={{ fontSize: 10, lineHeight: "18px", color: "#A1A0A9" }}
+              >
+                {it.kicker}
+              </span>
+            </div>
+            <div className="flex w-full flex-col items-start" style={{ gap: 8 }}>
+              <p
+                className="w-full font-medium"
+                style={{ fontSize: 16, lineHeight: "22px", color: "#000000" }}
+              >
+                {it.title}
+              </p>
+              <p
+                className="w-full"
+                style={{ fontSize: 12, lineHeight: "20px", color: "#7A7885" }}
+              >
+                {it.desc}
+              </p>
+            </div>
+          </div>
+        ))}
+      </div>
+    </MenuPanel>
+  );
+}
+
+/* --------------------------------------------------------------- platform */
+
+/** Three products (left, one per row) and four capabilities (right list). */
+const PLATFORM_PRODUCTS: Array<{
+  dot: string;
+  kicker: string;
+  title: string;
+  desc: string;
+  tag?: string;
+  to?: string;
+}> = [
+  {
+    dot: "#8CE0FF",
+    kicker: "Engine",
+    title: "Self-Developed RAG 2.0",
+    desc: "Intelligent knowledge engine for accurate, context-aware responses.",
+  },
+  {
+    dot: "#9E8CFF",
+    kicker: "Knowledge",
+    title: "Knowledge Cloud",
+    desc: "One governed knowledge base — accurate, controlled, always current.",
+  },
+  {
+    dot: "#D1E486",
+    kicker: "Studio",
+    title: "Synergy Studio",
+    tag: "New",
+    desc: "Build and deploy AI agents — no code needed.",
+  },
+];
+
+const PLATFORM_CAPABILITIES: Array<{ title: string; desc: string; to?: string }> = [
+  { title: "AI Mission Control", desc: "Real-time smart dispatch centre" },
+  { title: "Human + AI", desc: "Seamless AI–human handoff" },
+  { title: "Analytics", desc: "Deep business insights & VOC analysis" },
+  { title: "Persona Analysis", desc: "User profiling & personalised service" },
+];
+
+function PlatformMenu({ open }: { open: boolean }) {
+  const [hover, setHover] = useState<string | null>(null);
+  const navigate = useNavigate();
+  const go = (to?: string) => {
+    if (to) navigate({ to });
+  };
+
+  return (
+    <MenuPanel open={open} kicker="/ platform" align="center">
+      {/* one-line positioning statement in place of the old gradient banner */}
+      <p
+        className="whitespace-nowrap"
+        style={{
+          margin: "-12px 0 0",
+          fontSize: 12,
+          lineHeight: "20px",
+          color: "#A1A0A9",
+          ...cellReveal(open, 0),
+        }}
+      >
+        Self-developed Agent &amp; RAG — no wrappers, just performance.
+      </p>
+
+      <div
+        className="grid overflow-hidden"
+        style={{
+          width: 760,
+          gridTemplateColumns: "380px 1fr",
+          border: "1px solid #E1E0E4",
+        }}
+      >
+        {/* products */}
+        <div className="flex flex-col" style={{ borderRight: "1px solid #E1E0E4" }}>
+          {PLATFORM_PRODUCTS.map((it, i) => {
+            const key = `p-${i}`;
+            return (
+              <div
+                key={it.title}
+                className="flex cursor-pointer flex-col items-start"
+                onClick={() => go(it.to)}
+                onMouseEnter={() => setHover(key)}
+                onMouseLeave={() => setHover(null)}
+                style={{
+                  padding: "22px 30px",
+                  gap: 8,
+                  minHeight: 105,
+                  background: hover === key ? "#F8F8F9" : "transparent",
+                  borderBottom: i < PLATFORM_PRODUCTS.length - 1 ? "1px solid #E1E0E4" : "none",
+                  ...cellReveal(open, i + 1),
+                }}
+              >
+                <div className="flex items-center" style={{ gap: 8 }}>
+                  <span style={{ width: 8, height: 8, background: it.dot, display: "block" }} />
+                  <span
+                    className="uppercase whitespace-nowrap"
+                    style={{ fontSize: 10, lineHeight: "18px", color: "#A1A0A9" }}
+                  >
+                    {it.kicker}
+                  </span>
+                </div>
+                <div className="flex w-full flex-col items-start" style={{ gap: 6 }}>
+                  <p
+                    className="flex w-full items-center font-medium"
+                    style={{ gap: 8, fontSize: 16, lineHeight: "22px", color: "#000000" }}
+                  >
+                    {it.title}
+                    {it.tag ? (
+                      <span
+                        className="uppercase"
+                        style={{
+                          fontSize: 10,
+                          lineHeight: "16px",
+                          fontWeight: 500,
+                          letterSpacing: "0.06em",
+                          padding: "0 6px",
+                          background: "#0E0B22",
+                          color: "#FFFFFF",
+                        }}
+                      >
+                        {it.tag}
+                      </span>
+                    ) : null}
+                  </p>
+                  <p className="w-full" style={{ fontSize: 12, lineHeight: "20px", color: "#7A7885" }}>
+                    {it.desc}
+                  </p>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* capabilities */}
+        <div className="flex flex-col">
+          {PLATFORM_CAPABILITIES.map((it, i) => {
+            const key = `c-${i}`;
+            return (
+              <div
+                key={it.title}
+                className="flex flex-1 cursor-pointer items-center"
+                onClick={() => go(it.to)}
+                onMouseEnter={() => setHover(key)}
+                onMouseLeave={() => setHover(null)}
+                style={{
+                  padding: "18px 30px",
+                  gap: 10,
+                  background: hover === key ? "#F8F8F9" : "transparent",
+                  borderBottom: i < PLATFORM_CAPABILITIES.length - 1 ? "1px solid #E1E0E4" : "none",
+                  ...cellReveal(open, i + 2),
+                }}
+              >
+                {/* alternating ink square / diamond, as in the KPI bullet lists */}
+                <span
+                  aria-hidden
+                  className="block shrink-0"
+                  style={{
+                    width: 6,
+                    height: 6,
+                    background: "#0E0B22",
+                    transform: i % 2 === 1 ? "rotate(45deg)" : undefined,
+                  }}
+                />
+                <div className="flex flex-col" style={{ gap: 2 }}>
+                  <p className="font-medium" style={{ fontSize: 14, lineHeight: "20px", color: "#000000" }}>
+                    {it.title}
+                  </p>
+                  <p style={{ fontSize: 12, lineHeight: "18px", color: "#7A7885" }}>{it.desc}</p>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </MenuPanel>
   );
 }
 
