@@ -13,6 +13,7 @@ import { SiteFooter } from "@/components/SiteFooter";
 
 import { getLenis } from "@/lib/smoothScroll";
 import { DotArrow } from "@/components/DotArrow";
+import { StepDiagram, type Step } from "@/components/WhyFigures";
 
 /** Nav (60) + breathing room, so a targeted module never hugs the header. */
 const ANCHOR_OFFSET = 60 + 40;
@@ -146,6 +147,8 @@ type Module = {
   caption: string;
   bullets: string[];
   light: Block[];
+  /** Method sketch shown after the light blocks. */
+  diagram: { steps: Step[]; caption: string };
   dark: Block[];
   tail: Block;
 };
@@ -184,6 +187,15 @@ const MODULES: Module[] = [
         divider: false,
       },
     ],
+    diagram: {
+      steps: [
+        { label: "Question arrives", sub: "Top-up, withdrawal, compensation…" },
+        { label: "Knowledge base lookup", sub: "Governed scripts, precision retrieval" },
+        { label: "Inside the boundary?", sub: "Confident match, or not" },
+        { label: "Answer — or hand over", sub: "No match → a person, every time", emphasis: true },
+      ],
+      caption: "The boundary rule. Coverage widens as the knowledge base grows; it is never widened by loosening step 03.",
+    },
     dark: [
       {
         icon: Gauge,
@@ -238,6 +250,15 @@ const MODULES: Module[] = [
         divider: false,
       },
     ],
+    diagram: {
+      steps: [
+        { label: "50+ long documents", sub: "Region × time window × pre/after-sales" },
+        { label: "Configuration Skill", sub: "Splits every document into two layers" },
+        { label: "Scripts → knowledge base", sub: "Rules → rules layer" },
+        { label: "Verified entry by entry", sub: "Human review + AI tests; sessions tagged", emphasis: true },
+      ],
+      caption: "Governance before retrieval: what to say and what never to do are stored apart, then checked twice.",
+    },
     dark: [
       {
         icon: FolderTree,
@@ -292,6 +313,15 @@ const MODULES: Module[] = [
         divider: false,
       },
     ],
+    diagram: {
+      steps: [
+        { label: "Customer question", sub: "Often close to many passages" },
+        { label: "PageIndex locate", sub: "By the document's own structure, no chunking" },
+        { label: "High-precision embedding", sub: "Underlying representation" },
+        { label: "Rerank, coarse → fine", sub: "Right passage lands first", emphasis: true },
+      ],
+      caption: "Three retrieval layers. Each scenario carries an explicit boundary, so the stack never over-answers.",
+    },
     dark: [
       {
         icon: Link2,
@@ -346,6 +376,15 @@ const MODULES: Module[] = [
         divider: false,
       },
     ],
+    diagram: {
+      steps: [
+        { label: "Fiat ticket", sub: "One of 56 scenarios, deep branches" },
+        { label: "Multi-agent routing", sub: "Cooperating agents along the process" },
+        { label: "CRM · ERM · orders", sub: "Connected end to end, no manual copying" },
+        { label: "Standard steps close; refunds → human", sub: "AI gathers evidence, a person decides", emphasis: true },
+      ],
+      caption: "Orchestration with a human ceiling: high-risk, high-complexity steps are never fully automated.",
+    },
     dark: [
       {
         icon: UserCheck,
@@ -578,6 +617,7 @@ function ModuleArticle({ module }: { module: Module }) {
         {module.light.map((b, i) => (
           <ArticleBlock key={b.title} {...b} delay={i * 260} />
         ))}
+        <StepDiagram steps={module.diagram.steps} caption={module.diagram.caption} accent={SKY} />
       </div>
 
       {/* dark block — full-bleed inside the column */}

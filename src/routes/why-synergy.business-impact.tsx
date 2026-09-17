@@ -10,6 +10,7 @@ import { FinChatDock } from "@/components/FinChatDock";
 import { SiteFooter } from "@/components/SiteFooter";
 import { GradientHoverHeading } from "@/components/GradientHoverHeading";
 import { DotArrow } from "@/components/DotArrow";
+import { PullQuote } from "@/components/WhyFigures";
 import { RollingNumber } from "@/components/RollingNumber";
 
 
@@ -158,6 +159,8 @@ type ArticleSet = {
   intro: string;
   light: ArticleBlockData[];
   dark: ArticleBlockData[];
+  /** One-line takeaway, set as a pull quote at the end of the dark section. */
+  pull: string;
 };
 
 const ARTICLES: Record<"roi" | "impact", ArticleSet> = {
@@ -203,6 +206,7 @@ const ARTICLES: Record<"roi" | "impact", ArticleSet> = {
         divider: false,
       },
     ],
+    pull: "Capability is met; implementation is a matter of pacing.",
   },
   impact: {
     eyebrow: "Overall Impact · Resolution",
@@ -227,17 +231,18 @@ const ARTICLES: Record<"roi" | "impact", ArticleSet> = {
     dark: [
       {
         icon: Headset,
-        title: "Escalation And Fallback Behaviour",
+        title: "Escalation and Fallback Behaviour",
         body: "The handover policy is explicit. Anything beyond the current knowledge boundary, or involving a high-risk judgement, goes to a human — every time. VIP conversations keep a human in the loop by default. Handover carries the full context so the agent never restarts the exchange. Human-likeness is engineered rather than prompted: the target market's slang, abbreviations and scenario-specific phrasing are configured into the response layer, so most customers cannot tell they are talking to a system.",
         divider: true,
       },
       {
         icon: ClipboardCheck,
-        title: "Baseline And Clarifications",
+        title: "Baseline and Clarifications",
         body: "Both metrics were zero before launch, so today's figures are net new absorption, not a migration of existing automation. 55% and 70% describe stable capacity within the range the system is confident about — not a technical maximum. Holding this level at 200K conversations a month is what makes the workforce restructuring in the previous article possible: it changes the staffing logic of the whole team, not the fate of individual agents. Why the rate is 55% rather than a forced 95% is covered under Technology → Zero Hallucinations. All numbers are a snapshot of the current observation cycle and will change as the system iterates weekly.",
         divider: false,
       },
     ],
+    pull: "55% and 70% describe stable capacity inside the range the system is confident about — not a technical maximum.",
   },
 };
 
@@ -635,6 +640,7 @@ function BusinessImpactPage() {
             {article.dark.map((b, i) => (
               <ArticleBlock key={b.title} {...b} dark delay={i * 260} duration={1600} />
             ))}
+            <PullQuote text={article.pull} accent={ACCENT} dark />
           </div>
 
           {/* light blocks */}
