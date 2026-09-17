@@ -297,12 +297,28 @@ function CropFrame({ inset }: { inset: string }) {
     <div aria-hidden className="pointer-events-none absolute inset-0 hidden md:block">
       {/* the frame */}
       <div className="absolute" style={{ inset, border: `1px solid ${rule}` }} />
-      {/* ticks continuing the rules to the edges */}
+      {/* ticks continuing the rules past the frame, fading out toward the edges */}
       {(["top", "bottom"] as const).map((y) => (
-        <span key={`h-${y}`} className="absolute inset-x-0" style={{ [y]: inset, height: 1, background: rule, opacity: 0.6 }} />
+        <span
+          key={`h-${y}`}
+          className="absolute inset-x-0"
+          style={{
+            [y]: inset,
+            height: 1,
+            background: `linear-gradient(to right, transparent 0, ${rule} ${inset}, ${rule} calc(100% - ${inset}), transparent 100%)`,
+          }}
+        />
       ))}
       {(["left", "right"] as const).map((x) => (
-        <span key={`v-${x}`} className="absolute inset-y-0" style={{ [x]: inset, width: 1, background: rule, opacity: 0.6 }} />
+        <span
+          key={`v-${x}`}
+          className="absolute inset-y-0"
+          style={{
+            [x]: inset,
+            width: 1,
+            background: `linear-gradient(to bottom, transparent 0, ${rule} ${inset}, ${rule} calc(100% - ${inset}), transparent 100%)`,
+          }}
+        />
       ))}
       {corner("left", "top")}
       {corner("right", "top")}
