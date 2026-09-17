@@ -1,11 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { SiteNav } from "@/components/SiteNav";
 import { Reveal } from "@/components/Reveal";
-import { GradientHoverHeading } from "@/components/GradientHoverHeading";
 import { FinChatDock } from "@/components/FinChatDock";
 import { SiteFooter } from "@/components/SiteFooter";
 import { RollingNumber } from "@/components/RollingNumber";
-import { ProductHero, RainbowButton } from "@/components/ProductHero";
+import { BreakLines, ProductHero, RainbowButton } from "@/components/ProductHero";
 import { solutionChannelsAsset, solutionConsoleAsset, solutionFlowAsset } from "@/lib/media";
 import { HoverTilt } from "@/components/HoverTilt";
 
@@ -155,13 +154,9 @@ function FeatureSection({ feature, flip }: { feature: Feature; flip: boolean }) 
         >
           <div className={`flex flex-1 flex-col ${flip ? "md:order-2" : ""}`} style={{ minWidth: 0 }}>
             <Reveal y={24} duration={1600}>
-              <GradientHoverHeading
-                as="h2"
-                className="font-display text-ink"
-                text={feature.title}
-                breakFrom="md"
-                style={{ margin: 0, maxWidth: 580, fontSize: fluid(44, 30), lineHeight: 1.2273, fontWeight: 400 }}
-              />
+              <h2 className="font-display text-ink" style={{ margin: 0, maxWidth: 580, fontSize: fluid(44, 30), lineHeight: 1.2273, fontWeight: 400 }}>
+  <BreakLines text={feature.title} />
+</h2>
             </Reveal>
             <Reveal y={24} duration={1600} delay={120}>
               <p style={{ margin: "20px 0 0", maxWidth: 580, fontSize: 14, lineHeight: "24px", color: MUTED }}>
@@ -262,13 +257,9 @@ function Outcomes() {
         <div className="mx-auto w-full max-w-[1200px]">
           <div className="flex flex-col md:flex-row md:items-start md:justify-between" style={{ gap: fluid(24, 24) }}>
             <Reveal y={24} duration={1600} className="md:w-1/2">
-              <GradientHoverHeading
-                as="h2"
-                className="font-display text-ink"
-                text={OUTCOMES.title}
-                breakFrom="md"
-                style={{ margin: 0, fontSize: fluid(44, 30), lineHeight: 1.2273, fontWeight: 400 }}
-              />
+              <h2 className="font-display text-ink" style={{ margin: 0, fontSize: fluid(44, 30), lineHeight: 1.2273, fontWeight: 400 }}>
+  <BreakLines text={OUTCOMES.title} />
+</h2>
             </Reveal>
             <Reveal y={24} duration={1600} delay={120} className="md:w-1/2">
               <p style={{ margin: 0, maxWidth: 532, fontSize: 16, lineHeight: "27px", color: INK }}>{OUTCOMES.body}</p>

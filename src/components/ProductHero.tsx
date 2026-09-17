@@ -55,6 +55,26 @@ export function RainbowButton({ label }: { label: string }) {
   );
 }
 
+/** Text with "\n" breaks honoured from md up — for module titles that don't take the hero's hover. */
+export function BreakLines({ text }: { text: string }) {
+  const lines = text.split("\n");
+  return (
+    <>
+      {lines.map((line, i) => (
+        <span key={i}>
+          {i > 0 ? (
+            <>
+              {" "}
+              <br className="hidden md:inline" />
+            </>
+          ) : null}
+          {line}
+        </span>
+      ))}
+    </>
+  );
+}
+
 export function ProductHero({
   eyebrow,
   accent,
