@@ -457,8 +457,9 @@ function PlatformMenu({ open }: { open: boolean }) {
       <div
         className="grid overflow-hidden"
         style={{
-          width: 760,
-          gridTemplateColumns: "380px 1fr",
+          // right column sized to its one-line descriptions, no dead air after them
+          width: 690,
+          gridTemplateColumns: "360px 330px",
           border: "1px solid #E1E0E4",
         }}
       >
@@ -535,7 +536,7 @@ function PlatformMenu({ open }: { open: boolean }) {
                 onMouseEnter={() => setHover(key)}
                 onMouseLeave={() => setHover(null)}
                 style={{
-                  padding: "18px 30px",
+                  padding: "18px 24px 18px 30px",
                   gap: 10,
                   background: hover === key ? "#F8F8F9" : "transparent",
                   borderBottom: i < PLATFORM_CAPABILITIES.length - 1 ? "1px solid #E1E0E4" : "none",
