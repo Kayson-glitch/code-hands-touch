@@ -1347,3 +1347,11 @@ html.lenis body {
 }
 .calc-range:hover::-webkit-slider-thumb,
 .calc-range:focus-visible::-webkit-slider-thumb { transform: scale(1.25); }
+
+/* Why Synergy hero copy column. Between lg and xl the halftone subject starts
+   60px right of the viewport centre, so the column yields to it instead of
+   running underneath. */
+.why-hero-copy { max-width: 680px; }
+@media (min-width: 1024px) and (max-width: 1279px) {
+  .why-hero-copy { max-width: min(680px, calc(100% - 340px)); }
+}

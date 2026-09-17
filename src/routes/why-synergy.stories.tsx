@@ -458,7 +458,7 @@ function StoriesPage() {
           cropW={0.883}
           cropY={0.03}
           cropH={0.9}
-          className="pointer-events-none absolute select-none"
+          className="pointer-events-none absolute hidden select-none lg:block"
           style={{
             // Soften the box edges the subject bleeds through (left arm, lower arm).
             maskImage: "linear-gradient(to right, transparent 0, #000 14%), linear-gradient(to top, transparent 0, #000 14%)",
@@ -466,7 +466,7 @@ function StoriesPage() {
             maskComposite: "intersect",
             WebkitMaskComposite: "source-in",
             top: fluid(115, 66),
-            left: fluid(780, 420),
+            left: `max(${fluid(780, 420)}, calc(50% + 60px))`,
             width: fluid(741, 400),
             height: fluid(425, 230),
           }}
@@ -475,8 +475,8 @@ function StoriesPage() {
         <div style={{ padding: pad }}>
           <div className="relative mx-auto w-full max-w-[1200px]">
             <div
-              className="relative z-10"
-              style={{ maxWidth: 680, paddingTop: fluid(160, 104), paddingBottom: fluid(172, 100) }}
+              className="why-hero-copy relative z-10"
+              style={{ paddingTop: fluid(160, 104), paddingBottom: fluid(172, 100) }}
             >
               <Reveal immediate className="flex items-center gap-2">
                 <span aria-hidden style={{ width: 8, height: 8, background: LIME }} />

@@ -167,7 +167,7 @@ export function SiteNav({
 
           {/* Center menu */}
           <ul
-            className="pointer-events-auto hidden flex-1 items-center justify-center gap-2.5 md:flex"
+            className="pointer-events-auto hidden flex-1 items-center justify-center gap-2.5 lg:flex"
             style={{ fontSize: 13, lineHeight: "20px" }}
           >
             {[

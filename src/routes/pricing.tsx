@@ -431,7 +431,7 @@ function Calculator() {
   const set = (key: keyof Inputs) => (v: number) => setInputs((s) => ({ ...s, [key]: v }));
 
   return (
-    <div className="grid md:grid-cols-[1fr_440px]" style={{ background: "#FFFFFF", border: `1px solid ${HAIRLINE}` }}>
+    <div className="grid lg:grid-cols-[1fr_440px]" style={{ background: "#FFFFFF", border: `1px solid ${HAIRLINE}` }}>
       {/* inputs */}
       <div className="flex flex-col" style={{ padding: fluid(40, 24), gap: fluid(28, 20) }}>
         {KNOBS.map((k) => (
