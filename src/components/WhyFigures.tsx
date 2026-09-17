@@ -230,6 +230,7 @@ export function BeforeAfter({
   afterLabel,
   accent,
   dark = false,
+  plain = false,
   className,
   style,
 }: {
@@ -239,6 +240,8 @@ export function BeforeAfter({
   afterLabel: string;
   accent: string;
   dark?: boolean;
+  /** No panel of its own — for use inside a host that already draws one. */
+  plain?: boolean;
   className?: string;
   style?: CSSProperties;
 }) {
@@ -266,10 +269,10 @@ export function BeforeAfter({
         className="flex flex-col items-start md:flex-row md:items-end"
         style={{
           margin: 0,
-          padding: `${fluid(28, 20)} ${fluid(32, 20)}`,
+          padding: plain ? 0 : `${fluid(28, 20)} ${fluid(32, 20)}`,
           gap: `16px ${fluid(40, 24)}`,
-          background: t.surface,
-          border: `1px solid ${t.rule}`,
+          background: plain ? "transparent" : t.surface,
+          border: plain ? "none" : `1px solid ${t.rule}`,
         }}
       >
         <div>
@@ -290,5 +293,45 @@ export function BeforeAfter({
         </div>
       </figure>
     </Reveal>
+  );
+}
+
+/* ------------------------------------------------------------------- stat */
+
+/** One display-face number with its unit and a caption — the KPI card's
+ *  typography, sized for a figure slot. */
+export function StatFigure({
+  value,
+  unit,
+  caption,
+  dark = false,
+  className,
+  style,
+}: {
+  value: string;
+  unit?: string;
+  caption: string;
+  dark?: boolean;
+  className?: string;
+  style?: CSSProperties;
+}) {
+  const t = tone(dark);
+  return (
+    <div className={className} style={style}>
+      <p
+        className="font-display whitespace-nowrap"
+        style={{ margin: 0, fontSize: fluid(72, 44), lineHeight: 1.1, fontWeight: 400, color: t.ink }}
+      >
+        {value}
+        {unit ? (
+          <span style={{ fontSize: fluid(36, 24), fontWeight: 400, color: t.muted, marginLeft: 6 }}>
+            {unit}
+          </span>
+        ) : null}
+      </p>
+      <p style={{ margin: "14px 0 0", fontSize: 13, lineHeight: "20px", color: t.muted, maxWidth: 360 }}>
+        {caption}
+      </p>
+    </div>
   );
 }

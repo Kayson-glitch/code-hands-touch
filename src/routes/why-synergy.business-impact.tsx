@@ -10,7 +10,7 @@ import { FinChatDock } from "@/components/FinChatDock";
 import { SiteFooter } from "@/components/SiteFooter";
 import { GradientHoverHeading } from "@/components/GradientHoverHeading";
 import { DotArrow } from "@/components/DotArrow";
-import { PullQuote } from "@/components/WhyFigures";
+import { BeforeAfter, PullQuote, StatFigure } from "@/components/WhyFigures";
 import { RollingNumber } from "@/components/RollingNumber";
 
 
@@ -150,17 +150,20 @@ type ArticleBlockData = {
   icon: LucideIcon;
   title: string;
   body: string | BodySegment[];
-  divider: boolean;
 };
+/** What fills the figure slot beside a text block (Figma 1551:20323 image slots). */
+type Figure =
+  | { kind: "stat"; value: string; unit?: string; caption: string }
+  | { kind: "compare"; before: string; after: string; beforeLabel: string; afterLabel: string }
+  | { kind: "quote"; text: string };
+type ArticleRow = { block: ArticleBlockData; figure: Figure };
 type ArticleSet = {
   eyebrow: string;
   titleAccent: string;
   titleRest: string;
   intro: string;
-  light: ArticleBlockData[];
-  dark: ArticleBlockData[];
-  /** One-line takeaway, set as a pull quote at the end of the dark section. */
-  pull: string;
+  /** Checkerboard rows: text and figure swap sides on every row. */
+  rows: ArticleRow[];
 };
 
 const ARTICLES: Record<"roi" | "impact", ArticleSet> = {
@@ -170,43 +173,67 @@ const ARTICLES: Record<"roi" | "impact", ArticleSet> = {
     titleRest: "Cost Analysis from 150 to 50 Agents",
     intro:
       "For the people who sign the budget. BCGame's 150-agent support team costs about $1.5M a month; this article quantifies how the AI system changes that structure and what the data already supports.",
-    light: [
+    rows: [
       {
-        icon: Coins,
-        title: "Analysis of Current Cost Structure",
-        body: [
-          { text: "Within the existing agent structure, the vast majority of labour hours are consumed by high-repetition, low-judgement inquiries: order tracking, payment progress, promotion rules, withdrawal status checks. These dominate inbound volume but need almost no human judgement. " },
-          { text: "During promotional cycles", highlight: true },
-          { text: ", inbound volume multiplies and the team typically copes with temporary hires. Marginal labour cost rises, training cycles stretch, and service quality becomes uneven. The marginal efficiency between labour input and service output keeps falling." },
-        ],
-        divider: true,
+        block: {
+          icon: Coins,
+          title: "Analysis of Current Cost Structure",
+          body: [
+            { text: "Within the existing agent structure, the vast majority of labour hours are consumed by high-repetition, low-judgement inquiries: order tracking, payment progress, promotion rules, withdrawal status checks. These dominate inbound volume but need almost no human judgement. " },
+            { text: "During promotional cycles", highlight: true },
+            { text: ", inbound volume multiplies and the team typically copes with temporary hires. Marginal labour cost rises, training cycles stretch, and service quality becomes uneven. The marginal efficiency between labour input and service output keeps falling." },
+          ],
+        },
+        figure: {
+          kind: "stat",
+          value: "150",
+          unit: "agents",
+          caption: "Today's support team · about $1.5M a month in labour cost, most of it on repetitive inquiries",
+        },
       },
       {
-        icon: Users,
-        title: "Target Structure: Reallocating Agent Functions",
-        body: [
-          { text: "After integration, based on business data from the current observation cycle, the CS team can be optimised to about 50 agents: 20 VIP agents (supervisor-level, dedicated to high-value customers) and 30 general agents. Crucially, the 30 general agents move from front-line Q&A to online data monitoring, anomaly handling and human fallback. " },
-          { text: "This 30-agent headcount is a conservative configuration,", highlight: true },
-          { text: " keeping redundancy for sudden load surges. Under this structure the AI system absorbs standardised work, while people concentrate on high-judgement, high-value workflows." },
-        ],
-        divider: false,
+        block: {
+          icon: Users,
+          title: "Target Structure: Reallocating Agent Functions",
+          body: [
+            { text: "After integration, based on business data from the current observation cycle, the CS team can be optimised to about 50 agents: 20 VIP agents (supervisor-level, dedicated to high-value customers) and 30 general agents. Crucially, the 30 general agents move from front-line Q&A to online data monitoring, anomaly handling and human fallback. " },
+            { text: "This 30-agent headcount is a conservative configuration,", highlight: true },
+            { text: " keeping redundancy for sudden load surges. Under this structure the AI system absorbs standardised work, while people concentrate on high-judgement, high-value workflows." },
+          ],
+        },
+        figure: {
+          kind: "compare",
+          before: "150",
+          after: "50",
+          beforeLabel: "Agents today",
+          afterLabel: "Target: 20 VIP + 30 monitoring",
+        },
+      },
+      {
+        block: {
+          icon: TrendingDown,
+          title: "Cost Impact Projection",
+          body: "Under the target structure the team shrinks by roughly 50%, which translates to about $1M a month and roughly $12M a year in labour cost. This is not cost reduction at the expense of service quality: VIP customers are served by dedicated agents, strengthening continuity and response quality, while general agents move into monitoring roles and the whole team shifts from a scale-driven to an efficiency-driven model.",
+        },
+        figure: {
+          kind: "stat",
+          value: "$12M",
+          unit: "/ yr",
+          caption: "Projected labour saving at the target structure · about $1M a month",
+        },
+      },
+      {
+        block: {
+          icon: ClipboardCheck,
+          title: "Conclusion and Clarifications",
+          body: "This projection is based on the AI system's actual absorption capacity during the current observation cycle — it describes the optimisation space the data supports; the organisational adjustment itself has not been executed. The system's capacity already meets the level required for this structure; when and how headcount changes is the client's operating decision. Capability is met; implementation is a matter of pacing. Figures describe BCGame's results since the June 2026 launch and will move as the system iterates week by week.",
+        },
+        figure: {
+          kind: "quote",
+          text: "Capability is met; implementation is a matter of pacing.",
+        },
       },
     ],
-    dark: [
-      {
-        icon: TrendingDown,
-        title: "Cost Impact Projection",
-        body: "Under the target structure the team shrinks by roughly 50%, which translates to about $1M a month and roughly $12M a year in labour cost. This is not cost reduction at the expense of service quality: VIP customers are served by dedicated agents, strengthening continuity and response quality, while general agents move into monitoring roles and the whole team shifts from a scale-driven to an efficiency-driven model.",
-        divider: true,
-      },
-      {
-        icon: ClipboardCheck,
-        title: "Conclusion and Clarifications",
-        body: "This projection is based on the AI system's actual absorption capacity during the current observation cycle — it describes the optimisation space the data supports; the organisational adjustment itself has not been executed. The system's capacity already meets the level required for this structure; when and how headcount changes is the client's operating decision. Capability is met; implementation is a matter of pacing. Figures describe BCGame's results since the June 2026 launch and will move as the system iterates week by week.",
-        divider: false,
-      },
-    ],
-    pull: "Capability is met; implementation is a matter of pacing.",
   },
   impact: {
     eyebrow: "Overall Impact · Resolution",
@@ -214,35 +241,59 @@ const ARTICLES: Record<"roi" | "impact", ArticleSet> = {
     titleRest: "How AI Absorbs 200K Conversations",
     intro:
       "For support and business leads. How the 55% auto-handling rate and 70% reply rate are defined, where they come from, and why they are a boundary the team chose rather than a technical ceiling.",
-    light: [
+    rows: [
       {
-        icon: Gauge,
-        title: "How Resolution Is Measured",
-        body: "Two independent metrics are tracked. The AI auto-handling rate — 55% — is the share of conversations completed entirely by AI with no human agent in the thread. The AI reply rate — 70% — is the share of customer messages answered by AI, including turns inside conversations that later escalate. At the current monthly volume that is about 110K conversations handled independently every month. Both figures were zero before launch; nothing here is smoothed, weighted, or inherited from earlier automation.",
-        divider: true,
+        block: {
+          icon: Gauge,
+          title: "How Resolution Is Measured",
+          body: "Two independent metrics are tracked. The AI auto-handling rate — 55% — is the share of conversations completed entirely by AI with no human agent in the thread. The AI reply rate — 70% — is the share of customer messages answered by AI, including turns inside conversations that later escalate. At the current monthly volume that is about 110K conversations handled independently every month. Both figures were zero before launch; nothing here is smoothed, weighted, or inherited from earlier automation.",
+        },
+        figure: {
+          kind: "stat",
+          value: "55",
+          unit: "%",
+          caption: "Auto-handling rate — conversations closed entirely by AI · reply rate 70% of all messages",
+        },
       },
       {
-        icon: ChartPie,
-        title: "Traffic Composition Across 200K Conversations",
-        body: "Monthly inbound sits at roughly 200K conversations with concurrency holding at QPS 20–50 — a genuinely high-volume production load that tests stability, precision and absorption capacity. The mix is dominated by order tracking, payment and withdrawal status, promotion rules and account verification: repetitive intents with stable resolution paths, which is why they are absorbed first. Disputes, risk review, VIP negotiation and anything needing a policy exception are routed to people by design and excluded from the AI target rather than counted as failures.",
-        divider: false,
+        block: {
+          icon: ChartPie,
+          title: "Traffic Composition Across 200K Conversations",
+          body: "Monthly inbound sits at roughly 200K conversations with concurrency holding at QPS 20–50 — a genuinely high-volume production load that tests stability, precision and absorption capacity. The mix is dominated by order tracking, payment and withdrawal status, promotion rules and account verification: repetitive intents with stable resolution paths, which is why they are absorbed first. Disputes, risk review, VIP negotiation and anything needing a policy exception are routed to people by design and excluded from the AI target rather than counted as failures.",
+        },
+        figure: {
+          kind: "stat",
+          value: "200K",
+          unit: "/ mo",
+          caption: "Inbound conversations a month at QPS 20–50 · about 110K of them handled by AI alone",
+        },
+      },
+      {
+        block: {
+          icon: Headset,
+          title: "Escalation and Fallback Behaviour",
+          body: "The handover policy is explicit. Anything beyond the current knowledge boundary, or involving a high-risk judgement, goes to a human — every time. VIP conversations keep a human in the loop by default. Handover carries the full context so the agent never restarts the exchange. Human-likeness is engineered rather than prompted: the target market's slang, abbreviations and scenario-specific phrasing are configured into the response layer, so most customers cannot tell they are talking to a system.",
+        },
+        figure: {
+          kind: "quote",
+          text: "Beyond the knowledge boundary, or any high-risk judgement: a human — every time.",
+        },
+      },
+      {
+        block: {
+          icon: ClipboardCheck,
+          title: "Baseline and Clarifications",
+          body: "Both metrics were zero before launch, so today's figures are net new absorption, not a migration of existing automation. 55% and 70% describe stable capacity within the range the system is confident about — not a technical maximum. Holding this level at 200K conversations a month is what makes the workforce restructuring in the previous article possible: it changes the staffing logic of the whole team, not the fate of individual agents. Why the rate is 55% rather than a forced 95% is covered under Technology → Zero Hallucinations. All numbers are a snapshot of the current observation cycle and will change as the system iterates weekly.",
+        },
+        figure: {
+          kind: "compare",
+          before: "0%",
+          after: "55%",
+          beforeLabel: "Before the June 2026 launch",
+          afterLabel: "Current cycle · not a ceiling",
+        },
       },
     ],
-    dark: [
-      {
-        icon: Headset,
-        title: "Escalation and Fallback Behaviour",
-        body: "The handover policy is explicit. Anything beyond the current knowledge boundary, or involving a high-risk judgement, goes to a human — every time. VIP conversations keep a human in the loop by default. Handover carries the full context so the agent never restarts the exchange. Human-likeness is engineered rather than prompted: the target market's slang, abbreviations and scenario-specific phrasing are configured into the response layer, so most customers cannot tell they are talking to a system.",
-        divider: true,
-      },
-      {
-        icon: ClipboardCheck,
-        title: "Baseline and Clarifications",
-        body: "Both metrics were zero before launch, so today's figures are net new absorption, not a migration of existing automation. 55% and 70% describe stable capacity within the range the system is confident about — not a technical maximum. Holding this level at 200K conversations a month is what makes the workforce restructuring in the previous article possible: it changes the staffing logic of the whole team, not the fate of individual agents. Why the rate is 55% rather than a forced 95% is covered under Technology → Zero Hallucinations. All numbers are a snapshot of the current observation cycle and will change as the system iterates weekly.",
-        divider: false,
-      },
-    ],
-    pull: "55% and 70% describe stable capacity inside the range the system is confident about — not a technical maximum.",
   },
 };
 
@@ -345,7 +396,7 @@ function ArticleBlock({
   icon: Icon,
   title,
   body,
-  divider,
+  divider = false,
   dark,
   delay = 0,
   duration,
@@ -353,7 +404,7 @@ function ArticleBlock({
   icon: LucideIcon;
   title: string;
   body: string | BodySegment[];
-  divider: boolean;
+  divider?: boolean;
   dark?: boolean;
   delay?: number;
   duration?: number;
@@ -401,6 +452,89 @@ function ArticleBlock({
         </div>
       ) : null}
     </Reveal>
+  );
+}
+
+/** Figure slot beside a text block — the design's 480×260 image box, filled
+ *  with a figure drawn from the block's own numbers. */
+function FigureSlot({ figure }: { figure: Figure }) {
+  return (
+    <div
+      className="flex h-full w-full flex-col justify-center"
+      style={{
+        minHeight: fluid(260, 200),
+        padding: `${fluid(32, 24)} ${fluid(36, 24)}`,
+        background: "#F8F9FA",
+      }}
+    >
+      {figure.kind === "stat" ? (
+        <StatFigure value={figure.value} unit={figure.unit} caption={figure.caption} />
+      ) : figure.kind === "compare" ? (
+        <BeforeAfter
+          before={figure.before}
+          after={figure.after}
+          beforeLabel={figure.beforeLabel}
+          afterLabel={figure.afterLabel}
+          accent={ACCENT}
+          plain
+        />
+      ) : (
+        <PullQuote text={figure.text} accent={ACCENT} />
+      )}
+    </div>
+  );
+}
+
+/**
+ * Article body — Figma 1551:20323: rows of text + figure that swap sides on
+ * every row, dashed rules between rows, a dashed centre line, and a small
+ * square where they cross. Below md the rows stack: text, then figure.
+ */
+function ArticleRows({ rows }: { rows: ArticleRow[] }) {
+  const cell = `${fluid(60, 32)} ${fluid(60, 24)}`;
+  return (
+    <div className="relative" style={{ borderTop: "1px solid #F1F1F3", borderBottom: "1px solid #F1F1F3" }}>
+      {/* centre line */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-y-0 left-1/2 hidden md:block"
+        style={{ width: 0, borderLeft: "1px dashed #E1E0E4" }}
+      />
+      {rows.map((row, i) => {
+        const flip = i % 2 === 1;
+        return (
+          <div
+            key={row.block.title}
+            className="relative grid md:grid-cols-2"
+            style={{ borderTop: i > 0 ? "1px dashed #E1E0E4" : undefined }}
+          >
+            {i > 0 ? (
+              <span
+                aria-hidden
+                className="absolute left-1/2 hidden md:block"
+                style={{
+                  top: -5.5,
+                  width: 10,
+                  height: 10,
+                  transform: "translateX(-50%)",
+                  background: "#FFFFFF",
+                  border: "1px solid #A1A0A9",
+                }}
+              />
+            ) : null}
+
+            <div className={flip ? "md:order-2" : ""} style={{ padding: cell }}>
+              <ArticleBlock {...row.block} duration={1600} />
+            </div>
+            <div className={flip ? "md:order-1" : ""} style={{ padding: cell }}>
+              <Reveal y={20} duration={1600} delay={120} className="h-full">
+                <FigureSlot figure={row.figure} />
+              </Reveal>
+            </div>
+          </div>
+        );
+      })}
+    </div>
   );
 }
 
@@ -556,7 +690,13 @@ function BusinessImpactPage() {
 
       {/* -------------------------------------------------------- article */}
       <section style={{ padding: pad, marginTop: 0 }}>
-        <Reveal key={tab} y={32} duration={1600} className="mx-auto w-full max-w-[1200px] overflow-hidden bg-white">
+        <Reveal
+          key={tab}
+          y={32}
+          duration={1600}
+          className="mx-auto w-full max-w-[1200px] overflow-hidden bg-white"
+          style={{ border: "1px solid var(--hairline, #E1E0E4)" }}
+        >
           {/* card header */}
           <div style={{ padding: `${fluid(60, 32)} ${fluid(60, 24)} 0` }}>
             <p
@@ -625,35 +765,9 @@ function BusinessImpactPage() {
             </div>
           </div>
 
-          {/* dark block — full-bleed inside the card */}
-          <div
-            data-dark-section
-            style={{
-              background: "#000000",
-              padding: `${fluid(80, 44)} ${fluid(60, 24)}`,
-              display: "flex",
-              flexDirection: "column",
-              gap: fluid(60, 36),
-              marginTop: fluid(80, 44),
-            }}
-          >
-            {article.dark.map((b, i) => (
-              <ArticleBlock key={b.title} {...b} dark delay={i * 260} duration={1600} />
-            ))}
-            <PullQuote text={article.pull} accent={ACCENT} dark />
-          </div>
-
-          {/* light blocks */}
-          <div
-            style={{
-              padding: `${fluid(80, 44)} ${fluid(60, 24)} ${fluid(80, 44)}`,
-            }}
-          >
-            <div className="flex flex-col" style={{ gap: fluid(60, 36) }}>
-              {article.light.map((b, i) => (
-                <ArticleBlock key={b.title} {...b} delay={i * 260} duration={1600} />
-              ))}
-            </div>
+          {/* body — checkerboard of text + figure rows */}
+          <div style={{ padding: `${fluid(80, 44)} ${fluid(60, 24)} ${fluid(60, 32)}` }}>
+            <ArticleRows rows={article.rows} />
           </div>
 
         </Reveal>
