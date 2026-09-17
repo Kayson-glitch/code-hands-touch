@@ -22,7 +22,7 @@ body::-webkit-scrollbar {
 
 .font-display {
   font-family: var(--font-display);
-  font-weight: 500;
+  font-weight: 400;
   font-synthesis-weight: none;
 }
 
@@ -271,7 +271,7 @@ body {
   margin: 0;
   font-family: var(--font-display);
   font-size: clamp(2.25rem, 3.3333vw, 3.75rem);
-  font-weight: 500;
+  font-weight: 400;
   line-height: 1.1;
   letter-spacing: 0;
 }
@@ -279,11 +279,11 @@ body {
 
 .kore-outcomes__header strong {
   color: #5749FF;
-  font-weight: 500;
+  font-weight: 400;
 }
 
 .kore-outcomes__header em {
-  font-weight: 400;
+  font-weight: 300;
 }
 
 .kore-outcomes__cards-container {
@@ -428,7 +428,7 @@ body {
 .kore-outcomes__footer p {
   font-family: var(--font-display);
   font-size: clamp(5rem, 12.5vw, 11.75rem);
-  font-weight: 500;
+  font-weight: 400;
   line-height: 0.86;
   letter-spacing: 0;
 }
@@ -438,7 +438,7 @@ body {
 }
 
 .kore-outcomes__footer em {
-  font-weight: 400;
+  font-weight: 300;
 }
 
 @media (max-width: 990px) {
@@ -587,7 +587,7 @@ html.lenis body {
   margin: 0;
   font-family: var(--font-display);
   font-size: clamp(3.5rem, 11.6667vw, 12.5rem);
-  font-weight: 500;
+  font-weight: 400;
   line-height: 0.86;
   letter-spacing: 0;
   color: #0A0A0A;
@@ -598,7 +598,7 @@ html.lenis body {
 }
 
 .artemis-closing__text em {
-  font-weight: 400;
+  font-weight: 300;
 }
 
 /* Horizontal track inside the dark layer: headline first, then the panels. */
@@ -993,7 +993,7 @@ html.lenis body {
 .artemis-gallery__title {
   margin: 0;
   font-family: var(--font-display);
-  font-weight: 500;
+  font-weight: 400;
   font-size: 28px;
   line-height: 36px;
   color: #fff;

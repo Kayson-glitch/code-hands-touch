@@ -210,7 +210,7 @@ export function PullQuote({
           borderLeft: `2px solid ${accent}`,
           fontSize: fluid(28, 22),
           lineHeight: 1.25,
-          fontWeight: 500,
+          fontWeight: 400,
           color: t.ink,
           maxWidth: 760,
         }}

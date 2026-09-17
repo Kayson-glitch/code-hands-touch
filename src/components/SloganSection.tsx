@@ -170,7 +170,7 @@ export function SloganSection() {
           fontSize: "clamp(28px, 4.2vw, 54px)",
           lineHeight: 1.25,
           letterSpacing: "-0.01em",
-          fontWeight: 500,
+          fontWeight: 400,
           color: "#FAFAFA",
         }}
       >

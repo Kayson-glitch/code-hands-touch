@@ -46,7 +46,7 @@ export function HeroCopy() {
             style={{
               fontSize: layout.titleFontSize,
               lineHeight: layout.titleLineHeight,
-              fontWeight: 500,
+              fontWeight: 400,
               margin: 0,
             }}
           >

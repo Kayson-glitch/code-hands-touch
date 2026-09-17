@@ -191,7 +191,7 @@ function TestimonialCard() {
 
           <blockquote
             className="font-display"
-            style={{ margin: 0, fontSize: fluid(36, 24), lineHeight: 1.2222, fontWeight: 500 }}
+            style={{ margin: 0, fontSize: fluid(36, 24), lineHeight: 1.2222, fontWeight: 400 }}
           >
             <span className="text-ink-ghost">“ {TESTIMONIAL.lead}</span>
             <span className="text-ink">{TESTIMONIAL.rest} ”</span>
@@ -304,7 +304,7 @@ function SecurityPage() {
           {/* header — eyebrow, rule, 48px title, intro, CTA */}
           <div style={{ padding: `${fluid(100, 56)} ${fluid(60, 24)} 0` }}>
             <Reveal y={32} duration={1600}>
-              <p style={{ margin: 0, fontSize: 12, lineHeight: "20px", fontWeight: 500, color: "var(--ink, #0E0B22)" }}>
+              <p style={{ margin: 0, fontSize: 12, lineHeight: "20px", color: "var(--ink, #0E0B22)" }}>
                 {HEADER.eyebrow}
               </p>
               <div style={{ marginTop: 10 }}>
