@@ -242,7 +242,7 @@ function RagPage() {
       </section>
 
       {/* a plain band of background between the module and the footer */}
-      <div aria-hidden style={{ height: fluid(160, 96), background: "#FFFFFF" }} />
+      <div aria-hidden style={{ height: fluid(160, 96), background: "#FAFAFA" }} />
 
       {/* brand footer only — this page ends on its module, not the CTA screen */}
       <SiteFooter cta={false} />
