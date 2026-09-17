@@ -28,6 +28,11 @@ export const whySecurityAsset = media("why-security-handshake.jpg");
 /** Testimonial portrait — pre-blurred stand-in, 560×784 for the 280×392 slot. */
 export const whySecurityPortraitAsset = media("why-security-portrait.jpg");
 
+/** Solution → Customer Support feature illustrations, exported from Figma at 2× (540×540). */
+export const solutionChannelsAsset = media("solution-cs-channels.webp");
+export const solutionConsoleAsset = media("solution-cs-console.webp");
+export const solutionFlowAsset = media("solution-cs-flow.webp");
+
 export const cometAsset = media("kore-comet.svg");
 export const valueAsset = media("kore-value.svg");
 export const scaleAsset = media("kore-scale.svg");

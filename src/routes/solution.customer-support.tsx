@@ -1,14 +1,4 @@
 import { createFileRoute } from "@tanstack/react-router";
-import {
-  Check,
-  Database,
-  Globe,
-  Mail,
-  MessageCircle,
-  ShieldCheck,
-  Smartphone,
-  type LucideIcon,
-} from "lucide-react";
 import { SiteNav } from "@/components/SiteNav";
 import { Reveal } from "@/components/Reveal";
 import { GradientHoverHeading } from "@/components/GradientHoverHeading";
@@ -16,6 +6,7 @@ import { FinChatDock } from "@/components/FinChatDock";
 import { SiteFooter } from "@/components/SiteFooter";
 import { RollingNumber } from "@/components/RollingNumber";
 import { GRADIENT, ProductHero, RainbowButton } from "@/components/ProductHero";
+import { solutionChannelsAsset, solutionConsoleAsset, solutionFlowAsset } from "@/lib/media";
 
 export const Route = createFileRoute("/solution/customer-support")({
   head: () => ({
@@ -46,7 +37,6 @@ const fluid = (px: number, min = px * 0.7) =>
 
 /** Page accent — the Solution menu's "Customer service" square. */
 const AMBER = "#FFCE91";
-const LIME = "#D1E486";
 const HAIRLINE = "#E1E0E4";
 const INK = "#0E0B22";
 const MUTED = "#7A7885";
@@ -128,246 +118,29 @@ function Bullet({ diamond }: { diamond: boolean }) {
   );
 }
 
-/** Square ink tag — the menu's NEW label at flow-node size. */
-function Tag({ children, tone = "ink" }: { children: string; tone?: "ink" | "accent" }) {
+/** Feature illustration — the card designed in Figma, exported at 2×. */
+const FIGURES = {
+  channels: { src: solutionChannelsAsset.url, alt: "One knowledge base answering web, email, mobile apps and social platforms" },
+  console: { src: solutionConsoleAsset.url, alt: "24/7 support console with live conversations being resolved" },
+  flow: { src: solutionFlowAsset.url, alt: "Self-service flow: inbound request, intent detection, automated solution, instant resolution" },
+} as const;
+
+function Figure({ kind }: { kind: Feature["figure"] }) {
+  const f = FIGURES[kind];
   return (
-    <span
-      className="inline-flex items-center uppercase whitespace-nowrap"
-      style={{
-        height: 24,
-        padding: "0 10px",
-        fontSize: 11,
-        lineHeight: "16px",
-        fontWeight: 500,
-        letterSpacing: "0.06em",
-        background: tone === "ink" ? INK : LIME,
-        color: tone === "ink" ? "#FFFFFF" : INK,
-      }}
-    >
-      {children}
-    </span>
-  );
-}
-
-/** Figure panel shell — the RAG demo card's frame: white, hairline, square. */
-function Panel({ children, padding = fluid(32, 20) }: { children: React.ReactNode; padding?: string }) {
-  return (
-    <div
-      className="flex h-full w-full flex-col"
-      style={{ background: "#FFFFFF", border: `1px solid ${HAIRLINE}`, padding, minHeight: fluid(480, 360) }}
-    >
-      {children}
-    </div>
-  );
-}
-
-/* --- figure 1: one knowledge base behind every channel ------------------ */
-
-const CHANNELS: Array<{ icon: LucideIcon; label: string; x: number; y: number }> = [
-  { icon: Globe, label: "Web", x: 16, y: 20 },
-  { icon: Mail, label: "Email", x: 84, y: 20 },
-  { icon: Smartphone, label: "Mobile apps", x: 84, y: 78 },
-  { icon: MessageCircle, label: "Social platforms", x: 16, y: 78 },
-];
-
-function ChannelHub() {
-  return (
-    <Panel>
-      {/* fixed aspect so the SVG rails and the HTML nodes share one coordinate space */}
-      <div className="relative w-full" style={{ aspectRatio: "100 / 82" }}>
-        <svg
-          aria-hidden
-          className="absolute inset-0 h-full w-full"
-          viewBox="0 0 100 82"
-          preserveAspectRatio="none"
-        >
-          {CHANNELS.map((c) => (
-            <line
-              key={c.label}
-              x1="50"
-              y1="41"
-              x2={c.x}
-              y2={(c.y / 100) * 82}
-              stroke="#C6C5CB"
-              strokeWidth="1"
-              strokeDasharray="1 3"
-              strokeLinecap="round"
-              vectorEffect="non-scaling-stroke"
-            />
-          ))}
-        </svg>
-
-        {/* hub */}
-        <div
-          className="absolute flex flex-col items-center justify-center text-center"
-          style={{
-            left: "50%",
-            top: "50%",
-            width: fluid(112, 88),
-            height: fluid(112, 88),
-            transform: "translate(-50%, -50%)",
-            background: INK,
-            color: "#FFFFFF",
-            gap: 8,
-          }}
-        >
-          <Database size={20} strokeWidth={1.5} />
-          <span className="uppercase" style={{ fontSize: 10, lineHeight: "14px", letterSpacing: "0.08em" }}>
-            Knowledge
-            <br />
-            base
-          </span>
-        </div>
-
-        {/* channels */}
-        {CHANNELS.map((c, i) => (
-          <div
-            key={c.label}
-            className="absolute flex flex-col items-center"
-            style={{ left: `${c.x}%`, top: `${c.y}%`, transform: "translate(-50%, -50%)", gap: 8 }}
-          >
-            <span
-              className="grid place-items-center"
-              style={{ width: 44, height: 44, background: "#FFFFFF", border: `1px solid ${HAIRLINE}` }}
-            >
-              <c.icon size={18} strokeWidth={1.5} color={INK} />
-            </span>
-            <span className="whitespace-nowrap" style={{ fontSize: 12, lineHeight: "16px", color: i % 2 ? MUTED : INK }}>
-              {c.label}
-            </span>
-          </div>
-        ))}
-      </div>
-    </Panel>
-  );
-}
-
-/* --- figure 2: the always-on console ------------------------------------ */
-
-const CONVERSATIONS = [
-  { name: "Marvin McKinney", ask: "How do I stake my tokens?" },
-  { name: "Jane Cooper", ask: "Transaction stuck, help?" },
-  { name: "Cody Fisher", ask: "NFT not showing in wallet" },
-];
-
-function SupportConsole() {
-  return (
-    <Panel padding="0">
-      <div className="flex items-center justify-between" style={{ padding: "20px 24px", borderBottom: `1px solid ${HAIRLINE}` }}>
-        <div className="flex items-center" style={{ gap: 12 }}>
-          <span className="grid place-items-center" style={{ width: 36, height: 36, border: `1px solid ${HAIRLINE}` }}>
-            <ShieldCheck size={18} strokeWidth={1.5} color={INK} />
-          </span>
-          <div>
-            <p style={{ margin: 0, fontSize: 15, lineHeight: "22px", fontWeight: 500, color: INK }}>24/7 Support Active</p>
-            <p style={{ margin: 0, fontSize: 12, lineHeight: "18px", color: MUTED }}>
-              All time zones · Zero downtime · Instant
-            </p>
-          </div>
-        </div>
-        <span className="inline-flex items-center" style={{ gap: 6, fontSize: 12, lineHeight: "18px", color: MUTED }}>
-          <span aria-hidden style={{ width: 6, height: 6, background: LIME }} />
-          Live
-        </span>
-      </div>
-
-      <div className="flex items-baseline justify-between" style={{ padding: "20px 24px 12px" }}>
-        <p style={{ margin: 0, fontSize: 14, lineHeight: "20px", fontWeight: 500, color: INK }}>Active conversations</p>
-        <p style={{ margin: 0, fontSize: 12, lineHeight: "18px", color: MUTED }}>
-          <RollingNumber value="1429" /> handled today
-        </p>
-      </div>
-
-      <ul className="m-0 flex flex-1 list-none flex-col p-0" style={{ padding: "0 24px 24px", gap: 8 }}>
-        {CONVERSATIONS.map((c) => (
-          <li
-            key={c.name}
-            className="flex items-center justify-between"
-            style={{ padding: "14px 16px", background: "#F8F9FA", border: `1px solid ${HAIRLINE}` }}
-          >
-            <div className="flex items-center" style={{ gap: 12 }}>
-              <span
-                className="grid place-items-center uppercase"
-                style={{ width: 32, height: 32, background: INK, color: "#FFFFFF", fontSize: 11, letterSpacing: "0.04em" }}
-              >
-                {c.name.split(" ").map((w) => w[0]).join("")}
-              </span>
-              <div>
-                <p style={{ margin: 0, fontSize: 14, lineHeight: "20px", fontWeight: 500, color: INK }}>{c.name}</p>
-                <p style={{ margin: 0, fontSize: 12, lineHeight: "18px", color: MUTED }}>{c.ask}</p>
-              </div>
-            </div>
-            <span className="grid place-items-center" style={{ width: 24, height: 24, background: LIME }}>
-              <Check size={14} strokeWidth={2} color={INK} />
-            </span>
-          </li>
-        ))}
-      </ul>
-    </Panel>
-  );
-}
-
-/* --- figure 3: self-service, end to end in one session ------------------ */
-
-const FLOW: Array<{ tag: string; note: string; tone?: "ink" | "accent" }> = [
-  { tag: "User inbound", note: "No escalation needed · end-to-end in one session" },
-  { tag: "Intent detection", note: "Real-time visibility · shorter time to resolution" },
-  { tag: "Automated solution", note: "Routed with full context · fewer repeated transfers" },
-  { tag: "Instant resolution", note: "Hi! 👋 How can I help you? — answered, closed, no hand-off", tone: "accent" },
-];
-
-function SelfServiceFlow() {
-  return (
-    <Panel>
-      <ol className="m-0 flex flex-1 list-none flex-col justify-between p-0" style={{ gap: 8 }}>
-        {FLOW.map((step, i) => {
-          const last = i === FLOW.length - 1;
-          return (
-            <li key={step.tag} className="flex" style={{ gap: 16 }}>
-              {/* rail: square marker, dotted line down to the next step */}
-              <div className="flex flex-col items-center" style={{ width: 10 }}>
-                <span
-                  aria-hidden
-                  className="block shrink-0"
-                  style={{
-                    width: 10,
-                    height: 10,
-                    marginTop: 7,
-                    background: last ? LIME : "transparent",
-                    border: last ? "none" : `1px solid ${INK}`,
-                  }}
-                />
-                {!last ? (
-                  <span
-                    aria-hidden
-                    className="block w-[3px] flex-1"
-                    style={{
-                      marginTop: 6,
-                      backgroundImage: "radial-gradient(circle, #C6C5CB 1px, transparent 1.6px)",
-                      backgroundSize: "3px 8px",
-                      backgroundRepeat: "repeat-y",
-                      backgroundPosition: "center",
-                    }}
-                  />
-                ) : null}
-              </div>
-              <div className={last ? "pb-0" : "pb-7"} style={{ minWidth: 0 }}>
-                <Tag tone={step.tone}>{step.tag}</Tag>
-                <p style={{ margin: "10px 0 0", fontSize: 13, lineHeight: "20px", color: MUTED }}>{step.note}</p>
-              </div>
-            </li>
-          );
-        })}
-      </ol>
-    </Panel>
+    <img
+      src={f.src}
+      alt={f.alt}
+      draggable={false}
+      className="block h-auto w-full select-none"
+      style={{ maxWidth: 540, aspectRatio: "1 / 1" }}
+    />
   );
 }
 
 /* --- feature section ---------------------------------------------------- */
 
 function FeatureSection({ feature, flip }: { feature: Feature; flip: boolean }) {
-  const figure =
-    feature.figure === "channels" ? <ChannelHub /> : feature.figure === "console" ? <SupportConsole /> : <SelfServiceFlow />;
   return (
     <section style={{ borderTop: `1px solid ${HAIRLINE}` }}>
       <div style={{ padding: `${fluid(100, 56)} ${fluid(120, 24)}` }}>
@@ -409,8 +182,14 @@ function FeatureSection({ feature, flip }: { feature: Feature; flip: boolean }) 
             </Reveal>
           </div>
 
-          <Reveal y={32} duration={1600} delay={160} className={`flex-1 ${flip ? "md:order-1" : ""}`} style={{ minWidth: 0 }}>
-            {figure}
+          <Reveal
+            y={32}
+            duration={1600}
+            delay={160}
+            className={`flex flex-1 ${flip ? "md:order-1 md:justify-start" : "md:justify-end"}`}
+            style={{ minWidth: 0 }}
+          >
+            <Figure kind={feature.figure} />
           </Reveal>
         </div>
       </div>
