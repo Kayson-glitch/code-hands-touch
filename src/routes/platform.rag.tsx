@@ -192,12 +192,12 @@ function RagPage() {
 
       {/* ---------------------------------------------------- engine module */}
       <section className="relative" style={{ background: "#FAFAFA" }}>
-        {/* 80px of air inside the frame, then 200px of plain background before the footer */}
-        <CropFrame inset={fluid(86, 16)} insetBottom={fluid(200, 72)} />
+        {/* symmetric: 86px from the section edge to the frame, 80px from the frame to the content */}
+        <CropFrame inset={fluid(86, 16)} />
 
         <div
           className="relative"
-          style={{ padding: `${fluid(166, 80)} ${fluid(120, 24)} ${fluid(280, 136)}` }}
+          style={{ padding: `${fluid(166, 80)} ${fluid(120, 24)}` }}
         >
           <div
             className="mx-auto flex w-full max-w-[1200px] flex-col md:flex-row md:items-center"
@@ -240,6 +240,9 @@ function RagPage() {
           </div>
         </div>
       </section>
+
+      {/* a plain band of background between the module and the footer */}
+      <div aria-hidden style={{ height: fluid(160, 96), background: "#FFFFFF" }} />
 
       {/* brand footer only — this page ends on its module, not the CTA screen */}
       <SiteFooter cta={false} />
