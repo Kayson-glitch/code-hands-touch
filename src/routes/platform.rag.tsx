@@ -323,9 +323,10 @@ function RagPage() {
 
       {/* ------------------------------------------------------------ hero */}
       <header className="relative overflow-hidden">
-        {/* The homepage CTA's dot field — 20px pitch, ambient gradient rings,
-            a grey halftone shoreline swelling toward the next section — now
-            opens the page (Figma 点纹). Fades in under the nav. */}
+        {/* The homepage CTA's dot field — 20px pitch, ambient gradient rings —
+            opens the page (Figma 点纹). No shoreline swell here: the dots stay
+            one size and simply fade in under the nav and out into the next
+            section. */}
         <SonarGrid
           aria-hidden
           spacing={20}
@@ -342,21 +343,12 @@ function RagPage() {
           interactive={false}
           seedPing
           pingArea={[0.2, 0.15, 0.8, 0.85]}
-          shore={{
-            start: 0.55,
-            maxRadius: 3,
-            ink: ["#E6E6E6", "#C8C8C8"],
-            strength: 0.6,
-            noiseScale: 220,
-            noiseMix: 0.35,
-            drift: 0,
-            jitter: 0,
-            breathe: [1, 1],
-          }}
           className="pointer-events-none absolute inset-0"
           style={{
-            maskImage: "linear-gradient(to bottom, transparent 0, #000 18%, #000 100%)",
-            WebkitMaskImage: "linear-gradient(to bottom, transparent 0, #000 18%, #000 100%)",
+            maskImage:
+              "linear-gradient(to bottom, transparent 0, #000 18%, #000 62%, transparent 100%)",
+            WebkitMaskImage:
+              "linear-gradient(to bottom, transparent 0, #000 18%, #000 62%, transparent 100%)",
           }}
         />
 
