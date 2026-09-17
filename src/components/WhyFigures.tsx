@@ -49,7 +49,7 @@ function DottedRail({ color, vertical }: { color: string; vertical?: boolean }) 
   return (
     <span
       aria-hidden
-      className={vertical ? "block w-[3px] flex-1 md:hidden" : "hidden h-[3px] flex-1 md:block"}
+      className={vertical ? "block w-[3px] flex-1 xl:hidden" : "hidden h-[3px] flex-1 xl:block"}
       style={{
         backgroundImage: `radial-gradient(circle, ${color} 1px, transparent 1.6px)`,
         backgroundSize: vertical ? "3px 8px" : "8px 3px",
@@ -63,8 +63,10 @@ function DottedRail({ color, vertical }: { color: string; vertical?: boolean }) 
 
 /**
  * Editorial rail: markers on a dotted line, each step hanging below its
- * marker with a display-face numeral — no boxes. On phones the rail turns
- * vertical and the steps read as a timeline.
+ * marker with a display-face numeral — no boxes. From xl up the steps sit in
+ * a subgrid so the marker, numeral, label and note rows line up across every
+ * column whatever the copy length; on phones the rail turns vertical and the
+ * steps read as a timeline. The whole figure sits in a hairline frame.
  */
 export function StepDiagram({
   steps,
@@ -84,10 +86,16 @@ export function StepDiagram({
   const t = tone(dark);
   return (
     <Reveal y={20} duration={1600} className={className} style={style}>
-      <figure style={{ margin: 0 }}>
-        {/* .why-steps (styles.css): one column on phones, one per step from md up */}
+      <figure
+        style={{
+          margin: 0,
+          padding: `${fluid(32, 20)} ${fluid(36, 20)} ${fluid(24, 18)}`,
+          border: `1px solid ${t.rule}`,
+        }}
+      >
+        {/* .why-steps (styles.css): vertical timeline below xl, one column per step from xl up */}
         <ol
-          className="why-steps m-0 grid list-none p-0 md:gap-x-6"
+          className="why-steps m-0 grid list-none p-0 xl:gap-x-6"
           style={{ "--steps": steps.length } as CSSProperties}
         >
           {steps.map((step, i) => {
@@ -96,9 +104,12 @@ export function StepDiagram({
             // 1px dots need a touch more contrast than a solid hairline to read.
             const railColor = leadsToOutcome ? accent : dark ? "rgba(255,255,255,0.4)" : "#C6C5CB";
             return (
-              <li key={step.label} className="flex gap-4 md:block">
-                {/* marker + rail: vertical column on phones, horizontal row from md */}
-                <div className="flex shrink-0 flex-col items-center self-stretch md:h-[12px] md:w-full md:flex-row md:self-auto">
+              <li
+                key={step.label}
+                className="flex gap-4 xl:row-span-4 xl:grid xl:grid-rows-[subgrid] xl:gap-0"
+              >
+                {/* marker + rail: vertical column below xl, horizontal row from xl */}
+                <div className="flex shrink-0 flex-col items-center self-stretch xl:h-[12px] xl:w-full xl:flex-row xl:self-auto">
                   <span
                     aria-hidden
                     className="block shrink-0"
@@ -117,9 +128,10 @@ export function StepDiagram({
                   ) : null}
                 </div>
 
-                <div className={last ? "pb-0" : "pb-8 md:pb-0"} style={{ paddingRight: 8 }}>
+                {/* xl+: `contents` lifts numeral / label / note into the subgrid rows */}
+                <div className={`${last ? "pb-0" : "pb-8"} xl:contents`}>
                   <p
-                    className="font-display"
+                    className="font-display xl:pt-6"
                     style={{
                       margin: 0,
                       fontSize: fluid(32, 26),
@@ -131,8 +143,9 @@ export function StepDiagram({
                     {String(i + 1).padStart(2, "0")}
                   </p>
                   <p
+                    className="xl:pr-2"
                     style={{
-                      margin: "10px 0 0",
+                      margin: "12px 0 0",
                       fontSize: 14,
                       lineHeight: "20px",
                       fontWeight: 500,
@@ -141,11 +154,12 @@ export function StepDiagram({
                   >
                     {step.label}
                   </p>
-                  {step.sub ? (
-                    <p style={{ margin: "4px 0 0", fontSize: 12, lineHeight: "18px", color: t.muted }}>
-                      {step.sub}
-                    </p>
-                  ) : null}
+                  <p
+                    className="xl:pr-2"
+                    style={{ margin: "6px 0 0", fontSize: 12, lineHeight: "18px", color: t.muted }}
+                  >
+                    {step.sub}
+                  </p>
                 </div>
               </li>
             );
@@ -153,7 +167,14 @@ export function StepDiagram({
         </ol>
         {caption ? (
           <figcaption
-            style={{ marginTop: 28, fontSize: 12, lineHeight: "18px", color: t.muted, maxWidth: 560 }}
+            style={{
+              marginTop: fluid(28, 20),
+              paddingTop: 16,
+              borderTop: `1px solid ${t.rule}`,
+              fontSize: 12,
+              lineHeight: "18px",
+              color: t.muted,
+            }}
           >
             {caption}
           </figcaption>

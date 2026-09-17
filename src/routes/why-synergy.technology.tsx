@@ -189,10 +189,10 @@ const MODULES: Module[] = [
     ],
     diagram: {
       steps: [
-        { label: "Question arrives", sub: "Top-up, withdrawal, compensation…" },
-        { label: "Knowledge base lookup", sub: "Governed scripts, precision retrieval" },
-        { label: "Inside the boundary?", sub: "Confident match, or not" },
-        { label: "Answer — or hand over", sub: "No match → a person, every time", emphasis: true },
+        { label: "Question arrives", sub: "Money at stake: top-up, withdrawal, claim" },
+        { label: "Knowledge lookup", sub: "Governed scripts, found by precision retrieval" },
+        { label: "Inside the boundary?", sub: "A confident match in the knowledge base, or not" },
+        { label: "Answer or hand over", sub: "No match → a person, every time. Never a guess", emphasis: true },
       ],
       caption: "The boundary rule. Coverage widens as the knowledge base grows; it is never widened by loosening step 03.",
     },
@@ -252,10 +252,10 @@ const MODULES: Module[] = [
     ],
     diagram: {
       steps: [
-        { label: "50+ long documents", sub: "Region × time window × pre/after-sales" },
-        { label: "Configuration Skill", sub: "Splits every document into two layers" },
-        { label: "Scripts → knowledge base", sub: "Rules → rules layer" },
-        { label: "Verified entry by entry", sub: "Human review + AI tests; sessions tagged", emphasis: true },
+        { label: "50+ long documents", sub: "Region × time window × pre-/after-sales, mixed" },
+        { label: "Configuration Skill", sub: "Structures every document into two layers" },
+        { label: "Scripts vs. rules", sub: "Scripts → knowledge base; rules → rules layer" },
+        { label: "Verified entry by entry", sub: "Human review + AI tests; every session tagged", emphasis: true },
       ],
       caption: "Governance before retrieval: what to say and what never to do are stored apart, then checked twice.",
     },
@@ -315,10 +315,10 @@ const MODULES: Module[] = [
     ],
     diagram: {
       steps: [
-        { label: "Customer question", sub: "Often close to many passages" },
-        { label: "PageIndex locate", sub: "By the document's own structure, no chunking" },
-        { label: "High-precision embedding", sub: "Underlying representation" },
-        { label: "Rerank, coarse → fine", sub: "Right passage lands first", emphasis: true },
+        { label: "Customer question", sub: "Close to many passages that differ only in time" },
+        { label: "PageIndex locate", sub: "By the document's own structure — no chunking" },
+        { label: "Precision embedding", sub: "Highest-precision model as the representation" },
+        { label: "Rerank, coarse → fine", sub: "Self-built two-stage scorer, right passage first", emphasis: true },
       ],
       caption: "Three retrieval layers. Each scenario carries an explicit boundary, so the stack never over-answers.",
     },
@@ -378,10 +378,10 @@ const MODULES: Module[] = [
     ],
     diagram: {
       steps: [
-        { label: "Fiat ticket", sub: "One of 56 scenarios, deep branches" },
-        { label: "Multi-agent routing", sub: "Cooperating agents along the process" },
-        { label: "CRM · ERM · orders", sub: "Connected end to end, no manual copying" },
-        { label: "Standard steps close; refunds → human", sub: "AI gathers evidence, a person decides", emphasis: true },
+        { label: "Fiat ticket arrives", sub: "One of 56 scenarios, deep cross-system branches" },
+        { label: "Multi-agent routing", sub: "Cooperating agents split work along the process" },
+        { label: "CRM · ERM · orders", sub: "Connected end to end; nothing copied by hand" },
+        { label: "Close or escalate", sub: "Standard steps close; refunds go to a person", emphasis: true },
       ],
       caption: "Orchestration with a human ceiling: high-risk, high-complexity steps are never fully automated.",
     },
