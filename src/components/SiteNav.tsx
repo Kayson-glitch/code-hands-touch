@@ -320,16 +320,17 @@ function MenuPanel({
         style={{
           gap: 20,
           padding: 24,
-          borderRadius: 16,
+          // square, like every other surface on the site
+          borderRadius: 0,
           background: "#FFFFFF",
-          border: "1px solid #F1F1F3",
+          border: "1px solid #E1E0E4",
           boxShadow: "0px 12px 36px 0px rgba(0,0,0,0.10)",
           // Clip-path wipe so the card grows open from its anchor edge.
           clipPath: open
-            ? "inset(0 0 0 0 round 16px)"
+            ? "inset(0 0 0 0)"
             : centered
-              ? "inset(0 50% 100% 50% round 16px)"
-              : "inset(0 100% 100% 0 round 16px)",
+              ? "inset(0 50% 100% 50%)"
+              : "inset(0 100% 100% 0)",
           transition: `clip-path 620ms ${PANEL_EASE}`,
         }}
       >

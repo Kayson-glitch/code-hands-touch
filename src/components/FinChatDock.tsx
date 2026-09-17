@@ -665,7 +665,8 @@ export function FinChatDock({ alwaysVisible = false }: { alwaysVisible?: boolean
         ref={wrapperRef}
         className="w-full"
         style={{
-          maxWidth: wide ? 520 : 400,
+          // never wider than the phone minus the dock's side padding
+          maxWidth: wide ? "min(520px, calc(100vw - 48px))" : "min(400px, calc(100vw - 48px))",
           transition: "max-width 420ms cubic-bezier(0.22, 1, 0.36, 1)",
         }}
       >
