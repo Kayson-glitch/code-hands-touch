@@ -203,7 +203,7 @@ function OutlineButton({ label, light = false }: { label: string; light?: boolea
 }
 
 function BillingToggle({ annual, onChange }: { annual: boolean; onChange: (annual: boolean) => void }) {
-  const seg = (on: boolean, label: string) => (
+  const seg = (on: boolean, label: string, tag?: string) => (
     <button
       type="button"
       aria-pressed={on}
@@ -211,6 +211,7 @@ function BillingToggle({ annual, onChange }: { annual: boolean; onChange: (annua
       className="relative inline-flex cursor-pointer items-center justify-center transition-colors"
       style={{
         height: 36,
+        gap: 10,
         padding: "0 18px",
         fontSize: 14,
         lineHeight: "20px",
@@ -223,27 +224,29 @@ function BillingToggle({ annual, onChange }: { annual: boolean; onChange: (annua
       }}
     >
       {label}
+      {tag ? (
+        // the saving belongs to this option, so it rides inside the segment
+        <span
+          className="uppercase"
+          style={{
+            padding: "0 8px",
+            fontSize: 10,
+            lineHeight: "18px",
+            letterSpacing: "0.06em",
+            fontWeight: 500,
+            background: LIME,
+            color: INK,
+          }}
+        >
+          {tag}
+        </span>
+      ) : null}
     </button>
   );
   return (
     <div className="inline-flex items-center" style={{ border: `1px solid ${INK}`, padding: 2, gap: 2 }}>
       {seg(!annual, "Monthly")}
-      {seg(annual, "Annual")}
-      <span
-        className="uppercase"
-        style={{
-          margin: "0 6px 0 4px",
-          padding: "0 8px",
-          fontSize: 10,
-          lineHeight: "18px",
-          letterSpacing: "0.06em",
-          fontWeight: 500,
-          background: LIME,
-          color: INK,
-        }}
-      >
-        Save 10%
-      </span>
+      {seg(annual, "Annual", "Save 10%")}
     </div>
   );
 }
