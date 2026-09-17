@@ -167,8 +167,9 @@ export function SloganSection() {
         style={{
           maxWidth: 1100,
           textAlign: "center",
-          fontSize: "clamp(30px, 3.3333vw, 48px)",
-          lineHeight: 1.1667,
+          // A standalone slogan screen, not a module title — keeps its own larger scale.
+          fontSize: "clamp(28px, 4.2vw, 54px)",
+          lineHeight: 1.25,
           letterSpacing: "-0.01em",
           fontWeight: 400,
           color: "#FAFAFA",
