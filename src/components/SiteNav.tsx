@@ -323,7 +323,8 @@ function MenuPanel({
           // square, like every other surface on the site
           borderRadius: 0,
           background: "#FFFFFF",
-          border: "1px solid #E1E0E4",
+          // the original panel's lighter edge — the shadow does the separating
+          border: "1px solid #F1F1F3",
           boxShadow: "0px 12px 36px 0px rgba(0,0,0,0.10)",
           // Clip-path wipe so the card grows open from its anchor edge.
           clipPath: open

@@ -76,7 +76,7 @@ function FitWordmark({ text }: { text: string }) {
           lineHeight: 0.8,
           fontWeight: 600,
           letterSpacing: "-0.02em",
-          color: "rgba(255,255,255,0.045)",
+          color: "rgba(255,255,255,0.06)",
           display: "inline-block",
           transform: "translateY(22%)",
         }}
