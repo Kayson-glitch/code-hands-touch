@@ -123,8 +123,9 @@ function DemoCard() {
  * section edges, a 6px square where they meet, and short ticks running out
  * to the viewport edge at each corner.
  */
-function CropFrame({ inset }: { inset: string }) {
+function CropFrame({ inset, insetBottom = inset }: { inset: string; insetBottom?: string }) {
   const rule = "#DCDCDC";
+  const edge = (y: "top" | "bottom") => (y === "bottom" ? insetBottom : inset);
   const corner = (x: "left" | "right", y: "top" | "bottom") => (
     <span
       key={`${x}-${y}`}
@@ -132,7 +133,7 @@ function CropFrame({ inset }: { inset: string }) {
       className="absolute"
       style={{
         [x]: inset,
-        [y]: inset,
+        [y]: edge(y),
         width: 6,
         height: 6,
         background: "#FFFFFF",
@@ -144,14 +145,17 @@ function CropFrame({ inset }: { inset: string }) {
   return (
     <div aria-hidden className="pointer-events-none absolute inset-0 hidden md:block">
       {/* the frame */}
-      <div className="absolute" style={{ inset, border: `1px solid ${rule}` }} />
+      <div
+        className="absolute"
+        style={{ top: inset, left: inset, right: inset, bottom: insetBottom, border: `1px solid ${rule}` }}
+      />
       {/* ticks continuing the rules past the frame, fading out toward the edges */}
       {(["top", "bottom"] as const).map((y) => (
         <span
           key={`h-${y}`}
           className="absolute inset-x-0"
           style={{
-            [y]: inset,
+            [y]: edge(y),
             height: 1,
             background: `linear-gradient(to right, transparent 0, ${rule} ${inset}, ${rule} calc(100% - ${inset}), transparent 100%)`,
           }}
@@ -164,7 +168,7 @@ function CropFrame({ inset }: { inset: string }) {
           style={{
             [x]: inset,
             width: 1,
-            background: `linear-gradient(to bottom, transparent 0, ${rule} ${inset}, ${rule} calc(100% - ${inset}), transparent 100%)`,
+            background: `linear-gradient(to bottom, transparent 0, ${rule} ${inset}, ${rule} calc(100% - ${insetBottom}), transparent 100%)`,
           }}
         />
       ))}
@@ -189,9 +193,12 @@ function RagPage() {
 
       {/* ---------------------------------------------------- engine module */}
       <section className="relative" style={{ background: "#FAFAFA" }}>
-        <CropFrame inset={fluid(86, 16)} />
+        <CropFrame inset={fluid(86, 16)} insetBottom={fluid(120, 40)} />
 
-        <div className="relative" style={{ padding: `${fluid(120, 64)} ${fluid(120, 24)}` }}>
+        <div
+          className="relative"
+          style={{ padding: `${fluid(166, 80)} ${fluid(120, 24)} ${fluid(200, 104)}` }}
+        >
           <div
             className="mx-auto flex w-full max-w-[1200px] flex-col md:flex-row md:items-center"
             style={{ gap: fluid(24, 32) }}
