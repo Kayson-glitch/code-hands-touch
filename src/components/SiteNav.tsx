@@ -454,20 +454,6 @@ function PlatformMenu({ open }: { open: boolean }) {
 
   return (
     <MenuPanel open={open} kicker="/ platform" align="center">
-      {/* one-line positioning statement in place of the old gradient banner */}
-      <p
-        className="whitespace-nowrap"
-        style={{
-          margin: "-12px 0 0",
-          fontSize: 12,
-          lineHeight: "20px",
-          color: "#A1A0A9",
-          ...cellReveal(open, 0),
-        }}
-      >
-        Self-developed Agent &amp; RAG — no wrappers, just performance.
-      </p>
-
       <div
         className="grid overflow-hidden"
         style={{
