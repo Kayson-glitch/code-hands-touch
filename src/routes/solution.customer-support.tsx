@@ -5,7 +5,7 @@ import { GradientHoverHeading } from "@/components/GradientHoverHeading";
 import { FinChatDock } from "@/components/FinChatDock";
 import { SiteFooter } from "@/components/SiteFooter";
 import { RollingNumber } from "@/components/RollingNumber";
-import { GRADIENT, ProductHero, RainbowButton } from "@/components/ProductHero";
+import { ProductHero, RainbowButton } from "@/components/ProductHero";
 import { solutionChannelsAsset, solutionConsoleAsset, solutionFlowAsset } from "@/lib/media";
 import { HoverTilt } from "@/components/HoverTilt";
 
@@ -95,10 +95,10 @@ const OUTCOMES = {
   title: "Support that feels\nimmediate\nand dependable.",
   body: "synergy.ai removes friction from every customer interaction — responding faster, staying consistent, and helping customers move forward without delay.",
   stats: [
-    { sign: "-", value: "70", unit: "%", label: "First\nResponse Time" },
-    { sign: "+", value: "28", unit: "%", label: "First Contact\nResolution" },
-    { sign: "+", value: "40", unit: "%", label: "Tickets Resolved\nvia Self-Service" },
-    { sign: "-", value: "17", unit: "%", label: "Customer\nSatisfaction (CSAT)" },
+    { sign: "-", value: "70", unit: "%", label: "First response time", dot: "#FFCE91" },
+    { sign: "+", value: "28", unit: "%", label: "First contact resolution", dot: "#D1E486" },
+    { sign: "+", value: "40", unit: "%", label: "Self-service resolution", dot: "#8CE0FF" },
+    { sign: "-", value: "17", unit: "%", label: "Customer satisfaction", dot: "#9E8CFF" },
   ],
 };
 
@@ -204,43 +204,52 @@ function FeatureSection({ feature, flip }: { feature: Feature; flip: boolean }) 
 
 /* --- outcomes ----------------------------------------------------------- */
 
+/** Outcome tile — the Why Synergy KPI card at grid size: square + uppercase
+ *  label on top, the display-face number anchored to the bottom. */
 function OutcomeCard({
   sign,
   value,
   unit,
   label,
+  dot,
   index,
 }: {
   sign: string;
   value: string;
   unit: string;
   label: string;
+  dot: string;
   index: number;
 }) {
   return (
     <Reveal y={24} duration={1600} delay={index * 120} className="min-w-0 flex-1">
       <div
         className="flex h-full flex-col justify-between"
-        style={{ background: "#F8F9FA", border: `1px solid ${HAIRLINE}`, minHeight: fluid(220, 160) }}
+        style={{
+          gap: 32,
+          padding: `${fluid(24, 18)} ${fluid(28, 18)} ${fluid(24, 18)}`,
+          background: "#F8F9FA",
+          border: `1px solid ${HAIRLINE}`,
+          minHeight: fluid(200, 150),
+        }}
       >
-        {/* each card shows a different slice of the brand gradient */}
-        <div
-          aria-hidden
-          style={{ height: 2, backgroundImage: GRADIENT, backgroundSize: "400% 100%", backgroundPosition: `${index * 33.333}% 0` }}
-        />
-        <div style={{ padding: `${fluid(28, 20)} ${fluid(24, 18)} ${fluid(24, 18)}` }}>
-          <p
-            className="font-display whitespace-nowrap"
-            style={{ margin: 0, fontSize: fluid(56, 40), lineHeight: 1.1, fontWeight: 400, color: INK }}
+        <p className="flex items-start" style={{ margin: 0, gap: 8 }}>
+          <span aria-hidden className="mt-[5px] shrink-0" style={{ width: 8, height: 8, background: dot }} />
+          <span
+            className="uppercase"
+            style={{ fontSize: 12, lineHeight: "18px", letterSpacing: "0.06em", color: MUTED }}
           >
-            <span style={{ color: "#A1A0A9" }}>{sign}</span>
-            <RollingNumber value={value} />
-            <span style={{ color: "#A1A0A9" }}>{unit}</span>
-          </p>
-          <p style={{ margin: "14px 0 0", fontSize: 14, lineHeight: "20px", color: MUTED, whiteSpace: "pre-line" }}>
             {label}
-          </p>
-        </div>
+          </span>
+        </p>
+        <p
+          className="font-display whitespace-nowrap"
+          style={{ margin: 0, fontSize: fluid(56, 40), lineHeight: 1.1, fontWeight: 400, color: INK }}
+        >
+          {sign}
+          <RollingNumber value={value} />
+          <span style={{ color: "#A1A0A9" }}>{unit}</span>
+        </p>
       </div>
     </Reveal>
   );
