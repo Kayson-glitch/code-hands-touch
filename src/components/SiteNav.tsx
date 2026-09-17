@@ -686,7 +686,7 @@ const SOLUTION_USE_CASES: RichItem[] = [
   },
   {
     dot: "#FF9ED8",
-    kicker: "Internal support",
+    kicker: "Customer support",
     title: "Employee Experience, Designed for Focus",
     desc: "Answer the everyday questions so teams stay on the work that matters.",
   },
