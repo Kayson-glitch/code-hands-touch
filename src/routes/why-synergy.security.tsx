@@ -6,13 +6,14 @@ import {
   LifeBuoy,
 } from "lucide-react";
 import { SiteNav } from "@/components/SiteNav";
-import { whySecurityAsset } from "@/lib/media";
+import { whySecurityAsset, whySecurityPortraitAsset } from "@/lib/media";
 import { HalftoneHandStill } from "@/components/HalftoneHandStill";
 import { Reveal } from "@/components/Reveal";
 import { GradientHoverHeading } from "@/components/GradientHoverHeading";
 import { FinChatDock } from "@/components/FinChatDock";
 import { SiteFooter } from "@/components/SiteFooter";
 import { DotArrow } from "@/components/DotArrow";
+import { PullQuote } from "@/components/WhyFigures";
 
 export const Route = createFileRoute("/why-synergy/security")({
   head: () => ({
@@ -205,6 +206,23 @@ function ArticleBlock({
   );
 }
 
+/** Stand-in customer wordmark in the 140×24 logo slot: square mark + set name. */
+function CustomerWordmark() {
+  return (
+    <div className="flex items-center" style={{ height: 24, gap: 8, color: "#0E0B22" }} aria-label="BCGame">
+      <span aria-hidden className="grid shrink-0 place-items-center" style={{ width: 24, height: 24, background: "#0E0B22" }}>
+        <span style={{ width: 10, height: 10, border: "2px solid #FFFFFF" }} />
+      </span>
+      <span
+        className="font-display"
+        style={{ fontSize: 18, lineHeight: "24px", fontWeight: 600, letterSpacing: "0.04em" }}
+      >
+        BCGAME
+      </span>
+    </div>
+  );
+}
+
 /** Customer testimonial card (Figma 1569:103835): portrait, logo, quote, attribution. */
 function TestimonialCard() {
   return (
@@ -213,16 +231,24 @@ function TestimonialCard() {
         className="flex flex-col md:flex-row"
         style={{ padding: `${fluid(24, 16)} ${fluid(40, 20)} ${fluid(24, 16)} ${fluid(24, 16)}`, gap: fluid(40, 24) }}
       >
-        {/* portrait placeholder — Figma 280×392 */}
-        <div
-          aria-hidden
-          className="shrink-0"
-          style={{ width: fluid(280, 200), aspectRatio: "280 / 392", background: "#D9D9D9" }}
+        {/* portrait — Figma 280×392; a pre-blurred stand-in until the customer supplies one */}
+        <img
+          src={whySecurityPortraitAsset.url}
+          alt=""
+          className="shrink-0 select-none"
+          draggable={false}
+          style={{
+            width: fluid(280, 200),
+            aspectRatio: "280 / 392",
+            objectFit: "cover",
+            background: "#D9D9D9",
+            filter: "grayscale(1)",
+          }}
         />
 
         <div className="flex min-w-0 flex-1 flex-col justify-between" style={{ gap: 24 }}>
-          {/* customer logo placeholder — Figma 140×24 */}
-          <div aria-hidden style={{ width: 140, height: 24, background: "#ACACAC" }} />
+          {/* customer wordmark — Figma 140×24 */}
+          <CustomerWordmark />
 
           <blockquote
             className="font-display"
@@ -389,6 +415,11 @@ function SecurityPage() {
             {DARK_BLOCKS.map((b, i) => (
               <ArticleBlock key={b.title} {...b} dark delay={i * 260} />
             ))}
+            <PullQuote
+              text="Nothing is pooled across tenants, and a security team can audit the whole path end to end."
+              accent={AMBER}
+              dark
+            />
           </div>
 
           {/* light blocks */}

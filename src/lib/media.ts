@@ -25,6 +25,8 @@ export const whyImpactAsset = media("why-impact-coin.jpg");
 export const whyStoriesAsset = media("why-stories-quill.jpg");
 export const whyTechnologyAsset = media("why-technology-scale.jpg");
 export const whySecurityAsset = media("why-security-handshake.jpg");
+/** Testimonial portrait — pre-blurred stand-in, 560×784 for the 280×392 slot. */
+export const whySecurityPortraitAsset = media("why-security-portrait.jpg");
 
 export const cometAsset = media("kore-comet.svg");
 export const valueAsset = media("kore-value.svg");
