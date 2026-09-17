@@ -8,6 +8,7 @@ import { SiteFooter } from "@/components/SiteFooter";
 import { DotArrow } from "@/components/DotArrow";
 import { RollingNumber } from "@/components/RollingNumber";
 import { logoAsset } from "@/lib/media";
+import { SonarGrid } from "@/components/ui/sonar-grid";
 
 export const Route = createFileRoute("/platform/rag")({
   head: () => ({
@@ -37,8 +38,8 @@ export const Route = createFileRoute("/platform/rag")({
 const fluid = (px: number, min = px * 0.7) =>
   `clamp(${Math.round(min)}px, ${((px / 1440) * 100).toFixed(4)}vw, ${px}px)`;
 
-const GRADIENT =
-  "linear-gradient(90deg, #137DFF 0%, #FF18AA 33.333%, #FFCD17 66.666%, #137DFF 100%)";
+const GRADIENT_STOPS = ["#137DFF", "#FF18AA", "#FFCD17", "#137DFF"];
+const GRADIENT = `linear-gradient(90deg, ${GRADIENT_STOPS[0]} 0%, ${GRADIENT_STOPS[1]} 33.333%, ${GRADIENT_STOPS[2]} 66.666%, ${GRADIENT_STOPS[3]} 100%)`;
 /** Page accent — the Platform menu's "Engine" square. */
 const SKY = "#8CE0FF";
 /** Product UI accent inside the demo card (Figma #4F39F6, brand indigo). */
@@ -318,20 +319,44 @@ function RagPage() {
 
   return (
     <div className="relative min-h-screen bg-paper">
-      <SiteNav revealDelay={0} />
+      <SiteNav revealDelay={0} solid />
 
       {/* ------------------------------------------------------------ hero */}
       <header className="relative overflow-hidden">
-        {/* dot grid, fading out toward the section's end (Figma 点纹) */}
-        <div
+        {/* The homepage CTA's dot field — 20px pitch, ambient gradient rings,
+            a grey halftone shoreline swelling toward the next section — now
+            opens the page (Figma 点纹). Fades in under the nav. */}
+        <SonarGrid
           aria-hidden
+          spacing={20}
+          dotRadius={1}
+          baseOpacity={0.16}
+          peakOpacity={0.7}
+          color="#0E0B22"
+          waveGradient={GRADIENT_STOPS}
+          waveGradientMode="angular"
+          pingEvery={5.5}
+          speed={200}
+          ringWidth={120}
+          amplitude={0.6}
+          interactive={false}
+          seedPing
+          pingArea={[0.2, 0.15, 0.8, 0.85]}
+          shore={{
+            start: 0.55,
+            maxRadius: 3,
+            ink: ["#E6E6E6", "#C8C8C8"],
+            strength: 0.6,
+            noiseScale: 220,
+            noiseMix: 0.35,
+            drift: 0,
+            jitter: 0,
+            breathe: [1, 1],
+          }}
           className="pointer-events-none absolute inset-0"
           style={{
-            backgroundImage: "radial-gradient(circle, #D6D5DA 1px, transparent 1.4px)",
-            backgroundSize: "20px 20px",
-            backgroundPosition: "10px 10px",
-            maskImage: "linear-gradient(to bottom, #000 55%, transparent 100%)",
-            WebkitMaskImage: "linear-gradient(to bottom, #000 55%, transparent 100%)",
+            maskImage: "linear-gradient(to bottom, transparent 0, #000 18%, #000 100%)",
+            WebkitMaskImage: "linear-gradient(to bottom, transparent 0, #000 18%, #000 100%)",
           }}
         />
 
@@ -433,8 +458,8 @@ function RagPage() {
         </div>
       </section>
 
-      {/* CTA + brand footer, shared with the homepage */}
-      <SiteFooter />
+      {/* brand footer only — this page ends on its module, not the CTA screen */}
+      <SiteFooter cta={false} />
 
       <FinChatDock alwaysVisible />
     </div>

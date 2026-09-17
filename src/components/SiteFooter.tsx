@@ -128,13 +128,14 @@ function FitWordmark({ text }: { text: string }) {
   );
 }
 
-/** Closing CTA block + brand footer, shared across pages. */
-export function SiteFooter() {
+/** Closing CTA block + brand footer, shared across pages. `cta={false}` renders the brand footer alone. */
+export function SiteFooter({ cta = true }: { cta?: boolean } = {}) {
   const pad = `0 ${fluid(120, 24)}`;
   const imgRef = useRef<HTMLImageElement>(null);
   const [halfH, setHalfH] = useState(0);
-  // How far the footer climbs over the image (negative margin).
-  const footerOverlap = halfH * (1 - IMAGE_REVEAL) + 96 + IMAGE_TUCK;
+  // How far the footer climbs over the image (negative margin). Nothing to
+  // climb over without the CTA screen.
+  const footerOverlap = cta ? halfH * (1 - IMAGE_REVEAL) + 96 + IMAGE_TUCK : 0;
   // The ContainerScroll frame's travel is its own height; at rest its bottom
   // still sits (overlap + frame padding) below the viewport, so the flip must
   // finish at this fraction of the travel to be complete when the page stops.
@@ -154,6 +155,7 @@ export function SiteFooter() {
   return (
     <div className="relative" style={{ zIndex: 20, background: "#FAFAFA" }}>
       {/* ------------------------------------------------------------- CTA */}
+      {cta ? (
       <section className="relative overflow-hidden" style={{ padding: `${fluid(240, 120)} 0 0` }}>
         {/* Dot field (1px dots, 16% ink, 20px pitch) drawn on a canvas so ambient
             sonar rings can ripple through it. Toward the footer the same grid
@@ -235,6 +237,7 @@ export function SiteFooter() {
           </ContainerScroll>
         </div>
       </section>
+      ) : null}
 
       {/* ---------------------------------------------------------- footer */}
       <footer

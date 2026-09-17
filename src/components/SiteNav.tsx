@@ -2,7 +2,18 @@ import { useEffect, useState } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { logoAsset as logo } from "@/lib/media";
 
-export function SiteNav({ revealDelay = 4000 }: { revealDelay?: number } = {}) {
+export function SiteNav({
+  revealDelay = 4000,
+  solid = false,
+}: {
+  revealDelay?: number;
+  /**
+   * Keep the frosted bar at the very top too. The homepage lets its hero show
+   * through until the first scroll; pages with a patterned first screen need
+   * the bar to read as a bar from the start.
+   */
+  solid?: boolean;
+} = {}) {
   const [theme, setTheme] = useState<"light" | "dark">("light");
   const [hidden, setHidden] = useState(revealDelay > 0);
   const [scrolled, setScrolled] = useState(false);
@@ -122,8 +133,8 @@ export function SiteNav({ revealDelay = 4000 }: { revealDelay?: number } = {}) {
         style={{
           height: 60,
           borderBottom: `1px solid ${hairline}`,
-          background: scrolled ? glassBg : "transparent",
-          backdropFilter: scrolled ? "blur(18px) saturate(140%)" : "none",
+          background: scrolled || solid ? glassBg : "transparent",
+          backdropFilter: scrolled || solid ? "blur(18px) saturate(140%)" : "none",
           transition:
             "background 260ms ease-out, backdrop-filter 260ms ease-out",
         }}
