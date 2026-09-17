@@ -1,5 +1,4 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { ArrowUp, ChevronDown, Crosshair, Plus, Search, Zap, type LucideIcon } from "lucide-react";
 import { SiteNav } from "@/components/SiteNav";
 import { Reveal } from "@/components/Reveal";
 import { GradientHoverHeading } from "@/components/GradientHoverHeading";
@@ -7,7 +6,8 @@ import { FinChatDock } from "@/components/FinChatDock";
 import { SiteFooter } from "@/components/SiteFooter";
 import { RollingNumber } from "@/components/RollingNumber";
 import { ProductHero } from "@/components/ProductHero";
-import { logoAsset } from "@/lib/media";
+import { platformRagDemoAsset } from "@/lib/media";
+import { HoverTilt } from "@/components/HoverTilt";
 
 export const Route = createFileRoute("/platform/rag")({
   head: () => ({
@@ -39,8 +39,6 @@ const fluid = (px: number, min = px * 0.7) =>
 
 /** Page accent — the Platform menu's "Engine" square. */
 const SKY = "#8CE0FF";
-/** Product UI accent inside the demo card (Figma #4F39F6, brand indigo). */
-const INDIGO = "#5749FF";
 const HAIRLINE = "#E1E0E4";
 
 /* ------------------------------------------------------------------ data */
@@ -58,20 +56,6 @@ const ENGINE = {
     { label: "Knowledge retrieval accuracy", value: "100", unit: "%" },
     { label: "First contact resolution", value: "70", unit: "%", prefix: "+" },
   ],
-};
-
-/** The worked example inside the demo card (Figma 855:52075). */
-const DEMO = {
-  prompt:
-    "A customer's asking if order #8841 still qualifies for the 7-day no-questions return — check the status and reply per policy.",
-  steps: [
-    { icon: Crosshair, tool: "intent_detection", result: "return inquiry" },
-    { icon: Search, tool: "knowledge_retrieval", result: "return policy · 7-day window" },
-    { icon: Zap, tool: "function_calling", result: "order system · #8841" },
-  ] as Array<{ icon: LucideIcon; tool: string; result: string }>,
-  answer:
-    "Found it. Order #8841 shipped June 23, delivered 4 days ago — still within the 7-day window, 3 days left to file. Drafted a reply matching brand tone. Send it to the customer?",
-  model: "Synergy RAG 2.0",
 };
 
 /* ------------------------------------------------------------- fragments */
@@ -117,115 +101,19 @@ function StatTile({
   );
 }
 
-/** One tool call in the demo transcript: icon, tool name, what it resolved. */
-function ToolChip({ icon: Icon, tool, result }: { icon: LucideIcon; tool: string; result: string }) {
-  return (
-    <div
-      className="inline-flex max-w-full items-center self-start"
-      style={{
-        gap: 12,
-        padding: "8px 14px",
-        background: "#FFFFFF",
-        border: `1px solid ${HAIRLINE}`,
-        borderRadius: 999,
-      }}
-    >
-      <Icon size={16} strokeWidth={1.5} color="#0E0B22" />
-      <span className="flex min-w-0 flex-wrap items-baseline" style={{ gap: 8, fontSize: 13, lineHeight: "22px" }}>
-        <span className="font-mono" style={{ color: "#7A7885", fontSize: 12 }}>
-          {tool}
-        </span>
-        <span aria-hidden style={{ color: "#0E0B22" }}>
-          ·
-        </span>
-        <span style={{ color: "#0E0B22" }}>{result}</span>
-      </span>
-    </div>
-  );
-}
-
-/** The product depiction: a transcript where the engine shows its work. */
+/** The product depiction — the transcript card designed in Figma, exported at 2×. */
 function DemoCard() {
   return (
-    <Reveal y={32} duration={1600} delay={160} className="flex-1" style={{ minWidth: 0 }}>
-      <div
-        className="flex h-full flex-col"
-        style={{ background: "#FFFFFF", border: `1px solid ${HAIRLINE}` }}
-      >
-        {/* title bar */}
-        <div
-          className="flex items-center justify-center"
-          style={{ height: 56, gap: 8, borderBottom: `1px solid ${HAIRLINE}` }}
-        >
-          <img
-            src={logoAsset.url}
-            alt=""
-            style={{ width: 20, height: 20, borderRadius: 999, objectFit: "cover" }}
-          />
-          <span style={{ fontSize: 14, lineHeight: "20px", fontWeight: 600, color: "#0E0B22" }}>
-            Synergy.AI
-          </span>
-        </div>
-
-        <div className="flex flex-1 flex-col" style={{ padding: 16, gap: 24 }}>
-          <div className="flex flex-1 flex-col" style={{ padding: "0 8px", gap: 24 }}>
-            {/* operator prompt */}
-            <div className="flex justify-end">
-              <p
-                style={{
-                  margin: 0,
-                  maxWidth: 440,
-                  padding: "12px 20px",
-                  background: "#EBE8FF",
-                  borderRadius: 16,
-                  fontSize: 14,
-                  lineHeight: "24px",
-                  color: "#0E0B22",
-                }}
-              >
-                {DEMO.prompt}
-              </p>
-            </div>
-
-            {/* tool calls */}
-            <div className="flex flex-col" style={{ gap: 12 }}>
-              {DEMO.steps.map((s) => (
-                <ToolChip key={s.tool} {...s} />
-              ))}
-            </div>
-
-            <p style={{ margin: 0, fontSize: 14, lineHeight: "24px", color: "#0E0B22" }}>
-              {DEMO.answer}
-            </p>
-          </div>
-
-          {/* composer */}
-          <div
-            className="flex flex-col"
-            style={{ gap: 8, padding: "16px 20px", border: `1px solid ${HAIRLINE}`, borderRadius: 16 }}
-          >
-            <span style={{ fontSize: 14, lineHeight: "24px", color: "#A1A0A9" }}>Reply…</span>
-            <div className="flex items-center justify-between">
-              <Plus size={20} strokeWidth={1.5} color="#0E0B22" />
-              <div className="flex items-center" style={{ gap: 12 }}>
-                <span
-                  className="inline-flex items-center"
-                  style={{ gap: 4, fontSize: 14, lineHeight: "24px", fontWeight: 500, color: "#7A7885" }}
-                >
-                  {DEMO.model}
-                  <ChevronDown size={16} strokeWidth={1.5} />
-                </span>
-                <span
-                  className="grid place-items-center"
-                  style={{ width: 32, height: 32, background: INDIGO, borderRadius: 10 }}
-                >
-                  <ArrowUp size={16} strokeWidth={2} color="#FFFFFF" />
-                </span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+    <Reveal y={32} duration={1600} delay={160} className="flex flex-1 md:justify-end" style={{ minWidth: 0 }}>
+      <HoverTilt from="left" className="w-full" style={{ maxWidth: 588 }}>
+        <img
+          src={platformRagDemoAsset.url}
+          alt="Synergy RAG 2.0 working a return request: intent detection, knowledge retrieval, function calling, drafted reply"
+          draggable={false}
+          className="block h-auto w-full select-none"
+          style={{ aspectRatio: "588 / 568" }}
+        />
+      </HoverTilt>
     </Reveal>
   );
 }

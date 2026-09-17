@@ -32,6 +32,8 @@ export const whySecurityPortraitAsset = media("why-security-portrait.jpg");
 export const solutionChannelsAsset = media("solution-cs-channels.webp");
 export const solutionConsoleAsset = media("solution-cs-console.webp");
 export const solutionFlowAsset = media("solution-cs-flow.webp");
+/** Platform → RAG 2.0 demo transcript card, exported from Figma at 2× (588×568). */
+export const platformRagDemoAsset = media("platform-rag-demo.webp");
 
 export const cometAsset = media("kore-comet.svg");
 export const valueAsset = media("kore-value.svg");
