@@ -179,6 +179,7 @@ export function SiteNav({ revealDelay = 4000 }: { revealDelay?: number } = {}) {
                 </div>
                 {i === 0 && <WhySynergyMenu open={hovered === 0} />}
                 {i === 1 && <PlatformMenu open={hovered === 1} />}
+                {i === 2 && <SolutionMenu open={hovered === 2} />}
               </li>
             ))}
 
@@ -406,17 +407,234 @@ function WhySynergyMenu({ open }: { open: boolean }) {
   );
 }
 
+/* ------------------------------------------------------- two-column menus */
+
+type RichItem = { dot: string; kicker: string; title: string; desc: string; tag?: string; to?: string };
+type ListItem = { title: string; desc: string; to?: string };
+
+/** Colour square + kicker, title (optional tag), one-line description. */
+function RichCell({
+  item,
+  hovered,
+  last,
+  reveal,
+  onEnter,
+  onLeave,
+  onClick,
+}: {
+  item: RichItem;
+  hovered: boolean;
+  last: boolean;
+  reveal: React.CSSProperties;
+  onEnter: () => void;
+  onLeave: () => void;
+  onClick: () => void;
+}) {
+  return (
+    <div
+      className="flex cursor-pointer flex-col items-start"
+      onClick={onClick}
+      onMouseEnter={onEnter}
+      onMouseLeave={onLeave}
+      style={{
+        padding: "22px 30px",
+        gap: 8,
+        minHeight: 105,
+        background: hovered ? "#F8F8F9" : "transparent",
+        borderBottom: last ? "none" : "1px solid #E1E0E4",
+        ...reveal,
+      }}
+    >
+      <div className="flex items-center" style={{ gap: 8 }}>
+        <span style={{ width: 8, height: 8, background: item.dot, display: "block" }} />
+        <span
+          className="uppercase whitespace-nowrap"
+          style={{ fontSize: 10, lineHeight: "18px", color: "#A1A0A9" }}
+        >
+          {item.kicker}
+        </span>
+      </div>
+      <div className="flex w-full flex-col items-start" style={{ gap: 6 }}>
+        <p
+          className="flex w-full items-center font-medium"
+          style={{ gap: 8, fontSize: 16, lineHeight: "22px", color: "#000000" }}
+        >
+          {item.title}
+          {item.tag ? (
+            <span
+              className="uppercase"
+              style={{
+                fontSize: 10,
+                lineHeight: "16px",
+                fontWeight: 500,
+                letterSpacing: "0.06em",
+                padding: "0 6px",
+                background: "#0E0B22",
+                color: "#FFFFFF",
+              }}
+            >
+              {item.tag}
+            </span>
+          ) : null}
+        </p>
+        <p className="w-full" style={{ fontSize: 12, lineHeight: "20px", color: "#7A7885" }}>
+          {item.desc}
+        </p>
+      </div>
+    </div>
+  );
+}
+
+/** Compact row: alternating ink square / diamond (the KPI bullet language), title, one line. */
+function ListRow({
+  item,
+  index,
+  hovered,
+  last,
+  reveal,
+  onEnter,
+  onLeave,
+  onClick,
+}: {
+  item: ListItem;
+  index: number;
+  hovered: boolean;
+  last: boolean;
+  reveal: React.CSSProperties;
+  onEnter: () => void;
+  onLeave: () => void;
+  onClick: () => void;
+}) {
+  return (
+    <div
+      className="flex flex-1 cursor-pointer items-center"
+      onClick={onClick}
+      onMouseEnter={onEnter}
+      onMouseLeave={onLeave}
+      style={{
+        padding: "18px 24px 18px 30px",
+        gap: 10,
+        background: hovered ? "#F8F8F9" : "transparent",
+        borderBottom: last ? "none" : "1px solid #E1E0E4",
+        ...reveal,
+      }}
+    >
+      <span
+        aria-hidden
+        className="block shrink-0"
+        style={{
+          width: 6,
+          height: 6,
+          background: "#0E0B22",
+          transform: index % 2 === 1 ? "rotate(45deg)" : undefined,
+        }}
+      />
+      <div className="flex flex-col" style={{ gap: 2 }}>
+        <p className="font-medium" style={{ fontSize: 14, lineHeight: "20px", color: "#000000" }}>
+          {item.title}
+        </p>
+        <p style={{ fontSize: 12, lineHeight: "18px", color: "#7A7885" }}>{item.desc}</p>
+      </div>
+    </div>
+  );
+}
+
+/** Column label sitting inside the grid frame, above a column's rows. */
+function ColumnHead({ label, reveal }: { label: string; reveal: React.CSSProperties }) {
+  return (
+    <div
+      className="uppercase whitespace-nowrap"
+      style={{
+        padding: "12px 30px",
+        fontSize: 10,
+        lineHeight: "18px",
+        letterSpacing: "0.06em",
+        color: "#A1A0A9",
+        borderBottom: "1px solid #E1E0E4",
+        ...reveal,
+      }}
+    >
+      {label}
+    </div>
+  );
+}
+
+/**
+ * Rich cells on the left, compact list on the right — the shape both the
+ * Platform and Solution menus take. The right column is sized to its copy so
+ * no dead air trails the descriptions.
+ */
+function TwoColumnMenu({
+  open,
+  kicker,
+  left,
+  right,
+  heads,
+}: {
+  open: boolean;
+  kicker: string;
+  left: RichItem[];
+  right: ListItem[];
+  /** Optional column labels, e.g. "By use case" / "By industry". */
+  heads?: [string, string];
+}) {
+  const [hover, setHover] = useState<string | null>(null);
+  const navigate = useNavigate();
+  const go = (to?: string) => {
+    if (to) navigate({ to });
+  };
+
+  return (
+    <MenuPanel open={open} kicker={kicker} align="center">
+      <div
+        className="grid overflow-hidden"
+        style={{
+          width: 690,
+          gridTemplateColumns: "360px 330px",
+          border: "1px solid #E1E0E4",
+        }}
+      >
+        <div className="flex flex-col" style={{ borderRight: "1px solid #E1E0E4" }}>
+          {heads ? <ColumnHead label={heads[0]} reveal={cellReveal(open, 0)} /> : null}
+          {left.map((it, i) => (
+            <RichCell
+              key={it.title}
+              item={it}
+              hovered={hover === `l-${i}`}
+              last={i === left.length - 1}
+              reveal={cellReveal(open, i + 1)}
+              onEnter={() => setHover(`l-${i}`)}
+              onLeave={() => setHover(null)}
+              onClick={() => go(it.to)}
+            />
+          ))}
+        </div>
+
+        <div className="flex flex-col">
+          {heads ? <ColumnHead label={heads[1]} reveal={cellReveal(open, 0)} /> : null}
+          {right.map((it, i) => (
+            <ListRow
+              key={it.title}
+              item={it}
+              index={i}
+              hovered={hover === `r-${i}`}
+              last={i === right.length - 1}
+              reveal={cellReveal(open, i + 2)}
+              onEnter={() => setHover(`r-${i}`)}
+              onLeave={() => setHover(null)}
+              onClick={() => go(it.to)}
+            />
+          ))}
+        </div>
+      </div>
+    </MenuPanel>
+  );
+}
+
 /* --------------------------------------------------------------- platform */
 
 /** Three products (left, one per row) and four capabilities (right list). */
-const PLATFORM_PRODUCTS: Array<{
-  dot: string;
-  kicker: string;
-  title: string;
-  desc: string;
-  tag?: string;
-  to?: string;
-}> = [
+const PLATFORM_PRODUCTS: RichItem[] = [
   {
     dot: "#8CE0FF",
     kicker: "Engine",
@@ -438,7 +656,7 @@ const PLATFORM_PRODUCTS: Array<{
   },
 ];
 
-const PLATFORM_CAPABILITIES: Array<{ title: string; desc: string; to?: string }> = [
+const PLATFORM_CAPABILITIES: ListItem[] = [
   { title: "AI Mission Control", desc: "Real-time smart dispatch centre" },
   { title: "Human + AI", desc: "Seamless AI–human handoff" },
   { title: "Analytics", desc: "Deep business insights & VOC analysis" },
@@ -446,126 +664,50 @@ const PLATFORM_CAPABILITIES: Array<{ title: string; desc: string; to?: string }>
 ];
 
 function PlatformMenu({ open }: { open: boolean }) {
-  const [hover, setHover] = useState<string | null>(null);
-  const navigate = useNavigate();
-  const go = (to?: string) => {
-    if (to) navigate({ to });
-  };
-
   return (
-    <MenuPanel open={open} kicker="/ platform" align="center">
-      <div
-        className="grid overflow-hidden"
-        style={{
-          // right column sized to its one-line descriptions, no dead air after them
-          width: 690,
-          gridTemplateColumns: "360px 330px",
-          border: "1px solid #E1E0E4",
-        }}
-      >
-        {/* products */}
-        <div className="flex flex-col" style={{ borderRight: "1px solid #E1E0E4" }}>
-          {PLATFORM_PRODUCTS.map((it, i) => {
-            const key = `p-${i}`;
-            return (
-              <div
-                key={it.title}
-                className="flex cursor-pointer flex-col items-start"
-                onClick={() => go(it.to)}
-                onMouseEnter={() => setHover(key)}
-                onMouseLeave={() => setHover(null)}
-                style={{
-                  padding: "22px 30px",
-                  gap: 8,
-                  minHeight: 105,
-                  background: hover === key ? "#F8F8F9" : "transparent",
-                  borderBottom: i < PLATFORM_PRODUCTS.length - 1 ? "1px solid #E1E0E4" : "none",
-                  ...cellReveal(open, i + 1),
-                }}
-              >
-                <div className="flex items-center" style={{ gap: 8 }}>
-                  <span style={{ width: 8, height: 8, background: it.dot, display: "block" }} />
-                  <span
-                    className="uppercase whitespace-nowrap"
-                    style={{ fontSize: 10, lineHeight: "18px", color: "#A1A0A9" }}
-                  >
-                    {it.kicker}
-                  </span>
-                </div>
-                <div className="flex w-full flex-col items-start" style={{ gap: 6 }}>
-                  <p
-                    className="flex w-full items-center font-medium"
-                    style={{ gap: 8, fontSize: 16, lineHeight: "22px", color: "#000000" }}
-                  >
-                    {it.title}
-                    {it.tag ? (
-                      <span
-                        className="uppercase"
-                        style={{
-                          fontSize: 10,
-                          lineHeight: "16px",
-                          fontWeight: 500,
-                          letterSpacing: "0.06em",
-                          padding: "0 6px",
-                          background: "#0E0B22",
-                          color: "#FFFFFF",
-                        }}
-                      >
-                        {it.tag}
-                      </span>
-                    ) : null}
-                  </p>
-                  <p className="w-full" style={{ fontSize: 12, lineHeight: "20px", color: "#7A7885" }}>
-                    {it.desc}
-                  </p>
-                </div>
-              </div>
-            );
-          })}
-        </div>
+    <TwoColumnMenu
+      open={open}
+      kicker="/ platform"
+      left={PLATFORM_PRODUCTS}
+      right={PLATFORM_CAPABILITIES}
+    />
+  );
+}
 
-        {/* capabilities */}
-        <div className="flex flex-col">
-          {PLATFORM_CAPABILITIES.map((it, i) => {
-            const key = `c-${i}`;
-            return (
-              <div
-                key={it.title}
-                className="flex flex-1 cursor-pointer items-center"
-                onClick={() => go(it.to)}
-                onMouseEnter={() => setHover(key)}
-                onMouseLeave={() => setHover(null)}
-                style={{
-                  padding: "18px 24px 18px 30px",
-                  gap: 10,
-                  background: hover === key ? "#F8F8F9" : "transparent",
-                  borderBottom: i < PLATFORM_CAPABILITIES.length - 1 ? "1px solid #E1E0E4" : "none",
-                  ...cellReveal(open, i + 2),
-                }}
-              >
-                {/* alternating ink square / diamond, as in the KPI bullet lists */}
-                <span
-                  aria-hidden
-                  className="block shrink-0"
-                  style={{
-                    width: 6,
-                    height: 6,
-                    background: "#0E0B22",
-                    transform: i % 2 === 1 ? "rotate(45deg)" : undefined,
-                  }}
-                />
-                <div className="flex flex-col" style={{ gap: 2 }}>
-                  <p className="font-medium" style={{ fontSize: 14, lineHeight: "20px", color: "#000000" }}>
-                    {it.title}
-                  </p>
-                  <p style={{ fontSize: 12, lineHeight: "18px", color: "#7A7885" }}>{it.desc}</p>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      </div>
-    </MenuPanel>
+/* --------------------------------------------------------------- solution */
+
+/** Two use cases (left) and four industries (right). */
+const SOLUTION_USE_CASES: RichItem[] = [
+  {
+    dot: "#FFCE91",
+    kicker: "Customer service",
+    title: "Scale & Stabilise Customer Support",
+    desc: "Absorb the repetitive volume; keep people on the judgement calls.",
+  },
+  {
+    dot: "#FF9ED8",
+    kicker: "Internal support",
+    title: "Employee Experience, Designed for Focus",
+    desc: "Answer the everyday questions so teams stay on the work that matters.",
+  },
+];
+
+const SOLUTION_INDUSTRIES: ListItem[] = [
+  { title: "Financial", desc: "Payments, KYC and compliant handover" },
+  { title: "Web3 & Gaming", desc: "22-language support at production load" },
+  { title: "Consumer Tech", desc: "Orders, accounts and subscriptions at scale" },
+  { title: "Other Industries", desc: "Tell us about your scenario" },
+];
+
+function SolutionMenu({ open }: { open: boolean }) {
+  return (
+    <TwoColumnMenu
+      open={open}
+      kicker="/ solution"
+      left={SOLUTION_USE_CASES}
+      right={SOLUTION_INDUSTRIES}
+      heads={["By use case", "By industry"]}
+    />
   );
 }
 
