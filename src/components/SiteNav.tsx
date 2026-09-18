@@ -285,24 +285,16 @@ const PANEL_EASE = "cubic-bezier(0.22, 1, 0.36, 1)";
 
 /** The grid rule inside a dropdown panel. */
 const MENU_RULE = "#E1E0E4";
-/** A finer dash than the page frames use — 4/4 is too coarse beside a 6px
- *  mark, this keeps three ticks in the run-out at panel scale. */
-const DASH_X = `repeating-linear-gradient(90deg, ${MENU_RULE} 0 2px, transparent 2px 5px)`;
-const DASH_Y = `repeating-linear-gradient(180deg, ${MENU_RULE} 0 2px, transparent 2px 5px)`;
-/** Dash run from a corner out into the panel's 24px padding. */
-const TICK = 21;
 
 /**
  * Registration mark: the 6px white square the page frames put where hairlines
- * cross (platform/rag's crop frame, the Business Impact article rows). `ticks`
- * adds the dashed run-outs that make a corner read as a crop mark.
+ * cross (platform/rag's crop frame, the Business Impact article rows).
  */
 function RuleMark({
   open,
   x,
   y,
   nudge = [0, 0],
-  ticks,
   delay = 0,
 }: {
   open: boolean;
@@ -311,62 +303,34 @@ function RuleMark({
   y: string;
   /** Half-pixel corrections so the square straddles the rule, not the box. */
   nudge?: [number, number];
-  /** Directions the dashed run-outs leave in. */
-  ticks?: Array<"up" | "down" | "left" | "right">;
   delay?: number;
 }) {
-  const left = `calc(${x} + ${nudge[0]}px)`;
-  const top = `calc(${y} + ${nudge[1]}px)`;
-  const fade = {
-    opacity: open ? 1 : 0,
-    transition: `opacity 340ms ${PANEL_EASE} ${delay}ms`,
-  } as const;
-  // Leave the square's 8px footprint clear so the dashes read as run-outs.
-  const run = TICK - 7;
   return (
-    <>
-      {(ticks ?? []).map((dir) => {
-        const horizontal = dir === "left" || dir === "right";
-        return (
-          <span
-            key={dir}
-            className="absolute"
-            style={{
-              left: horizontal ? (dir === "left" ? `calc(${left} - ${TICK}px)` : `calc(${left} + 7px)`) : left,
-              top: horizontal ? top : dir === "up" ? `calc(${top} - ${TICK}px)` : `calc(${top} + 7px)`,
-              width: horizontal ? run : 1,
-              height: horizontal ? 1 : run,
-              backgroundImage: horizontal ? DASH_X : DASH_Y,
-              ...fade,
-            }}
-          />
-        );
-      })}
-      <span
-        className="absolute"
-        style={{
-          left,
-          top,
-          width: 6,
-          height: 6,
-          transform: "translate(-50%, -50%)",
-          background: "#FFFFFF",
-          border: `1px solid ${MENU_RULE}`,
-          ...fade,
-        }}
-      />
-    </>
+    <span
+      className="absolute"
+      style={{
+        left: `calc(${x} + ${nudge[0]}px)`,
+        top: `calc(${y} + ${nudge[1]}px)`,
+        width: 6,
+        height: 6,
+        transform: "translate(-50%, -50%)",
+        background: "#FFFFFF",
+        border: `1px solid ${MENU_RULE}`,
+        opacity: open ? 1 : 0,
+        transition: `opacity 340ms ${PANEL_EASE} ${delay}ms`,
+      }}
+    />
   );
 }
 
-/** The four crop marks on a menu grid, with their dashes running outward. */
-function GridCropMarks({ open, delay = 460 }: { open: boolean; delay?: number }) {
+/** The mark on each corner of a menu grid. */
+function GridCornerMarks({ open, delay = 460 }: { open: boolean; delay?: number }) {
   return (
     <div aria-hidden className="pointer-events-none absolute inset-0">
-      <RuleMark open={open} x="0%" y="0%" nudge={[0.5, 0.5]} ticks={["left", "up"]} delay={delay} />
-      <RuleMark open={open} x="100%" y="0%" nudge={[-0.5, 0.5]} ticks={["right", "up"]} delay={delay + 50} />
-      <RuleMark open={open} x="0%" y="100%" nudge={[0.5, -0.5]} ticks={["left", "down"]} delay={delay + 100} />
-      <RuleMark open={open} x="100%" y="100%" nudge={[-0.5, -0.5]} ticks={["right", "down"]} delay={delay + 150} />
+      <RuleMark open={open} x="0%" y="0%" nudge={[0.5, 0.5]} delay={delay} />
+      <RuleMark open={open} x="100%" y="0%" nudge={[-0.5, 0.5]} delay={delay + 50} />
+      <RuleMark open={open} x="0%" y="100%" nudge={[0.5, -0.5]} delay={delay + 100} />
+      <RuleMark open={open} x="100%" y="100%" nudge={[-0.5, -0.5]} delay={delay + 150} />
     </div>
   );
 }
@@ -509,10 +473,10 @@ function WhySynergyMenu({ open }: { open: boolean }) {
         ))}
       </div>
         <div aria-hidden className="pointer-events-none absolute inset-0">
-          {/* the one interior crossing — the rules already run out of it */}
+          {/* the grid's one interior crossing */}
           <RuleMark open={open} x="50%" y="50%" nudge={[0.5, -0.5]} delay={640} />
         </div>
-        <GridCropMarks open={open} />
+        <GridCornerMarks open={open} />
       </div>
     </MenuPanel>
   );
@@ -743,7 +707,7 @@ function TwoColumnMenu({
           <RuleMark open={open} x="360px" y="0%" nudge={[-0.5, 0.5]} delay={640} />
           <RuleMark open={open} x="360px" y="100%" nudge={[-0.5, -0.5]} delay={690} />
         </div>
-        <GridCropMarks open={open} />
+        <GridCornerMarks open={open} />
       </div>
     </MenuPanel>
   );
