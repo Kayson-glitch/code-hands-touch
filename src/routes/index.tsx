@@ -21,17 +21,17 @@ import { introVideoAsset as videoAsset } from "@/lib/media";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Good/Fella — ASCII Creation of Adam" },
+      { title: "Synergy.AI — Revenue-Driven AI Support" },
       {
         name: "description",
         content:
-          "An interactive ASCII homage to Michelangelo's Creation of Adam — two hands sculpted from code, responding to your cursor.",
+          "AI support that resolves conversations end to end: 55% auto-handled, every answer grounded in your own knowledge, and a human on every judgement call.",
       },
-      { property: "og:title", content: "Good/Fella — ASCII Creation of Adam" },
+      { property: "og:title", content: "Synergy.AI — Revenue-Driven AI Support" },
       {
         property: "og:description",
         content:
-          "An interactive ASCII homage to Michelangelo's Creation of Adam — two hands sculpted from code, responding to your cursor.",
+          "AI support that resolves conversations end to end: 55% auto-handled, every answer grounded in your own knowledge, and a human on every judgement call.",
       },
     ],
   }),

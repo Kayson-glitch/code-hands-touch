@@ -15,6 +15,17 @@ import { destroySmoothScroll, initSmoothScroll } from "../lib/smoothScroll";
 import { SitePreloader } from "../components/SitePreloader";
 import { fluid } from "../lib/fluid";
 
+/**
+ * What a shared link shows. `SITE_IMAGE` is relative because the deploy
+ * domain isn't known here — Slack, Facebook and LinkedIn resolve that against
+ * the page URL; set it to the absolute URL once the domain is fixed so X
+ * shows a card too.
+ */
+const SITE_TITLE = "Synergy.AI — Revenue-Driven AI Support";
+const SITE_DESCRIPTION =
+  "The intelligence layer for customer success. Synergy.AI resolves support conversations end to end and keeps people on the judgement calls.";
+const SITE_IMAGE = "/media/og-card.png";
+
 const INK = "#0E0B22";
 const MUTED = "#7A7885";
 const FAINT = "#A1A0A9";
@@ -110,18 +121,20 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Good/Fella — ASCII Creation of Adam" },
-      { name: "description", content: "An interactive ASCII homage to Michelangelo's Creation of Adam — two hands sculpted from code, responding to your cursor." },
-      { name: "author", content: "Lovable" },
-      { property: "og:title", content: "Good/Fella — ASCII Creation of Adam" },
-      { property: "og:description", content: "An interactive ASCII homage to Michelangelo's Creation of Adam — two hands sculpted from code, responding to your cursor." },
+      { title: SITE_TITLE },
+      { name: "description", content: SITE_DESCRIPTION },
+      { property: "og:site_name", content: "Synergy.AI" },
+      { property: "og:title", content: SITE_TITLE },
+      { property: "og:description", content: SITE_DESCRIPTION },
       { property: "og:type", content: "website" },
+      { property: "og:image", content: SITE_IMAGE },
+      { property: "og:image:alt", content: "Synergy.AI — resolve support end to end, securely." },
+      { property: "og:image:width", content: "1200" },
+      { property: "og:image:height", content: "630" },
       { name: "twitter:card", content: "summary_large_image" },
-      { name: "twitter:site", content: "@Lovable" },
-      { name: "twitter:title", content: "Good/Fella — ASCII Creation of Adam" },
-      { name: "twitter:description", content: "An interactive ASCII homage to Michelangelo's Creation of Adam — two hands sculpted from code, responding to your cursor." },
-      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/29306ebd-bdea-4829-8e6d-9ff2f3f7f461/id-preview-4e39b9d3--5f189616-74af-43e1-9d81-6bf187196947.lovable.app-1784511719735.png" },
-      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/29306ebd-bdea-4829-8e6d-9ff2f3f7f461/id-preview-4e39b9d3--5f189616-74af-43e1-9d81-6bf187196947.lovable.app-1784511719735.png" },
+      { name: "twitter:title", content: SITE_TITLE },
+      { name: "twitter:description", content: SITE_DESCRIPTION },
+      { name: "twitter:image", content: SITE_IMAGE },
     ],
     links: [
       {
