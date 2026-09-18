@@ -391,6 +391,15 @@ export function FinChatDock({ alwaysVisible = false }: { alwaysVisible?: boolean
   // is visible near the bottom of the viewport, so it never overlaps the
   // copyright bar / social icons.
   const [footerVisible, setFooterVisible] = useState(false);
+
+  // The mobile menu covers the screen; the dock would float over its CTAs.
+  const [menuOpen, setMenuOpen] = useState(false);
+  useEffect(() => {
+    const onMenu = (e: Event) => setMenuOpen((e as CustomEvent<boolean>).detail);
+    window.addEventListener("app-menu-open", onMenu);
+    return () => window.removeEventListener("app-menu-open", onMenu);
+  }, []);
+
   useEffect(() => {
     const visibleEls = new Set<Element>();
     const observed = new Set<Element>();
@@ -650,7 +659,7 @@ export function FinChatDock({ alwaysVisible = false }: { alwaysVisible?: boolean
   const lastAssistant = [...messages].reverse().find((m) => m.role === "assistant");
   const showFollowUps = !typing && lastAssistant?.followUps && !lastAssistant.streaming;
 
-  const show = visible && !footerVisible;
+  const show = visible && !footerVisible && !menuOpen;
   return (
     <div
       className="pointer-events-none fixed inset-x-0 bottom-10 flex flex-col items-center px-4"
