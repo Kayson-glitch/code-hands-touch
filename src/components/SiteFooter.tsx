@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { Linkedin, Twitter, Youtube } from "lucide-react";
 import { Reveal } from "@/components/Reveal";
 import { DotArrow } from "@/components/DotArrow";
@@ -18,11 +18,11 @@ import { dashboardAsset } from "@/lib/media";
 
 import { fluid } from "@/lib/fluid";
 import { GRADIENT, GRADIENT_STOPS, RainbowButton } from "@/components/RainbowButton";
-import { useHeroLayout } from "@/hooks/useHeroLayout";
-import { BAYER, DOT_FILL, MIN_DENSITY, SQUARE_AT } from "@/components/HalftoneHandsFooter";
 
-/** Peak white of the footer wordmark dots. */
-const WORDMARK_ALPHA = 0.11;
+/** Watermark ink. Quiet enough that the links stay in front. */
+const WORDMARK_ALPHA = 0.055;
+/** Air between dots so the fill reads as a screen, not a grey slab. */
+const WORDMARK_DOT_FILL = 0.72;
 
 /** Fraction of the dashboard image's lower half left visible above the footer. */
 const IMAGE_REVEAL = 0.75;
@@ -42,67 +42,47 @@ const FOOTER_COLUMNS = [
 
 
 /**
- * Wordmark as a dot matrix, drawn with the hero hands' halftone rules: the
- * same cell-grid downsample (0.5px blur on the 1px-per-cell canvas), the same
- * pitch / Bayer / area-for-coverage / soft ceiling / square-off. Photographic
- * dissolve is skipped — a wordmark needs a closed glyph edge, not a fraying
- * silhouette. Ink is inverted for the black footer (white, constant alpha;
- * size carries the tone, as the hands do).
+ * Footer wordmark: real Montserrat, fitted to the container, sitting on the
+ * divider — then filled with a fine round-dot screen. The hero grid is a
+ * picture; at that pitch a wordmark becomes a pixel font. Here the outline
+ * stays the type, and the dots are only the ink.
  */
 function DotWordmark({ text }: { text: string }) {
   const boxRef = useRef<HTMLDivElement>(null);
+  const textRef = useRef<HTMLSpanElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const layout = useHeroLayout();
-  const pitch = Math.max(5, Math.round(layout.cellSize * 0.62));
+  const [size, setSize] = useState(200);
+
+  const fit = () => {
+    const box = boxRef.current;
+    const el = textRef.current;
+    if (!box || !el) return;
+    const probe = 200;
+    el.style.fontSize = `${probe}px`;
+    const w = el.scrollWidth;
+    const next = w > 0 ? (probe * box.clientWidth) / w : probe;
+    el.style.fontSize = `${next}px`;
+    setSize(next);
+  };
+
+  useLayoutEffect(fit);
+  useEffect(() => {
+    window.addEventListener("resize", fit);
+    if (document.fonts?.ready) document.fonts.ready.then(fit);
+    return () => window.removeEventListener("resize", fit);
+  }, []);
 
   useEffect(() => {
     const box = boxRef.current;
     const canvas = canvasRef.current;
-    if (!box || !canvas) return;
+    if (!box || !canvas || size < 8) return;
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
     const draw = () => {
       const w = box.clientWidth;
-      if (w < 10) return;
-      const font = (px: number) => `600 ${px}px Montserrat, ui-sans-serif, system-ui, sans-serif`;
-
-      const probe = document.createElement("canvas").getContext("2d");
-      if (!probe) return;
-      probe.font = font(200);
-      (probe as unknown as { letterSpacing: string }).letterSpacing = `${-0.02 * 200}px`;
-      const tw = probe.measureText(text).width || 200;
-      const size = (200 * w) / tw;
-      // Same 0.8em line box as FitWordmark. Baseline sits near the bottom so
-      // the glyphs rest on the divider instead of being cropped through their
-      // stems (the previous 0.93em baseline sat below the canvas).
-      const h = Math.max(1, Math.round(size * 0.8));
-      const baseline = Math.round(h * 0.92);
-
-      const src = document.createElement("canvas");
-      src.width = Math.max(1, Math.round(w));
-      src.height = h;
-      const sctx = src.getContext("2d");
-      if (!sctx) return;
-      sctx.font = font(size);
-      (sctx as unknown as { letterSpacing: string }).letterSpacing = `${-0.02 * size}px`;
-      sctx.fillStyle = "#fff";
-      sctx.textBaseline = "alphabetic";
-      sctx.fillText(text, 0, baseline);
-
-      // Hands' sampleField: draw onto a 1px-per-cell canvas with a 0.5px blur.
-      const cols = Math.ceil(w / pitch);
-      const rows = Math.ceil(h / pitch);
-      const off = document.createElement("canvas");
-      off.width = cols;
-      off.height = rows;
-      const octx = off.getContext("2d", { willReadFrequently: true });
-      if (!octx) return;
-      octx.imageSmoothingEnabled = true;
-      (octx as unknown as { filter: string }).filter = "blur(0.5px)";
-      octx.drawImage(src, 0, 0, src.width, src.height, 0, 0, cols, rows);
-      (octx as unknown as { filter: string }).filter = "none";
-      const data = octx.getImageData(0, 0, cols, rows).data;
+      const h = box.clientHeight;
+      if (w < 10 || h < 4) return;
 
       const dpr = Math.min(2, window.devicePixelRatio || 1);
       canvas.width = Math.round(w * dpr);
@@ -112,49 +92,81 @@ function DotWordmark({ text }: { text: string }) {
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
       ctx.clearRect(0, 0, w, h);
 
-      const maxR = pitch * 0.5 * DOT_FILL;
+      const src = document.createElement("canvas");
+      src.width = Math.max(1, Math.round(w * dpr));
+      src.height = Math.max(1, Math.round(h * dpr));
+      const sctx = src.getContext("2d", { willReadFrequently: true });
+      if (!sctx) return;
+      sctx.scale(dpr, dpr);
+      sctx.font = `600 ${size}px Montserrat, ui-sans-serif, system-ui, sans-serif`;
+      (sctx as unknown as { letterSpacing: string }).letterSpacing = `${-0.02 * size}px`;
+      sctx.fillStyle = "#fff";
+      sctx.textBaseline = "alphabetic";
+      // Same line box as the hidden span: 0.8em, then translateY(22%).
+      const lineBox = size * 0.8;
+      const m = sctx.measureText(text);
+      const ascent = m.fontBoundingBoxAscent || size * 0.73;
+      const baseline = (lineBox - size) / 2 + ascent + lineBox * 0.22;
+      sctx.fillText(text, 0, baseline);
+
+      // Pitch tracks the type so the screen stays a texture, not a pixel font.
+      const pitch = Math.max(2.25, size / 80);
+      const cols = Math.ceil(w / pitch);
+      const rows = Math.ceil(h / pitch);
+      const off = document.createElement("canvas");
+      off.width = cols;
+      off.height = rows;
+      const octx = off.getContext("2d", { willReadFrequently: true });
+      if (!octx) return;
+      octx.imageSmoothingEnabled = true;
+      octx.drawImage(src, 0, 0, cols, rows);
+      const data = octx.getImageData(0, 0, cols, rows).data;
+
+      const maxR = pitch * 0.5 * WORDMARK_DOT_FILL;
       ctx.fillStyle = `rgba(255,255,255,${WORDMARK_ALPHA})`;
       for (let j = 0; j < rows; j++) {
         for (let i = 0; i < cols; i++) {
-          const coverage = data[(j * cols + i) * 4 + 3] / 255;
-          const t = Math.min(1, Math.max(0, (coverage - 0.02) / 0.88));
-          let density = Math.pow(t, 0.8);
-          density = Math.min(1, Math.max(0, density + (BAYER[(j & 3) * 4 + (i & 3)] - 0.5) * 0.07));
-          if (density < MIN_DENSITY) continue;
-          const d = density < 0.8 ? density : 0.8 + (density - 0.8) * 0.7;
-          const r = maxR * Math.sqrt(d);
-          if (r < 0.16) continue;
-
-          const x = (i + 0.5) * pitch;
-          const y = (j + 0.5) * pitch;
+          const a = data[(j * cols + i) * 4 + 3] / 255;
+          if (a < 0.05) continue;
+          const r = maxR * Math.sqrt(a);
+          if (r < 0.18) continue;
           ctx.beginPath();
-          if (d <= SQUARE_AT) {
-            ctx.arc(x, y, r, 0, Math.PI * 2);
-          } else {
-            const sq = (d - SQUARE_AT) / (1 - SQUARE_AT);
-            const side = r * (1 - 0.04 * sq);
-            ctx.roundRect(x - side, y - side, side * 2, side * 2, r * (1 - 0.6 * sq));
-          }
+          ctx.arc((i + 0.5) * pitch, (j + 0.5) * pitch, r, 0, Math.PI * 2);
           ctx.fill();
         }
       }
     };
 
     draw();
+    if (document.fonts?.ready) document.fonts.ready.then(draw);
     const ro = new ResizeObserver(draw);
     ro.observe(box);
-    if (document.fonts?.ready) document.fonts.ready.then(draw);
     return () => ro.disconnect();
-  }, [text, pitch]);
+  }, [text, size]);
 
   return (
     <div
       ref={boxRef}
       aria-hidden
-      className="pointer-events-none w-full select-none overflow-hidden"
+      className="pointer-events-none relative w-full select-none overflow-hidden"
       style={{ lineHeight: 0 }}
     >
-      <canvas ref={canvasRef} style={{ display: "block" }} />
+      <span
+        ref={textRef}
+        className="font-sans block whitespace-nowrap"
+        style={{
+          fontSize: size,
+          lineHeight: 0.8,
+          fontWeight: 600,
+          letterSpacing: "-0.02em",
+          display: "inline-block",
+          transform: "translateY(22%)",
+          visibility: "hidden",
+        }}
+      >
+        {text}
+      </span>
+      <canvas ref={canvasRef} className="absolute inset-0 block h-full w-full" />
     </div>
   );
 }
