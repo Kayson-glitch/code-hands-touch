@@ -1362,6 +1362,24 @@ html.lenis body {
 .calc-range:hover::-webkit-slider-thumb,
 .calc-range:focus-visible::-webkit-slider-thumb { transform: scale(1.25); }
 
+/* First-load bar. The server ships this markup before the bundle lands, so the
+   fill creeps on its own until the script takes over; `is-live` then hands the
+   width back to the component. */
+@keyframes site-preloader-creep {
+  from {
+    width: 0%;
+  }
+  to {
+    width: 88%;
+  }
+}
+.site-preloader-fill {
+  animation: site-preloader-creep 4s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+.site-preloader-fill.is-live {
+  animation: none;
+}
+
 /* Company page — the cards pinned on the globe lift a little under the cursor,
    as if they were floating just off it. Transform only, so nothing reflows. */
 .company-float {

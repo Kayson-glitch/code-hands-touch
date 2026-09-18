@@ -38,7 +38,11 @@ export function SitePreloader() {
   const [shown, setShown] = useState(0);
   const [leaving, setLeaving] = useState(false);
   const [gone, setGone] = useState(false);
+  /** False until the bundle has hydrated; the bar creeps in CSS until then. */
+  const [live, setLive] = useState(false);
   const shownRef = useRef(0);
+
+  useEffect(() => setLive(true), []);
 
   useEffect(() => {
     // Weighted readiness: the hero's art and the fonts are what the first
@@ -146,10 +150,18 @@ export function SitePreloader() {
         }}
       />
 
-      {/* the figure, in the face every number on the site is set in */}
+      {/* the figure, in the face every number on the site is set in. It waits
+          for the script — before that there is no progress to report. */}
       <span
         className="font-display relative block tabular-nums"
-        style={{ fontSize: fluid(56, 40), lineHeight: 1, fontWeight: 400, color: "#0E0B22" }}
+        style={{
+          fontSize: fluid(56, 40),
+          lineHeight: 1,
+          fontWeight: 400,
+          color: "#0E0B22",
+          opacity: live ? 1 : 0,
+          transition: "opacity 300ms ease-out",
+        }}
       >
         {Math.round(shown * 100)}
         <span style={{ marginLeft: 4, fontSize: fluid(20, 16), color: "#A1A0A9" }}>%</span>
@@ -161,12 +173,13 @@ export function SitePreloader() {
         style={{ width: "min(72vw, 220px)", height: 3, background: "rgba(14,11,34,0.12)" }}
       >
         <span
+          className={`site-preloader-fill${live ? " is-live" : ""}`}
           style={{
             position: "absolute",
             left: 0,
             top: 0,
             bottom: 0,
-            width: `${shown * 100}%`,
+            width: live ? `${shown * 100}%` : undefined,
             backgroundImage: GRADIENT,
             backgroundSize: "220px 100%",
           }}
