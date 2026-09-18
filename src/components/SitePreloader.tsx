@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { GRADIENT } from "@/components/RainbowButton";
+import { HeroDots } from "@/components/ProductHero";
 import { handsFramesAsset } from "@/lib/media";
 import { fluid } from "@/lib/fluid";
 
@@ -33,6 +33,11 @@ const CLIMB_PER_MS = 1 / 900;
  */
 const TRICKLE_CEILING = 0.92;
 const TRICKLE_TAU = 1100;
+
+/** The bar: wide and solid, with the page's hairline for its crop marks. */
+const BAR_W = "min(72vw, 320px)";
+const BAR_H = 12;
+const RULE = "rgba(14, 11, 34, 0.10)";
 
 export function SitePreloader() {
   const [shown, setShown] = useState(0);
@@ -145,7 +150,7 @@ export function SitePreloader() {
         flexDirection: "column",
         alignItems: "center",
         justifyContent: "center",
-        gap: 22,
+        gap: 30,
         // the site's paper, so the hero fades in out of the same ground
         background: "#FAFAFA",
         opacity: leaving ? 0 : 1,
@@ -153,19 +158,77 @@ export function SitePreloader() {
         pointerEvents: leaving ? "none" : "auto",
       }}
     >
-      {/* the hero's own dot field: 1px dots on a 20px grid */}
-      <span
-        aria-hidden
-        style={{
-          position: "absolute",
-          inset: 0,
-          backgroundImage:
-            "radial-gradient(circle, rgba(14,11,34,0.16) 0 1px, transparent 1.6px)",
-          backgroundSize: "20px 20px",
-          maskImage: "radial-gradient(circle at 50% 50%, #000 0%, transparent 78%)",
-          WebkitMaskImage: "radial-gradient(circle at 50% 50%, #000 0%, transparent 78%)",
-        }}
-      />
+      {/* The product pages' dot field, rings and all. It is a canvas, so the
+          plain grid stands in until the script arrives and they trade places
+          on the same 20px pitch. */}
+      {live ? (
+        <HeroDots />
+      ) : (
+        <span
+          aria-hidden
+          style={{
+            position: "absolute",
+            inset: 0,
+            backgroundImage:
+              "radial-gradient(circle, rgba(14,11,34,0.16) 0 1px, transparent 1.6px)",
+            backgroundSize: "20px 20px",
+            maskImage: "radial-gradient(circle at 50% 50%, #000 0%, transparent 78%)",
+            WebkitMaskImage: "radial-gradient(circle at 50% 50%, #000 0%, transparent 78%)",
+          }}
+        />
+      )}
+
+      {/* The bar, sitting on the crop marks the page frames use: a rule
+          through it that fades out to either side, and a tick standing at
+          each end of the track. */}
+      <span className="relative block" style={{ width: BAR_W }}>
+        <span
+          aria-hidden
+          className="absolute"
+          style={{
+            left: "-40%",
+            right: "-40%",
+            top: "50%",
+            height: 1,
+            transform: "translateY(-50%)",
+            background: `linear-gradient(to right, transparent 0, ${RULE} 22%, ${RULE} 78%, transparent 100%)`,
+          }}
+        />
+        {(["left", "right"] as const).map((side) => (
+          <span
+            key={side}
+            aria-hidden
+            className="absolute"
+            style={{
+              [side]: 0,
+              top: "50%",
+              width: 1,
+              height: BAR_H * 7,
+              transform: "translateY(-50%)",
+              background: `linear-gradient(to bottom, transparent 0, ${RULE} 26%, ${RULE} 74%, transparent 100%)`,
+            }}
+          />
+        ))}
+
+        <span
+          ref={trackRef}
+          className="relative block"
+          style={{ width: "100%", height: BAR_H, background: "#F1F1F3" }}
+        >
+          <span
+            ref={fillRef}
+            className={`site-preloader-fill${live ? " is-live" : ""}`}
+            style={{
+              position: "absolute",
+              left: 0,
+              top: 0,
+              bottom: 0,
+              width: live ? `${shown * 100}%` : undefined,
+              background: "#0E0B22",
+            }}
+          />
+        </span>
+      </span>
 
       {/* the figure, in the face every number on the site is set in. It waits
           for the script — before that there is no progress to report. */}
@@ -181,28 +244,7 @@ export function SitePreloader() {
         }}
       >
         {Math.round(shown * 100)}
-        <span style={{ marginLeft: 4, fontSize: fluid(20, 16), color: "#A1A0A9" }}>%</span>
-      </span>
-
-      {/* one square bar, the brand gradient travelling along it */}
-      <span
-        ref={trackRef}
-        className="relative block"
-        style={{ width: "min(72vw, 220px)", height: 3, background: "rgba(14,11,34,0.12)" }}
-      >
-        <span
-          ref={fillRef}
-          className={`site-preloader-fill${live ? " is-live" : ""}`}
-          style={{
-            position: "absolute",
-            left: 0,
-            top: 0,
-            bottom: 0,
-            width: live ? `${shown * 100}%` : undefined,
-            backgroundImage: GRADIENT,
-            backgroundSize: "220px 100%",
-          }}
-        />
+        <span style={{ marginLeft: 2, fontSize: fluid(24, 18), color: "#7A7885" }}>%</span>
       </span>
     </div>
   );
