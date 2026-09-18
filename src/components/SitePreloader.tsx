@@ -34,10 +34,17 @@ const CLIMB_PER_MS = 1 / 900;
 const TRICKLE_CEILING = 0.92;
 const TRICKLE_TAU = 1100;
 
-/** The bar: wide and solid, with the page's hairline for its crop marks. */
-const BAR_W = "min(72vw, 320px)";
-const BAR_H = 12;
-const RULE = "rgba(14, 11, 34, 0.10)";
+/**
+ * Measured off the reference: the bar sits in a cell drawn by two rules across
+ * the page and two down it, inset a few pixels inside that cell, with the
+ * figure below. Cell is 61% of the viewport and a thirtieth of its own width
+ * tall; the fill clears the rules by CELL_INSET.
+ */
+const CELL_W = "min(61vw, 640px)";
+const CELL_H = 42;
+const CELL_INSET = 5;
+const RULE = "rgba(14, 11, 34, 0.09)";
+const TRACK = "#F1F1F3";
 
 export function SitePreloader() {
   const [shown, setShown] = useState(0);
@@ -178,73 +185,51 @@ export function SitePreloader() {
         />
       )}
 
-      {/* The bar, sitting on the crop marks the page frames use: a rule
-          through it that fades out to either side, and a tick standing at
-          each end of the track. */}
-      <span className="relative block" style={{ width: BAR_W }}>
-        <span
-          aria-hidden
-          className="absolute"
-          style={{
-            left: "-40%",
-            right: "-40%",
-            top: "50%",
-            height: 1,
-            transform: "translateY(-50%)",
-            background: `linear-gradient(to right, transparent 0, ${RULE} 22%, ${RULE} 78%, transparent 100%)`,
-          }}
-        />
-        {(["left", "right"] as const).map((side) => (
-          <span
-            key={side}
-            aria-hidden
-            className="absolute"
-            style={{
-              [side]: 0,
-              top: "50%",
-              width: 1,
-              height: BAR_H * 7,
-              transform: "translateY(-50%)",
-              background: `linear-gradient(to bottom, transparent 0, ${RULE} 26%, ${RULE} 74%, transparent 100%)`,
-            }}
-          />
-        ))}
-
-        <span
-          ref={trackRef}
-          className="relative block"
-          style={{ width: "100%", height: BAR_H, background: "#F1F1F3" }}
-        >
-          <span
-            ref={fillRef}
-            className={`site-preloader-fill${live ? " is-live" : ""}`}
-            style={{
-              position: "absolute",
-              left: 0,
-              top: 0,
-              bottom: 0,
-              width: live ? `${shown * 100}%` : undefined,
-              background: "#0E0B22",
-            }}
-          />
-        </span>
+      {/* The rules that draw the cell: two across the page, two down it. */}
+      <span aria-hidden className="absolute" style={{ left: 0, right: 0, top: "50%", height: CELL_H, transform: "translateY(-50%)" }}>
+        <span className="absolute" style={{ left: 0, right: 0, top: 0, height: 1, background: RULE }} />
+        <span className="absolute" style={{ left: 0, right: 0, bottom: 0, height: 1, background: RULE }} />
+      </span>
+      <span
+        aria-hidden
+        className="absolute"
+        style={{ top: 0, bottom: 0, width: CELL_W, left: "50%", transform: "translateX(-50%)" }}
+      >
+        <span className="absolute" style={{ top: 0, bottom: 0, left: 0, width: 1, background: RULE }} />
+        <span className="absolute" style={{ top: 0, bottom: 0, right: 0, width: 1, background: RULE }} />
       </span>
 
-      {/* the figure, in the face every number on the site is set in. It waits
-          for the script — before that there is no progress to report. */}
+      {/* the cell itself, with the fill inset off its rules */}
       <span
-        className="font-display relative block tabular-nums"
-        style={{
-          fontSize: fluid(56, 40),
-          lineHeight: 1,
-          fontWeight: 400,
-          color: "#0E0B22",
-          opacity: live ? 1 : 0,
-          transition: "opacity 300ms ease-out",
-        }}
+        ref={trackRef}
+        className="relative block"
+        style={{ width: CELL_W, height: CELL_H, background: TRACK, padding: CELL_INSET }}
       >
-        {Math.round(shown * 100)}
-        <span style={{ marginLeft: 2, fontSize: fluid(24, 18), color: "#7A7885" }}>%</span>
+        <span
+          ref={fillRef}
+          className={`site-preloader-fill${live ? " is-live" : ""}`}
+          style={{
+            position: "absolute",
+            left: CELL_INSET,
+            top: CELL_INSET,
+            bottom: CELL_INSET,
+            width: live ? `calc((100% - ${CELL_INSET * 2}px) * ${shown})` : undefined,
+            background: "#0E0B22",
+          }}
+        />
+      </span>
+
+      {/* The figure, in the face every number on the site is set in. It counts
+          from nought in CSS before the script lands, then the component takes
+          the count over. */}
+      <span
+        className="font-display relative flex items-baseline tabular-nums"
+        style={{ fontSize: fluid(48, 32), lineHeight: 1, fontWeight: 400, color: "#0E0B22" }}
+      >
+        <span className={`site-preloader-count${live ? " is-live" : ""}`}>
+          {live ? Math.round(shown * 100) : null}
+        </span>
+        <span style={{ marginLeft: 2, fontSize: "0.44em", color: "#7A7885" }}>%</span>
       </span>
     </div>
   );

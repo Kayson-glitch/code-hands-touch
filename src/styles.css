@@ -1380,6 +1380,35 @@ html.lenis body {
   animation: none;
 }
 
+/* The figure counts in CSS too, so it starts at nought with the bar rather
+   than waiting for the script and appearing part-way up. */
+@property --site-preloader-count {
+  syntax: "<integer>";
+  inherits: false;
+  initial-value: 0;
+}
+@keyframes site-preloader-counting {
+  from {
+    --site-preloader-count: 0;
+  }
+  to {
+    --site-preloader-count: 88;
+  }
+}
+.site-preloader-count {
+  counter-reset: site-preloader var(--site-preloader-count);
+  animation: site-preloader-counting 4s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+.site-preloader-count::before {
+  content: counter(site-preloader);
+}
+.site-preloader-count.is-live {
+  animation: none;
+}
+.site-preloader-count.is-live::before {
+  content: none;
+}
+
 /* Company page — the cards pinned on the globe lift a little under the cursor,
    as if they were floating just off it. Transform only, so nothing reflows. */
 .company-float {
