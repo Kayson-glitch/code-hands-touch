@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { GRADIENT } from "@/components/RainbowButton";
-import { handsFramesAsset, logoAsset } from "@/lib/media";
+import { handsFramesAsset } from "@/lib/media";
+import { fluid } from "@/lib/fluid";
 
 /**
  * First-load screen.
@@ -9,8 +10,8 @@ import { handsFramesAsset, logoAsset } from "@/lib/media";
  * decoded, and the display face arrives from a third party with `display=swap`,
  * so an unguarded entry shows an empty hero and then swaps the headline's type
  * underneath the reader. This holds that moment behind the site's own chrome —
- * the nav lockup on the paper dot field, and one hairline bar carrying the
- * brand gradient — while the things it actually needs land.
+ * the hero's dot field on paper, the figure in the display face, and one
+ * square bar carrying the brand gradient — while what it needs lands.
  *
  * It only ever runs on a real page load: client-side route changes don't
  * remount the root, so navigating inside the site never sees it.
@@ -104,6 +105,8 @@ export function SitePreloader() {
   return (
     <div
       aria-hidden
+      data-site-preloader
+      data-progress={shown.toFixed(3)}
       style={{
         position: "fixed",
         inset: 0,
@@ -112,7 +115,7 @@ export function SitePreloader() {
         flexDirection: "column",
         alignItems: "center",
         justifyContent: "center",
-        gap: 28,
+        gap: 22,
         // the site's paper, so the hero fades in out of the same ground
         background: "#FAFAFA",
         opacity: leaving ? 0 : 1,
@@ -134,34 +137,29 @@ export function SitePreloader() {
         }}
       />
 
-      {/* the nav's own lockup, so the wait reads as part of the site */}
-      <span className="relative flex items-center" style={{ gap: 8 }}>
-        <img
-          src={logoAsset.url}
-          alt=""
-          style={{ width: 28, height: 28, display: "block", borderRadius: 999, objectFit: "cover" }}
-        />
-        <span
-          className="font-medium"
-          style={{ fontSize: 18, lineHeight: "24px", color: "#0E0B22", letterSpacing: "-0.01em" }}
-        >
-          Synergy.AI
-        </span>
+      {/* the figure, in the face every number on the site is set in */}
+      <span
+        className="font-display relative block tabular-nums"
+        style={{ fontSize: fluid(56, 40), lineHeight: 1, fontWeight: 400, color: "#0E0B22" }}
+      >
+        {Math.round(shown * 100)}
+        <span style={{ marginLeft: 4, fontSize: fluid(20, 16), color: "#A1A0A9" }}>%</span>
       </span>
 
-      {/* one hairline bar, the brand gradient travelling along it */}
+      {/* one square bar, the brand gradient travelling along it */}
       <span
-        className="relative block overflow-hidden"
-        style={{ width: "min(60vw, 128px)", height: 2, background: "rgba(14,11,34,0.12)" }}
+        className="relative block"
+        style={{ width: "min(72vw, 220px)", height: 3, background: "rgba(14,11,34,0.12)" }}
       >
         <span
           style={{
             position: "absolute",
-            inset: 0,
-            transformOrigin: "left center",
-            transform: `scaleX(${shown})`,
+            left: 0,
+            top: 0,
+            bottom: 0,
+            width: `${shown * 100}%`,
             backgroundImage: GRADIENT,
-            backgroundSize: "128px 100%",
+            backgroundSize: "220px 100%",
           }}
         />
       </span>
