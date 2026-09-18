@@ -23,10 +23,10 @@ import { getLenis } from "@/lib/smoothScroll";
 /** Watermark ink on the fine screen. */
 const WORDMARK_ALPHA = 0.11;
 const WORDMARK_DOT_FILL = 0.8;
-/** At rest most of the glyph sits under the divider — only a cropped peek shows. */
-const WORDMARK_REST_CLIP = 0.68;
-/** Extra rise past "sitting on the line", so a full pull clears the divider. */
-const WORDMARK_PULL_LIFT = 0.06;
+/** Default rest: sit on the divider with only the descenders clipped. */
+const WORDMARK_REST_CLIP = 0.08;
+/** Extra scroll at the page end lifts those clipped bottoms fully above the line. */
+const WORDMARK_PULL_LIFT = 0.14;
 
 /** Fraction of the dashboard image's lower half left visible above the footer. */
 const IMAGE_REVEAL = 0.75;
@@ -47,9 +47,9 @@ const FOOTER_COLUMNS = [
 
 /**
  * Footer wordmark: real Montserrat fitted to the container, filled with a
- * fine round-dot screen. At rest it is cropped under the divider (a peek of
- * the letter tops). Extra scroll at the page bottom drags the complete glyph
- * up into view.
+ * fine round-dot screen. Default rest matches the designed crop — the type
+ * sits on the divider with only descenders clipped. Extra scroll at the page
+ * bottom drags the complete glyph up.
  */
 function DotWordmark({ text }: { text: string }) {
   const boxRef = useRef<HTMLDivElement>(null);
@@ -242,10 +242,10 @@ export function SiteFooter({ cta = true }: { cta?: boolean } = {}) {
 
     const measure = () => {
       const h = mark.offsetHeight;
-      restTuck.px = Math.round(Math.max(24, h * WORDMARK_REST_CLIP));
+      restTuck.px = Math.round(Math.max(4, h * WORDMARK_REST_CLIP));
       maxPull.px = prefersReduce
         ? 0
-        : Math.round(Math.max(restTuck.px + 16, h * (WORDMARK_REST_CLIP + WORDMARK_PULL_LIFT)));
+        : Math.round(Math.max(restTuck.px + 12, h * (WORDMARK_REST_CLIP + WORDMARK_PULL_LIFT)));
       if (pull.target > maxPull.px) pull.target = maxPull.px;
     };
     measure();
