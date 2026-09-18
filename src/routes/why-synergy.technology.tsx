@@ -91,10 +91,10 @@ const MODULES: Module[] = [
     stats: ["55%", "0"],
     caption: "Auto-handling rate, drawn on purpose",
     bullets: [
-      "Has the knowledge: answer. Doesn't: hand over, never invent",
+      "Answers what it knows, hands over what it doesn't",
       "Better a real person than a plausible wrong answer",
       "55%, not a forced 95% — the line is drawn on purpose",
-      "Coverage grows with knowledge, never by loosening the rule",
+      "Coverage grows with knowledge, not looser rules",
     ],
     light: [
       {
@@ -154,10 +154,10 @@ const MODULES: Module[] = [
     stats: ["50+", "2"],
     caption: "Long docs across markets and windows",
     bullets: [
-      "Region × time window × pre/after-sales in 50+ long documents",
-      "Configuration Skill splits reply scripts from constraint rules",
+      "Region × time × sales stage across 50+ documents",
+      "Reply scripts kept apart from the constraint rules",
       "Every entry verified by human review and AI tests",
-      "Sessions tagged: support traffic becomes a business radar",
+      "Tagged sessions turn support into a business radar",
     ],
     light: [
       {
@@ -217,9 +217,9 @@ const MODULES: Module[] = [
     stats: ["3", "2"],
     caption: "Retrieval layers, PageIndex to rerank",
     bullets: [
-      "PageIndex vector-free retrieval locates answers by structure",
-      "Highest-precision embedding as the underlying representation",
-      "Self-built rerank, coarse then fine, right passage first",
+      "PageIndex finds answers by structure, not vectors",
+      "The highest-precision embedding as the base layer",
+      "Self-built rerank, coarse then fine, best passage first",
       "Explicit boundaries per scenario — no over-answering",
     ],
     light: [
@@ -280,10 +280,10 @@ const MODULES: Module[] = [
     stats: ["56", "2"],
     caption: "Fiat ticket scenarios, multi-agent",
     bullets: [
-      "56 fiat ticket scenarios split across cooperating agents",
-      "CRM and ERM connected — orders and notices flow automatically",
-      "Top-ups, withdrawals and order checks close automatically",
-      "Refunds: AI gathers the evidence, a human double-checks",
+      "56 fiat ticket types split across cooperating agents",
+      "CRM and ERM connected, orders and notices flow",
+      "Top-ups, withdrawals and checks close themselves",
+      "Refunds: AI gathers evidence, a human signs off",
     ],
     light: [
       {

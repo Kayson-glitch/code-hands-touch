@@ -420,7 +420,10 @@ export function StatsCard({
           style={{ gap: 22, margin: 0 }}
         >
           {bullets.map((b, i) => (
-            <li key={b} className="flex items-start gap-3">
+            // Two lines of room per row: the copy is written to one line at the
+            // design width, but the rhythm must not change at the widths where
+            // one of them wraps.
+            <li key={b} className="flex items-start gap-3" style={{ minHeight: 44 }}>
               <ListBullet diamond={i % 2 === 0} accent={accent} dark={dark} />
               <span style={{ fontSize: 14, lineHeight: "22px", color: t.ink }}>{b}</span>
             </li>

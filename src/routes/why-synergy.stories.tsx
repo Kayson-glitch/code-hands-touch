@@ -143,7 +143,7 @@ const STORIES: Story[] = [
     bullets: [
       "Multimodal detection across PDF, video and image proofs",
       "Tiered handling: only suspicious cases reach a human",
-      "Days of outsourced KYC checks compressed to near real time",
+      "Outsourced KYC checks compressed to near real time",
     ],
     figure: {
       before: "Days",
