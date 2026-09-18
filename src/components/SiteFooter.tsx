@@ -23,10 +23,10 @@ import { getLenis } from "@/lib/smoothScroll";
 /** Watermark ink on the fine screen. */
 const WORDMARK_ALPHA = 0.11;
 const WORDMARK_DOT_FILL = 0.8;
-/** At rest, this fraction of the glyph hangs under the divider. */
-const WORDMARK_REST_CLIP = 0.08;
-/** Extra rise at full pull, so the complete type sits above the line. */
-const WORDMARK_PULL_LIFT = 0.3;
+/** At rest most of the glyph sits under the divider — only a cropped peek shows. */
+const WORDMARK_REST_CLIP = 0.68;
+/** Extra rise past "sitting on the line", so a full pull clears the divider. */
+const WORDMARK_PULL_LIFT = 0.06;
 
 /** Fraction of the dashboard image's lower half left visible above the footer. */
 const IMAGE_REVEAL = 0.75;
@@ -47,9 +47,9 @@ const FOOTER_COLUMNS = [
 
 /**
  * Footer wordmark: real Montserrat fitted to the container, filled with a
- * fine round-dot screen. The full glyph is drawn; the wrapper tucks a little
- * under the divider at rest, and extra scroll at the page bottom drags it
- * up until the type sits complete above the line.
+ * fine round-dot screen. At rest it is cropped under the divider (a peek of
+ * the letter tops). Extra scroll at the page bottom drags the complete glyph
+ * up into view.
  */
 function DotWordmark({ text }: { text: string }) {
   const boxRef = useRef<HTMLDivElement>(null);
@@ -242,10 +242,10 @@ export function SiteFooter({ cta = true }: { cta?: boolean } = {}) {
 
     const measure = () => {
       const h = mark.offsetHeight;
-      restTuck.px = prefersReduce ? 0 : Math.round(Math.max(10, h * WORDMARK_REST_CLIP));
+      restTuck.px = Math.round(Math.max(24, h * WORDMARK_REST_CLIP));
       maxPull.px = prefersReduce
         ? 0
-        : Math.round(Math.max(56, h * (WORDMARK_REST_CLIP + WORDMARK_PULL_LIFT)));
+        : Math.round(Math.max(restTuck.px + 16, h * (WORDMARK_REST_CLIP + WORDMARK_PULL_LIFT)));
       if (pull.target > maxPull.px) pull.target = maxPull.px;
     };
     measure();
@@ -448,7 +448,13 @@ export function SiteFooter({ cta = true }: { cta?: boolean } = {}) {
         </div>
 
         <div className="relative overflow-hidden" style={{ height: 400 }}>
-          <div className="flex h-full items-center" style={{ padding: pad }}>
+          <div
+            ref={markRef}
+            className="pointer-events-none absolute bottom-0 left-0 z-0 w-full will-change-transform"
+          >
+            <DotWordmark text="Synergy.AI" />
+          </div>
+          <div className="relative z-10 flex h-full items-center" style={{ padding: pad }}>
             <div className="mx-auto w-full max-w-[1200px]">
               <div className="grid grid-cols-2 gap-9 md:grid-cols-4">
                 {FOOTER_COLUMNS.map((col, i) => (
@@ -487,13 +493,6 @@ export function SiteFooter({ cta = true }: { cta?: boolean } = {}) {
                 ))}
               </div>
             </div>
-          </div>
-
-          <div
-            ref={markRef}
-            className="absolute bottom-0 left-0 w-full will-change-transform"
-          >
-            <DotWordmark text="Synergy.AI" />
           </div>
         </div>
 
