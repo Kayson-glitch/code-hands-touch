@@ -13,26 +13,68 @@ import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { destroySmoothScroll, initSmoothScroll } from "../lib/smoothScroll";
 import { SitePreloader } from "../components/SitePreloader";
+import { fluid } from "../lib/fluid";
+
+const INK = "#0E0B22";
+const MUTED = "#7A7885";
+const FAINT = "#A1A0A9";
+const HAIRLINE = "rgba(14,11,34,0.10)";
+
+function Eyebrow({ children }: { children: ReactNode }) {
+  return (
+    <p
+      className="uppercase"
+      style={{ margin: 0, fontSize: 10, lineHeight: "16px", letterSpacing: "0.14em", color: FAINT }}
+    >
+      {children}
+    </p>
+  );
+}
+
+function HomeLink({ label }: { label: string }) {
+  return (
+    <Link
+      to="/"
+      className="inline-flex items-center gap-2"
+      style={{ fontSize: 13, lineHeight: "20px", color: INK, borderBottom: `1px solid ${INK}`, paddingBottom: 2 }}
+    >
+      {label}
+      <span aria-hidden>&#8594;</span>
+    </Link>
+  );
+}
+
+/** Off-brand fallbacks read as a different product, so both shells stay in the site's paper/ink language. */
+function StatusShell({ eyebrow, title, body, children }: { eyebrow: string; title: string; body: string; children: ReactNode }) {
+  return (
+    <div
+      className="flex min-h-screen items-center justify-center"
+      style={{ background: "#FAFAFA", padding: "0 24px" }}
+    >
+      <div style={{ width: "100%", maxWidth: 520, borderTop: `1px solid ${HAIRLINE}`, paddingTop: 24 }}>
+        <Eyebrow>{eyebrow}</Eyebrow>
+        <h1
+          className="font-display"
+          style={{ margin: "16px 0 0", fontSize: fluid(44, 30), lineHeight: 1.08, fontWeight: 400, color: INK }}
+        >
+          {title}
+        </h1>
+        <p style={{ margin: "12px 0 0", fontSize: 14, lineHeight: "22px", color: MUTED }}>{body}</p>
+        <div className="mt-8 flex flex-wrap items-center gap-6">{children}</div>
+      </div>
+    </div>
+  );
+}
 
 function NotFoundComponent() {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background px-4">
-      <div className="max-w-md text-center">
-        <h1 className="text-7xl font-bold text-foreground">404</h1>
-        <h2 className="mt-4 text-xl font-semibold text-foreground">Page not found</h2>
-        <p className="mt-2 text-sm text-muted-foreground">
-          The page you're looking for doesn't exist or has been moved.
-        </p>
-        <div className="mt-6">
-          <Link
-            to="/"
-            className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
-          >
-            Go home
-          </Link>
-        </div>
-      </div>
-    </div>
+    <StatusShell
+      eyebrow="404 / Not Found"
+      title="This page doesn't exist."
+      body="The link may be out of date, or the page has moved somewhere else on the site."
+    >
+      <HomeLink label="Back to home" />
+    </StatusShell>
   );
 }
 
@@ -44,34 +86,22 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
   }, [error]);
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background px-4">
-      <div className="max-w-md text-center">
-        <h1 className="text-xl font-semibold tracking-tight text-foreground">
-          This page didn't load
-        </h1>
-        <p className="mt-2 text-sm text-muted-foreground">
-          Something went wrong on our end. You can try refreshing or head back home.
-        </p>
-        <div className="mt-6 flex flex-wrap justify-center gap-2">
-          <button
-            onClick={() => {
-              router.invalidate();
-              reset();
-            }}
-            className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
-          >
-            Try again
-          </button>
-          <Link
-            to="/"
-            className="inline-flex items-center justify-center rounded-md border border-input bg-background px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-accent"
-          >
-            Go home
-          </Link>
-
-        </div>
-      </div>
-    </div>
+    <StatusShell
+      eyebrow="Error / Load Failed"
+      title="This page didn't load."
+      body="Something went wrong on our end. Try again, or head back to the home page."
+    >
+      <button
+        onClick={() => {
+          router.invalidate();
+          reset();
+        }}
+        style={{ fontSize: 13, lineHeight: "20px", color: INK, borderBottom: `1px solid ${INK}`, paddingBottom: 2 }}
+      >
+        Try again
+      </button>
+      <HomeLink label="Back to home" />
+    </StatusShell>
   );
 }
 
