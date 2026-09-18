@@ -7,6 +7,7 @@ import { FinChatDock } from "@/components/FinChatDock";
 import { SiteFooter } from "@/components/SiteFooter";
 import { DotArrow } from "@/components/DotArrow";
 import { BreakLines, HeroDots, RainbowButton } from "@/components/ProductHero";
+import { CropFrame } from "@/components/CropFrame";
 import { fluid } from "@/lib/fluid";
 
 export const Route = createFileRoute("/pricing")({
@@ -33,8 +34,21 @@ export const Route = createFileRoute("/pricing")({
 const INK = "#0E0B22";
 const MUTED = "#7A7885";
 const FAINT = "#A1A0A9";
-const HAIRLINE = "#E1E0E4";
 const LIME = "#D1E486";
+/** The page's own accent — the amber the site leads with. */
+const ACCENT = "#EBA753";
+
+/**
+ * Surfaces and rules. Contrast is carried by layered paper and rules at low
+ * alpha rather than black-on-white blocks: three paper values, two rule
+ * weights, and a warm graphite for the inverted panels instead of #000.
+ */
+const SURFACE = "#FFFFFF";
+const SURFACE_SOFT = "#F6F6F8";
+const RULE = "rgba(14, 11, 34, 0.10)";
+const RULE_SOFT = "rgba(14, 11, 34, 0.06)";
+/** The estimate panel: one step darker than the section, still paper. */
+const PANEL = "#ECECEF";
 
 const money = (n: number) => `$${Math.round(n).toLocaleString("en-US")}`;
 /** $2.8M / $480K style for secondary figures. */
@@ -56,11 +70,47 @@ type Plan = {
   cta: string;
 };
 
+/**
+ * The volume a plan covers and its rate now sit in the card's metric strip, so
+ * the feature list carries only what separates one plan from the one below it.
+ */
 const PLANS: Plan[] = [
-  { id: "free", name: "Free", dot: "#C6C5CB", monthly: 0, messages: 10_000, features: ["10k AI messages / mo", "AI message volume add-on"], cta: "Book a Demo" },
-  { id: "basic", name: "Basic", dot: "#8CE0FF", monthly: 1500, messages: 100_000, features: ["100k AI messages / mo", "AI message volume add-on"], cta: "Book a Demo" },
-  { id: "growth", name: "Growth", dot: LIME, monthly: 15000, messages: 1_000_000, features: ["1M AI messages / mo", "AI message volume add-on"], cta: "Book a Demo" },
-  { id: "enterprise", name: "Enterprise", dot: "#EBA753", monthly: null, messages: null, features: ["Unlimited AI messages", "Private deployment · on-site FDE"], cta: "Contact us" },
+  {
+    id: "free",
+    name: "Free",
+    dot: "#C6C5CB",
+    monthly: 0,
+    messages: 10_000,
+    features: ["Web chat channel", "Community support", "AI message volume add-on"],
+    cta: "Book a Demo",
+  },
+  {
+    id: "basic",
+    name: "Basic",
+    dot: "#8CE0FF",
+    monthly: 1500,
+    messages: 100_000,
+    features: ["Chat, email and in-app", "Standard support SLA", "AI message volume add-on"],
+    cta: "Book a Demo",
+  },
+  {
+    id: "growth",
+    name: "Growth",
+    dot: LIME,
+    monthly: 15000,
+    messages: 1_000_000,
+    features: ["Analytics and quality scoring", "Priority support SLA", "AI message volume add-on"],
+    cta: "Book a Demo",
+  },
+  {
+    id: "enterprise",
+    name: "Enterprise",
+    dot: ACCENT,
+    monthly: null,
+    messages: null,
+    features: ["Private deployment · on-site FDE", "SSO, audit log, data residency", "Named support engineer"],
+    cta: "Contact us",
+  },
 ];
 
 const ANNUAL_DISCOUNT = 0.1;
@@ -157,24 +207,48 @@ function useTweened(value: number) {
 
 /* ------------------------------------------------------------- fragments */
 
-function Bullet({ diamond, light = false }: { diamond: boolean; light?: boolean }) {
+function Bullet({ diamond, accent }: { diamond: boolean; accent: string }) {
   return (
     <span
       aria-hidden
       className="mt-[8px] inline-block shrink-0"
       style={{
-        width: 6,
-        height: 6,
-        background: light ? "#FFFFFF" : diamond ? LIME : INK,
+        width: 5,
+        height: 5,
+        background: diamond ? accent : "rgba(14, 11, 34, 0.35)",
         transform: diamond ? "rotate(45deg)" : undefined,
       }}
     />
   );
 }
 
+/**
+ * Numbered section label — "01 / PRICING". The number carries the sequence so
+ * the eye can place a section without reading the heading.
+ */
+function SectionLabel({ index, label, accent }: { index: string; label: string; accent?: string }) {
+  return (
+    <p className="flex items-center" style={{ margin: 0, gap: 10 }}>
+      {accent ? <span aria-hidden style={{ width: 6, height: 6, background: accent }} /> : null}
+      <span
+        className="uppercase"
+        style={{ fontSize: 11, lineHeight: "18px", letterSpacing: "0.14em", color: FAINT }}
+      >
+        {index}
+      </span>
+      <span aria-hidden style={{ width: 1, height: 10, background: RULE }} />
+      <span
+        className="uppercase"
+        style={{ fontSize: 11, lineHeight: "18px", letterSpacing: "0.14em", color: MUTED }}
+      >
+        {label}
+      </span>
+    </p>
+  );
+}
+
 /** Square outline button — the Book a Demo of the plans that aren't the pick. */
-function OutlineButton({ label, light = false }: { label: string; light?: boolean }) {
-  const color = light ? "#FFFFFF" : INK;
+function OutlineButton({ label }: { label: string }) {
   return (
     <button
       className="inline-flex w-full cursor-pointer items-center justify-center transition-colors"
@@ -183,16 +257,18 @@ function OutlineButton({ label, light = false }: { label: string; light?: boolea
         gap: 6,
         fontSize: 14,
         lineHeight: "20px",
-        color,
+        color: INK,
         background: "transparent",
-        border: `1px solid ${light ? "rgba(255,255,255,0.4)" : INK}`,
+        border: `1px solid rgba(14, 11, 34, 0.22)`,
         borderRadius: 0,
       }}
       onMouseEnter={(e) => {
-        e.currentTarget.style.background = light ? "rgba(255,255,255,0.08)" : "#F1F1F3";
+        e.currentTarget.style.background = "rgba(14, 11, 34, 0.04)";
+        e.currentTarget.style.borderColor = "rgba(14, 11, 34, 0.45)";
       }}
       onMouseLeave={(e) => {
         e.currentTarget.style.background = "transparent";
+        e.currentTarget.style.borderColor = "rgba(14, 11, 34, 0.22)";
       }}
     >
       {label}
@@ -209,17 +285,18 @@ function BillingToggle({ annual, onChange }: { annual: boolean; onChange: (annua
       onClick={() => onChange(label === "Annual")}
       className="relative inline-flex cursor-pointer items-center justify-center transition-colors"
       style={{
-        height: 36,
+        height: 34,
         gap: 10,
         padding: "0 18px",
         fontSize: 14,
         lineHeight: "20px",
         fontWeight: 500,
-        color: on ? "#FFFFFF" : MUTED,
-        background: on ? INK : "transparent",
-        border: "none",
+        color: on ? INK : MUTED,
+        // the selected side lifts to paper instead of inverting to a black chip
+        background: on ? SURFACE : "transparent",
+        border: `1px solid ${on ? RULE : "transparent"}`,
         borderRadius: 0,
-        transition: "background 220ms ease, color 220ms ease",
+        transition: "background 220ms ease, color 220ms ease, border-color 220ms ease",
       }}
     >
       {label}
@@ -228,13 +305,13 @@ function BillingToggle({ annual, onChange }: { annual: boolean; onChange: (annua
         <span
           className="uppercase"
           style={{
-            padding: "0 8px",
+            padding: "0 7px",
             fontSize: 10,
-            lineHeight: "18px",
-            letterSpacing: "0.06em",
+            lineHeight: "17px",
+            letterSpacing: "0.1em",
             fontWeight: 500,
-            background: LIME,
-            color: INK,
+            background: "rgba(235, 167, 83, 0.14)",
+            color: "#9A6516",
           }}
         >
           {tag}
@@ -243,71 +320,138 @@ function BillingToggle({ annual, onChange }: { annual: boolean; onChange: (annua
     </button>
   );
   return (
-    <div className="inline-flex items-center" style={{ border: `1px solid ${INK}`, padding: 2, gap: 2 }}>
+    <div
+      className="inline-flex items-center"
+      style={{ border: `1px solid ${RULE}`, background: SURFACE_SOFT, padding: 3, gap: 3 }}
+    >
       {seg(!annual, "Monthly")}
       {seg(annual, "Annual", "Save 10%")}
     </div>
   );
 }
 
+/** Registration mark, as on the page frames: a square straddling a corner. */
+function CornerMark({ x, y, shown }: { x: "left" | "right"; y: "top" | "bottom"; shown: boolean }) {
+  return (
+    <span
+      aria-hidden
+      className="absolute"
+      style={{
+        [x]: -3.5,
+        [y]: -3.5,
+        width: 6,
+        height: 6,
+        background: SURFACE_SOFT,
+        border: `1px solid rgba(14, 11, 34, 0.22)`,
+        opacity: shown ? 1 : 0,
+        transition: "opacity 220ms ease",
+      }}
+    />
+  );
+}
+
 function PlanCard({ plan, annual, index }: { plan: Plan; annual: boolean; index: number }) {
-  const dark = plan.id === "enterprise";
   const pick = plan.id === "growth";
-  const ink = dark ? "#FFFFFF" : INK;
-  const muted = dark ? "rgba(255,255,255,0.6)" : MUTED;
+  const [hover, setHover] = useState(false);
   const price =
     plan.monthly === null ? null : annual ? Math.round(plan.monthly * (1 - ANNUAL_DISCOUNT)) : plan.monthly;
+  // The rate behind the price, so every card carries a second, comparable figure.
+  const perThousand =
+    price && plan.messages ? (price / (plan.messages / 1000)).toFixed(2) : null;
   return (
     <Reveal y={24} duration={1400} delay={160 + index * 100} className="min-w-0">
       <div
-        className="flex h-full flex-col"
+        className="relative flex h-full flex-col"
+        onMouseEnter={() => setHover(true)}
+        onMouseLeave={() => setHover(false)}
         style={{
           padding: fluid(28, 20),
-          background: dark ? "#000000" : "#FFFFFF",
-          border: `1px solid ${dark ? "#000000" : HAIRLINE}`,
+          // Every card rests on paper; hovering lifts it onto the softer
+          // surface and puts the registration marks on its corners.
+          background: hover ? SURFACE_SOFT : SURFACE,
+          border: `1px solid ${hover ? "rgba(14, 11, 34, 0.18)" : RULE}`,
           minHeight: 372,
+          transition: "background 220ms ease, border-color 220ms ease",
         }}
       >
+        <CornerMark x="left" y="top" shown={hover} />
+        <CornerMark x="right" y="top" shown={hover} />
+        <CornerMark x="left" y="bottom" shown={hover} />
+        <CornerMark x="right" y="bottom" shown={hover} />
+
         <p className="flex items-center" style={{ margin: 0, gap: 8 }}>
           <span aria-hidden style={{ width: 8, height: 8, background: plan.dot }} />
-          <span className="uppercase" style={{ fontSize: 12, lineHeight: "18px", letterSpacing: "0.06em", color: muted }}>
+          <span className="uppercase" style={{ fontSize: 11, lineHeight: "18px", letterSpacing: "0.14em", color: MUTED }}>
             {plan.name}
           </span>
           {pick ? (
             <span
               className="ml-auto uppercase"
-              style={{ padding: "0 8px", fontSize: 10, lineHeight: "18px", letterSpacing: "0.06em", fontWeight: 500, background: LIME, color: INK }}
+              style={{
+                padding: "0 7px",
+                fontSize: 10,
+                lineHeight: "17px",
+                letterSpacing: "0.1em",
+                fontWeight: 500,
+                background: "rgba(235, 167, 83, 0.14)",
+                color: "#9A6516",
+              }}
             >
               Most teams
             </span>
           ) : null}
         </p>
 
-        <div style={{ marginTop: 24, minHeight: 68 }}>
+        <div style={{ marginTop: 22, minHeight: 74 }}>
           {price === null ? (
-            <p className="font-display" style={{ margin: 0, fontSize: fluid(40, 32), lineHeight: 1.1, fontWeight: 400, color: ink }}>
-              Let's talk
-            </p>
+            <>
+              <p className="font-display" style={{ margin: 0, fontSize: fluid(40, 32), lineHeight: 1.1, fontWeight: 400, color: INK }}>
+                Custom
+              </p>
+              <p style={{ margin: "8px 0 0", fontSize: 12, lineHeight: "18px", color: MUTED }}>
+                Quoted on your volume
+              </p>
+            </>
           ) : (
             <>
-              <p className="font-display whitespace-nowrap" style={{ margin: 0, fontSize: fluid(40, 32), lineHeight: 1.1, fontWeight: 400, color: ink }}>
+              <p className="font-display whitespace-nowrap" style={{ margin: 0, fontSize: fluid(40, 32), lineHeight: 1.1, fontWeight: 400, color: INK }}>
                 {money(price)}
-                <span style={{ marginLeft: 6, fontSize: 14, color: muted }}>/ mo</span>
+                <span style={{ marginLeft: 6, fontSize: 14, color: FAINT }}>/ mo</span>
               </p>
-              <p style={{ margin: "6px 0 0", fontSize: 12, lineHeight: "18px", color: muted, minHeight: 18 }}>
+              <p style={{ margin: "8px 0 0", fontSize: 12, lineHeight: "18px", color: MUTED }}>
                 {price === 0 ? "No card needed" : annual ? `Billed annually · ${money(price * 12)} / yr` : "Billed monthly"}
               </p>
             </>
           )}
         </div>
 
-        <div aria-hidden style={{ margin: "24px 0", height: 1, background: dark ? "rgba(255,255,255,0.18)" : HAIRLINE }} />
+        {/* Metric strip: the volume the plan covers and the rate behind it. */}
+        <div
+          className="flex items-center justify-between uppercase"
+          style={{
+            margin: "0 0 16px",
+            padding: "12px 0",
+            borderTop: `1px solid ${RULE_SOFT}`,
+            borderBottom: `1px solid ${RULE_SOFT}`,
+            gap: 10,
+            fontSize: 10,
+            lineHeight: "16px",
+            letterSpacing: "0.12em",
+          }}
+        >
+          <span style={{ color: MUTED }}>
+            {plan.messages ? `${count(plan.messages)} messages / mo` : "Unlimited messages"}
+          </span>
+          <span style={{ color: FAINT }}>
+            {perThousand ? `$${perThousand} / 1k` : price === 0 ? "Free" : "On request"}
+          </span>
+        </div>
 
         <ul className="m-0 flex flex-1 list-none flex-col p-0" style={{ gap: 12 }}>
           {plan.features.map((f, i) => (
             <li key={f} className="flex items-start" style={{ gap: 10 }}>
-              <Bullet diamond={i % 2 === 0} light={dark} />
-              <span style={{ fontSize: 14, lineHeight: "22px", color: ink }}>{f}</span>
+              <Bullet diamond={i % 2 === 0} accent={plan.dot} />
+              <span style={{ fontSize: 14, lineHeight: "22px", color: i === 0 ? INK : MUTED }}>{f}</span>
             </li>
           ))}
         </ul>
@@ -318,7 +462,7 @@ function PlanCard({ plan, annual, index }: { plan: Plan; annual: boolean; index:
               <RainbowButton label={plan.cta} />
             </div>
           ) : (
-            <OutlineButton label={plan.cta} light={dark} />
+            <OutlineButton label={plan.cta} />
           )}
         </div>
       </div>
@@ -398,25 +542,35 @@ function YearBars({ years }: { years: ReturnType<typeof estimate>["years"] }) {
             <div className="flex flex-1 items-end" style={{ gap: 4 }}>
               <span
                 className="block flex-1"
-                style={{ height: `${(y.without / max) * 100}%`, background: "rgba(255,255,255,0.22)", transition: "height 520ms cubic-bezier(0.22,1,0.36,1)" }}
+                style={{
+                  height: `${(y.without / max) * 100}%`,
+                  // the baseline is a hairline-framed ghost, not a solid block
+                  background: "rgba(14, 11, 34, 0.05)",
+                  borderTop: `1px solid rgba(14, 11, 34, 0.22)`,
+                  transition: "height 520ms cubic-bezier(0.22,1,0.36,1)",
+                }}
               />
               <span
                 className="block flex-1"
-                style={{ height: `${Math.max(2, (y.withAi / max) * 100)}%`, background: LIME, transition: "height 520ms cubic-bezier(0.22,1,0.36,1)" }}
+                style={{
+                  height: `${Math.max(2, (y.withAi / max) * 100)}%`,
+                  background: `linear-gradient(180deg, ${ACCENT} 0%, rgba(235,167,83,0.45) 100%)`,
+                  transition: "height 520ms cubic-bezier(0.22,1,0.36,1)",
+                }}
               />
             </div>
-            <span className="text-center" style={{ fontSize: 11, lineHeight: "16px", color: "rgba(255,255,255,0.55)" }}>
+            <span className="text-center uppercase" style={{ fontSize: 10, lineHeight: "16px", letterSpacing: "0.12em", color: FAINT }}>
               Y{y.year}
             </span>
           </div>
         ))}
       </div>
-      <div className="flex items-center" style={{ gap: 16, marginTop: 10, fontSize: 11, lineHeight: "16px", color: "rgba(255,255,255,0.55)" }}>
+      <div className="flex items-center" style={{ gap: 16, marginTop: 12, fontSize: 11, lineHeight: "16px", color: FAINT }}>
         <span className="inline-flex items-center" style={{ gap: 6 }}>
-          <span aria-hidden style={{ width: 8, height: 8, background: "rgba(255,255,255,0.22)" }} /> Support labour today
+          <span aria-hidden style={{ width: 6, height: 6, background: "rgba(14, 11, 34, 0.22)" }} /> Support labour today
         </span>
         <span className="inline-flex items-center" style={{ gap: 6 }}>
-          <span aria-hidden style={{ width: 8, height: 8, background: LIME }} /> With Synergy, plan included
+          <span aria-hidden style={{ width: 6, height: 6, background: ACCENT }} /> With Synergy, plan included
         </span>
       </div>
     </div>
@@ -431,7 +585,7 @@ function Calculator() {
   const set = (key: keyof Inputs) => (v: number) => setInputs((s) => ({ ...s, [key]: v }));
 
   return (
-    <div className="grid lg:grid-cols-[1fr_440px]" style={{ background: "#FFFFFF", border: `1px solid ${HAIRLINE}` }}>
+    <div className="grid lg:grid-cols-[1fr_440px]" style={{ background: SURFACE, border: `1px solid ${RULE}` }}>
       {/* inputs */}
       <div className="flex flex-col" style={{ padding: fluid(40, 24), gap: fluid(28, 20) }}>
         {KNOBS.map((k) => (
@@ -447,36 +601,57 @@ function Calculator() {
         </button>
       </div>
 
-      {/* estimate */}
-      <div className="flex flex-col" style={{ padding: fluid(40, 24), background: "#000000", color: "#FFFFFF", gap: 28 }}>
-        <p className="flex items-center" style={{ margin: 0, gap: 8 }}>
-          <span aria-hidden style={{ width: 8, height: 8, background: LIME }} />
-          <span className="uppercase" style={{ fontSize: 12, lineHeight: "18px", letterSpacing: "0.06em", color: "rgba(255,255,255,0.6)" }}>
+      {/* estimate — a darker sheet of the same paper, with a rule dividing it
+          off the inputs, instead of an inverted panel */}
+      <div
+        className="flex flex-col"
+        style={{
+          padding: fluid(40, 24),
+          background: PANEL,
+          color: INK,
+          gap: 26,
+          borderLeft: `1px solid ${RULE}`,
+        }}
+      >
+        <p className="flex items-center" style={{ margin: 0, gap: 10 }}>
+          <span aria-hidden style={{ width: 6, height: 6, background: ACCENT }} />
+          <span className="uppercase" style={{ fontSize: 11, lineHeight: "18px", letterSpacing: "0.14em", color: MUTED }}>
             Your estimate
           </span>
         </p>
 
         <div>
-          <p style={{ margin: 0, fontSize: 14, lineHeight: "22px", color: "rgba(255,255,255,0.6)" }}>Saved in year one</p>
-          <p className="font-display whitespace-nowrap" style={{ margin: "6px 0 0", fontSize: fluid(56, 40), lineHeight: 1.05, fontWeight: 400 }}>
+          <p className="uppercase" style={{ margin: 0, fontSize: 10, lineHeight: "16px", letterSpacing: "0.12em", color: FAINT }}>
+            Saved in year one
+          </p>
+          <p className="font-display whitespace-nowrap" style={{ margin: "10px 0 0", fontSize: fluid(56, 40), lineHeight: 1.05, fontWeight: 400 }}>
             {money(annual)}
           </p>
-          <p style={{ margin: "10px 0 0", fontSize: 14, lineHeight: "22px", color: "rgba(255,255,255,0.6)" }}>
+          <p style={{ margin: "10px 0 0", fontSize: 13, lineHeight: "20px", color: MUTED }}>
             {compact(total)} over {inputs.years} {inputs.years === 1 ? "year" : "years"}, after the {result.plan.name} plan
           </p>
         </div>
 
-        <div aria-hidden style={{ height: 1, background: "rgba(255,255,255,0.18)" }} />
+        <div aria-hidden style={{ height: 1, background: RULE }} />
 
-        <ul className="m-0 flex list-none flex-col p-0" style={{ gap: 14 }}>
+        <ul className="m-0 flex list-none flex-col p-0" style={{ gap: 0 }}>
           {[
             [`${result.freed} of ${inputs.agents} agents`, "freed for monitoring, VIP and fallback"],
             [`${count(result.aiPerYear)} conversations / yr`, "closed by AI end to end"],
             [result.plan.monthly === null ? "Enterprise" : `${result.plan.name} · ${money(result.plan.monthly)} / mo`, result.plan.monthly === null ? "quoted for your volume" : "plan that covers your AI volume"],
-          ].map(([v, l]) => (
-            <li key={l} style={{ fontSize: 13, lineHeight: "20px" }}>
-              <span className="block" style={{ color: "#FFFFFF", fontWeight: 500 }}>{v}</span>
-              <span className="block" style={{ color: "rgba(255,255,255,0.55)", fontSize: 12, lineHeight: "18px" }}>{l}</span>
+          ].map(([v, l], i) => (
+            // rows divided by hairlines, so the panel reads as a statement of record
+            <li
+              key={l}
+              style={{
+                fontSize: 13,
+                lineHeight: "20px",
+                padding: i === 0 ? "0 0 12px" : "12px 0",
+                borderTop: i === 0 ? "none" : `1px solid ${RULE_SOFT}`,
+              }}
+            >
+              <span className="block" style={{ color: INK, fontWeight: 500 }}>{v}</span>
+              <span className="block" style={{ color: MUTED, fontSize: 12, lineHeight: "18px" }}>{l}</span>
             </li>
           ))}
         </ul>
@@ -506,11 +681,8 @@ function PricingPage() {
         <HeroDots />
         <div className="relative" style={{ padding: pad }}>
           <div className="mx-auto flex w-full max-w-[1200px] flex-col items-center text-center" style={{ paddingTop: fluid(160, 104) }}>
-            <Reveal immediate className="flex items-center gap-2">
-              <span aria-hidden style={{ width: 8, height: 8, background: LIME }} />
-              <span className="uppercase" style={{ fontSize: 14, lineHeight: "22px", color: MUTED }}>
-                Pricing
-              </span>
+            <Reveal immediate>
+              <SectionLabel index="01" label="Pricing" accent={ACCENT} />
             </Reveal>
             <Reveal immediate delay={120}>
               <GradientHoverHeading
@@ -531,7 +703,7 @@ function PricingPage() {
             </Reveal>
           </div>
 
-          <div className="mx-auto grid w-full max-w-[1200px] grid-cols-1 sm:grid-cols-2 lg:grid-cols-4" style={{ gap: 16, marginTop: fluid(56, 36), paddingBottom: fluid(120, 64) }}>
+          <div className="mx-auto grid w-full max-w-[1200px] grid-cols-1 sm:grid-cols-2 lg:grid-cols-4" style={{ gap: 16, marginTop: fluid(56, 36), paddingBottom: fluid(96, 56) }}>
             {PLANS.map((p, i) => (
               <PlanCard key={p.id} plan={p} annual={annual} index={i} />
             ))}
@@ -540,12 +712,19 @@ function PricingPage() {
       </header>
 
       {/* ------------------------------------------------------ calculator */}
-      <section style={{ borderTop: `1px solid ${HAIRLINE}`, background: "#FAFAFA" }}>
-        <div style={{ padding: `${fluid(100, 56)} ${fluid(120, 24)} ${fluid(120, 64)}` }}>
+      <section className="relative" style={{ borderTop: `1px solid ${RULE_SOFT}`, background: SURFACE_SOFT }}>
+        {/* the Platform module's crop frame: rules inset from the section
+            edges, corner squares, ticks fading out to the viewport */}
+        <CropFrame inset={fluid(60, 16)} rule={RULE} mark={SURFACE_SOFT} />
+        <div className="relative" style={{ padding: `${fluid(112, 56)} ${fluid(120, 24)} ${fluid(128, 72)}` }}>
           <div className="mx-auto w-full max-w-[1200px]">
             <div className="flex flex-col md:flex-row md:items-end md:justify-between" style={{ gap: 24 }}>
               <Reveal y={24} duration={1600}>
-                <h2 className="font-display text-ink" style={{ margin: 0, fontSize: fluid(48, 30), lineHeight: 1.1667, fontWeight: 400 }}>
+                <SectionLabel index="02" label="Savings" accent={ACCENT} />
+                <h2
+                  className="font-display text-ink"
+                  style={{ margin: "18px 0 0", fontSize: fluid(48, 30), lineHeight: 1.1667, fontWeight: 400 }}
+                >
                   <BreakLines text={"See how much\nyou could save"} />
                 </h2>
               </Reveal>
