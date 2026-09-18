@@ -41,8 +41,9 @@ const FRAME_PAD = 40;
 const CARD_TILT_FROM = 24;
 
 /** Dimmed until hover, as in the nav's centre menu. */
+/** Block + padding on touch widths so the 22px line isn't the whole tap target. */
 const FOOTER_LINK =
-  "cursor-pointer text-[rgba(255,255,255,0.72)] transition-colors duration-200 hover:text-white";
+  "block cursor-pointer py-2 text-[rgba(255,255,255,0.72)] transition-colors duration-200 hover:text-white md:py-0";
 
 
 /**
@@ -517,7 +518,7 @@ export function SiteFooter({ cta = true }: { cta?: boolean } = {}) {
                     >
                       {col.title}
                     </p>
-                    <ul className="mt-6 flex flex-col items-start gap-[18px]">
+                    <ul className="mt-4 flex flex-col items-start gap-[2px] md:mt-6 md:gap-[18px]">
                       {col.items.map((item) => (
                         <li key={item.title} style={{ fontSize: 14, lineHeight: "22px" }}>
                           {item.to ? (
