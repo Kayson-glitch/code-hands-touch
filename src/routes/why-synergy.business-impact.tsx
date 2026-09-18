@@ -650,9 +650,9 @@ function BusinessImpactPage() {
             />
           </div>
 
-          {/* closing hairline under the KPI block */}
-          <div aria-hidden style={{ height: 1, background: "var(--hairline, #E1E0E4)" }} />
-
+          {/* The article card's own top border closes this block — a rule here
+              too would stack two hairlines into one heavy 2px line, and pull
+              apart into two while the reveals are still travelling. */}
         </Reveal>
       </section>
 

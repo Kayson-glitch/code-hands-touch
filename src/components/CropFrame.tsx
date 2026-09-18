@@ -43,12 +43,10 @@ export function CropFrame({
   );
   return (
     <div aria-hidden className="pointer-events-none absolute inset-0 hidden md:block">
-      {/* the frame */}
-      <div
-        className="absolute"
-        style={{ top: insetTop, left: inset, right: inset, bottom: insetBottom, border: `1px solid ${rule}` }}
-      />
-      {/* ticks continuing the rules past the frame, fading out toward the edges */}
+      {/* Four rules draw the frame AND its run-outs: each is opaque across the
+          frame's own span and fades to nothing at the viewport edge. A separate
+          bordered box would lay a second line over every edge — invisible with
+          an opaque rule, but double-strength with a translucent one. */}
       {(["top", "bottom"] as const).map((y) => (
         <span
           key={`h-${y}`}
