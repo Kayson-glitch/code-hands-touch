@@ -23,10 +23,10 @@ import { getLenis } from "@/lib/smoothScroll";
 /** Watermark ink on the fine screen. */
 const WORDMARK_ALPHA = 0.11;
 const WORDMARK_DOT_FILL = 0.8;
-/** Default rest: sit on the divider with only the descenders clipped. */
-const WORDMARK_REST_CLIP = 0.08;
-/** Extra scroll at the page end lifts those clipped bottoms fully above the line. */
-const WORDMARK_PULL_LIFT = 0.14;
+/** At rest most of the glyph is under the divider — only the letter tops peek. */
+const WORDMARK_REST_CLIP = 0.58;
+/** After extra scroll: sit on the divider, descenders still just tucked. */
+const WORDMARK_PULLED_CLIP = 0.08;
 
 /** Fraction of the dashboard image's lower half left visible above the footer. */
 const IMAGE_REVEAL = 0.75;
@@ -47,9 +47,9 @@ const FOOTER_COLUMNS = [
 
 /**
  * Footer wordmark: real Montserrat fitted to the container, filled with a
- * fine round-dot screen. Default rest matches the designed crop — the type
- * sits on the divider with only descenders clipped. Extra scroll at the page
- * bottom drags the complete glyph up.
+ * fine round-dot screen. Default rest is cropped under the divider. Only
+ * extra scroll after the page has already parked at the bottom drags the
+ * complete glyph up.
  */
 function DotWordmark({ text }: { text: string }) {
   const boxRef = useRef<HTMLDivElement>(null);
@@ -235,17 +235,23 @@ export function SiteFooter({ cta = true }: { cta?: boolean } = {}) {
 
     const atBottom = () => {
       const lenis = getLenis();
-      if (lenis) return lenis.scroll >= lenis.limit - 1;
+      if (lenis) return lenis.scroll >= lenis.limit - 0.5;
       const el = document.documentElement;
-      return window.scrollY + window.innerHeight >= el.scrollHeight - 2;
+      return window.scrollY + window.innerHeight >= el.scrollHeight - 1;
+    };
+
+    const lenisSettled = () => {
+      const lenis = getLenis();
+      if (!lenis) return true;
+      const vel = Math.abs((lenis as unknown as { velocity?: number }).velocity ?? 0);
+      return vel < 0.15;
     };
 
     const measure = () => {
       const h = mark.offsetHeight;
       restTuck.px = Math.round(Math.max(4, h * WORDMARK_REST_CLIP));
-      maxPull.px = prefersReduce
-        ? 0
-        : Math.round(Math.max(restTuck.px + 12, h * (WORDMARK_REST_CLIP + WORDMARK_PULL_LIFT)));
+      const pulledTuck = Math.round(Math.max(0, h * WORDMARK_PULLED_CLIP));
+      maxPull.px = prefersReduce ? 0 : Math.max(24, restTuck.px - pulledTuck);
       if (pull.target > maxPull.px) pull.target = maxPull.px;
     };
     measure();
@@ -271,25 +277,41 @@ export function SiteFooter({ cta = true }: { cta?: boolean } = {}) {
       };
     }
 
+    let armed = false;
+
     const consume = (rawDy: number, deltaMode = 0) => {
       const dy = rawDy * (deltaMode === 1 ? 16 : deltaMode === 2 ? 100 : 1);
       if (dy === 0) return false;
       const goingDown = dy > 0;
 
       if (goingDown) {
-        if (!atBottom() && pull.target <= 0) return false;
+        if (pull.target <= 0) {
+          if (!atBottom() || !lenisSettled()) {
+            armed = false;
+            return false;
+          }
+          // First tick at the parked bottom is arrival — do not lift yet.
+          if (!armed) {
+            armed = true;
+            return false;
+          }
+        }
         setHijack(true);
-        const step = Math.max(-48, Math.min(48, dy));
-        pull.target = Math.min(maxPull.px, pull.target + step * 0.65);
+        const step = Math.max(-32, Math.min(32, dy));
+        pull.target = Math.min(maxPull.px, pull.target + step * 0.4);
         return true;
       }
 
       if (pull.target > 0) {
-        const step = Math.max(-48, Math.min(48, dy));
-        pull.target = Math.max(0, pull.target + step * 0.65);
-        if (pull.target <= 0) setHijack(false);
+        const step = Math.max(-32, Math.min(32, dy));
+        pull.target = Math.max(0, pull.target + step * 0.4);
+        if (pull.target <= 0) {
+          setHijack(false);
+          armed = atBottom();
+        }
         return true;
       }
+      armed = false;
       setHijack(false);
       return false;
     };
