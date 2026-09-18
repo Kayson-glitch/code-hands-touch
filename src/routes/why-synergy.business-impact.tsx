@@ -5,6 +5,7 @@ import { Coins, ChartPie, ClipboardCheck, Gauge, Headset, TrendingDown, Users } 
 import { SiteNav } from "@/components/SiteNav";
 import { whyImpactAsset } from "@/lib/media";
 import { HalftoneHandStill } from "@/components/HalftoneHandStill";
+import { WHY_HERO_ART, whyHeroArtMask } from "@/lib/whyHeroArt";
 import { Reveal } from "@/components/Reveal";
 import { FinChatDock } from "@/components/FinChatDock";
 import { SiteFooter } from "@/components/SiteFooter";
@@ -527,17 +528,7 @@ function BusinessImpactPage() {
           cropY={0.095}
           cropH={0.85}
           className="pointer-events-none absolute hidden select-none lg:block"
-          style={{
-            // Soften the box edges the subject bleeds through (left arm, lower arm).
-            maskImage: "linear-gradient(to right, transparent 0, #000 14%), linear-gradient(to top, transparent 0, #000 14%)",
-            WebkitMaskImage: "linear-gradient(to right, transparent 0, #000 14%), linear-gradient(to top, transparent 0, #000 14%)",
-            maskComposite: "intersect",
-            WebkitMaskComposite: "source-in",
-            top: fluid(115, 66),
-            left: `max(${fluid(780, 420)}, calc(50% + 60px))`,
-            width: fluid(741, 400),
-            height: fluid(425, 230),
-          }}
+          style={{ ...whyHeroArtMask(), ...WHY_HERO_ART }}
         />
 
         <div style={{ padding: pad }}>

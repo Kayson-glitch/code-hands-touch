@@ -5,6 +5,7 @@ import { Activity, CalendarCheck, ClipboardCheck, FileWarning, Hourglass, Langua
 import { SiteNav } from "@/components/SiteNav";
 import { whyStoriesAsset } from "@/lib/media";
 import { HalftoneHandStill } from "@/components/HalftoneHandStill";
+import { WHY_HERO_ART, whyHeroArtMask } from "@/lib/whyHeroArt";
 import { Reveal } from "@/components/Reveal";
 import { GradientHoverHeading } from "@/components/GradientHoverHeading";
 import { FinChatDock } from "@/components/FinChatDock";
@@ -459,17 +460,7 @@ function StoriesPage() {
           cropY={0.03}
           cropH={0.9}
           className="pointer-events-none absolute hidden select-none lg:block"
-          style={{
-            // Soften the box edges the subject bleeds through (left arm, lower arm).
-            maskImage: "linear-gradient(to right, transparent 0, #000 14%), linear-gradient(to top, transparent 0, #000 14%)",
-            WebkitMaskImage: "linear-gradient(to right, transparent 0, #000 14%), linear-gradient(to top, transparent 0, #000 14%)",
-            maskComposite: "intersect",
-            WebkitMaskComposite: "source-in",
-            top: fluid(115, 66),
-            left: `max(${fluid(780, 420)}, calc(50% + 60px))`,
-            width: fluid(741, 400),
-            height: fluid(425, 230),
-          }}
+          style={{ ...whyHeroArtMask(), ...WHY_HERO_ART }}
         />
 
         <div style={{ padding: pad }}>
