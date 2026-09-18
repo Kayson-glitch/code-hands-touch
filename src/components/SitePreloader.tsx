@@ -25,6 +25,14 @@ const MAX_MS = 3600;
 const FADE_MS = 600;
 /** Ceiling on how fast the bar may climb, so it always reads as travel. */
 const CLIMB_PER_MS = 1 / 900;
+/**
+ * Fonts and a decoded image only report done, not progress, so on a slow line
+ * every signal is nought for seconds. A time curve carries the bar in the
+ * meantime — it eases toward this ceiling and can never reach the end on its
+ * own, so completion still means the page is genuinely ready.
+ */
+const TRICKLE_CEILING = 0.92;
+const TRICKLE_TAU = 1100;
 
 export function SitePreloader() {
   const [shown, setShown] = useState(0);
@@ -59,7 +67,8 @@ export function SitePreloader() {
       last = now;
       const elapsed = now - started;
 
-      const cap = elapsed >= MAX_MS ? 1 : target();
+      const trickle = (1 - Math.exp(-elapsed / TRICKLE_TAU)) * TRICKLE_CEILING;
+      const cap = elapsed >= MAX_MS ? 1 : Math.max(target(), trickle);
       const next = Math.min(cap, shownRef.current + CLIMB_PER_MS * dt);
       shownRef.current = next;
       setShown(next);
