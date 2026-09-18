@@ -86,7 +86,11 @@ function pick(): HeroLayout {
 }
 
 export function useHeroLayout(): HeroLayout {
-  const [layout, setLayout] = useState<HeroLayout>(() => pick());
+  // Must start where the server did. Picking the real bucket during hydration
+  // makes React bail out of the mismatched attributes, and because the buckets
+  // are shared constants the effect's setLayout is then a no-op — leaving wide
+  // screens stuck on DESKTOP's padding, hand box and cell size.
+  const [layout, setLayout] = useState<HeroLayout>(DESKTOP);
   useEffect(() => {
     const update = () => setLayout(pick());
     update();
