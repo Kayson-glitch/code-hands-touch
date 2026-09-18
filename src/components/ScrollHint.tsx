@@ -28,7 +28,15 @@ export function ScrollHint({ visible = true }: { visible?: boolean }) {
       window.removeEventListener("hands-entry-state", onState as EventListener);
   }, []);
 
-  const on = visible && entered && atEntry;
+  // It sits above the nav, so it would otherwise read through the menu panel.
+  const [menuOpen, setMenuOpen] = useState(false);
+  useEffect(() => {
+    const onMenu = (e: Event) => setMenuOpen((e as CustomEvent<boolean>).detail);
+    window.addEventListener("app-menu-open", onMenu);
+    return () => window.removeEventListener("app-menu-open", onMenu);
+  }, []);
+
+  const on = visible && entered && atEntry && !menuOpen;
 
 
   return (
