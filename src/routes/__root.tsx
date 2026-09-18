@@ -12,6 +12,7 @@ import { useEffect, type ReactNode } from "react";
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { destroySmoothScroll, initSmoothScroll } from "../lib/smoothScroll";
+import { SitePreloader } from "../components/SitePreloader";
 
 function NotFoundComponent() {
   return (
@@ -146,6 +147,8 @@ function RootComponent() {
 
   return (
     <QueryClientProvider client={queryClient}>
+      {/* Held over the first paint of a page load; route changes never see it. */}
+      <SitePreloader />
       {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
       <Outlet />
     </QueryClientProvider>
