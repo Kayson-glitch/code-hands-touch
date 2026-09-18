@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { HeroDots } from "@/components/ProductHero";
+import { CropFrame } from "@/components/CropFrame";
 import { handsFramesAsset } from "@/lib/media";
 import { fluid } from "@/lib/fluid";
 
@@ -44,8 +45,11 @@ const CELL_W = "61vw";
 /** A thirtieth of the cell's width, as measured, with floors for small screens. */
 const CELL_H = "clamp(16px, 2.03vw, 34px)";
 const CELL_INSET = "clamp(2px, 0.26vw, 5px)";
-const RULE = "rgba(14, 11, 34, 0.09)";
+const RULE = "rgba(14, 11, 34, 0.12)";
 const TRACK = "#F1F1F3";
+/** How far the frame's rules run past the cell before they fade out. */
+const FRAME_REACH_X = 112;
+const FRAME_REACH_Y = 108;
 
 export function SitePreloader() {
   const [shown, setShown] = useState(0);
@@ -166,59 +170,71 @@ export function SitePreloader() {
         pointerEvents: leaving ? "none" : "auto",
       }}
     >
-      {/* The product pages' dot field, rings and all. It is a canvas, so the
-          plain grid stands in until the script arrives and they trade places
-          on the same 20px pitch. */}
+      {/* The product pages' dot field, rings and all. It is a canvas and so
+          cannot run before the script arrives; until then the same 20px grid
+          stands in with a ring of its own sweeping through it, so the field is
+          never still. */}
       {live ? (
         <HeroDots />
       ) : (
         <span
           aria-hidden
+          className="site-preloader-dots"
           style={{
             position: "absolute",
             inset: 0,
             backgroundImage:
               "radial-gradient(circle, rgba(14,11,34,0.16) 0 1px, transparent 1.6px)",
             backgroundSize: "20px 20px",
-            maskImage: "radial-gradient(circle at 50% 50%, #000 0%, transparent 78%)",
-            WebkitMaskImage: "radial-gradient(circle at 50% 50%, #000 0%, transparent 78%)",
           }}
         />
       )}
 
-      {/* The rules that draw the cell: two across the page, two down it. */}
-      <span aria-hidden className="absolute" style={{ left: 0, right: 0, top: "50%", height: CELL_H, transform: "translateY(-50%)" }}>
-        <span className="absolute" style={{ left: 0, right: 0, top: 0, height: 1, background: RULE }} />
-        <span className="absolute" style={{ left: 0, right: 0, bottom: 0, height: 1, background: RULE }} />
-      </span>
-      <span
-        aria-hidden
-        className="absolute"
-        style={{ top: 0, bottom: 0, width: CELL_W, left: "50%", transform: "translateX(-50%)" }}
-      >
-        <span className="absolute" style={{ top: 0, bottom: 0, left: 0, width: 1, background: RULE }} />
-        <span className="absolute" style={{ top: 0, bottom: 0, right: 0, width: 1, background: RULE }} />
-      </span>
-
-      {/* the cell itself, with the fill inset off its rules */}
+      {/* The Platform module's frame, drawn around the bar: four rules whose
+          ends fade out, crossing at four corners. */}
       <span
         className="relative block"
-        style={{ width: CELL_W, height: CELL_H, background: TRACK, padding: CELL_INSET }}
+        style={{
+          width: `calc(${CELL_W} + ${FRAME_REACH_X * 2}px)`,
+          height: `calc(${CELL_H} + ${FRAME_REACH_Y * 2}px)`,
+        }}
       >
-        {/* the padded box, so the fill's width is a share of the run it travels */}
-        <span ref={trackRef} className="relative block" style={{ width: "100%", height: "100%" }}>
-          <span
-            ref={fillRef}
-            className={`site-preloader-fill${live ? " is-live" : ""}`}
-            style={{
-              position: "absolute",
-              left: 0,
-              top: 0,
-              bottom: 0,
-              width: live ? `${shown * 100}%` : undefined,
-              background: "#0E0B22",
-            }}
-          />
+        <CropFrame
+          inset={`${FRAME_REACH_X}px`}
+          insetTop={`${FRAME_REACH_Y}px`}
+          insetBottom={`${FRAME_REACH_Y}px`}
+          rule={RULE}
+          mark="#FAFAFA"
+        />
+
+        {/* the cell itself, with the fill inset off the frame's rules */}
+        <span
+          className="absolute"
+          style={{
+            left: FRAME_REACH_X,
+            right: FRAME_REACH_X,
+            top: "50%",
+            height: CELL_H,
+            transform: "translateY(-50%)",
+            background: TRACK,
+            padding: CELL_INSET,
+          }}
+        >
+          {/* the padded box, so the fill's width is a share of the run it travels */}
+          <span ref={trackRef} className="relative block" style={{ width: "100%", height: "100%" }}>
+            <span
+              ref={fillRef}
+              className={`site-preloader-fill${live ? " is-live" : ""}`}
+              style={{
+                position: "absolute",
+                left: 0,
+                top: 0,
+                bottom: 0,
+                width: live ? `${shown * 100}%` : undefined,
+                background: "#0E0B22",
+              }}
+            />
+          </span>
         </span>
       </span>
 
