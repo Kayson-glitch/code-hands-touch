@@ -233,12 +233,12 @@ export function SiteFooter({ cta = true }: { cta?: boolean } = {}) {
 
     const restTuck = { px: 24 };
     const revealTuck = { px: 0 };
-    /** Spring on 0 = default crop … 1 = fully revealed. Slightly overdamped:
-     *  the word leans into the move, is resisted through the middle and eases
-     *  to a stop instead of snapping or bouncing past the line. */
+    /** Spring on 0 = default crop … 1 = fully revealed. Just past critical
+     *  damping: it leaves quickly, eases to a stop in about half a second and
+     *  never bounces back over the line. */
     const reveal = { target: 0, v: 0, vel: 0 };
-    const STIFFNESS = 48;
-    const DAMPING = 15;
+    const STIFFNESS = 200;
+    const DAMPING = 29;
     let raf = 0;
     let last = performance.now();
 
@@ -506,7 +506,7 @@ export function SiteFooter({ cta = true }: { cta?: boolean } = {}) {
                     <p
                       style={{
                         margin: 0,
-                        color: "rgba(255,255,255,0.65)",
+                        color: "rgba(255,255,255,0.5)",
                         fontSize: 12,
                         lineHeight: "20px",
                         fontWeight: 400,
