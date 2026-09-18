@@ -1380,32 +1380,6 @@ html.lenis body {
   animation: none;
 }
 
-/* The stand-in dot field gets a ring of its own: a mask that opens out from
-   the centre, so the grid reads as the same sonar field the canvas draws once
-   the script has landed. */
-@keyframes site-preloader-ping {
-  0% {
-    mask-position: 50% 50%;
-    mask-size: 10% 10%;
-    opacity: 0.5;
-  }
-  70% {
-    opacity: 1;
-  }
-  100% {
-    mask-position: 50% 50%;
-    mask-size: 220% 220%;
-    opacity: 0.85;
-  }
-}
-.site-preloader-dots {
-  mask-image: radial-gradient(circle, #000 34%, rgba(0, 0, 0, 0.45) 58%, transparent 74%);
-  mask-repeat: no-repeat;
-  -webkit-mask-image: radial-gradient(circle, #000 34%, rgba(0, 0, 0, 0.45) 58%, transparent 74%);
-  -webkit-mask-repeat: no-repeat;
-  animation: site-preloader-ping 3.2s cubic-bezier(0.22, 1, 0.36, 1) infinite;
-}
-
 /* The figure counts in CSS too, so it starts at nought with the bar rather
    than waiting for the script and appearing part-way up. */
 @property --site-preloader-count {

@@ -12,6 +12,7 @@ export function CropFrame({
   insetBottom = inset,
   rule = "#E1E0E4",
   mark = "#FFFFFF",
+  marks = true,
 }: {
   /** Distance from the section's side edges to the frame. */
   inset: string;
@@ -22,6 +23,8 @@ export function CropFrame({
   rule?: string;
   /** Fill of the corner squares — match the surface they sit on. */
   mark?: string;
+  /** Drop the corner squares where the crossing rules are enough on their own. */
+  marks?: boolean;
 }) {
   const edge = (y: "top" | "bottom") => (y === "bottom" ? insetBottom : insetTop);
   const corner = (x: "left" | "right", y: "top" | "bottom") => (
@@ -69,10 +72,7 @@ export function CropFrame({
           }}
         />
       ))}
-      {corner("left", "top")}
-      {corner("right", "top")}
-      {corner("left", "bottom")}
-      {corner("right", "bottom")}
+      {marks ? [corner("left", "top"), corner("right", "top"), corner("left", "bottom"), corner("right", "bottom")] : null}
     </div>
   );
 }

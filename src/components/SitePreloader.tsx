@@ -41,10 +41,10 @@ const TRICKLE_TAU = 1100;
  * figure below. Cell is 61% of the viewport and a thirtieth of its own width
  * tall; the fill clears the rules by CELL_INSET.
  */
-const CELL_W = "61vw";
-/** A thirtieth of the cell's width, as measured, with floors for small screens. */
-const CELL_H = "clamp(16px, 2.03vw, 34px)";
-const CELL_INSET = "clamp(2px, 0.26vw, 5px)";
+const CELL_W = "min(44vw, 520px)";
+/** A fifteenth of the cell's width, as measured off the mock. */
+const CELL_H = "clamp(20px, 2.93vw, 35px)";
+const CELL_INSET = "clamp(3px, 0.38vw, 5px)";
 const RULE = "rgba(14, 11, 34, 0.12)";
 const TRACK = "#F1F1F3";
 /** How far the frame's rules run past the cell before they fade out. */
@@ -162,7 +162,7 @@ export function SitePreloader() {
         flexDirection: "column",
         alignItems: "center",
         justifyContent: "center",
-        gap: "clamp(40px, 4.8vw, 80px)",
+        gap: "clamp(16px, 1.7vw, 26px)",
         // the site's paper, so the hero fades in out of the same ground
         background: "#FAFAFA",
         opacity: leaving ? 0 : 1,
@@ -170,22 +170,23 @@ export function SitePreloader() {
         pointerEvents: leaving ? "none" : "auto",
       }}
     >
-      {/* The product pages' dot field, rings and all. It is a canvas and so
-          cannot run before the script arrives; until then the same 20px grid
-          stands in with a ring of its own sweeping through it, so the field is
-          never still. */}
+      {/* The product pages' dot field, with the brand-gradient rings expanding
+          through it. It is a canvas, so the same 20px grid stands in — plain,
+          not pulsing — for the moment before the script arrives. */}
       {live ? (
         <HeroDots />
       ) : (
         <span
           aria-hidden
-          className="site-preloader-dots"
           style={{
             position: "absolute",
             inset: 0,
             backgroundImage:
               "radial-gradient(circle, rgba(14,11,34,0.16) 0 1px, transparent 1.6px)",
             backgroundSize: "20px 20px",
+            maskImage: "linear-gradient(to bottom, transparent 0, #000 18%, #000 62%, transparent 100%)",
+            WebkitMaskImage:
+              "linear-gradient(to bottom, transparent 0, #000 18%, #000 62%, transparent 100%)",
           }}
         />
       )}
@@ -204,7 +205,7 @@ export function SitePreloader() {
           insetTop={`${FRAME_REACH_Y}px`}
           insetBottom={`${FRAME_REACH_Y}px`}
           rule={RULE}
-          mark="#FAFAFA"
+          marks={false}
         />
 
         {/* the cell itself, with the fill inset off the frame's rules */}
