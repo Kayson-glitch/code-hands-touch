@@ -22,11 +22,9 @@ import { GRADIENT, GRADIENT_STOPS, RainbowButton } from "@/components/RainbowBut
 /** Watermark ink on the fine screen. */
 const WORDMARK_ALPHA = 0.11;
 const WORDMARK_DOT_FILL = 0.8;
-/** Fractions of the glyph box kept below the divider, so both positions scale
- *  with the type. Default: the word reads, descenders cut by the line. */
+/** Fraction of the glyph box kept below the divider by default, so the crop
+ *  scales with the type: the word reads, descenders cut by the line. */
 const WORDMARK_REST_CLIP = 0.37;
-/** Revealed: the complete glyph has risen clear of the divider. */
-const WORDMARK_REVEAL_CLIP = 0;
 
 /** Fraction of the dashboard image's lower half left visible above the footer. */
 const IMAGE_REVEAL = 0.75;
@@ -47,16 +45,25 @@ const FOOTER_COLUMNS = [
 
 /**
  * Footer wordmark: real Montserrat fitted to the container, filled with a
- * fine round-dot screen. Default rest is cropped under the divider. Only
- * extra scroll after the page has already parked at the bottom drags the
- * complete glyph up.
+ * fine round-dot screen. The wrapper is offset so the divider crops it; the
+ * footer decides how deep, and reports the descender depth back so the
+ * reveal can stop with the baseline on the line.
  */
-function DotWordmark({ text }: { text: string }) {
+function DotWordmark({
+  text,
+  onMetrics,
+}: {
+  text: string;
+  /** Descender depth as a fraction of the glyph box (baseline → box bottom). */
+  onMetrics?: (descentRatio: number) => void;
+}) {
   const boxRef = useRef<HTMLDivElement>(null);
   const textRef = useRef<HTMLSpanElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [size, setSize] = useState(200);
   const [glyphH, setGlyphH] = useState(184);
+  const onMetricsRef = useRef(onMetrics);
+  onMetricsRef.current = onMetrics;
 
   const fit = () => {
     const box = boxRef.current;
@@ -78,6 +85,7 @@ function DotWordmark({ text }: { text: string }) {
     const descent = Math.ceil(m.actualBoundingBoxDescent || next * 0.2);
     const h = Math.max(1, ascent + descent);
     setGlyphH(h);
+    onMetricsRef.current?.(descent / h);
   };
 
   useLayoutEffect(fit);
@@ -185,6 +193,10 @@ export function SiteFooter({ cta = true }: { cta?: boolean } = {}) {
   const pad = `0 ${fluid(120, 24)}`;
   const imgRef = useRef<HTMLImageElement>(null);
   const markRef = useRef<HTMLDivElement>(null);
+  // Descender depth of the wordmark, reported by DotWordmark; the reveal stops
+  // there so the baseline — the bottom of the A — lands on the divider.
+  const descentRatioRef = useRef(0.2);
+  const remeasureRef = useRef<(() => void) | null>(null);
   const [halfH, setHalfH] = useState(0);
   // How far the footer climbs over the image (negative margin). Nothing to
   // climb over without the CTA screen.
@@ -228,9 +240,12 @@ export function SiteFooter({ cta = true }: { cta?: boolean } = {}) {
     const measure = () => {
       const h = mark.offsetHeight;
       restTuck.px = Math.round(Math.max(4, h * WORDMARK_REST_CLIP));
-      revealTuck.px = prefersReduce ? restTuck.px : Math.round(h * WORDMARK_REVEAL_CLIP);
+      revealTuck.px = prefersReduce
+        ? restTuck.px
+        : Math.min(restTuck.px, Math.round(h * descentRatioRef.current));
     };
     measure();
+    remeasureRef.current = measure;
     const ro = new ResizeObserver(measure);
     ro.observe(mark);
 
@@ -266,6 +281,7 @@ export function SiteFooter({ cta = true }: { cta?: boolean } = {}) {
     if (prefersReduce) {
       return () => {
         cancelAnimationFrame(raf);
+        remeasureRef.current = null;
         ro.disconnect();
       };
     }
@@ -313,6 +329,7 @@ export function SiteFooter({ cta = true }: { cta?: boolean } = {}) {
 
     return () => {
       cancelAnimationFrame(raf);
+      remeasureRef.current = null;
       ro.disconnect();
       window.removeEventListener("wheel", onWheel);
       window.removeEventListener("touchstart", onTouchStart);
@@ -450,7 +467,13 @@ export function SiteFooter({ cta = true }: { cta?: boolean } = {}) {
             ref={markRef}
             className="pointer-events-none absolute bottom-0 left-0 z-0 w-full will-change-transform"
           >
-            <DotWordmark text="Synergy.AI" />
+            <DotWordmark
+              text="Synergy.AI"
+              onMetrics={(descentRatio) => {
+                descentRatioRef.current = descentRatio;
+                remeasureRef.current?.();
+              }}
+            />
           </div>
           <div className="relative z-10 flex h-full items-center" style={{ padding: pad }}>
             <div className="mx-auto w-full max-w-[1200px]">
