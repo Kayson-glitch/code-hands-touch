@@ -162,7 +162,7 @@ export function SitePreloader() {
         flexDirection: "column",
         alignItems: "center",
         justifyContent: "center",
-        gap: "clamp(16px, 1.7vw, 26px)",
+        gap: "clamp(18px, 1.9vw, 30px)",
         // the site's paper, so the hero fades in out of the same ground
         background: "#FAFAFA",
         opacity: leaving ? 0 : 1,
@@ -191,35 +191,33 @@ export function SitePreloader() {
         />
       )}
 
-      {/* The Platform module's frame, drawn around the bar: four rules whose
-          ends fade out, crossing at four corners. */}
-      <span
-        className="relative block"
-        style={{
-          width: `calc(${CELL_W} + ${FRAME_REACH_X * 2}px)`,
-          height: `calc(${CELL_H} + ${FRAME_REACH_Y * 2}px)`,
-        }}
-      >
-        <CropFrame
-          inset={`${FRAME_REACH_X}px`}
-          insetTop={`${FRAME_REACH_Y}px`}
-          insetBottom={`${FRAME_REACH_Y}px`}
-          rule={RULE}
-          marks={false}
-        />
-
-        {/* the cell itself, with the fill inset off the frame's rules */}
+      {/* The cell. Only this and the figure take part in the layout; the
+          Platform module's frame hangs off it as an overlay, so its reach
+          never pushes the figure away. */}
+      <span className="relative block" style={{ width: CELL_W, height: CELL_H }}>
         <span
+          aria-hidden
           className="absolute"
           style={{
-            left: FRAME_REACH_X,
-            right: FRAME_REACH_X,
-            top: "50%",
-            height: CELL_H,
-            transform: "translateY(-50%)",
-            background: TRACK,
-            padding: CELL_INSET,
+            left: -FRAME_REACH_X,
+            right: -FRAME_REACH_X,
+            top: -FRAME_REACH_Y,
+            bottom: -FRAME_REACH_Y,
           }}
+        >
+          <CropFrame
+            inset={`${FRAME_REACH_X}px`}
+            insetTop={`${FRAME_REACH_Y}px`}
+            insetBottom={`${FRAME_REACH_Y}px`}
+            rule={RULE}
+            marks={false}
+          />
+        </span>
+
+        {/* the track sits over the frame, with the fill inset off its rules */}
+        <span
+          className="absolute"
+          style={{ inset: 0, background: TRACK, padding: CELL_INSET }}
         >
           {/* the padded box, so the fill's width is a share of the run it travels */}
           <span ref={trackRef} className="relative block" style={{ width: "100%", height: "100%" }}>
