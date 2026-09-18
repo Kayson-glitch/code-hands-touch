@@ -29,8 +29,11 @@ export function DotGlobe({
   ink = "#3A3A44",
   /** Peak alpha of a land dot at the centre of the disc. */
   landAlpha = 0.54,
-  /** Open ocean is almost bare; the limb does the rest by accumulation. */
-  oceanAlpha = 0.012,
+  /**
+   * The ocean grid the continents sit in. Light enough to stay behind them,
+   * heavy enough to read as a surface rather than only as a rim at the limb.
+   */
+  oceanAlpha = 0.075,
 }: {
   className?: string;
   style?: React.CSSProperties;
