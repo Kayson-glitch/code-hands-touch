@@ -664,8 +664,11 @@ function BusinessImpactPage() {
           y={32}
           duration={1600}
           className="mx-auto w-full max-w-[1200px] overflow-hidden bg-white"
-          style={{ border: "1px solid var(--hairline, #E1E0E4)" }}
         >
+          {/* module top hairline — the rule that opens every article module;
+              the other three modules are open on their other three sides too */}
+          <Hairline />
+
           {/* card header */}
           <div style={{ padding: `${fluid(60, 32)} ${fluid(60, 24)} 0` }}>
             <p
