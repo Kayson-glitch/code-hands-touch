@@ -40,9 +40,10 @@ const TRICKLE_TAU = 1100;
  * figure below. Cell is 61% of the viewport and a thirtieth of its own width
  * tall; the fill clears the rules by CELL_INSET.
  */
-const CELL_W = "min(61vw, 640px)";
-const CELL_H = 42;
-const CELL_INSET = 5;
+const CELL_W = "61vw";
+/** A thirtieth of the cell's width, as measured, with floors for small screens. */
+const CELL_H = "clamp(16px, 2.03vw, 34px)";
+const CELL_INSET = "clamp(2px, 0.26vw, 5px)";
 const RULE = "rgba(14, 11, 34, 0.09)";
 const TRACK = "#F1F1F3";
 
@@ -157,7 +158,7 @@ export function SitePreloader() {
         flexDirection: "column",
         alignItems: "center",
         justifyContent: "center",
-        gap: 92,
+        gap: "clamp(40px, 4.8vw, 80px)",
         // the site's paper, so the hero fades in out of the same ground
         background: "#FAFAFA",
         opacity: leaving ? 0 : 1,
@@ -201,22 +202,24 @@ export function SitePreloader() {
 
       {/* the cell itself, with the fill inset off its rules */}
       <span
-        ref={trackRef}
         className="relative block"
         style={{ width: CELL_W, height: CELL_H, background: TRACK, padding: CELL_INSET }}
       >
-        <span
-          ref={fillRef}
-          className={`site-preloader-fill${live ? " is-live" : ""}`}
-          style={{
-            position: "absolute",
-            left: CELL_INSET,
-            top: CELL_INSET,
-            bottom: CELL_INSET,
-            width: live ? `calc((100% - ${CELL_INSET * 2}px) * ${shown})` : undefined,
-            background: "#0E0B22",
-          }}
-        />
+        {/* the padded box, so the fill's width is a share of the run it travels */}
+        <span ref={trackRef} className="relative block" style={{ width: "100%", height: "100%" }}>
+          <span
+            ref={fillRef}
+            className={`site-preloader-fill${live ? " is-live" : ""}`}
+            style={{
+              position: "absolute",
+              left: 0,
+              top: 0,
+              bottom: 0,
+              width: live ? `${shown * 100}%` : undefined,
+              background: "#0E0B22",
+            }}
+          />
+        </span>
       </span>
 
       {/* The figure, in the face every number on the site is set in. It counts
@@ -224,7 +227,7 @@ export function SitePreloader() {
           the count over. */}
       <span
         className="font-display relative flex items-baseline tabular-nums"
-        style={{ fontSize: fluid(48, 32), lineHeight: 1, fontWeight: 400, color: "#0E0B22" }}
+        style={{ fontSize: "clamp(30px, 3.2vw, 52px)", lineHeight: 1, fontWeight: 400, color: "#0E0B22" }}
       >
         <span className={`site-preloader-count${live ? " is-live" : ""}`}>
           {live ? Math.round(shown * 100) : null}
