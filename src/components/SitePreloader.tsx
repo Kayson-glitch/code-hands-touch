@@ -157,7 +157,7 @@ export function SitePreloader() {
         flexDirection: "column",
         alignItems: "center",
         justifyContent: "center",
-        gap: 30,
+        gap: 92,
         // the site's paper, so the hero fades in out of the same ground
         background: "#FAFAFA",
         opacity: leaving ? 0 : 1,
