@@ -7,11 +7,14 @@ type Panel = {
   eyebrow: string;
   title: string;
   points: Point[];
+  /** The module's colour, from the same set the nav menus mark sections with. */
+  dot: string;
 };
 
 export const PANELS: Panel[] = [
   {
     id: "001",
+    dot: "#8CE0FF",
     eyebrow: "Rapid Response",
     title: "Resolve 93% of Customer Issues Instantly",
     points: [
@@ -29,6 +32,7 @@ export const PANELS: Panel[] = [
   },
   {
     id: "002",
+    dot: "#FF9ED8",
     eyebrow: "Brand Voice",
     title: "Speak in Your Brand Voice, Every Time",
     points: [
@@ -40,6 +44,7 @@ export const PANELS: Panel[] = [
   },
   {
     id: "003",
+    dot: "#9E8CFF",
     eyebrow: "Smart Routing",
     title: "Route Every Conversation to the Right Place",
     points: [
@@ -51,6 +56,7 @@ export const PANELS: Panel[] = [
   },
   {
     id: "004",
+    dot: "#D1E486",
     eyebrow: "Omnichannel",
     title: "One Conversation Across Every Channel",
     points: [
@@ -62,6 +68,7 @@ export const PANELS: Panel[] = [
   },
   {
     id: "005",
+    dot: "#EBA753",
     eyebrow: "Support Insight",
     title: "Turn Support Data Into Product Insight",
     points: [
@@ -72,6 +79,20 @@ export const PANELS: Panel[] = [
     ],
   },
 ];
+
+/**
+ * Ticker label colour: paper grey out at the edges of the strip, lifting to
+ * the module's own hue as it slides into the centre. At lum 0 this is the
+ * same grey the CSS ramp used before.
+ */
+function tickerColour(hex: string, lum: number) {
+  const n = parseInt(hex.slice(1), 16);
+  const to = (channel: number) => Math.round(255 + (channel - 255) * lum);
+  const r = to(n >> 16);
+  const g = to((n >> 8) & 255);
+  const b = to(n & 255);
+  return `rgba(${r}, ${g}, ${b}, ${(0.32 + 0.68 * lum).toFixed(3)})`;
+}
 
 /** Milliseconds per typed character. */
 const CHAR_MS = 130;
@@ -178,6 +199,12 @@ export function FeaturePanels({
               return (
                 <>
                   <p className="artemis-gallery__eyebrow">
+                    {/* The section square the nav menus use, in this module's colour. */}
+                    <span
+                      aria-hidden
+                      className="artemis-gallery__mark"
+                      style={{ background: panel.dot }}
+                    />
                     [ <Typed text={panel.eyebrow} active={active} delay={eyebrowDelay} /> ]
                   </p>
                   <div className="artemis-gallery__row">
@@ -227,13 +254,15 @@ export function FeaturePanels({
                             // across the wrap point.
                             const raw = Math.abs(pos - real);
                             const d = Math.min(raw, n - raw);
+                            const lum = Math.max(0, 1 - d);
                             return (
                               <span
                                 key={key}
                                 className="artemis-gallery__ticker-item"
                                 style={
                                   {
-                                    "--lum": Math.max(0, 1 - d).toFixed(3),
+                                    "--lum": lum.toFixed(3),
+                                    color: tickerColour(p.dot, lum),
                                   } as CSSProperties
                                 }
                               >

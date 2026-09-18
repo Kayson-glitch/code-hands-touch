@@ -957,6 +957,15 @@ html.lenis body {
   }
 }
 
+/* Section square, as in the nav dropdown cells: 8px, on the eyebrow's cap line. */
+.artemis-gallery__mark {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  margin-right: 10px;
+  vertical-align: 0.06em;
+}
+
 .artemis-gallery__eyebrow {
   margin: 0;
   /* Left edge aligns with the media block below (which is offset 80px from
