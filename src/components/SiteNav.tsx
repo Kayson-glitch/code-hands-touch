@@ -283,6 +283,94 @@ const WHY_SYNERGY_ITEMS: Array<{
 // Spring-ish easing for the panel reveal.
 const PANEL_EASE = "cubic-bezier(0.22, 1, 0.36, 1)";
 
+/** The grid rule inside a dropdown panel. */
+const MENU_RULE = "#E1E0E4";
+/** A finer dash than the page frames use — 4/4 is too coarse beside a 6px
+ *  mark, this keeps three ticks in the run-out at panel scale. */
+const DASH_X = `repeating-linear-gradient(90deg, ${MENU_RULE} 0 2px, transparent 2px 5px)`;
+const DASH_Y = `repeating-linear-gradient(180deg, ${MENU_RULE} 0 2px, transparent 2px 5px)`;
+/** Dash run from a corner out into the panel's 24px padding. */
+const TICK = 21;
+
+/**
+ * Registration mark: the 6px white square the page frames put where hairlines
+ * cross (platform/rag's crop frame, the Business Impact article rows). `ticks`
+ * adds the dashed run-outs that make a corner read as a crop mark.
+ */
+function RuleMark({
+  open,
+  x,
+  y,
+  nudge = [0, 0],
+  ticks,
+  delay = 0,
+}: {
+  open: boolean;
+  /** Position on the grid box, e.g. "0%", "100%", "360px". */
+  x: string;
+  y: string;
+  /** Half-pixel corrections so the square straddles the rule, not the box. */
+  nudge?: [number, number];
+  /** Directions the dashed run-outs leave in. */
+  ticks?: Array<"up" | "down" | "left" | "right">;
+  delay?: number;
+}) {
+  const left = `calc(${x} + ${nudge[0]}px)`;
+  const top = `calc(${y} + ${nudge[1]}px)`;
+  const fade = {
+    opacity: open ? 1 : 0,
+    transition: `opacity 340ms ${PANEL_EASE} ${delay}ms`,
+  } as const;
+  // Leave the square's 8px footprint clear so the dashes read as run-outs.
+  const run = TICK - 7;
+  return (
+    <>
+      {(ticks ?? []).map((dir) => {
+        const horizontal = dir === "left" || dir === "right";
+        return (
+          <span
+            key={dir}
+            className="absolute"
+            style={{
+              left: horizontal ? (dir === "left" ? `calc(${left} - ${TICK}px)` : `calc(${left} + 7px)`) : left,
+              top: horizontal ? top : dir === "up" ? `calc(${top} - ${TICK}px)` : `calc(${top} + 7px)`,
+              width: horizontal ? run : 1,
+              height: horizontal ? 1 : run,
+              backgroundImage: horizontal ? DASH_X : DASH_Y,
+              ...fade,
+            }}
+          />
+        );
+      })}
+      <span
+        className="absolute"
+        style={{
+          left,
+          top,
+          width: 6,
+          height: 6,
+          transform: "translate(-50%, -50%)",
+          background: "#FFFFFF",
+          border: `1px solid ${MENU_RULE}`,
+          ...fade,
+        }}
+      />
+    </>
+  );
+}
+
+/** The four crop marks on a menu grid, with their dashes running outward. */
+function GridCropMarks({ open, delay = 460 }: { open: boolean; delay?: number }) {
+  return (
+    <div aria-hidden className="pointer-events-none absolute inset-0">
+      <RuleMark open={open} x="0%" y="0%" nudge={[0.5, 0.5]} ticks={["left", "up"]} delay={delay} />
+      <RuleMark open={open} x="100%" y="0%" nudge={[-0.5, 0.5]} ticks={["right", "up"]} delay={delay + 50} />
+      <RuleMark open={open} x="0%" y="100%" nudge={[0.5, -0.5]} ticks={["left", "down"]} delay={delay + 100} />
+      <RuleMark open={open} x="100%" y="100%" nudge={[-0.5, -0.5]} ticks={["right", "down"]} delay={delay + 150} />
+    </div>
+  );
+}
+
 /**
  * Shared dropdown shell: white card that wipes open from its anchor corner,
  * a "/ section" kicker, then whatever grid the menu needs.
@@ -369,12 +457,11 @@ function WhySynergyMenu({ open }: { open: boolean }) {
 
   return (
     <MenuPanel open={open} kicker="/ why synergy">
+      <div className="relative" style={{ width: 620, height: 315 }}>
       <div
-        className="grid grid-cols-2 overflow-hidden"
+        className="grid h-full w-full grid-cols-2 overflow-hidden"
         style={{
-          width: 620,
-          height: 315,
-          border: "1px solid #E1E0E4",
+          border: `1px solid ${MENU_RULE}`,
         }}
       >
         {WHY_SYNERGY_ITEMS.map((it, i) => (
@@ -390,8 +477,8 @@ function WhySynergyMenu({ open }: { open: boolean }) {
               padding: 30,
               gap: 8,
               background: hover === i ? "#F8F8F9" : "transparent",
-              borderRight: i % 2 === 0 ? "1px solid #E1E0E4" : "none",
-              borderBottom: i < 2 ? "1px solid #E1E0E4" : "none",
+              borderRight: i % 2 === 0 ? `1px solid ${MENU_RULE}` : "none",
+              borderBottom: i < 2 ? `1px solid ${MENU_RULE}` : "none",
               ...cellReveal(open, i),
             }}
           >
@@ -420,6 +507,12 @@ function WhySynergyMenu({ open }: { open: boolean }) {
             </div>
           </div>
         ))}
+      </div>
+        <div aria-hidden className="pointer-events-none absolute inset-0">
+          {/* the one interior crossing — the rules already run out of it */}
+          <RuleMark open={open} x="50%" y="50%" nudge={[0.5, -0.5]} delay={640} />
+        </div>
+        <GridCropMarks open={open} />
       </div>
     </MenuPanel>
   );
@@ -604,15 +697,15 @@ function TwoColumnMenu({
 
   return (
     <MenuPanel open={open} kicker={kicker} align="center">
+      <div className="relative" style={{ width: 690 }}>
       <div
         className="grid overflow-hidden"
         style={{
-          width: 690,
           gridTemplateColumns: "360px 330px",
-          border: "1px solid #E1E0E4",
+          border: `1px solid ${MENU_RULE}`,
         }}
       >
-        <div className="flex flex-col" style={{ borderRight: "1px solid #E1E0E4" }}>
+        <div className="flex flex-col" style={{ borderRight: `1px solid ${MENU_RULE}` }}>
           {heads ? <ColumnHead label={heads[0]} reveal={cellReveal(open, 0)} /> : null}
           {left.map((it, i) => (
             <RichCell
@@ -644,6 +737,13 @@ function TwoColumnMenu({
             />
           ))}
         </div>
+      </div>
+        <div aria-hidden className="pointer-events-none absolute inset-0">
+          {/* where the column rule meets the frame, top and bottom */}
+          <RuleMark open={open} x="360px" y="0%" nudge={[-0.5, 0.5]} delay={640} />
+          <RuleMark open={open} x="360px" y="100%" nudge={[-0.5, -0.5]} delay={690} />
+        </div>
+        <GridCropMarks open={open} />
       </div>
     </MenuPanel>
   );
