@@ -216,11 +216,14 @@ export function SiteFooter({ cta = true }: { cta?: boolean } = {}) {
 
     const restTuck = { px: 24 };
     const revealTuck = { px: 0 };
-    /** 0 = default crop, 1 = fully revealed. */
-    const reveal = { target: 0, v: 0 };
+    /** Spring on 0 = default crop … 1 = fully revealed. Slightly overdamped:
+     *  the word leans into the move, is resisted through the middle and eases
+     *  to a stop instead of snapping or bouncing past the line. */
+    const reveal = { target: 0, v: 0, vel: 0 };
+    const STIFFNESS = 48;
+    const DAMPING = 15;
     let raf = 0;
     let last = performance.now();
-    const ease = (x: number) => (x < 0.5 ? 2 * x * x : 1 - Math.pow(-2 * x + 2, 2) / 2);
 
     const measure = () => {
       const h = mark.offsetHeight;
@@ -232,12 +235,29 @@ export function SiteFooter({ cta = true }: { cta?: boolean } = {}) {
     ro.observe(mark);
 
     const tick = (now: number) => {
-      const dt = Math.min(0.05, (now - last) / 1000);
+      // Fixed sub-steps keep the spring stable when a frame is dropped.
+      let rest = Math.min(0.1, (now - last) / 1000);
       last = now;
-      reveal.v += (reveal.target - reveal.v) * (1 - Math.exp(-dt / 0.16));
-      if (Math.abs(reveal.target - reveal.v) < 0.0015) reveal.v = reveal.target;
-      const t = ease(reveal.v);
-      mark.style.transform = `translate3d(0, ${restTuck.px + (revealTuck.px - restTuck.px) * t}px, 0)`;
+      while (rest > 0) {
+        const dt = Math.min(1 / 120, rest);
+        rest -= dt;
+        reveal.vel +=
+          (-STIFFNESS * (reveal.v - reveal.target) - DAMPING * reveal.vel) * dt;
+        reveal.v += reveal.vel * dt;
+        if (reveal.v > 1) {
+          reveal.v = 1;
+          if (reveal.vel > 0) reveal.vel = 0;
+        } else if (reveal.v < 0) {
+          reveal.v = 0;
+          if (reveal.vel < 0) reveal.vel = 0;
+        }
+      }
+      if (Math.abs(reveal.target - reveal.v) < 0.0008 && Math.abs(reveal.vel) < 0.01) {
+        reveal.v = reveal.target;
+        reveal.vel = 0;
+      }
+      mark.style.transform =
+        `translate3d(0, ${restTuck.px + (revealTuck.px - restTuck.px) * reveal.v}px, 0)`;
       raf = requestAnimationFrame(tick);
     };
     mark.style.transform = `translate3d(0, ${restTuck.px}px, 0)`;
@@ -255,12 +275,18 @@ export function SiteFooter({ cta = true }: { cta?: boolean } = {}) {
     const atBottom = () =>
       window.scrollY + window.innerHeight >= document.documentElement.scrollHeight - 2;
 
-    const onWheel = (e: WheelEvent) => {
-      if (e.deltaY > 0) {
+    // The gesture only picks the end state; the spring owns the travel, so
+    // the reveal always carries the same weight however hard it was thrown.
+    const push = (dy: number) => {
+      if (dy > 0) {
         if (atBottom()) reveal.target = 1;
-      } else if (e.deltaY < 0) {
+      } else {
         reveal.target = 0;
       }
+    };
+
+    const onWheel = (e: WheelEvent) => {
+      if (e.deltaY !== 0) push(e.deltaY);
     };
     window.addEventListener("wheel", onWheel, { passive: true });
 
@@ -274,11 +300,7 @@ export function SiteFooter({ cta = true }: { cta?: boolean } = {}) {
       const dy = touchY - y;
       if (Math.abs(dy) < 1) return;
       touchY = y;
-      if (dy > 0) {
-        if (atBottom()) reveal.target = 1;
-      } else {
-        reveal.target = 0;
-      }
+      push(dy);
     };
     window.addEventListener("touchstart", onTouchStart, { passive: true });
     window.addEventListener("touchmove", onTouchMove, { passive: true });
