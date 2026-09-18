@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Linkedin, Twitter, Youtube } from "lucide-react";
 import { Reveal } from "@/components/Reveal";
 import { DotArrow } from "@/components/DotArrow";
@@ -36,30 +36,82 @@ const FOOTER_COLUMNS = [
 ];
 
 
-/** Wordmark that fills its container width by uniform font scaling (no glyph stretching). */
-function FitWordmark({ text }: { text: string }) {
+/**
+ * Wordmark as a dot matrix — the site's halftone language instead of a flat
+ * tint. The text is set at the size that fills the container, downsampled to
+ * one cell per dot, and each cell's coverage becomes a dot whose AREA carries
+ * it (the same rule as the hero hands). Same line box and 22% drop as the
+ * flat version had, so the baseline still sits on the divider.
+ */
+function DotWordmark({ text }: { text: string }) {
   const boxRef = useRef<HTMLDivElement>(null);
-  const textRef = useRef<HTMLSpanElement>(null);
-  const [size, setSize] = useState(200);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
 
-  const fit = () => {
-    const box = boxRef.current;
-    const el = textRef.current;
-    if (!box || !el) return;
-    const probe = 200;
-    el.style.fontSize = `${probe}px`;
-    const w = el.scrollWidth;
-    const next = w > 0 ? (probe * box.clientWidth) / w : probe;
-    el.style.fontSize = `${next}px`;
-    setSize(next);
-  };
-
-  useLayoutEffect(fit);
   useEffect(() => {
-    window.addEventListener("resize", fit);
-    if (document.fonts?.ready) document.fonts.ready.then(fit);
-    return () => window.removeEventListener("resize", fit);
-  }, []);
+    const box = boxRef.current;
+    const canvas = canvasRef.current;
+    if (!box || !canvas) return;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
+    const draw = () => {
+      const w = box.clientWidth;
+      if (w < 10) return;
+      const off = document.createElement("canvas");
+      const octx = off.getContext("2d", { willReadFrequently: true });
+      if (!octx) return;
+      const font = (px: number) => `600 ${px}px Montserrat, ui-sans-serif, system-ui, sans-serif`;
+
+      // Fit: the size at which the word spans the container, as FitWordmark did.
+      const probe = 200;
+      octx.font = font(probe);
+      (octx as unknown as { letterSpacing: string }).letterSpacing = `${-0.02 * probe}px`;
+      const tw = octx.measureText(text).width || probe;
+      const size = (probe * w) / tw;
+      const h = Math.round(size * 0.8);
+
+      // One cell per dot; ~10px at the desktop size, never finer than 6.
+      const pitch = Math.max(6, Math.round(size / 26));
+      const cols = Math.ceil(w / pitch);
+      const rows = Math.ceil(h / pitch);
+      off.width = cols;
+      off.height = rows;
+      octx.setTransform(1 / pitch, 0, 0, 1 / pitch, 0, 0);
+      octx.font = font(size);
+      (octx as unknown as { letterSpacing: string }).letterSpacing = `${-0.02 * size}px`;
+      octx.fillStyle = "#fff";
+      octx.textBaseline = "alphabetic";
+      // line-height 0.8 put the baseline ~0.75em down the box; translateY(22%) added 0.176em.
+      octx.fillText(text, 0, size * 0.93);
+      const data = octx.getImageData(0, 0, cols, rows).data;
+
+      const dpr = Math.min(2, window.devicePixelRatio || 1);
+      canvas.width = Math.round(w * dpr);
+      canvas.height = Math.round(h * dpr);
+      canvas.style.width = `${w}px`;
+      canvas.style.height = `${h}px`;
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      ctx.clearRect(0, 0, w, h);
+      ctx.fillStyle = "rgba(255,255,255,0.09)";
+      const maxR = pitch * 0.5 * 0.9;
+      for (let j = 0; j < rows; j++) {
+        for (let i = 0; i < cols; i++) {
+          const a = data[(j * cols + i) * 4 + 3] / 255;
+          if (a < 0.08) continue;
+          const r = maxR * Math.sqrt(a);
+          ctx.beginPath();
+          ctx.arc((i + 0.5) * pitch, (j + 0.5) * pitch, r, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      }
+    };
+
+    draw();
+    const ro = new ResizeObserver(draw);
+    ro.observe(box);
+    if (document.fonts?.ready) document.fonts.ready.then(draw);
+    return () => ro.disconnect();
+  }, [text]);
 
   return (
     <div
@@ -68,21 +120,7 @@ function FitWordmark({ text }: { text: string }) {
       className="pointer-events-none w-full select-none overflow-hidden"
       style={{ lineHeight: 0 }}
     >
-      <span
-        ref={textRef}
-        className="font-sans block whitespace-nowrap"
-        style={{
-          fontSize: size,
-          lineHeight: 0.8,
-          fontWeight: 600,
-          letterSpacing: "-0.02em",
-          color: "rgba(255,255,255,0.06)",
-          display: "inline-block",
-          transform: "translateY(22%)",
-        }}
-      >
-        {text}
-      </span>
+      <canvas ref={canvasRef} style={{ display: "block" }} />
     </div>
   );
 }
@@ -278,7 +316,7 @@ export function SiteFooter({ cta = true }: { cta?: boolean } = {}) {
           </div>
 
           <div className="absolute bottom-0 left-0 w-full">
-            <FitWordmark text="Synergy.AI" />
+            <DotWordmark text="Synergy.AI" />
           </div>
         </div>
 
