@@ -45,6 +45,8 @@ const ACCENT = "#EBA753";
  */
 const SURFACE = "#FFFFFF";
 const SURFACE_SOFT = "#F6F6F8";
+/** Cards rest on this, so hovering can brighten them to paper white. */
+const CARD_REST = "#F2F2F5";
 const RULE = "rgba(14, 11, 34, 0.10)";
 const RULE_SOFT = "rgba(14, 11, 34, 0.06)";
 /** The estimate panel: one step darker than the section, still paper. */
@@ -341,8 +343,8 @@ function CornerMark({ x, y, shown }: { x: "left" | "right"; y: "top" | "bottom";
         [y]: -3.5,
         width: 6,
         height: 6,
-        background: SURFACE_SOFT,
-        border: `1px solid rgba(14, 11, 34, 0.22)`,
+        background: SURFACE,
+        border: `1px solid rgba(14, 11, 34, 0.28)`,
         opacity: shown ? 1 : 0,
         transition: "opacity 220ms ease",
       }}
@@ -366,14 +368,26 @@ function PlanCard({ plan, annual, index }: { plan: Plan; annual: boolean; index:
         onMouseLeave={() => setHover(false)}
         style={{
           padding: fluid(28, 20),
-          // Every card rests on paper; hovering lifts it onto the softer
-          // surface and puts the registration marks on its corners.
-          background: hover ? SURFACE_SOFT : SURFACE,
-          border: `1px solid ${hover ? "rgba(14, 11, 34, 0.18)" : RULE}`,
+          // Cards rest on a quiet panel and brighten to paper white on hover —
+          // lit rather than pressed — with the plan's own colour on the top
+          // edge, the registration marks out, and the sheet lifted off the page.
+          background: hover ? SURFACE : CARD_REST,
+          border: `1px solid ${hover ? "rgba(14, 11, 34, 0.14)" : RULE_SOFT}`,
+          boxShadow: hover ? "0 14px 34px rgba(14, 11, 34, 0.09)" : "none",
           minHeight: 372,
-          transition: "background 220ms ease, border-color 220ms ease",
+          transition: "background 220ms ease, border-color 220ms ease, box-shadow 260ms ease",
         }}
       >
+        <span
+          aria-hidden
+          className="absolute inset-x-0 top-0"
+          style={{
+            height: 2,
+            background: plan.dot,
+            opacity: hover ? 1 : 0,
+            transition: "opacity 220ms ease",
+          }}
+        />
         <CornerMark x="left" y="top" shown={hover} />
         <CornerMark x="right" y="top" shown={hover} />
         <CornerMark x="left" y="bottom" shown={hover} />
@@ -715,8 +729,16 @@ function PricingPage() {
       <section className="relative" style={{ borderTop: `1px solid ${RULE_SOFT}`, background: SURFACE_SOFT }}>
         {/* the Platform module's crop frame: rules inset from the section
             edges, corner squares, ticks fading out to the viewport */}
-        <CropFrame inset={fluid(60, 16)} rule={RULE} mark={SURFACE_SOFT} />
-        <div className="relative" style={{ padding: `${fluid(112, 56)} ${fluid(120, 24)} ${fluid(128, 72)}` }}>
+        {/* the frame stands further off top and bottom, so a band of the
+            section's own ground reads as the gap around it */}
+        <CropFrame
+          inset={fluid(60, 16)}
+          insetTop={fluid(96, 40)}
+          insetBottom={fluid(96, 40)}
+          rule={RULE}
+          mark={SURFACE_SOFT}
+        />
+        <div className="relative" style={{ padding: `${fluid(184, 96)} ${fluid(120, 24)} ${fluid(192, 112)}` }}>
           <div className="mx-auto w-full max-w-[1200px]">
             <div className="flex flex-col md:flex-row md:items-end md:justify-between" style={{ gap: 24 }}>
               <Reveal y={24} duration={1600}>

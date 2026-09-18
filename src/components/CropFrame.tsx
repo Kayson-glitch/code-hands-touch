@@ -8,19 +8,22 @@
  */
 export function CropFrame({
   inset,
+  insetTop = inset,
   insetBottom = inset,
   rule = "#E1E0E4",
   mark = "#FFFFFF",
 }: {
-  /** Distance from the section edge to the frame. */
+  /** Distance from the section's side edges to the frame. */
   inset: string;
+  /** Top and bottom can stand further off, leaving a band of plain ground. */
+  insetTop?: string;
   insetBottom?: string;
   /** Rule colour; the ticks fade from it to transparent. */
   rule?: string;
   /** Fill of the corner squares — match the surface they sit on. */
   mark?: string;
 }) {
-  const edge = (y: "top" | "bottom") => (y === "bottom" ? insetBottom : inset);
+  const edge = (y: "top" | "bottom") => (y === "bottom" ? insetBottom : insetTop);
   const corner = (x: "left" | "right", y: "top" | "bottom") => (
     <span
       key={`${x}-${y}`}
@@ -43,7 +46,7 @@ export function CropFrame({
       {/* the frame */}
       <div
         className="absolute"
-        style={{ top: inset, left: inset, right: inset, bottom: insetBottom, border: `1px solid ${rule}` }}
+        style={{ top: insetTop, left: inset, right: inset, bottom: insetBottom, border: `1px solid ${rule}` }}
       />
       {/* ticks continuing the rules past the frame, fading out toward the edges */}
       {(["top", "bottom"] as const).map((y) => (
@@ -64,7 +67,7 @@ export function CropFrame({
           style={{
             [x]: inset,
             width: 1,
-            background: `linear-gradient(to bottom, transparent 0, ${rule} ${inset}, ${rule} calc(100% - ${insetBottom}), transparent 100%)`,
+            background: `linear-gradient(to bottom, transparent 0, ${rule} ${insetTop}, ${rule} calc(100% - ${insetBottom}), transparent 100%)`,
           }}
         />
       ))}
