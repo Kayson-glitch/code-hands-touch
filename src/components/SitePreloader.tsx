@@ -41,8 +41,23 @@ export function SitePreloader() {
   /** False until the bundle has hydrated; the bar creeps in CSS until then. */
   const [live, setLive] = useState(false);
   const shownRef = useRef(0);
+  const trackRef = useRef<HTMLSpanElement>(null);
+  const fillRef = useRef<HTMLSpanElement>(null);
 
-  useEffect(() => setLive(true), []);
+  // Pick up where the CSS creep got to, so taking over doesn't rewind the bar.
+  useEffect(() => {
+    const track = trackRef.current;
+    const fill = fillRef.current;
+    if (track && fill) {
+      const w = track.getBoundingClientRect().width;
+      if (w > 0) {
+        const at = Math.min(1, fill.getBoundingClientRect().width / w);
+        shownRef.current = at;
+        setShown(at);
+      }
+    }
+    setLive(true);
+  }, []);
 
   useEffect(() => {
     // Weighted readiness: the hero's art and the fonts are what the first
@@ -54,7 +69,6 @@ export function SitePreloader() {
 
     let raf = 0;
     let last = performance.now();
-    const started = last;
     let finishing = false;
 
     const finish = () => {
@@ -69,11 +83,14 @@ export function SitePreloader() {
     const tick = (now: number) => {
       const dt = now - last;
       last = now;
-      const elapsed = now - started;
+      // Measured on the page's own timeline, so it lines up with the CSS creep
+      // that ran before the script arrived.
+      const elapsed = now;
 
       const trickle = (1 - Math.exp(-elapsed / TRICKLE_TAU)) * TRICKLE_CEILING;
       const cap = elapsed >= MAX_MS ? 1 : Math.max(target(), trickle);
-      const next = Math.min(cap, shownRef.current + CLIMB_PER_MS * dt);
+      // Only ever forward: the bar must not rewind when the script takes over.
+      const next = Math.max(shownRef.current, Math.min(cap, shownRef.current + CLIMB_PER_MS * dt));
       shownRef.current = next;
       setShown(next);
 
@@ -169,10 +186,12 @@ export function SitePreloader() {
 
       {/* one square bar, the brand gradient travelling along it */}
       <span
+        ref={trackRef}
         className="relative block"
         style={{ width: "min(72vw, 220px)", height: 3, background: "rgba(14,11,34,0.12)" }}
       >
         <span
+          ref={fillRef}
           className={`site-preloader-fill${live ? " is-live" : ""}`}
           style={{
             position: "absolute",
