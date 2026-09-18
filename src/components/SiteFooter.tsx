@@ -18,11 +18,15 @@ import { dashboardAsset } from "@/lib/media";
 
 import { fluid } from "@/lib/fluid";
 import { GRADIENT, GRADIENT_STOPS, RainbowButton } from "@/components/RainbowButton";
+import { getLenis } from "@/lib/smoothScroll";
 
-/** Watermark ink. Quiet enough that the links stay in front. */
-const WORDMARK_ALPHA = 0.055;
-/** Air between dots so the fill reads as a screen, not a grey slab. */
-const WORDMARK_DOT_FILL = 0.72;
+/** Watermark ink on the fine screen. */
+const WORDMARK_ALPHA = 0.11;
+const WORDMARK_DOT_FILL = 0.8;
+/** At rest, this fraction of the glyph hangs under the divider. */
+const WORDMARK_REST_CLIP = 0.08;
+/** Extra rise at full pull, so the complete type sits above the line. */
+const WORDMARK_PULL_LIFT = 0.3;
 
 /** Fraction of the dashboard image's lower half left visible above the footer. */
 const IMAGE_REVEAL = 0.75;
@@ -42,16 +46,17 @@ const FOOTER_COLUMNS = [
 
 
 /**
- * Footer wordmark: real Montserrat, fitted to the container, sitting on the
- * divider — then filled with a fine round-dot screen. The hero grid is a
- * picture; at that pitch a wordmark becomes a pixel font. Here the outline
- * stays the type, and the dots are only the ink.
+ * Footer wordmark: real Montserrat fitted to the container, filled with a
+ * fine round-dot screen. The full glyph is drawn; the wrapper tucks a little
+ * under the divider at rest, and extra scroll at the page bottom drags it
+ * up until the type sits complete above the line.
  */
 function DotWordmark({ text }: { text: string }) {
   const boxRef = useRef<HTMLDivElement>(null);
   const textRef = useRef<HTMLSpanElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [size, setSize] = useState(200);
+  const [glyphH, setGlyphH] = useState(184);
 
   const fit = () => {
     const box = boxRef.current;
@@ -63,6 +68,16 @@ function DotWordmark({ text }: { text: string }) {
     const next = w > 0 ? (probe * box.clientWidth) / w : probe;
     el.style.fontSize = `${next}px`;
     setSize(next);
+
+    const ctx = document.createElement("canvas").getContext("2d");
+    if (!ctx) return;
+    ctx.font = `600 ${next}px Montserrat, ui-sans-serif, system-ui, sans-serif`;
+    (ctx as unknown as { letterSpacing: string }).letterSpacing = `${-0.02 * next}px`;
+    const m = ctx.measureText(text);
+    const ascent = Math.ceil(m.actualBoundingBoxAscent || next * 0.74);
+    const descent = Math.ceil(m.actualBoundingBoxDescent || next * 0.2);
+    const h = Math.max(1, ascent + descent);
+    setGlyphH(h);
   };
 
   useLayoutEffect(fit);
@@ -102,14 +117,10 @@ function DotWordmark({ text }: { text: string }) {
       (sctx as unknown as { letterSpacing: string }).letterSpacing = `${-0.02 * size}px`;
       sctx.fillStyle = "#fff";
       sctx.textBaseline = "alphabetic";
-      // Same line box as the hidden span: 0.8em, then translateY(22%).
-      const lineBox = size * 0.8;
       const m = sctx.measureText(text);
-      const ascent = m.fontBoundingBoxAscent || size * 0.73;
-      const baseline = (lineBox - size) / 2 + ascent + lineBox * 0.22;
-      sctx.fillText(text, 0, baseline);
+      const ascent = m.actualBoundingBoxAscent || size * 0.74;
+      sctx.fillText(text, 0, ascent);
 
-      // Pitch tracks the type so the screen stays a texture, not a pixel font.
       const pitch = Math.max(2.25, size / 80);
       const cols = Math.ceil(w / pitch);
       const rows = Math.ceil(h / pitch);
@@ -142,25 +153,23 @@ function DotWordmark({ text }: { text: string }) {
     const ro = new ResizeObserver(draw);
     ro.observe(box);
     return () => ro.disconnect();
-  }, [text, size]);
+  }, [text, size, glyphH]);
 
   return (
     <div
       ref={boxRef}
       aria-hidden
-      className="pointer-events-none relative w-full select-none overflow-hidden"
-      style={{ lineHeight: 0 }}
+      className="pointer-events-none relative w-full select-none"
+      style={{ height: glyphH, lineHeight: 0 }}
     >
       <span
         ref={textRef}
-        className="font-sans block whitespace-nowrap"
+        className="font-sans absolute left-0 top-0 whitespace-nowrap"
         style={{
           fontSize: size,
-          lineHeight: 0.8,
+          lineHeight: 1,
           fontWeight: 600,
           letterSpacing: "-0.02em",
-          display: "inline-block",
-          transform: "translateY(22%)",
           visibility: "hidden",
         }}
       >
@@ -175,6 +184,7 @@ function DotWordmark({ text }: { text: string }) {
 export function SiteFooter({ cta = true }: { cta?: boolean } = {}) {
   const pad = `0 ${fluid(120, 24)}`;
   const imgRef = useRef<HTMLImageElement>(null);
+  const markRef = useRef<HTMLDivElement>(null);
   const [halfH, setHalfH] = useState(0);
   // How far the footer climbs over the image (negative margin). Nothing to
   // climb over without the CTA screen.
@@ -193,6 +203,124 @@ export function SiteFooter({ cta = true }: { cta?: boolean } = {}) {
     const ro = new ResizeObserver(measure);
     ro.observe(el);
     return () => ro.disconnect();
+  }, []);
+
+  // Extra wheel at the document end lifts the wordmark until the full glyph
+  // sits above the divider. Lenis is paused while that pull is in effect so
+  // the two drivers don't fight.
+  useEffect(() => {
+    const mark = markRef.current;
+    if (!mark) return;
+    const prefersReduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+    const restTuck = { px: 24 };
+    const maxPull = { px: 80 };
+    const pull = { target: 0, v: 0 };
+    let hijacking = false;
+    let raf = 0;
+    let last = performance.now();
+
+    const apply = (y: number) => {
+      mark.style.transform = `translate3d(0, ${y}px, 0)`;
+    };
+
+    const setHijack = (on: boolean) => {
+      if (hijacking === on) return;
+      hijacking = on;
+      const lenis = getLenis();
+      if (!lenis) return;
+      if (on) lenis.stop();
+      else lenis.start();
+    };
+
+    const atBottom = () => {
+      const lenis = getLenis();
+      if (lenis) return lenis.scroll >= lenis.limit - 1;
+      const el = document.documentElement;
+      return window.scrollY + window.innerHeight >= el.scrollHeight - 2;
+    };
+
+    const measure = () => {
+      const h = mark.offsetHeight;
+      restTuck.px = prefersReduce ? 0 : Math.round(Math.max(10, h * WORDMARK_REST_CLIP));
+      maxPull.px = prefersReduce
+        ? 0
+        : Math.round(Math.max(56, h * (WORDMARK_REST_CLIP + WORDMARK_PULL_LIFT)));
+      if (pull.target > maxPull.px) pull.target = maxPull.px;
+    };
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(mark);
+
+    const tick = (now: number) => {
+      const dt = Math.min(0.05, (now - last) / 1000);
+      last = now;
+      const k = 1 - Math.exp(-dt / 0.14);
+      pull.v += (pull.target - pull.v) * k;
+      if (Math.abs(pull.target - pull.v) < 0.05) pull.v = pull.target;
+      apply(restTuck.px - pull.v);
+      raf = requestAnimationFrame(tick);
+    };
+    apply(restTuck.px);
+    raf = requestAnimationFrame(tick);
+
+    if (prefersReduce) {
+      return () => {
+        cancelAnimationFrame(raf);
+        ro.disconnect();
+      };
+    }
+
+    const consume = (rawDy: number, deltaMode = 0) => {
+      const dy = rawDy * (deltaMode === 1 ? 16 : deltaMode === 2 ? 100 : 1);
+      if (dy === 0) return false;
+      const goingDown = dy > 0;
+
+      if (goingDown) {
+        if (!atBottom() && pull.target <= 0) return false;
+        setHijack(true);
+        const step = Math.max(-48, Math.min(48, dy));
+        pull.target = Math.min(maxPull.px, pull.target + step * 0.65);
+        return true;
+      }
+
+      if (pull.target > 0) {
+        const step = Math.max(-48, Math.min(48, dy));
+        pull.target = Math.max(0, pull.target + step * 0.65);
+        if (pull.target <= 0) setHijack(false);
+        return true;
+      }
+      setHijack(false);
+      return false;
+    };
+
+    const onWheel = (e: WheelEvent) => {
+      if (consume(e.deltaY, e.deltaMode)) e.preventDefault();
+    };
+    window.addEventListener("wheel", onWheel, { passive: false, capture: true });
+
+    let touchY: number | null = null;
+    const onTouchStart = (e: TouchEvent) => {
+      touchY = e.touches[0]?.clientY ?? null;
+    };
+    const onTouchMove = (e: TouchEvent) => {
+      if (touchY === null) return;
+      const y = e.touches[0]?.clientY ?? touchY;
+      const dy = touchY - y;
+      touchY = y;
+      if (consume(dy * 1.5)) e.preventDefault();
+    };
+    window.addEventListener("touchstart", onTouchStart, { passive: true });
+    window.addEventListener("touchmove", onTouchMove, { passive: false });
+
+    return () => {
+      cancelAnimationFrame(raf);
+      setHijack(false);
+      ro.disconnect();
+      window.removeEventListener("wheel", onWheel, { capture: true } as EventListenerOptions);
+      window.removeEventListener("touchstart", onTouchStart);
+      window.removeEventListener("touchmove", onTouchMove);
+    };
   }, []);
 
   return (
@@ -361,7 +489,10 @@ export function SiteFooter({ cta = true }: { cta?: boolean } = {}) {
             </div>
           </div>
 
-          <div className="absolute bottom-0 left-0 w-full">
+          <div
+            ref={markRef}
+            className="absolute bottom-0 left-0 w-full will-change-transform"
+          >
             <DotWordmark text="Synergy.AI" />
           </div>
         </div>
