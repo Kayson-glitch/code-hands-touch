@@ -736,5 +736,3 @@ function BusinessImpactPage() {
     </div>
   );
 }
-
-export default BusinessImpactPage;

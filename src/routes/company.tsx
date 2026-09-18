@@ -349,5 +349,3 @@ function CompanyPage() {
     </div>
   );
 }
-
-export default CompanyPage;

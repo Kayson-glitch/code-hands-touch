@@ -29,5 +29,3 @@ function WhySynergyLayout() {
 export const Route = createFileRoute("/why-synergy")({
   component: WhySynergyLayout,
 });
-
-export default WhySynergyLayout;

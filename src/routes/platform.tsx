@@ -26,5 +26,3 @@ function PlatformLayout() {
 export const Route = createFileRoute("/platform")({
   component: PlatformLayout,
 });
-
-export default PlatformLayout;

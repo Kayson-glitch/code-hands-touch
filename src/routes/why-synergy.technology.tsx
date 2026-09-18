@@ -718,5 +718,3 @@ function TechnologyPage() {
     </div>
   );
 }
-
-export default TechnologyPage;

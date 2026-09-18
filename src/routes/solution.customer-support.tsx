@@ -307,5 +307,3 @@ function CustomerSupportPage() {
     </div>
   );
 }
-
-export default CustomerSupportPage;

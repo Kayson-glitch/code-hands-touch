@@ -22,5 +22,3 @@ function SolutionLayout() {
 export const Route = createFileRoute("/solution")({
   component: SolutionLayout,
 });
-
-export default SolutionLayout;

@@ -188,5 +188,3 @@ function RagPage() {
     </div>
   );
 }
-
-export default RagPage;
