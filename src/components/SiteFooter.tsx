@@ -18,16 +18,15 @@ import { dashboardAsset } from "@/lib/media";
 
 import { fluid } from "@/lib/fluid";
 import { GRADIENT, GRADIENT_STOPS, RainbowButton } from "@/components/RainbowButton";
-import { getLenis } from "@/lib/smoothScroll";
 
 /** Watermark ink on the fine screen. */
 const WORDMARK_ALPHA = 0.11;
 const WORDMARK_DOT_FILL = 0.8;
-/** Fractions of the glyph box that stay below the divider, so both positions
- *  scale with the type. At rest only the letter tops peek out. */
-const WORDMARK_REST_CLIP = 0.66;
-/** Fully pulled: the whole word reads, with the descenders cut by the line. */
-const WORDMARK_PULLED_CLIP = 0.37;
+/** Fractions of the glyph box kept below the divider, so both positions scale
+ *  with the type. Default: the word reads, descenders cut by the line. */
+const WORDMARK_REST_CLIP = 0.37;
+/** Revealed: the complete glyph has risen clear of the divider. */
+const WORDMARK_REVEAL_CLIP = 0;
 
 /** Fraction of the dashboard image's lower half left visible above the footer. */
 const IMAGE_REVEAL = 0.75;
@@ -206,47 +205,27 @@ export function SiteFooter({ cta = true }: { cta?: boolean } = {}) {
     return () => ro.disconnect();
   }, []);
 
-  // Once the page has parked at its end, the NEXT downward gesture stops
-  // being page scroll and becomes a drag on the wordmark. Lenis is paused for
-  // the duration so the two drivers never fight.
+  // The page parks at its end with the wordmark in its default crop. From
+  // there any further downward scroll immediately triggers the reveal: the
+  // whole word rises clear of the divider. Scrolling up puts it back. The
+  // page is never blocked — at the end there is nothing left to scroll.
   useEffect(() => {
     const mark = markRef.current;
     if (!mark) return;
     const prefersReduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-    /** Wheel/touch gap that counts as a new gesture rather than the same flick. */
-    const GESTURE_GAP_MS = 160;
     const restTuck = { px: 24 };
-    const maxPull = { px: 80 };
-    const pull = { target: 0, v: 0 };
-    let hijacking = false;
+    const revealTuck = { px: 0 };
+    /** 0 = default crop, 1 = fully revealed. */
+    const reveal = { target: 0, v: 0 };
     let raf = 0;
     let last = performance.now();
-
-    const apply = (y: number) => {
-      mark.style.transform = `translate3d(0, ${y}px, 0)`;
-    };
-
-    const setHijack = (on: boolean) => {
-      if (hijacking === on) return;
-      hijacking = on;
-      const lenis = getLenis();
-      if (!lenis) return;
-      if (on) lenis.stop();
-      else lenis.start();
-    };
-
-    // Lenis drives the window, so the document position is true for both the
-    // smoothed wheel and native touch.
-    const atBottom = () =>
-      window.scrollY + window.innerHeight >= document.documentElement.scrollHeight - 2;
+    const ease = (x: number) => (x < 0.5 ? 2 * x * x : 1 - Math.pow(-2 * x + 2, 2) / 2);
 
     const measure = () => {
       const h = mark.offsetHeight;
       restTuck.px = Math.round(Math.max(4, h * WORDMARK_REST_CLIP));
-      const pulledTuck = Math.round(Math.max(0, h * WORDMARK_PULLED_CLIP));
-      maxPull.px = prefersReduce ? 0 : Math.max(24, restTuck.px - pulledTuck);
-      if (pull.target > maxPull.px) pull.target = maxPull.px;
+      revealTuck.px = prefersReduce ? restTuck.px : Math.round(h * WORDMARK_REVEAL_CLIP);
     };
     measure();
     const ro = new ResizeObserver(measure);
@@ -255,13 +234,13 @@ export function SiteFooter({ cta = true }: { cta?: boolean } = {}) {
     const tick = (now: number) => {
       const dt = Math.min(0.05, (now - last) / 1000);
       last = now;
-      const k = 1 - Math.exp(-dt / 0.13);
-      pull.v += (pull.target - pull.v) * k;
-      if (Math.abs(pull.target - pull.v) < 0.05) pull.v = pull.target;
-      apply(restTuck.px - pull.v);
+      reveal.v += (reveal.target - reveal.v) * (1 - Math.exp(-dt / 0.16));
+      if (Math.abs(reveal.target - reveal.v) < 0.0015) reveal.v = reveal.target;
+      const t = ease(reveal.v);
+      mark.style.transform = `translate3d(0, ${restTuck.px + (revealTuck.px - restTuck.px) * t}px, 0)`;
       raf = requestAnimationFrame(tick);
     };
-    apply(restTuck.px);
+    mark.style.transform = `translate3d(0, ${restTuck.px}px, 0)`;
     raf = requestAnimationFrame(tick);
 
     if (prefersReduce) {
@@ -271,74 +250,49 @@ export function SiteFooter({ cta = true }: { cta?: boolean } = {}) {
       };
     }
 
-    let lastEventTs = 0;
-    // True when the gesture in progress began with the page already parked at
-    // the end — the gesture that merely scrolls down to the footer must not
-    // spill over into the pull.
-    let gestureOwnsPull = false;
-
-    const release = () => {
-      pull.target = 0;
-      setHijack(false);
-    };
-
-    const consume = (rawDy: number, deltaMode = 0) => {
-      const dy = rawDy * (deltaMode === 1 ? 16 : deltaMode === 2 ? 100 : 1);
-      if (dy === 0) return false;
-
-      const now = performance.now();
-      if (now - lastEventTs > GESTURE_GAP_MS) gestureOwnsPull = atBottom();
-      lastEventTs = now;
-
-      if (dy > 0) {
-        if (!gestureOwnsPull) return false;
-        setHijack(true);
-        pull.target = Math.min(maxPull.px, pull.target + Math.min(40, dy) * 0.5);
-        return true;
-      }
-
-      // Upward: give the lift back before the page starts moving again.
-      if (pull.target > 0) {
-        pull.target = Math.max(0, pull.target + Math.max(-40, dy) * 0.5);
-        if (pull.target <= 0) setHijack(false);
-        return true;
-      }
-      setHijack(false);
-      return false;
-    };
+    // Lenis drives the window, so the document position is true for both the
+    // smoothed wheel and native touch.
+    const atBottom = () =>
+      window.scrollY + window.innerHeight >= document.documentElement.scrollHeight - 2;
 
     const onWheel = (e: WheelEvent) => {
-      if (consume(e.deltaY, e.deltaMode)) e.preventDefault();
+      if (e.deltaY > 0) {
+        if (atBottom()) reveal.target = 1;
+      } else if (e.deltaY < 0) {
+        reveal.target = 0;
+      }
     };
-    window.addEventListener("wheel", onWheel, { passive: false, capture: true });
+    window.addEventListener("wheel", onWheel, { passive: true });
 
     let touchY: number | null = null;
     const onTouchStart = (e: TouchEvent) => {
       touchY = e.touches[0]?.clientY ?? null;
-      lastEventTs = 0;
     };
     const onTouchMove = (e: TouchEvent) => {
       if (touchY === null) return;
       const y = e.touches[0]?.clientY ?? touchY;
       const dy = touchY - y;
+      if (Math.abs(dy) < 1) return;
       touchY = y;
-      if (consume(dy * 1.4)) e.preventDefault();
+      if (dy > 0) {
+        if (atBottom()) reveal.target = 1;
+      } else {
+        reveal.target = 0;
+      }
     };
     window.addEventListener("touchstart", onTouchStart, { passive: true });
-    window.addEventListener("touchmove", onTouchMove, { passive: false });
+    window.addEventListener("touchmove", onTouchMove, { passive: true });
 
-    // Scrollbar drags and anchor jumps bypass the wheel entirely; leaving the
-    // end must always put the wordmark back.
+    // Scrollbar drags and anchor jumps bypass wheel/touch entirely.
     const onScroll = () => {
-      if (pull.target > 0 && !atBottom()) release();
+      if (reveal.target === 1 && !atBottom()) reveal.target = 0;
     };
     window.addEventListener("scroll", onScroll, { passive: true });
 
     return () => {
       cancelAnimationFrame(raf);
-      setHijack(false);
       ro.disconnect();
-      window.removeEventListener("wheel", onWheel, { capture: true } as EventListenerOptions);
+      window.removeEventListener("wheel", onWheel);
       window.removeEventListener("touchstart", onTouchStart);
       window.removeEventListener("touchmove", onTouchMove);
       window.removeEventListener("scroll", onScroll);
