@@ -22,7 +22,7 @@ import { useHeroLayout } from "@/hooks/useHeroLayout";
 import { BAYER, DOT_FILL, MIN_DENSITY, SQUARE_AT, hash2, smoothstep } from "@/components/HalftoneHandsFooter";
 
 /** Peak white of the footer wordmark dots. */
-const WORDMARK_ALPHA = 0.06;
+const WORDMARK_ALPHA = 0.11;
 
 /** Fraction of the dashboard image's lower half left visible above the footer. */
 const IMAGE_REVEAL = 0.75;
