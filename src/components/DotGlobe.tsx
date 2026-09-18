@@ -4,30 +4,33 @@ import { worldLandMaskAsset } from "@/lib/media";
 /**
  * Dot-matrix globe, turning on its own.
  *
- * The same drawing language as the hero hands and the footer wordmark: one dot
- * per cell of a grid, tone carried by dot area. Here the grid is a sphere —
- * rings of latitude with the dot count per ring scaled by cos(lat) so spacing
- * stays even — and each dot asks an equirectangular land mask whether it sits
- * on land. Ocean dots stay faint, land dots take the ink, and both fade toward
- * the limb so the sphere reads as a sphere.
+ * Built to the reference art: small squares on a fine sphere grid — rings of
+ * latitude with the count per ring scaled by cos(lat) so spacing stays even —
+ * each asking an equirectangular land mask whether it sits on land. The open
+ * ocean is barely inked; it only becomes visible at the limb, where the grid
+ * is seen edge-on and piles up into a rim. That rim, not a drawn outline, is
+ * what makes the disc read as a sphere.
  */
 
 /** Degrees between rings of latitude. */
-const LAT_STEP = 2.1;
+const LAT_STEP = 1.15;
 /** Arc between dots along the equator, in degrees. */
-const LON_STEP = 2.1;
+const LON_STEP = 1.15;
+/** Square side as a fraction of the grid spacing, at the centre and the limb. */
+const DOT_FILL = 0.57;
+const DOT_FILL_LIMB = 0.36;
 /** Turn rate, degrees a second. */
 const SPIN = 5.2;
 
 export function DotGlobe({
   className,
   style,
-  /** Ink for the land dots. */
-  ink = "#0E0B22",
+  /** Ink for the land dots — neutral, as in the reference art. */
+  ink = "#3A3A44",
   /** Peak alpha of a land dot at the centre of the disc. */
-  landAlpha = 0.5,
-  /** Peak alpha of an ocean dot — the graticule the continents sit in. */
-  oceanAlpha = 0.095,
+  landAlpha = 0.54,
+  /** Open ocean is almost bare; the limb does the rest by accumulation. */
+  oceanAlpha = 0.012,
 }: {
   className?: string;
   style?: React.CSSProperties;
@@ -104,8 +107,9 @@ export function DotGlobe({
       const s = (spin * Math.PI) / 180;
       const cosS = Math.cos(s);
       const sinS = Math.sin(s);
-      // Dot pitch at the equator, so the disc's density is size-independent.
-      const pitch = (r * 2 * Math.PI * (LON_STEP / 360)) / 2;
+      // Grid spacing at the equator, so density is size-independent.
+      const spacing = r * 2 * Math.PI * (LON_STEP / 360);
+      const rr = r * 0.94;
 
       for (const d of dots) {
         // spin about the polar axis, then tilt the axis toward the viewer
@@ -113,18 +117,20 @@ export function DotGlobe({
         const zs = -d.x * sinS + d.z * cosS;
         const y = d.y * cosT - zs * sinT;
         const z = d.y * sinT + zs * cosT;
-        if (z <= 0.02) continue; // back of the sphere
+        if (z <= 0.01) continue; // back of the sphere
 
-        // depth: dots shrink and fade toward the limb
-        const depth = z;
-        const rr = pitch * (0.26 + 0.42 * depth) * (d.land ? 1 : 0.7);
-        if (rr < 0.12) continue;
-        const a = (d.land ? landAlpha : oceanAlpha) * (0.25 + 0.75 * depth);
+        // The square barely tapers with depth — the rim is built by the grid
+        // crowding together, not by fatter dots.
+        const side = spacing * (DOT_FILL_LIMB + (DOT_FILL - DOT_FILL_LIMB) * z) * (d.land ? 1 : 0.92);
+        if (side < 0.24) continue;
+        // A fixed light across the disc, as in the reference: the ink builds
+        // toward the right, so continents pass through it as the globe turns.
+        const lit = 0.34 + 0.66 * (0.5 + 0.5 * x);
+        ctx.globalAlpha = (d.land ? landAlpha : oceanAlpha) * lit * (0.5 + 0.5 * z);
 
-        ctx.globalAlpha = a;
-        ctx.beginPath();
-        ctx.arc(r + x * r * 0.94, r - y * r * 0.94, rr, 0, Math.PI * 2);
-        ctx.fill();
+        const px = r + x * rr - side / 2;
+        const py = r - y * rr - side / 2;
+        ctx.fillRect(px, py, side, side);
       }
       ctx.globalAlpha = 1;
     };
