@@ -1,6 +1,15 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { logoAsset as logo } from "@/lib/media";
+import {
+  PLATFORM_CAPABILITIES,
+  PLATFORM_PRODUCTS,
+  SOLUTION_INDUSTRIES,
+  SOLUTION_USE_CASES,
+  WHY_SYNERGY_ITEMS,
+  type FeaturedItem,
+  type MenuItem,
+} from "@/lib/siteMenu";
 
 export function SiteNav({
   revealDelay = 4000,
@@ -243,43 +252,6 @@ export function SiteNav({
 
 
 
-const WHY_SYNERGY_ITEMS: Array<{
-  dot: string;
-  kicker: string;
-  title: string;
-  desc: string;
-  to?: string;
-}> = [
-  {
-    dot: "#9E8CFF",
-    kicker: "Impact",
-    title: "Business Impact",
-    to: "/why-synergy/business-impact",
-    desc: "55% of conversations resolved, with a clear path to lower costs.",
-  },
-  {
-    dot: "#D1E486",
-    kicker: "Stories",
-    title: "Stories from the Front Lines",
-    to: "/why-synergy/stories",
-    desc: "Multilingual support, risk management, and continuous improvement.",
-  },
-  {
-    dot: "#8CE0FF",
-    kicker: "Engineering",
-    title: "Technology & Guardrails",
-    to: "/why-synergy/technology",
-    desc: "Governed knowledge, precise retrieval, and human oversight.",
-  },
-  {
-    dot: "#EBA753",
-    kicker: "Commitment",
-    title: "Security & Partnership",
-    to: "/why-synergy/security",
-    desc: "Private deployment, customer-controlled data, and expert support after launch.",
-  },
-];
-
 // Spring-ish easing for the panel reveal.
 const PANEL_EASE = "cubic-bezier(0.22, 1, 0.36, 1)";
 
@@ -321,6 +293,40 @@ function RuleMark({
       }}
     />
   );
+}
+
+/**
+ * Where a menu grid's interior rules actually sit. The rules are the first
+ * child's own borders, and rows/columns are sized by their copy, so read them
+ * from layout instead of assuming the grid splits evenly. offsetX/Y are used
+ * rather than client rects because the closed panel is scaled.
+ */
+function useRuleCrossing() {
+  const ref = useRef<HTMLDivElement>(null);
+  const [rule, setRule] = useState<{ x: number; y: number; bottom: number } | null>(null);
+
+  useEffect(() => {
+    const grid = ref.current;
+    if (!grid) return;
+    const measure = () => {
+      const first = grid.firstElementChild as HTMLElement | null;
+      const host = grid.parentElement as HTMLElement | null;
+      if (!first || !host) return;
+      // A 1px rule is centred half a pixel inside the border box it belongs to.
+      setRule({
+        x: first.offsetLeft + first.offsetWidth - 0.5,
+        y: first.offsetTop + first.offsetHeight - 0.5,
+        bottom: host.offsetHeight - 0.5,
+      });
+    };
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(grid);
+    for (const child of grid.children) ro.observe(child);
+    return () => ro.disconnect();
+  }, []);
+
+  return [ref, rule] as const;
 }
 
 /** The mark on each corner of a menu grid. */
@@ -418,11 +424,13 @@ function cellReveal(open: boolean, i: number) {
 function WhySynergyMenu({ open }: { open: boolean }) {
   const [hover, setHover] = useState<number | null>(null);
   const navigate = useNavigate();
+  const [gridRef, rule] = useRuleCrossing();
 
   return (
     <MenuPanel open={open} kicker="/ why synergy">
       <div className="relative" style={{ width: 620, height: 315 }}>
       <div
+        ref={gridRef}
         className="grid h-full w-full grid-cols-2 overflow-hidden"
         style={{
           border: `1px solid ${MENU_RULE}`,
@@ -472,10 +480,12 @@ function WhySynergyMenu({ open }: { open: boolean }) {
           </div>
         ))}
       </div>
-        <div aria-hidden className="pointer-events-none absolute inset-0">
-          {/* the grid's one interior crossing */}
-          <RuleMark open={open} x="50%" y="50%" nudge={[0.5, -0.5]} delay={640} />
-        </div>
+        {rule ? (
+          <div aria-hidden className="pointer-events-none absolute inset-0">
+            {/* the grid's one interior crossing */}
+            <RuleMark open={open} x={`${rule.x}px`} y={`${rule.y}px`} delay={640} />
+          </div>
+        ) : null}
         <GridCornerMarks open={open} />
       </div>
     </MenuPanel>
@@ -484,8 +494,8 @@ function WhySynergyMenu({ open }: { open: boolean }) {
 
 /* ------------------------------------------------------- two-column menus */
 
-type RichItem = { dot: string; kicker: string; title: string; desc: string; tag?: string; to?: string };
-type ListItem = { title: string; desc: string; to?: string };
+type RichItem = FeaturedItem;
+type ListItem = MenuItem;
 
 /** Colour square + kicker, title (optional tag), one-line description. */
 function RichCell({
@@ -655,6 +665,7 @@ function TwoColumnMenu({
 }) {
   const [hover, setHover] = useState<string | null>(null);
   const navigate = useNavigate();
+  const [gridRef, rule] = useRuleCrossing();
   const go = (to?: string) => {
     if (to) navigate({ to });
   };
@@ -663,6 +674,7 @@ function TwoColumnMenu({
     <MenuPanel open={open} kicker={kicker} align="center">
       <div className="relative" style={{ width: 690 }}>
       <div
+        ref={gridRef}
         className="grid overflow-hidden"
         style={{
           gridTemplateColumns: "360px 330px",
@@ -702,11 +714,13 @@ function TwoColumnMenu({
           ))}
         </div>
       </div>
-        <div aria-hidden className="pointer-events-none absolute inset-0">
-          {/* where the column rule meets the frame, top and bottom */}
-          <RuleMark open={open} x="360px" y="0%" nudge={[-0.5, 0.5]} delay={640} />
-          <RuleMark open={open} x="360px" y="100%" nudge={[-0.5, -0.5]} delay={690} />
-        </div>
+        {rule ? (
+          <div aria-hidden className="pointer-events-none absolute inset-0">
+            {/* where the column rule meets the frame, top and bottom */}
+            <RuleMark open={open} x={`${rule.x}px`} y="0.5px" delay={640} />
+            <RuleMark open={open} x={`${rule.x}px`} y={`${rule.bottom}px`} delay={690} />
+          </div>
+        ) : null}
         <GridCornerMarks open={open} />
       </div>
     </MenuPanel>
@@ -714,37 +728,6 @@ function TwoColumnMenu({
 }
 
 /* --------------------------------------------------------------- platform */
-
-/** Three products (left, one per row) and four capabilities (right list). */
-const PLATFORM_PRODUCTS: RichItem[] = [
-  {
-    dot: "#8CE0FF",
-    kicker: "Engine",
-    title: "Self-Developed RAG 2.0",
-    desc: "Intelligent knowledge engine for accurate, context-aware responses.",
-    to: "/platform/rag",
-  },
-  {
-    dot: "#9E8CFF",
-    kicker: "Knowledge",
-    title: "Knowledge Cloud",
-    desc: "One governed knowledge base — accurate, controlled, always current.",
-  },
-  {
-    dot: "#D1E486",
-    kicker: "Studio",
-    title: "Synergy Studio",
-    tag: "New",
-    desc: "Build and deploy AI agents — no code needed.",
-  },
-];
-
-const PLATFORM_CAPABILITIES: ListItem[] = [
-  { title: "AI Mission Control", desc: "Real-time smart dispatch centre" },
-  { title: "Human + AI", desc: "Seamless AI–human handoff" },
-  { title: "Analytics", desc: "Deep business insights & VOC analysis" },
-  { title: "Persona Analysis", desc: "User profiling & personalised service" },
-];
 
 function PlatformMenu({ open }: { open: boolean }) {
   return (
@@ -758,30 +741,6 @@ function PlatformMenu({ open }: { open: boolean }) {
 }
 
 /* --------------------------------------------------------------- solution */
-
-/** Two use cases (left) and four industries (right). */
-const SOLUTION_USE_CASES: RichItem[] = [
-  {
-    dot: "#EBA753",
-    kicker: "Customer service",
-    title: "Scale & Stabilise Customer Support",
-    desc: "Absorb the repetitive volume; keep people on the judgement calls.",
-    to: "/solution/customer-support",
-  },
-  {
-    dot: "#FF9ED8",
-    kicker: "Customer support",
-    title: "Employee Experience, Designed for Focus",
-    desc: "Answer the everyday questions so teams stay on the work that matters.",
-  },
-];
-
-const SOLUTION_INDUSTRIES: ListItem[] = [
-  { title: "Financial", desc: "Payments, KYC and compliant handover" },
-  { title: "Web3 & Gaming", desc: "22-language support at production load" },
-  { title: "Consumer Tech", desc: "Orders, accounts and subscriptions at scale" },
-  { title: "Other Industries", desc: "Tell us about your scenario" },
-];
 
 function SolutionMenu({ open }: { open: boolean }) {
   return (

@@ -1,6 +1,8 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { Link } from "@tanstack/react-router";
 import { Linkedin, Twitter, Youtube } from "lucide-react";
 import { Reveal } from "@/components/Reveal";
+import { FOOTER_COLUMNS } from "@/lib/siteMenu";
 import { DotArrow } from "@/components/DotArrow";
 import { ContainerScroll } from "@/components/ui/container-scroll-animation";
 import { SonarGrid } from "@/components/ui/sonar-grid";
@@ -35,12 +37,9 @@ const FRAME_PAD = 40;
 /** Card tilt at the start of the approach; flattens fully by the rest position. */
 const CARD_TILT_FROM = 24;
 
-const FOOTER_COLUMNS = [
-  { title: "why  synergy", links: ["Features", "Pricing", "Book a demo"] },
-  { title: "platform", links: ["Features", "Pricing", "Book a demo"] },
-  { title: "solution", links: ["Events", "Blog"] },
-  { title: "Company", links: ["About us", "Contact us"] },
-];
+/** Dimmed until hover, as in the nav's centre menu. */
+const FOOTER_LINK =
+  "cursor-pointer text-[rgba(255,255,255,0.72)] transition-colors duration-200 hover:text-white";
 
 
 /**
@@ -462,7 +461,9 @@ export function SiteFooter({ cta = true }: { cta?: boolean } = {}) {
           </div>
         </div>
 
-        <div className="relative overflow-hidden" style={{ height: 400 }}>
+        {/* 400px tall with the columns centred, but free to grow when the
+            sitemap is taller than that — two columns on a phone, for one. */}
+        <div className="relative overflow-hidden" style={{ minHeight: 400 }}>
           <div
             ref={markRef}
             className="pointer-events-none absolute bottom-0 left-0 z-0 w-full will-change-transform"
@@ -475,7 +476,10 @@ export function SiteFooter({ cta = true }: { cta?: boolean } = {}) {
               }}
             />
           </div>
-          <div className="relative z-10 flex h-full items-center" style={{ padding: pad }}>
+          <div
+            className="relative z-10 flex items-center"
+            style={{ minHeight: 400, padding: `${fluid(56, 44)} ${fluid(120, 24)}` }}
+          >
             <div className="mx-auto w-full max-w-[1200px]">
               <div className="grid grid-cols-2 gap-9 md:grid-cols-4">
                 {FOOTER_COLUMNS.map((col, i) => (
@@ -486,27 +490,26 @@ export function SiteFooter({ cta = true }: { cta?: boolean } = {}) {
                     className="flex flex-col items-start text-left"
                   >
                     <p
-                      className="capitalize"
                       style={{
                         margin: 0,
                         color: "rgba(255,255,255,0.65)",
                         fontSize: 12,
                         lineHeight: "20px",
                         fontWeight: 400,
-                        whiteSpace: "pre-wrap",
                       }}
                     >
                       {col.title}
                     </p>
                     <ul className="mt-6 flex flex-col items-start gap-[18px]">
-                      {col.links.map((l) => (
-                        <li key={l}>
-                          <span
-                            className="cursor-pointer transition-opacity hover:opacity-70"
-                            style={{ color: "#FFFFFF", fontSize: 14, lineHeight: "22px" }}
-                          >
-                            {l}
-                          </span>
+                      {col.items.map((item) => (
+                        <li key={item.title} style={{ fontSize: 14, lineHeight: "22px" }}>
+                          {item.to ? (
+                            <Link to={item.to} preload="intent" className={FOOTER_LINK}>
+                              {item.title}
+                            </Link>
+                          ) : (
+                            <span className={FOOTER_LINK}>{item.title}</span>
+                          )}
                         </li>
                       ))}
                     </ul>
