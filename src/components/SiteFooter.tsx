@@ -21,9 +21,12 @@ import { dashboardAsset } from "@/lib/media";
 import { fluid } from "@/lib/fluid";
 import { GRADIENT, GRADIENT_STOPS, RainbowButton } from "@/components/RainbowButton";
 
-/** Watermark ink on the fine screen. */
-const WORDMARK_ALPHA = 0.11;
-const WORDMARK_DOT_FILL = 0.8;
+/** Watermark ink on the fine screen. The dots sit at 72% of the cell so the
+ *  paper between them reads; alpha carries the weight the smaller dots lose. */
+const WORDMARK_ALPHA = 0.13;
+const WORDMARK_DOT_FILL = 0.72;
+/** Cell size as a fraction of the type — a coarser screen than the hero's. */
+const WORDMARK_PITCH_DIVISOR = 72;
 /** Fraction of the glyph box kept below the divider by default, so the crop
  *  scales with the type: the word reads, descenders cut by the line. */
 const WORDMARK_REST_CLIP = 0.37;
@@ -132,7 +135,7 @@ function DotWordmark({
       const ascent = m.actualBoundingBoxAscent || size * 0.74;
       sctx.fillText(text, 0, ascent);
 
-      const pitch = Math.max(2.25, size / 80);
+      const pitch = Math.max(2.5, size / WORDMARK_PITCH_DIVISOR);
       const cols = Math.ceil(w / pitch);
       const rows = Math.ceil(h / pitch);
       const off = document.createElement("canvas");
