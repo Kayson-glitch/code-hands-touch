@@ -18,6 +18,11 @@ import { dashboardAsset } from "@/lib/media";
 
 import { fluid } from "@/lib/fluid";
 import { GRADIENT, GRADIENT_STOPS, RainbowButton } from "@/components/RainbowButton";
+import { useHeroLayout } from "@/hooks/useHeroLayout";
+import { BAYER, DOT_FILL, MIN_DENSITY, SQUARE_AT, hash2, smoothstep } from "@/components/HalftoneHandsFooter";
+
+/** Peak white of the footer wordmark dots. */
+const WORDMARK_ALPHA = 0.06;
 
 /** Fraction of the dashboard image's lower half left visible above the footer. */
 const IMAGE_REVEAL = 0.75;
@@ -37,15 +42,17 @@ const FOOTER_COLUMNS = [
 
 
 /**
- * Wordmark as a dot matrix — the site's halftone language instead of a flat
- * tint. The text is set at the size that fills the container, downsampled to
- * one cell per dot, and each cell's coverage becomes a dot whose AREA carries
- * it (the same rule as the hero hands). Same line box and 22% drop as the
- * flat version had, so the baseline still sits on the divider.
+ * Wordmark as a dot matrix, drawn with the hero hands' halftone rules: the
+ * same dot pitch (from the hero layout), dot AREA carries coverage with the
+ * same soft ceiling, ordered dither on the threshold, faint cells fray into
+ * isolated dots, and the deepest cells square off. Only the ink is inverted
+ * for the black footer — white, with the same low-to-high value ramp.
  */
 function DotWordmark({ text }: { text: string }) {
   const boxRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const layout = useHeroLayout();
+  const pitch = Math.max(5, Math.round(layout.cellSize * 0.62));
 
   useEffect(() => {
     const box = boxRef.current;
@@ -70,19 +77,20 @@ function DotWordmark({ text }: { text: string }) {
       const size = (probe * w) / tw;
       const h = Math.round(size * 0.8);
 
-      // One cell per dot; ~10px at the desktop size, never finer than 6.
-      const pitch = Math.max(6, Math.round(size / 26));
       const cols = Math.ceil(w / pitch);
       const rows = Math.ceil(h / pitch);
       off.width = cols;
       off.height = rows;
       octx.setTransform(1 / pitch, 0, 0, 1 / pitch, 0, 0);
+      // Slight blur before the downsample, as the hands do, so glyph edges don't stair-step.
+      (octx as unknown as { filter: string }).filter = `blur(${pitch * 0.5}px)`;
       octx.font = font(size);
       (octx as unknown as { letterSpacing: string }).letterSpacing = `${-0.02 * size}px`;
       octx.fillStyle = "#fff";
       octx.textBaseline = "alphabetic";
       // line-height 0.8 put the baseline ~0.75em down the box; translateY(22%) added 0.176em.
       octx.fillText(text, 0, size * 0.93);
+      (octx as unknown as { filter: string }).filter = "none";
       const data = octx.getImageData(0, 0, cols, rows).data;
 
       const dpr = Math.min(2, window.devicePixelRatio || 1);
@@ -92,15 +100,34 @@ function DotWordmark({ text }: { text: string }) {
       canvas.style.height = `${h}px`;
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
       ctx.clearRect(0, 0, w, h);
-      ctx.fillStyle = "rgba(255,255,255,0.09)";
-      const maxR = pitch * 0.5 * 0.9;
+
+      const maxR = pitch * 0.5 * DOT_FILL;
       for (let j = 0; j < rows; j++) {
         for (let i = 0; i < cols; i++) {
-          const a = data[(j * cols + i) * 4 + 3] / 255;
-          if (a < 0.08) continue;
-          const r = maxR * Math.sqrt(a);
+          const coverage = data[(j * cols + i) * 4 + 3] / 255;
+          // Same tone curve, dither and dissolve as sampleField / paintField.
+          const t = Math.min(1, Math.max(0, (coverage - 0.02) / 0.88));
+          let density = Math.pow(t, 0.8);
+          density = Math.min(1, Math.max(0, density + (BAYER[(j & 3) * 4 + (i & 3)] - 0.5) * 0.07));
+          if (density < MIN_DENSITY) continue;
+          const keep = smoothstep((density - MIN_DENSITY) / 0.22);
+          if (hash2(i, j) > 0.16 + keep * 0.84) continue;
+          const d = density < 0.8 ? density : 0.8 + (density - 0.8) * 0.7;
+          const r = maxR * Math.sqrt(d);
+          if (r < 0.16) continue;
+
+          const x = (i + 0.5) * pitch;
+          const y = (j + 0.5) * pitch;
+          // Inverted ink ramp for the black footer: faint cells lighter, deep cells fuller.
+          ctx.fillStyle = `rgba(255,255,255,${(WORDMARK_ALPHA * (0.55 + 0.45 * d)).toFixed(4)})`;
           ctx.beginPath();
-          ctx.arc((i + 0.5) * pitch, (j + 0.5) * pitch, r, 0, Math.PI * 2);
+          if (d <= SQUARE_AT) {
+            ctx.arc(x, y, r, 0, Math.PI * 2);
+          } else {
+            const sq = (d - SQUARE_AT) / (1 - SQUARE_AT);
+            const side = r * (1 - 0.04 * sq);
+            ctx.roundRect(x - side, y - side, side * 2, side * 2, r * (1 - 0.6 * sq));
+          }
           ctx.fill();
         }
       }
@@ -111,7 +138,7 @@ function DotWordmark({ text }: { text: string }) {
     ro.observe(box);
     if (document.fonts?.ready) document.fonts.ready.then(draw);
     return () => ro.disconnect();
-  }, [text]);
+  }, [text, pitch]);
 
   return (
     <div

@@ -29,11 +29,11 @@ const FRAME_AR = FRAME_W / FRAME_H;
 // ---------------------------------------------------------------- tuning
 // Radius is a fraction of the half-pitch. Kept below 1 so even the darkest
 // cells keep a sliver of paper between them and never weld into a solid mass.
-const DOT_FILL = 0.9;
+export const DOT_FILL = 0.9;
 // Coverage below this is left as bare paper.
-const MIN_DENSITY = 0.05;
+export const MIN_DENSITY = 0.05;
 // Only the very deepest dots square off, so shadows stay legible as a screen.
-const SQUARE_AT = 0.88;
+export const SQUARE_AT = 0.88;
 // Ink ramp: the previous single mid-grey is now the deepest tone; from there
 // the value decreases evenly toward near-paper light grey. Tone is carried
 // almost entirely by dot AREA, keeping the halftone read clean and neutral.
@@ -83,7 +83,7 @@ const GHOST_ALPHA_MAX = 0.2;
 
 
 /** 4x4 ordered dither matrix, normalised to 0..1 — breaks up flat banding. */
-const BAYER = [
+export const BAYER = [
   0, 8, 2, 10, 12, 4, 14, 6, 3, 11, 1, 9, 15, 7, 13, 5,
 ].map((v) => (v + 0.5) / 16);
 
@@ -266,12 +266,12 @@ function loadImage(src: string): Promise<HTMLImageElement> {
 }
 
 /** Deterministic per-cell hash in 0..1 — keeps the dissolve stable on resize. */
-function hash2(i: number, j: number) {
+export function hash2(i: number, j: number) {
   const s = Math.sin(i * 127.1 + j * 311.7) * 43758.5453;
   return s - Math.floor(s);
 }
 
-function smoothstep(t: number) {
+export function smoothstep(t: number) {
   const x = Math.min(1, Math.max(0, t));
   return x * x * (3 - 2 * x);
 }
