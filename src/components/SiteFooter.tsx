@@ -53,8 +53,12 @@ function DotWordmark({
   onMetrics,
 }: {
   text: string;
-  /** Descender depth as a fraction of the glyph box (baseline → box bottom). */
-  onMetrics?: (descentRatio: number) => void;
+  /**
+   * `height` is the glyph box, `descentRatio` the descender depth within it
+   * (baseline → box bottom). The footer needs both: one to keep the copy clear
+   * of the mark, the other to stop the reveal on the baseline.
+   */
+  onMetrics?: (m: { height: number; descentRatio: number }) => void;
 }) {
   const boxRef = useRef<HTMLDivElement>(null);
   const textRef = useRef<HTMLSpanElement>(null);
@@ -84,7 +88,7 @@ function DotWordmark({
     const descent = Math.ceil(m.actualBoundingBoxDescent || next * 0.2);
     const h = Math.max(1, ascent + descent);
     setGlyphH(h);
-    onMetricsRef.current?.(descent / h);
+    onMetricsRef.current?.({ height: h, descentRatio: descent / h });
   };
 
   useLayoutEffect(fit);
@@ -196,6 +200,8 @@ export function SiteFooter({ cta = true }: { cta?: boolean } = {}) {
   // there so the baseline — the bottom of the A — lands on the divider.
   const descentRatioRef = useRef(0.2);
   const remeasureRef = useRef<(() => void) | null>(null);
+  // How much of the wordmark shows at rest, so the columns can sit clear of it.
+  const [markRestH, setMarkRestH] = useState(0);
   const [halfH, setHalfH] = useState(0);
   // How far the footer climbs over the image (negative margin). Nothing to
   // climb over without the CTA screen.
@@ -470,15 +476,23 @@ export function SiteFooter({ cta = true }: { cta?: boolean } = {}) {
           >
             <DotWordmark
               text="Synergy.AI"
-              onMetrics={(descentRatio) => {
+              onMetrics={({ height, descentRatio }) => {
                 descentRatioRef.current = descentRatio;
                 remeasureRef.current?.();
+                setMarkRestH(Math.round(height * (1 - WORDMARK_REST_CLIP)));
               }}
             />
           </div>
+          {/* The columns clear the wordmark's resting height, so at rest the
+              copy never sits on the letters — only the reveal brings them
+              together. */}
           <div
             className="relative z-10 flex items-center"
-            style={{ minHeight: 400, padding: `${fluid(56, 44)} ${fluid(120, 24)}` }}
+            style={{
+              minHeight: 400,
+              padding: `${fluid(56, 44)} ${fluid(120, 24)}`,
+              paddingBottom: `calc(${fluid(56, 44)} + ${markRestH}px)`,
+            }}
           >
             <div className="mx-auto w-full max-w-[1200px]">
               <div className="grid grid-cols-2 gap-9 md:grid-cols-4">
@@ -505,10 +519,10 @@ export function SiteFooter({ cta = true }: { cta?: boolean } = {}) {
                         <li key={item.title} style={{ fontSize: 14, lineHeight: "22px" }}>
                           {item.to ? (
                             <Link to={item.to} preload="intent" className={FOOTER_LINK}>
-                              {item.title}
+                              {item.short ?? item.title}
                             </Link>
                           ) : (
-                            <span className={FOOTER_LINK}>{item.title}</span>
+                            <span className={FOOTER_LINK}>{item.short ?? item.title}</span>
                           )}
                         </li>
                       ))}

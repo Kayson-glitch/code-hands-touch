@@ -3,8 +3,12 @@
  * footer's columns both read from here, so the two can't drift apart.
  */
 
-/** A plain destination: title, one-line description, route when it exists. */
-export type MenuItem = { title: string; desc: string; to?: string };
+/**
+ * A plain destination: title, one-line description, route when it exists.
+ * `short` is the label for narrow places like the footer columns, where the
+ * dropdown's full marketing title would wrap onto three lines.
+ */
+export type MenuItem = { title: string; desc: string; to?: string; short?: string };
 
 /** A featured destination — carries the colour square and kicker the dropdowns show. */
 export type FeaturedItem = MenuItem & { dot: string; kicker: string; tag?: string };
@@ -21,6 +25,7 @@ export const WHY_SYNERGY_ITEMS: FeaturedItem[] = [
     dot: "#D1E486",
     kicker: "Stories",
     title: "Stories from the Front Lines",
+    short: "Front-Line Stories",
     to: "/why-synergy/stories",
     desc: "Multilingual support, risk management, and continuous improvement.",
   },
@@ -46,6 +51,7 @@ export const PLATFORM_PRODUCTS: FeaturedItem[] = [
     dot: "#8CE0FF",
     kicker: "Engine",
     title: "Self-Developed RAG 2.0",
+    short: "RAG 2.0",
     desc: "Intelligent knowledge engine for accurate, context-aware responses.",
     to: "/platform/rag",
   },
@@ -65,7 +71,7 @@ export const PLATFORM_PRODUCTS: FeaturedItem[] = [
 ];
 
 export const PLATFORM_CAPABILITIES: MenuItem[] = [
-  { title: "AI Mission Control", desc: "Real-time smart dispatch centre" },
+  { title: "AI Mission Control", short: "Mission Control", desc: "Real-time smart dispatch centre" },
   { title: "Human + AI", desc: "Seamless AI–human handoff" },
   { title: "Analytics", desc: "Deep business insights & VOC analysis" },
   { title: "Persona Analysis", desc: "User profiling & personalised service" },
@@ -77,6 +83,7 @@ export const SOLUTION_USE_CASES: FeaturedItem[] = [
     dot: "#EBA753",
     kicker: "Customer service",
     title: "Scale & Stabilise Customer Support",
+    short: "Customer Support",
     desc: "Absorb the repetitive volume; keep people on the judgement calls.",
     to: "/solution/customer-support",
   },
@@ -84,6 +91,7 @@ export const SOLUTION_USE_CASES: FeaturedItem[] = [
     dot: "#FF9ED8",
     kicker: "Customer support",
     title: "Employee Experience, Designed for Focus",
+    short: "Employee Experience",
     desc: "Answer the everyday questions so teams stay on the work that matters.",
   },
 ];
@@ -92,7 +100,7 @@ export const SOLUTION_INDUSTRIES: MenuItem[] = [
   { title: "Financial", desc: "Payments, KYC and compliant handover" },
   { title: "Web3 & Gaming", desc: "22-language support at production load" },
   { title: "Consumer Tech", desc: "Orders, accounts and subscriptions at scale" },
-  { title: "Other Industries", desc: "Tell us about your scenario" },
+  { title: "Other Industries", short: "Other", desc: "Tell us about your scenario" },
 ];
 
 /** Nav items that stand on their own, plus the company pages under them. */
