@@ -23,10 +23,11 @@ import { getLenis } from "@/lib/smoothScroll";
 /** Watermark ink on the fine screen. */
 const WORDMARK_ALPHA = 0.11;
 const WORDMARK_DOT_FILL = 0.8;
-/** At rest most of the glyph is under the divider — only the letter tops peek. */
-const WORDMARK_REST_CLIP = 0.58;
-/** After extra scroll: sit on the divider, descenders still just tucked. */
-const WORDMARK_PULLED_CLIP = 0.08;
+/** Fractions of the glyph box that stay below the divider, so both positions
+ *  scale with the type. At rest only the letter tops peek out. */
+const WORDMARK_REST_CLIP = 0.66;
+/** Fully pulled: the whole word reads, with the descenders cut by the line. */
+const WORDMARK_PULLED_CLIP = 0.37;
 
 /** Fraction of the dashboard image's lower half left visible above the footer. */
 const IMAGE_REVEAL = 0.75;
@@ -205,14 +206,16 @@ export function SiteFooter({ cta = true }: { cta?: boolean } = {}) {
     return () => ro.disconnect();
   }, []);
 
-  // Extra wheel at the document end lifts the wordmark until the full glyph
-  // sits above the divider. Lenis is paused while that pull is in effect so
-  // the two drivers don't fight.
+  // Once the page has parked at its end, the NEXT downward gesture stops
+  // being page scroll and becomes a drag on the wordmark. Lenis is paused for
+  // the duration so the two drivers never fight.
   useEffect(() => {
     const mark = markRef.current;
     if (!mark) return;
     const prefersReduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
+    /** Wheel/touch gap that counts as a new gesture rather than the same flick. */
+    const GESTURE_GAP_MS = 160;
     const restTuck = { px: 24 };
     const maxPull = { px: 80 };
     const pull = { target: 0, v: 0 };
@@ -233,19 +236,10 @@ export function SiteFooter({ cta = true }: { cta?: boolean } = {}) {
       else lenis.start();
     };
 
-    const atBottom = () => {
-      const lenis = getLenis();
-      if (lenis) return lenis.scroll >= lenis.limit - 0.5;
-      const el = document.documentElement;
-      return window.scrollY + window.innerHeight >= el.scrollHeight - 1;
-    };
-
-    const lenisSettled = () => {
-      const lenis = getLenis();
-      if (!lenis) return true;
-      const vel = Math.abs((lenis as unknown as { velocity?: number }).velocity ?? 0);
-      return vel < 0.15;
-    };
+    // Lenis drives the window, so the document position is true for both the
+    // smoothed wheel and native touch.
+    const atBottom = () =>
+      window.scrollY + window.innerHeight >= document.documentElement.scrollHeight - 2;
 
     const measure = () => {
       const h = mark.offsetHeight;
@@ -261,7 +255,7 @@ export function SiteFooter({ cta = true }: { cta?: boolean } = {}) {
     const tick = (now: number) => {
       const dt = Math.min(0.05, (now - last) / 1000);
       last = now;
-      const k = 1 - Math.exp(-dt / 0.14);
+      const k = 1 - Math.exp(-dt / 0.13);
       pull.v += (pull.target - pull.v) * k;
       if (Math.abs(pull.target - pull.v) < 0.05) pull.v = pull.target;
       apply(restTuck.px - pull.v);
@@ -277,41 +271,38 @@ export function SiteFooter({ cta = true }: { cta?: boolean } = {}) {
       };
     }
 
-    let armed = false;
+    let lastEventTs = 0;
+    // True when the gesture in progress began with the page already parked at
+    // the end — the gesture that merely scrolls down to the footer must not
+    // spill over into the pull.
+    let gestureOwnsPull = false;
+
+    const release = () => {
+      pull.target = 0;
+      setHijack(false);
+    };
 
     const consume = (rawDy: number, deltaMode = 0) => {
       const dy = rawDy * (deltaMode === 1 ? 16 : deltaMode === 2 ? 100 : 1);
       if (dy === 0) return false;
-      const goingDown = dy > 0;
 
-      if (goingDown) {
-        if (pull.target <= 0) {
-          if (!atBottom() || !lenisSettled()) {
-            armed = false;
-            return false;
-          }
-          // First tick at the parked bottom is arrival — do not lift yet.
-          if (!armed) {
-            armed = true;
-            return false;
-          }
-        }
+      const now = performance.now();
+      if (now - lastEventTs > GESTURE_GAP_MS) gestureOwnsPull = atBottom();
+      lastEventTs = now;
+
+      if (dy > 0) {
+        if (!gestureOwnsPull) return false;
         setHijack(true);
-        const step = Math.max(-32, Math.min(32, dy));
-        pull.target = Math.min(maxPull.px, pull.target + step * 0.4);
+        pull.target = Math.min(maxPull.px, pull.target + Math.min(40, dy) * 0.5);
         return true;
       }
 
+      // Upward: give the lift back before the page starts moving again.
       if (pull.target > 0) {
-        const step = Math.max(-32, Math.min(32, dy));
-        pull.target = Math.max(0, pull.target + step * 0.4);
-        if (pull.target <= 0) {
-          setHijack(false);
-          armed = atBottom();
-        }
+        pull.target = Math.max(0, pull.target + Math.max(-40, dy) * 0.5);
+        if (pull.target <= 0) setHijack(false);
         return true;
       }
-      armed = false;
       setHijack(false);
       return false;
     };
@@ -324,16 +315,24 @@ export function SiteFooter({ cta = true }: { cta?: boolean } = {}) {
     let touchY: number | null = null;
     const onTouchStart = (e: TouchEvent) => {
       touchY = e.touches[0]?.clientY ?? null;
+      lastEventTs = 0;
     };
     const onTouchMove = (e: TouchEvent) => {
       if (touchY === null) return;
       const y = e.touches[0]?.clientY ?? touchY;
       const dy = touchY - y;
       touchY = y;
-      if (consume(dy * 1.5)) e.preventDefault();
+      if (consume(dy * 1.4)) e.preventDefault();
     };
     window.addEventListener("touchstart", onTouchStart, { passive: true });
     window.addEventListener("touchmove", onTouchMove, { passive: false });
+
+    // Scrollbar drags and anchor jumps bypass the wheel entirely; leaving the
+    // end must always put the wordmark back.
+    const onScroll = () => {
+      if (pull.target > 0 && !atBottom()) release();
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
 
     return () => {
       cancelAnimationFrame(raf);
@@ -342,6 +341,7 @@ export function SiteFooter({ cta = true }: { cta?: boolean } = {}) {
       window.removeEventListener("wheel", onWheel, { capture: true } as EventListenerOptions);
       window.removeEventListener("touchstart", onTouchStart);
       window.removeEventListener("touchmove", onTouchMove);
+      window.removeEventListener("scroll", onScroll);
     };
   }, []);
 
