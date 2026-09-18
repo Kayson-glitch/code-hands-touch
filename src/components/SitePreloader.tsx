@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
-import { HeroDots } from "@/components/ProductHero";
+import { SonarGrid } from "@/components/ui/sonar-grid";
+import { GRADIENT_STOPS } from "@/components/RainbowButton";
 import { CropFrame } from "@/components/CropFrame";
 import { handsFramesAsset } from "@/lib/media";
 import { fluid } from "@/lib/fluid";
@@ -19,7 +20,7 @@ import { fluid } from "@/lib/fluid";
  */
 
 /** Never flash: the bar is on screen at least this long. */
-const MIN_MS = 560;
+const MIN_MS = 1100;
 /** Never trap: whatever is still pending, the page is handed over by now. */
 const MAX_MS = 3600;
 /** Fade of the overlay once the page is ready. */
@@ -45,8 +46,9 @@ const CELL_W = "min(44vw, 520px)";
 /** A fifteenth of the cell's width, as measured off the mock. */
 const CELL_H = "clamp(20px, 2.93vw, 35px)";
 const CELL_INSET = "clamp(3px, 0.38vw, 5px)";
-const RULE = "rgba(14, 11, 34, 0.12)";
+/** One grey for the track and the frame's rules, so they read as one drawing. */
 const TRACK = "#F1F1F3";
+const RULE = TRACK;
 /** How far the frame's rules run past the cell before they fade out. */
 const FRAME_REACH_X = 112;
 const FRAME_REACH_Y = 108;
@@ -171,10 +173,34 @@ export function SitePreloader() {
       }}
     >
       {/* The product pages' dot field, with the brand-gradient rings expanding
-          through it. It is a canvas, so the same 20px grid stands in — plain,
-          not pulsing — for the moment before the script arrives. */}
+          through it. Same grid and colours as the heroes, but a ring goes out
+          roughly every second from the middle of the screen: the heroes wait
+          5.5s between pings, which inside a loader's life means none at all.
+          It is a canvas, so the plain grid stands in until the script lands. */}
       {live ? (
-        <HeroDots />
+        <SonarGrid
+          aria-hidden
+          spacing={20}
+          dotRadius={1}
+          baseOpacity={0.16}
+          peakOpacity={0.7}
+          color="#0E0B22"
+          waveGradient={GRADIENT_STOPS}
+          waveGradientMode="angular"
+          pingEvery={1.1}
+          speed={240}
+          ringWidth={120}
+          amplitude={0.6}
+          interactive={false}
+          seedPing
+          pingArea={[0.36, 0.34, 0.64, 0.66]}
+          className="pointer-events-none absolute inset-0"
+          style={{
+            maskImage: "linear-gradient(to bottom, transparent 0, #000 18%, #000 62%, transparent 100%)",
+            WebkitMaskImage:
+              "linear-gradient(to bottom, transparent 0, #000 18%, #000 62%, transparent 100%)",
+          }}
+        />
       ) : (
         <span
           aria-hidden
