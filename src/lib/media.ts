@@ -35,6 +35,15 @@ export const solutionFlowAsset = media("solution-cs-flow.webp");
 /** Platform → RAG 2.0 demo transcript card, exported from Figma at 2× (588×568). */
 export const platformRagDemoAsset = media("platform-rag-demo.webp");
 
+/** Company page — the San Francisco card, from Figma at 2×. */
+export const companySanFranciscoAsset = media("company-san-francisco.webp");
+/**
+ * Equirectangular land mask (720×360, white = land), rasterised from
+ * world-atlas' 110m TopoJSON. DotGlobe samples it to decide which dots of the
+ * sphere are continents.
+ */
+export const worldLandMaskAsset = media("world-land-mask.png");
+
 export const cometAsset = media("kore-comet.svg");
 export const valueAsset = media("kore-value.svg");
 export const scaleAsset = media("kore-scale.svg");

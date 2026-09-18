@@ -1362,6 +1362,27 @@ html.lenis body {
 .calc-range:hover::-webkit-slider-thumb,
 .calc-range:focus-visible::-webkit-slider-thumb { transform: scale(1.25); }
 
+/* Company page — the cards pinned on the globe lift a little under the cursor,
+   as if they were floating just off it. Transform only, so nothing reflows. */
+.company-float {
+  transition:
+    transform 420ms cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 420ms cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: transform;
+}
+.company-float:hover {
+  transform: translate3d(0, -6px, 0);
+  box-shadow: 0 12px 28px rgba(14, 11, 34, 0.08);
+}
+@media (prefers-reduced-motion: reduce) {
+  .company-float {
+    transition: none;
+  }
+  .company-float:hover {
+    transform: none;
+  }
+}
+
 /* Why Synergy hero copy column. Between lg and xl the halftone subject starts
    60px right of the viewport centre, so the column yields to it instead of
    running underneath. */

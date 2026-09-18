@@ -106,7 +106,7 @@ export const SOLUTION_INDUSTRIES: MenuItem[] = [
 /** Nav items that stand on their own, plus the company pages under them. */
 export const COMPANY_ITEMS: MenuItem[] = [
   { title: "Pricing", desc: "Plans and the volume calculator", to: "/pricing" },
-  { title: "Company Hub", desc: "News, events and the blog" },
+  { title: "Company Hub", desc: "Our mission, how we work, and hiring", to: "/company" },
   { title: "About us", desc: "Who builds Synergy" },
   { title: "Contact us", desc: "Talk to the team" },
 ];

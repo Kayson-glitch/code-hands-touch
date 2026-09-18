@@ -184,7 +184,7 @@ export function SiteNav({
               { label: "Platform", chevron: true },
               { label: "Solution", chevron: true },
               { label: "Pricing", chevron: false, to: "/pricing" },
-              { label: "Company Hub", chevron: false },
+              { label: "Company Hub", chevron: false, to: "/company" },
             ].map((item, i) => (
               <li
                 key={item.label}
