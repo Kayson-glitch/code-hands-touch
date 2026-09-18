@@ -79,6 +79,9 @@ export function DotGlobe({
 
     let raf = 0;
     let spin = 0;
+    /** Current turn rate; eases to zero while the pointer is on the globe. */
+    let rate = SPIN;
+    let hovering = false;
     let last = performance.now();
     let running = true;
     let size = 0;
@@ -138,9 +141,31 @@ export function DotGlobe({
     const tick = (now: number) => {
       const dt = Math.min(0.05, (now - last) / 1000);
       last = now;
-      if (!prefersReduce) spin = (spin + SPIN * dt) % 360;
+      if (!prefersReduce) {
+        // The rate eases to a stop under the cursor rather than cutting out.
+        const want = hovering ? 0 : SPIN;
+        rate += (want - rate) * (1 - Math.exp(-dt / 0.3));
+        spin = (spin + rate * dt) % 360;
+      }
       draw();
+      // Once it has settled to a standstill there is nothing left to draw.
+      if (hovering && Math.abs(rate) < 0.04) {
+        rate = 0;
+        raf = 0;
+        return;
+      }
       raf = running ? requestAnimationFrame(tick) : 0;
+    };
+
+    const start = () => {
+      if (raf || prefersReduce || !running || !dots.length) return;
+      last = performance.now();
+      raf = requestAnimationFrame(tick);
+    };
+    const stop = () => {
+      if (!raf) return;
+      cancelAnimationFrame(raf);
+      raf = 0;
     };
 
     ctx.fillStyle = ink;
@@ -162,10 +187,7 @@ export function DotGlobe({
       }
       ctx.fillStyle = ink;
       draw();
-      if (!prefersReduce) {
-        last = performance.now();
-        raf = requestAnimationFrame(tick);
-      }
+      start();
     };
     img.src = worldLandMaskAsset.url;
 
@@ -180,27 +202,34 @@ export function DotGlobe({
     const io = new IntersectionObserver(
       (entries) => {
         for (const e of entries) {
-          const visible = e.isIntersecting;
-          if (visible && !raf && !prefersReduce && dots.length) {
-            running = true;
-            last = performance.now();
-            raf = requestAnimationFrame(tick);
-          } else if (!visible && raf) {
-            running = false;
-            cancelAnimationFrame(raf);
-            raf = 0;
-          }
+          running = e.isIntersecting;
+          if (running) start();
+          else stop();
         }
       },
       { threshold: 0.05 },
     );
     io.observe(host);
 
+    // Hold still under the pointer.
+    const onEnter = () => {
+      hovering = true;
+      start();
+    };
+    const onLeave = () => {
+      hovering = false;
+      start();
+    };
+    host.addEventListener("pointerenter", onEnter);
+    host.addEventListener("pointerleave", onLeave);
+
     return () => {
       running = false;
-      if (raf) cancelAnimationFrame(raf);
+      stop();
       ro.disconnect();
       io.disconnect();
+      host.removeEventListener("pointerenter", onEnter);
+      host.removeEventListener("pointerleave", onLeave);
       img.onload = null;
     };
   }, [ink, landAlpha, oceanAlpha]);
