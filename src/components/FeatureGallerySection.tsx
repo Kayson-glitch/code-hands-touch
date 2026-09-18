@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type CSSProperties } from "react";
+import { useEffect, useState, type CSSProperties } from "react";
 
 type Point = { label: string; text: string };
 
@@ -95,9 +95,12 @@ function tickerColour(hex: string, lum: number) {
 }
 
 /** Milliseconds per typed character. */
-const CHAR_MS = 130;
+const CHAR_MS = 30;
 /** Extra jitter per character so the rhythm feels human. */
-const CHAR_JITTER_MS = 26;
+const CHAR_JITTER_MS = 12;
+/** Beats held after punctuation and between words. */
+const PUNCT_MS = 90;
+const SPACE_MS = 18;
 /** Delay before a field starts typing once its panel is active. */
 const BASE_DELAY = 140;
 
@@ -120,35 +123,30 @@ function Typed({
   style?: CSSProperties;
 }) {
   const [count, setCount] = useState(0);
-  const timerRef = useRef<number | null>(null);
 
   useEffect(() => {
     if (!active) {
       setCount(0);
       return;
     }
-    let cancelled = false;
+    // The chain has to schedule itself from the timer, not from inside the
+    // state updater: the updater only runs when React gets round to the
+    // render, so on this screen — a pinned canvas scrub with the wheel live —
+    // every character was waiting on a commit and the real cadence came out
+    // near twice the one set here.
+    let timer = 0;
+    let typed = 0;
     const step = () => {
-      if (cancelled) return;
-      setCount((c) => {
-        const next = c + 1;
-        if (next < text.length) {
-          // Pause a little longer after punctuation / spaces, like real typing.
-          const ch = text[next - 1] ?? "";
-          const punct = /[.,—:;!?]/.test(ch) ? 140 : ch === " " ? 40 : 0;
-          timerRef.current = window.setTimeout(
-            step,
-            CHAR_MS + Math.random() * CHAR_JITTER_MS + punct
-          );
-        }
-        return Math.min(next, text.length);
-      });
+      typed += 1;
+      setCount(typed);
+      if (typed >= text.length) return;
+      // Pause a little longer after punctuation / spaces, like real typing.
+      const ch = text[typed - 1] ?? "";
+      const beat = /[.,—:;!?]/.test(ch) ? PUNCT_MS : ch === " " ? SPACE_MS : 0;
+      timer = window.setTimeout(step, CHAR_MS + Math.random() * CHAR_JITTER_MS + beat);
     };
-    timerRef.current = window.setTimeout(step, delay);
-    return () => {
-      cancelled = true;
-      if (timerRef.current) window.clearTimeout(timerRef.current);
-    };
+    timer = window.setTimeout(step, delay);
+    return () => window.clearTimeout(timer);
   }, [active, text, delay]);
 
   const started = count > 0;
