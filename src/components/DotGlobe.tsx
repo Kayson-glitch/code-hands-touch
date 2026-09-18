@@ -33,7 +33,7 @@ export function DotGlobe({
    * The ocean grid the continents sit in. Light enough to stay behind them,
    * heavy enough to read as a surface rather than only as a rim at the limb.
    */
-  oceanAlpha = 0.075,
+  oceanAlpha = 0.022,
 }: {
   className?: string;
   style?: React.CSSProperties;
