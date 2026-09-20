@@ -24,7 +24,7 @@ import { fluid } from "../lib/fluid";
 const SITE_TITLE = "Synergy.AI — Revenue-Driven AI Support";
 const SITE_DESCRIPTION =
   "The intelligence layer for customer success. Synergy.AI resolves support conversations end to end and keeps people on the judgement calls.";
-const SITE_IMAGE = "/media/og-card.png";
+const SITE_IMAGE = `${import.meta.env.BASE_URL}media/og-card.png`;
 
 const INK = "#0E0B22";
 const MUTED = "#7A7885";
@@ -141,7 +141,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         rel: "stylesheet",
         href: appCss,
       },
-      { rel: "icon", href: "/favicon.png", type: "image/png" },
+      { rel: "icon", href: `${import.meta.env.BASE_URL}favicon.png`, type: "image/png" },
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
       {
         rel: "preconnect",

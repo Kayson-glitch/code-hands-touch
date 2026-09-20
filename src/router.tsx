@@ -10,6 +10,8 @@ export const getRouter = () => {
     context: { queryClient },
     scrollRestoration: true,
     defaultPreloadStaleTime: 0,
+    // "/" for the Cloudflare build; a repo subpath when exported for Pages.
+    basepath: import.meta.env.BASE_URL,
   });
 
   return router;

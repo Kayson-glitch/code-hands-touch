@@ -8,7 +8,8 @@
  * Each export keeps a `{ url }` shape so call sites stay unchanged.
  */
 
-const media = (file: string) => ({ url: `/media/${file}` });
+/** `BASE_URL` is "/" for the Cloudflare build and a repo subpath on Pages. */
+const media = (file: string) => ({ url: `${import.meta.env.BASE_URL}media/${file}` });
 
 export const handsFramesAsset = media("hands-frames.webp");
 export const introVideoAsset = media("intro-hands.mp4");
