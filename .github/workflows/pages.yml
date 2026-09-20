@@ -1,15 +1,19 @@
 name: Pages
 
-# A stable address for the site that needs no account or token of its own:
-# GitHub builds the static export and serves it from the repository.
-# The Cloudflare/Lovable build is untouched — this only runs the extra
+# A stable address for the site served straight from the repository. The
+# Cloudflare/Lovable build is untouched — this only runs the extra
 # STATIC_BASE pass, which prerenders every route to plain HTML.
+#
+# Dormant until Pages can be turned on, which this repository can't do yet:
+# it is private, and Pages on a private repository needs GitHub Pro. Make the
+# repository public (Settings → General → Danger Zone) or upgrade, then set
+# Settings → Actions → General → Workflow permissions to read and write, and
+# run this workflow once. It deploys on every push to main after that.
 
 on:
   push:
     branches:
       - main
-      - cursor/animate-gallery-line-convergence-80ec
   workflow_dispatch:
 
 permissions:
