@@ -165,10 +165,16 @@ export function SloganSection() {
       <div
         className="font-display"
         style={{
-          maxWidth: 1100,
+          maxWidth: 1400,
           textAlign: "center",
-          // A standalone slogan screen, not a module title — keeps its own larger scale.
-          fontSize: "clamp(28px, 4.2vw, 54px)",
+          // A standalone slogan screen, not a module title — keeps its own
+          // larger scale, above the 60px heroes rather than under them.
+          // The line breaks are hand-set, so the ceiling is the longest line
+          // clearing the 6vw gutters: it runs 19.7x the font size, so 4.4vw is
+          // the hard limit and this sits under it — the fallback face during
+          // the font swap is wider than Clash Display and would wrap on the
+          // last few pixels.
+          fontSize: "clamp(28px, 4.3vw, 68px)",
           lineHeight: 1.25,
           letterSpacing: "-0.01em",
           fontWeight: 400,
