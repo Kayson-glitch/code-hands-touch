@@ -344,7 +344,6 @@ export function FinChatDock({ alwaysVisible = false }: { alwaysVisible?: boolean
   const [expanded, setExpanded] = useState(false);
   const [panelOpen, setPanelOpen] = useState(true);
   const [panelClosing, setPanelClosing] = useState(false);
-  const [hintIndex, setHintIndex] = useState(0);
   const [atBottom, setAtBottom] = useState(true);
   const [lead, setLead] = useState<Lead>({ stage: "idle", attempts: 0 });
   const inputRef = useRef<HTMLTextAreaElement>(null);
@@ -441,15 +440,6 @@ export function FinChatDock({ alwaysVisible = false }: { alwaysVisible?: boolean
     };
   }, []);
 
-  // Rotate the collapsed placeholder hint while collapsed and empty.
-  useEffect(() => {
-    if (expanded || value) return;
-    const id = window.setInterval(() => {
-      setHintIndex((i) => (i + 1) % SUGGESTIONS.length);
-    }, 3000);
-    return () => window.clearInterval(id);
-  }, [expanded, value]);
-
   const chatting = messages.length > 0;
 
   // Click outside: collapse entirely when nothing has happened yet, otherwise
@@ -459,13 +449,16 @@ export function FinChatDock({ alwaysVisible = false }: { alwaysVisible?: boolean
     const onDown = (e: MouseEvent) => {
       if (!wrapperRef.current) return;
       if (wrapperRef.current.contains(e.target as Node)) return;
+      // Minimised once already: the next click outside puts the mark back, so
+      // the resting state stays reachable with a thread going.
       if (!value && !chatting) setExpanded(false);
+      else if (chatting && !panelOpen) setExpanded(false);
       else if (chatting) closePanel();
     };
     window.addEventListener("mousedown", onDown);
     return () => window.removeEventListener("mousedown", onDown);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [expanded, value, chatting]);
+  }, [expanded, value, chatting, panelOpen]);
 
   const scrollToBottom = (smooth = false) => {
     const el = threadRef.current;
@@ -633,7 +626,7 @@ export function FinChatDock({ alwaysVisible = false }: { alwaysVisible?: boolean
   };
 
   const showSuggestions = expanded && !chatting;
-  const showPanel = chatting && panelOpen;
+  const showPanel = expanded && chatting && panelOpen;
   // Minimised (panel closed but thread kept) returns to the short pill.
   const wide = expanded && (!chatting || panelOpen || panelClosing);
   const hasText = value.trim().length > 0;
@@ -662,14 +655,45 @@ export function FinChatDock({ alwaysVisible = false }: { alwaysVisible?: boolean
   const show = visible && !footerVisible && !menuOpen;
   return (
     <div
-      className="pointer-events-none fixed inset-x-0 bottom-10 flex flex-col items-center px-4"
+      className="pointer-events-none fixed bottom-6 right-6 flex flex-col items-end md:bottom-10 md:right-10"
       style={{
+        // Fixed and shrink-wrapped, `items-end` would have nothing to align
+        // against, so the widest state sets the column and everything in it
+        // hangs off the right margin.
+        width: "min(520px, calc(100vw - 48px))",
         zIndex: 10000,
         opacity: show ? 1 : 0,
         transform: show ? "translateY(0)" : "translateY(16px)",
         transition: "opacity 700ms ease-out, transform 700ms ease-out",
       }}
     >
+      {/* Resting state: the mark on its own. Everything else is behind a click. */}
+      {!expanded && (
+        <button
+          type="button"
+          aria-label="Ask Synergy"
+          onClick={expand}
+          className="pointer-events-auto grid place-items-center rounded-full transition-transform hover:scale-105 active:scale-95"
+          style={{
+            width: 56,
+            height: 56,
+            backgroundColor: pillBg,
+            border: pillBorder,
+            boxShadow: pillShadow,
+            backdropFilter: onDark ? "blur(6px)" : "none",
+            animation: "finFabIn 320ms cubic-bezier(0.22, 1, 0.36, 1) both",
+          }}
+        >
+          <img
+            src={logo.url}
+            alt=""
+            aria-hidden
+            style={{ width: 28, height: 28, borderRadius: 999, objectFit: "cover", display: "block" }}
+          />
+        </button>
+      )}
+
+      {/* Empty until opened — the children below all gate on `expanded`. */}
       <div
         ref={wrapperRef}
         className="w-full"
@@ -864,28 +888,29 @@ export function FinChatDock({ alwaysVisible = false }: { alwaysVisible?: boolean
         )}
 
         {/* Input pill */}
-        <div
-          className="pointer-events-auto flex justify-between"
-          onClick={() => (!expanded || (chatting && !panelOpen)) && expand()}
-          style={{
-            minHeight: 48,
-            borderRadius: 666,
-            paddingLeft: 20,
-            paddingRight: 6,
-            paddingTop: 6,
-            paddingBottom: 6,
-            gap: 4,
-            alignItems: wide ? "flex-end" : "center",
-            backgroundColor: pillBg,
-            border: pillBorder,
-            backdropFilter: onDark ? "blur(6px)" : "none",
-            boxShadow: pillShadow,
-            transition:
-              "box-shadow 300ms ease, background-color 300ms ease, border-color 300ms ease",
-            cursor: wide ? "text" : "pointer",
-          }}
-        >
-          {expanded ? (
+        {expanded && (
+          <div
+            className="pointer-events-auto flex justify-between"
+            onClick={() => chatting && !panelOpen && expand()}
+            style={{
+              animation: "finPillIn 380ms cubic-bezier(0.22, 1, 0.36, 1) both",
+              minHeight: 48,
+              borderRadius: 666,
+              paddingLeft: 20,
+              paddingRight: 6,
+              paddingTop: 6,
+              paddingBottom: 6,
+              gap: 4,
+              alignItems: wide ? "flex-end" : "center",
+              backgroundColor: pillBg,
+              border: pillBorder,
+              backdropFilter: onDark ? "blur(6px)" : "none",
+              boxShadow: pillShadow,
+              transition:
+                "box-shadow 300ms ease, background-color 300ms ease, border-color 300ms ease",
+              cursor: wide ? "text" : "pointer",
+            }}
+          >
             <textarea
               ref={inputRef}
               value={value}
@@ -909,73 +934,59 @@ export function FinChatDock({ alwaysVisible = false }: { alwaysVisible?: boolean
                 color: textMain,
               }}
             />
-          ) : (
-            <div
-              key={hintIndex}
-              className="flex-1 truncate"
-              style={{
-                fontSize: 14,
-                lineHeight: "20px",
-                animation: "finHintFade 500ms ease-out",
-                color: textPlaceholder,
-              }}
-              aria-hidden
-            >
-              {SUGGESTIONS[hintIndex]}
-            </div>
-          )}
 
-          <button
-            type="button"
-            aria-label="Voice input"
-            className={`grid h-9 shrink-0 place-items-center rounded-full ${iconBtnHover}`}
-            style={{
-              width: wide ? 36 : 0,
-              opacity: wide ? 1 : 0,
-              overflow: "hidden",
-              pointerEvents: wide ? "auto" : "none",
-              transition: "width 320ms ease, opacity 240ms ease",
-              color: textMuted,
-            }}
-          >
-            <AudioLines size={17} strokeWidth={1.75} />
-          </button>
-          <button
-            type="button"
-            aria-label="Add attachment"
-            className={`grid h-9 shrink-0 place-items-center rounded-full ${iconBtnHover}`}
-            style={{
-              width: wide ? 36 : 0,
-              opacity: wide ? 1 : 0,
-              overflow: "hidden",
-              pointerEvents: wide ? "auto" : "none",
-              transition: "width 320ms ease 40ms, opacity 240ms ease 40ms",
-              color: textMuted,
-            }}
-          >
-            <Plus size={18} strokeWidth={1.75} />
-          </button>
-          <button
-            type="button"
-            aria-label="Send"
-            onClick={send}
-            disabled={typing || !hasText}
-            className="grid shrink-0 place-items-center transition-colors hover:opacity-80"
-            style={{
-              width: 36,
-              height: 36,
-              borderRadius: 20,
-              marginLeft: 4,
-              backgroundColor: sendBg,
-              color: sendIcon,
-              opacity: typing ? 0.5 : 1,
-              cursor: hasText && !typing ? "pointer" : "default",
-              transition: "background-color 200ms ease, color 200ms ease, opacity 200ms ease",
-            }}
-          >
-            <DotArrow size={24} direction="up" connectOnHover={false} dotRadius={0.5} />
-          </button>
-        </div>
+            <button
+              type="button"
+              aria-label="Voice input"
+              className={`grid h-9 shrink-0 place-items-center rounded-full ${iconBtnHover}`}
+              style={{
+                width: wide ? 36 : 0,
+                opacity: wide ? 1 : 0,
+                overflow: "hidden",
+                pointerEvents: wide ? "auto" : "none",
+                transition: "width 320ms ease, opacity 240ms ease",
+                color: textMuted,
+              }}
+            >
+              <AudioLines size={17} strokeWidth={1.75} />
+            </button>
+            <button
+              type="button"
+              aria-label="Add attachment"
+              className={`grid h-9 shrink-0 place-items-center rounded-full ${iconBtnHover}`}
+              style={{
+                width: wide ? 36 : 0,
+                opacity: wide ? 1 : 0,
+                overflow: "hidden",
+                pointerEvents: wide ? "auto" : "none",
+                transition: "width 320ms ease 40ms, opacity 240ms ease 40ms",
+                color: textMuted,
+              }}
+            >
+              <Plus size={18} strokeWidth={1.75} />
+            </button>
+            <button
+              type="button"
+              aria-label="Send"
+              onClick={send}
+              disabled={typing || !hasText}
+              className="grid shrink-0 place-items-center transition-colors hover:opacity-80"
+              style={{
+                width: 36,
+                height: 36,
+                borderRadius: 20,
+                marginLeft: 4,
+                backgroundColor: sendBg,
+                color: sendIcon,
+                opacity: typing ? 0.5 : 1,
+                cursor: hasText && !typing ? "pointer" : "default",
+                transition: "background-color 200ms ease, color 200ms ease, opacity 200ms ease",
+              }}
+            >
+              <DotArrow size={24} direction="up" connectOnHover={false} dotRadius={0.5} />
+            </button>
+          </div>
+        )}
       </div>
 
       <style>{`
@@ -983,9 +994,13 @@ export function FinChatDock({ alwaysVisible = false }: { alwaysVisible?: boolean
           from { opacity: 0; transform: translateY(10px); }
           to { opacity: 1; transform: translateY(0); }
         }
-        @keyframes finHintFade {
-          from { opacity: 0; transform: translateY(6px); }
-          to { opacity: 1; transform: translateY(0); }
+        @keyframes finFabIn {
+          from { opacity: 0; transform: scale(0.8); }
+          to { opacity: 1; transform: scale(1); }
+        }
+        @keyframes finPillIn {
+          from { opacity: 0; transform: translateY(10px) scale(0.96); }
+          to { opacity: 1; transform: translateY(0) scale(1); }
         }
         @keyframes finTyping {
           0%, 80%, 100% { opacity: 0.35; transform: translateY(0); }
