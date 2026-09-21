@@ -1,10 +1,8 @@
-// @lovable.dev/vite-tanstack-config already includes the following — do NOT add them manually
-// or the app will break with duplicate plugins:
-//   - TanStack devtools (dev-only, first), tanstackStart, viteReact, tailwindcss, tsConfigPaths,
-//     nitro (build-only using cloudflare as a default target), VITE_* env injection, @ path alias,
-//     React/TanStack dedupe, error logger plugins, and sandbox detection (port/host/strictPort).
-// You can pass additional config via defineConfig({ vite: { ... }, etc... }) if needed.
-import { defineConfig } from "@lovable.dev/vite-tanstack-config";
+import { defineConfig, loadEnv, type PluginOption, type UserConfig } from "vite";
+import { tanstackStart } from "@tanstack/react-start/plugin/vite";
+import viteReact from "@vitejs/plugin-react";
+import tailwindcss from "@tailwindcss/vite";
+import tsConfigPaths from "vite-tsconfig-paths";
 
 /**
  * Static export for GitHub Pages, off by default.
@@ -15,23 +13,73 @@ import { defineConfig } from "@lovable.dev/vite-tanstack-config";
  */
 const staticBase = process.env.STATIC_BASE;
 
-export default defineConfig({
-  // Nitro retargets the output to `.output` for Cloudflare, which is where the
-  // prerenderer's own preview server loses track of the build.
-  ...(staticBase ? { nitro: false as const } : {}),
-  tanstackStart: {
-    // Redirect TanStack Start's bundled server entry to src/server.ts (our SSR error wrapper).
-    // nitro/vite builds from this
-    server: { entry: "server" },
-    ...(staticBase ? { prerender: { enabled: true, crawlLinks: true } } : {}),
-  },
-  vite: {
+export default defineConfig(async ({ command, mode }): Promise<UserConfig> => {
+  // Only VITE_-prefixed values, and inlined rather than read at runtime: the
+  // Cloudflare worker has no process.env to read them from.
+  const env = loadEnv(mode, process.cwd(), "VITE_");
+  const define = Object.fromEntries(
+    Object.entries(env).map(([key, value]) => [`import.meta.env.${key}`, JSON.stringify(value)]),
+  );
+
+  const plugins: PluginOption[] = [
+    tailwindcss(),
+    tsConfigPaths({ projects: ["./tsconfig.json"] }),
+    tanstackStart({
+      // Redirect TanStack Start's bundled server entry to src/server.ts (our
+      // SSR error wrapper); nitro builds from this.
+      server: { entry: "server" },
+      // A client bundle that reaches into server code is a leak, not a warning.
+      importProtection: {
+        behavior: "error",
+        client: { files: ["**/server/**"], specifiers: ["server-only"] },
+      },
+      ...(staticBase ? { prerender: { enabled: true, crawlLinks: true } } : {}),
+    }),
+  ];
+
+  // Build-only, and skipped for the static export: nitro retargets the output
+  // to .output for Cloudflare, and the prerenderer's own preview server can't
+  // find the build there.
+  if (command === "build" && !staticBase) {
+    const { nitro } = await import("nitro/vite");
+    plugins.push(nitro({ defaultPreset: "cloudflare-module" }));
+  }
+
+  plugins.push(viteReact());
+
+  return {
     ...(staticBase ? { base: staticBase } : {}),
+    define,
+    css: { transformer: "lightningcss" },
+    resolve: {
+      alias: { "@": `${process.cwd()}/src` },
+      // One copy of each, or hooks break across duplicated module instances.
+      dedupe: [
+        "react",
+        "react-dom",
+        "react/jsx-runtime",
+        "react/jsx-dev-runtime",
+        "@tanstack/react-query",
+        "@tanstack/query-core",
+      ],
+    },
+    optimizeDeps: {
+      include: [
+        "react",
+        "react-dom",
+        "react-dom/client",
+        "react/jsx-runtime",
+        "react/jsx-dev-runtime",
+      ],
+    },
+    plugins,
     server: {
+      host: "::",
+      port: 8080,
       // The dev server is reached through forwarded/proxied hostnames (cloud
       // previews, tunnels); Vite would otherwise answer 403 for any Host that
       // isn't localhost.
       allowedHosts: true,
     },
-  },
+  };
 });
