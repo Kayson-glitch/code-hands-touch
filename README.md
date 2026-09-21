@@ -1,28 +1,64 @@
-# Remix of Digital Embrace
+# Synergy.AI
 
-https://good-fella.com/?ref=a1.gallery
+Marketing site for Synergy.AI — an AI support product. React 19 + TanStack
+Start (SSR), Tailwind 4, built by Vite into a Cloudflare worker.
 
-1:1复刻这个网站中页脚关于这个图片中两只由代码组成的手的效果，包括交互效果。这个手的灵感来源是名画《创造亚当》
+## Running it
 
-This project was built with [Lovable](https://lovable.dev).
-
-**Live app**: https://code-hands-touch.lovable.app
-
-## Build with Lovable
-
-Continue developing this project in the [Lovable editor](https://lovable.dev/projects/a27dbc7a-5298-4792-b24a-d83be8be2ac7).
-
-- **Ship faster**: describe what you want to build and Lovable handles the code.
-- **Stay in sync**: every change made in Lovable is committed straight to this repository.
-- **Full ownership**: this code is yours. Push to `main` on GitHub and your changes sync back into Lovable, ready for your next prompt.
-
-## Development
-
-Prefer working locally? You need Node.js and npm — [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating).
+The repo is set up for [Bun](https://bun.sh); npm works too if you swap the
+commands.
 
 ```sh
-git clone <this-repository-url>
-cd <repository-name>
-npm i
-npm run dev
+bun install
+bun run dev        # http://localhost:8080
 ```
+
+| Command | What it does |
+| --- | --- |
+| `bun run dev` | Dev server on port 8080 |
+| `bun run build` | Production build into `.output` (Cloudflare worker + assets) |
+| `bun run lint` | ESLint, including Prettier as a rule |
+| `bun run format` | Prettier over the repo |
+| `bunx tsc --noEmit` | Type-check without emitting |
+
+## Layout
+
+```
+src/routes/      file-based routes; the file name is the URL
+src/components/  everything shared, including the canvas pieces
+src/lib/         data and helpers with no JSX (siteMenu, media, fluid…)
+public/media/    images and video, referenced through src/lib/media.ts
+```
+
+A few things worth knowing before editing:
+
+- **`src/lib/siteMenu.ts` is the single source for navigation.** The header
+  dropdowns, the mobile menu and the footer columns all read from it, so add a
+  page there once rather than in three places.
+- **`fluid(px, min)`** in `src/lib/fluid.ts` turns a 1440px design value into a
+  clamped viewport-relative length. Most sizing in the site goes through it.
+- **Route files export only the route.** A second `export default` beside
+  `createFileRoute` stops the router code-splitting that page out.
+- Absolute asset paths go through `media()` or `import.meta.env.BASE_URL`, so
+  the static export can live under a subpath.
+
+## Deploying
+
+The default build targets Cloudflare Workers, and `.output/server/wrangler.json`
+is written for you:
+
+```sh
+bun run build
+cd .output/server
+bunx wrangler deploy
+```
+
+There is also a static export for a file host, which prerenders every route to
+HTML in `dist/client`:
+
+```sh
+STATIC_BASE=/repo-name/ bun run build
+```
+
+`.github/workflows/pages.yml` runs that export for GitHub Pages. It needs Pages
+enabled on the repository first, which a private repo on a free plan can't do.

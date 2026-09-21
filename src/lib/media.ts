@@ -2,8 +2,8 @@
  * Local media pointers.
  *
  * All binary assets live in `public/media/` and are served by Vite as static
- * files, so the project runs identically on Lovable and on a local machine
- * (Cursor / any IDE) with no CDN dependency.
+ * files, so the project runs the same locally and on the deploy target with
+ * no CDN dependency.
  *
  * Each export keeps a `{ url }` shape so call sites stay unchanged.
  */

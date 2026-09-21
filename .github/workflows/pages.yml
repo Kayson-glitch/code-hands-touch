@@ -1,7 +1,7 @@
 name: Pages
 
 # A stable address for the site served straight from the repository. The
-# Cloudflare/Lovable build is untouched — this only runs the extra
+# Cloudflare build is untouched — this only runs the extra
 # STATIC_BASE pass, which prerenders every route to plain HTML.
 #
 # Dormant until Pages can be turned on, which this repository can't do yet:
