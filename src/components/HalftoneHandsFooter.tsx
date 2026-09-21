@@ -1073,7 +1073,7 @@ export function HalftoneHandsFooter({
         />
       )}
       <h1 className="sr-only" suppressHydrationWarning>
-        Good Fella Studio — Halftone Creation of Adam
+        Synergy.AI — Revenue-Driven AI Support
       </h1>
 
       
