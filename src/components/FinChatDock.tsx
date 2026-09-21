@@ -275,6 +275,26 @@ function SuggestionBubbles({
   );
 }
 
+/**
+ * The resting mark: a solid bubble with the assistant's spark cut out of it.
+ * Lucide is a stroke set with no filled variant, and the cut-out is a hole
+ * rather than a second colour so the pill's own surface shows through and the
+ * icon needs no help on the dark sections.
+ */
+function AssistantMark({ size = 26, color }: { size?: number; color: string }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" aria-hidden>
+      <path
+        fillRule="evenodd"
+        clipRule="evenodd"
+        fill={color}
+        d="M7 2.5 L17 2.5 A5 5 0 0 1 22 7.5 L22 12.5 A5 5 0 0 1 17 17.5 L12.5 17.5 L7.5 21.5 L7.5 17.5 L7 17.5 A5 5 0 0 1 2 12.5 L2 7.5 A5 5 0 0 1 7 2.5 Z
+           M12 5.7 C12.5 8.4 13.6 9.5 16.3 10 C13.6 10.5 12.5 11.6 12 14.3 C11.5 11.6 10.4 10.5 7.7 10 C10.4 9.5 11.5 8.4 12 5.7 Z"
+      />
+    </svg>
+  );
+}
+
 function TypingDots({ color }: { color: string }) {
   return (
     <span className="inline-flex items-center gap-1" aria-label="Synergy is typing">
@@ -684,12 +704,7 @@ export function FinChatDock({ alwaysVisible = false }: { alwaysVisible?: boolean
             animation: "finFabIn 320ms cubic-bezier(0.22, 1, 0.36, 1) both",
           }}
         >
-          <img
-            src={logo.url}
-            alt=""
-            aria-hidden
-            style={{ width: 28, height: 28, borderRadius: 999, objectFit: "cover", display: "block" }}
-          />
+          <AssistantMark color={textMain} />
         </button>
       )}
 
