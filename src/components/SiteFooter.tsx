@@ -8,7 +8,7 @@ import { ContainerScroll } from "@/components/ui/container-scroll-animation";
 import { SonarGrid } from "@/components/ui/sonar-grid";
 
 import { logoAsset as logo } from "@/lib/media";
-import { dashboardAsset } from "@/lib/media";
+import { dashboardAsset, grainAsset } from "@/lib/media";
 
 /**
  * Footer rises to cover the dashboard image so that it enters the viewport
@@ -21,12 +21,13 @@ import { dashboardAsset } from "@/lib/media";
 import { fluid } from "@/lib/fluid";
 import { GRADIENT, GRADIENT_STOPS, RainbowButton } from "@/components/RainbowButton";
 
-/** Watermark ink on the fine screen. The dots sit at 72% of the cell so the
- *  paper between them reads; alpha carries the weight the smaller dots lose. */
-const WORDMARK_ALPHA = 0.13;
-const WORDMARK_DOT_FILL = 0.72;
-/** Cell size as a fraction of the type — a coarser screen than the hero's. */
-const WORDMARK_PITCH_DIVISOR = 72;
+/** Constant presence of the letters, so the word still reads with the cursor away. */
+const WORDMARK_BASE_ALPHA = 0.055;
+/** Peak and mid stops of the light that travels behind the letters. */
+const WORDMARK_LIGHT_ALPHA = 0.34;
+const WORDMARK_LIGHT_MID = 0.12;
+/** Radius of that light. Payload's is 1120px against a 1312px block. */
+const WORDMARK_LIGHT_R = "46vw";
 /** Fraction of the glyph box kept below the divider by default, so the crop
  *  scales with the type: the word reads, descenders cut by the line. */
 const WORDMARK_REST_CLIP = 0.37;
@@ -52,7 +53,7 @@ const FOOTER_LINK =
  * footer decides how deep, and reports the descender depth back so the
  * reveal can stop with the baseline on the line.
  */
-function DotWordmark({
+function SpotWordmark({
   text,
   onMetrics,
 }: {
@@ -66,7 +67,6 @@ function DotWordmark({
 }) {
   const boxRef = useRef<HTMLDivElement>(null);
   const textRef = useRef<HTMLSpanElement>(null);
-  const canvasRef = useRef<HTMLCanvasElement>(null);
   const [size, setSize] = useState(200);
   const [glyphH, setGlyphH] = useState(184);
   const onMetricsRef = useRef(onMetrics);
@@ -100,75 +100,40 @@ function DotWordmark({
     window.addEventListener("resize", fit);
     if (document.fonts?.ready) document.fonts.ready.then(fit);
     return () => window.removeEventListener("resize", fit);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  /**
+   * The light's centre, as a pair of custom properties the gradient reads.
+   * Tracking is bound to the whole footer rather than the word: by the time
+   * the mark is on screen the cursor is usually up among the links, and a
+   * light that only wakes inside the glyph box would look broken.
+   */
   useEffect(() => {
     const box = boxRef.current;
-    const canvas = canvasRef.current;
-    if (!box || !canvas || size < 8) return;
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return;
-
-    const draw = () => {
-      const w = box.clientWidth;
-      const h = box.clientHeight;
-      if (w < 10 || h < 4) return;
-
-      const dpr = Math.min(2, window.devicePixelRatio || 1);
-      canvas.width = Math.round(w * dpr);
-      canvas.height = Math.round(h * dpr);
-      canvas.style.width = `${w}px`;
-      canvas.style.height = `${h}px`;
-      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-      ctx.clearRect(0, 0, w, h);
-
-      const src = document.createElement("canvas");
-      src.width = Math.max(1, Math.round(w * dpr));
-      src.height = Math.max(1, Math.round(h * dpr));
-      const sctx = src.getContext("2d", { willReadFrequently: true });
-      if (!sctx) return;
-      sctx.scale(dpr, dpr);
-      sctx.font = `600 ${size}px Montserrat, ui-sans-serif, system-ui, sans-serif`;
-      (sctx as unknown as { letterSpacing: string }).letterSpacing = `${-0.02 * size}px`;
-      sctx.fillStyle = "#fff";
-      sctx.textBaseline = "alphabetic";
-      const m = sctx.measureText(text);
-      const ascent = m.actualBoundingBoxAscent || size * 0.74;
-      sctx.fillText(text, 0, ascent);
-
-      const pitch = Math.max(2.5, size / WORDMARK_PITCH_DIVISOR);
-      const cols = Math.ceil(w / pitch);
-      const rows = Math.ceil(h / pitch);
-      const off = document.createElement("canvas");
-      off.width = cols;
-      off.height = rows;
-      const octx = off.getContext("2d", { willReadFrequently: true });
-      if (!octx) return;
-      octx.imageSmoothingEnabled = true;
-      octx.drawImage(src, 0, 0, cols, rows);
-      const data = octx.getImageData(0, 0, cols, rows).data;
-
-      const maxR = pitch * 0.5 * WORDMARK_DOT_FILL;
-      ctx.fillStyle = `rgba(255,255,255,${WORDMARK_ALPHA})`;
-      for (let j = 0; j < rows; j++) {
-        for (let i = 0; i < cols; i++) {
-          const a = data[(j * cols + i) * 4 + 3] / 255;
-          if (a < 0.05) continue;
-          const r = maxR * Math.sqrt(a);
-          if (r < 0.18) continue;
-          ctx.beginPath();
-          ctx.arc((i + 0.5) * pitch, (j + 0.5) * pitch, r, 0, Math.PI * 2);
-          ctx.fill();
-        }
-      }
+    if (!box) return;
+    const surface = box.closest("[data-footer-surface]") ?? box;
+    let raf = 0;
+    let x = 0;
+    let y = 0;
+    const apply = () => {
+      raf = 0;
+      box.style.setProperty("--mx", `${x}px`);
+      box.style.setProperty("--my", `${y}px`);
     };
-
-    draw();
-    if (document.fonts?.ready) document.fonts.ready.then(draw);
-    const ro = new ResizeObserver(draw);
-    ro.observe(box);
-    return () => ro.disconnect();
-  }, [text, size, glyphH]);
+    const move = (e: Event) => {
+      const pe = e as PointerEvent;
+      const r = box.getBoundingClientRect();
+      x = pe.clientX - r.left;
+      y = pe.clientY - r.top;
+      if (!raf) raf = requestAnimationFrame(apply);
+    };
+    surface.addEventListener("pointermove", move, { passive: true });
+    return () => {
+      surface.removeEventListener("pointermove", move);
+      cancelAnimationFrame(raf);
+    };
+  }, []);
 
   return (
     <div
@@ -185,12 +150,21 @@ function DotWordmark({
           lineHeight: 1,
           fontWeight: 600,
           letterSpacing: "-0.02em",
-          visibility: "hidden",
+          color: "transparent",
+          WebkitBackgroundClip: "text",
+          backgroundClip: "text",
+          // Light on top, grain under it, the constant presence beneath both.
+          backgroundImage: [
+            `radial-gradient(circle ${WORDMARK_LIGHT_R} at var(--mx, 50%) var(--my, 40%), rgba(255,255,255,${WORDMARK_LIGHT_ALPHA}), rgba(255,255,255,${WORDMARK_LIGHT_MID}) 42%, rgba(255,255,255,0) 70%)`,
+            `url(${grainAsset.url})`,
+            `linear-gradient(rgba(255,255,255,${WORDMARK_BASE_ALPHA}), rgba(255,255,255,${WORDMARK_BASE_ALPHA}))`,
+          ].join(", "),
+          backgroundSize: "auto, 64px 64px, auto",
+          backgroundRepeat: "no-repeat, repeat, no-repeat",
         }}
       >
         {text}
       </span>
-      <canvas ref={canvasRef} className="absolute inset-0 block h-full w-full" />
     </div>
   );
 }
@@ -439,6 +413,7 @@ export function SiteFooter({ cta = true }: { cta?: boolean } = {}) {
         data-dark-section
         data-progressive-blur-hide
         className="relative overflow-hidden"
+        data-footer-surface
         style={{ background: "#000000", marginTop: -footerOverlap, zIndex: 30 }}
       >
         <div aria-hidden style={{ height: 2, backgroundImage: GRADIENT, backgroundSize: "200%" }} />
@@ -478,7 +453,7 @@ export function SiteFooter({ cta = true }: { cta?: boolean } = {}) {
             ref={markRef}
             className="pointer-events-none absolute bottom-0 left-0 z-0 w-full will-change-transform"
           >
-            <DotWordmark
+            <SpotWordmark
               text="Synergy.AI"
               onMetrics={({ height, descentRatio }) => {
                 descentRatioRef.current = descentRatio;
