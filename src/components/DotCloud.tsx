@@ -10,8 +10,9 @@ import { useEffect, useRef } from "react";
  * gives it, and a different `seed` keeps the three from looking like the same
  * picture repeated.
  *
- * Measured off that raster: a 16px pitch with a ~2.3px dot on #F1EEE9, drawn at
- * 53% in the frame, and clusters correlating over roughly 220 rendered px.
+ * Measured off that raster: a ~2.3px dot on #F1EEE9 drawn at 53% in the frame,
+ * with clusters correlating over roughly 220 rendered px. Pitch and tone are
+ * looser and lighter than the measurement — see PITCH and INK.
  */
 
 /**
@@ -21,17 +22,17 @@ import { useEffect, useRef } from "react";
  * block from reading as a panel against the white section.
  */
 const GROUND = "#F7F7F8";
+/** Dot ink: `--ink-faint`. */
+const INK = "161, 160, 169";
 /**
- * Dot ink: `--ink-ghost`. Matching the raster's contrast statistically took an
- * almost black dot, which read far heavier than a texture should. Against a
- * ground this light the field carries on about 48 levels of separation, which
- * is enough to read the clusters and little enough to stay a wash.
+ * Distance between dots, in CSS px. The raster's own 9px pitch fills the frame
+ * with a mesh dense enough that the dots stop reading as dots, so this is
+ * deliberately looser than the reference: half the dot count, spaced enough to
+ * stay a field rather than a screen.
  */
-const INK = "199, 198, 205";
-/** Distance between dots, in CSS px. */
-const PITCH = 9;
-/** Dot radius at full weight. */
-const DOT_R = 1.45;
+const PITCH = 15;
+/** Dot radius at full weight, opened up to match the wider pitch. */
+const DOT_R = 1.7;
 /** Cluster size, in CSS px: the wavelength of the coarse noise. */
 const CLUSTER = 220;
 /** Floor and ceiling of a dot's weight, so nothing is fully absent or solid. */
