@@ -21,20 +21,13 @@ import { dashboardAsset, grainAsset } from "@/lib/media";
 import { fluid } from "@/lib/fluid";
 import { GRADIENT, GRADIENT_STOPS, RainbowButton } from "@/components/RainbowButton";
 
-/**
- * Read off payloadcms.com's own footer mark, which this reproduces: a black
- * box in the shape of the word, a soft white light travelling behind it with
- * the cursor, and a grain tile over the top. Their values, not ours — the only
- * departures are the typeface and its size, and a 320px grain tile in place of
- * their 640px one, generated to the same mean and deviation.
- */
-/** The light: 1120px square, blurred, stops at 0.2 / 0.1 / 0. */
-const LIGHT_SIZE = 1120;
-const LIGHT_BLUR = 100;
-const LIGHT_STOPS =
-  "rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0)";
-/** Their grain tile is drawn at its natural size and repeated. */
-const GRAIN_TILE = 320;
+/** Constant presence of the letters, so the word still reads with the cursor away. */
+const WORDMARK_BASE_ALPHA = 0.055;
+/** Peak and mid stops of the light that travels behind the letters. */
+const WORDMARK_LIGHT_ALPHA = 0.34;
+const WORDMARK_LIGHT_MID = 0.12;
+/** Radius of that light. Payload's is 1120px against a 1312px block. */
+const WORDMARK_LIGHT_R = "46vw";
 /** Fraction of the glyph box kept below the divider by default, so the crop
  *  scales with the type: the word reads, descenders cut by the line. */
 const WORDMARK_REST_CLIP = 0.37;
@@ -74,15 +67,8 @@ function SpotWordmark({
 }) {
   const boxRef = useRef<HTMLDivElement>(null);
   const textRef = useRef<HTMLSpanElement>(null);
-  const lightRef = useRef<HTMLSpanElement>(null);
   const [size, setSize] = useState(200);
   const [glyphH, setGlyphH] = useState(184);
-  /**
-   * The word as a mask, drawn at runtime instead of shipped as a file.
-   * Payload keeps a payload-mask.svg beside the page; deriving it from the
-   * same fitted type means the shape cannot drift from the word.
-   */
-  const [maskUrl, setMaskUrl] = useState<string | null>(null);
   const onMetricsRef = useRef(onMetrics);
   onMetricsRef.current = onMetrics;
 
@@ -99,8 +85,7 @@ function SpotWordmark({
 
     const ctx = document.createElement("canvas").getContext("2d");
     if (!ctx) return;
-    const font = `600 ${next}px Montserrat, ui-sans-serif, system-ui, sans-serif`;
-    ctx.font = font;
+    ctx.font = `600 ${next}px Montserrat, ui-sans-serif, system-ui, sans-serif`;
     (ctx as unknown as { letterSpacing: string }).letterSpacing = `${-0.02 * next}px`;
     const m = ctx.measureText(text);
     const ascent = Math.ceil(m.actualBoundingBoxAscent || next * 0.74);
@@ -108,22 +93,6 @@ function SpotWordmark({
     const h = Math.max(1, ascent + descent);
     setGlyphH(h);
     onMetricsRef.current?.({ height: h, descentRatio: descent / h });
-
-    const boxW = box.clientWidth;
-    if (boxW < 10) return;
-    const dpr = Math.min(2, window.devicePixelRatio || 1);
-    const cv = document.createElement("canvas");
-    cv.width = Math.round(boxW * dpr);
-    cv.height = Math.round(h * dpr);
-    const c = cv.getContext("2d");
-    if (!c) return;
-    c.scale(dpr, dpr);
-    c.font = font;
-    (c as unknown as { letterSpacing: string }).letterSpacing = `${-0.02 * next}px`;
-    c.fillStyle = "#fff";
-    c.textBaseline = "alphabetic";
-    c.fillText(text, 0, ascent);
-    setMaskUrl(cv.toDataURL());
   };
 
   useLayoutEffect(fit);
@@ -135,27 +104,28 @@ function SpotWordmark({
   }, []);
 
   /**
-   * The light sits centred on the cursor: translate by its position within the
-   * block, less half the light's own size. Measured against the whole footer,
-   * because by the time the mark is on screen the cursor is usually up among
-   * the links and a light that only woke inside the glyphs would look broken.
+   * The light's centre, as a pair of custom properties the gradient reads.
+   * Tracking is bound to the whole footer rather than the word: by the time
+   * the mark is on screen the cursor is usually up among the links, and a
+   * light that only wakes inside the glyph box would look broken.
    */
   useEffect(() => {
     const box = boxRef.current;
-    const light = lightRef.current;
-    if (!box || !light) return;
+    if (!box) return;
     const surface = box.closest("[data-footer-surface]") ?? box;
     let raf = 0;
     let x = 0;
     let y = 0;
     const apply = () => {
       raf = 0;
-      light.style.transform = `translate(${x - LIGHT_SIZE / 2}px, ${y - LIGHT_SIZE / 2}px)`;
+      box.style.setProperty("--mx", `${x}px`);
+      box.style.setProperty("--my", `${y}px`);
     };
     const move = (e: Event) => {
+      const pe = e as PointerEvent;
       const r = box.getBoundingClientRect();
-      x = (e as PointerEvent).clientX - r.left;
-      y = (e as PointerEvent).clientY - r.top;
+      x = pe.clientX - r.left;
+      y = pe.clientY - r.top;
       if (!raf) raf = requestAnimationFrame(apply);
     };
     surface.addEventListener("pointermove", move, { passive: true });
@@ -163,8 +133,7 @@ function SpotWordmark({
       surface.removeEventListener("pointermove", move);
       cancelAnimationFrame(raf);
     };
-    // The light only exists once the mask has been drawn, so rebind then.
-  }, [maskUrl]);
+  }, []);
 
   return (
     <div
@@ -173,7 +142,6 @@ function SpotWordmark({
       className="pointer-events-none relative w-full select-none"
       style={{ height: glyphH, lineHeight: 0 }}
     >
-      {/* Measured, never painted: the fit and the mask are both taken off it. */}
       <span
         ref={textRef}
         className="font-sans absolute left-0 top-0 whitespace-nowrap"
@@ -182,47 +150,21 @@ function SpotWordmark({
           lineHeight: 1,
           fontWeight: 600,
           letterSpacing: "-0.02em",
-          visibility: "hidden",
+          color: "transparent",
+          WebkitBackgroundClip: "text",
+          backgroundClip: "text",
+          // Light on top, grain under it, the constant presence beneath both.
+          backgroundImage: [
+            `radial-gradient(circle ${WORDMARK_LIGHT_R} at var(--mx, 50%) var(--my, 40%), rgba(255,255,255,${WORDMARK_LIGHT_ALPHA}), rgba(255,255,255,${WORDMARK_LIGHT_MID}) 42%, rgba(255,255,255,0) 70%)`,
+            `url(${grainAsset.url})`,
+            `linear-gradient(rgba(255,255,255,${WORDMARK_BASE_ALPHA}), rgba(255,255,255,${WORDMARK_BASE_ALPHA}))`,
+          ].join(", "),
+          backgroundSize: "auto, 64px 64px, auto",
+          backgroundRepeat: "no-repeat, repeat, no-repeat",
         }}
       >
         {text}
       </span>
-
-      {maskUrl && (
-        <span
-          className="absolute inset-0 block overflow-hidden"
-          style={{
-            backgroundColor: "#000000",
-            WebkitMaskImage: `url(${maskUrl})`,
-            maskImage: `url(${maskUrl})`,
-            WebkitMaskSize: "100% 100%",
-            maskSize: "100% 100%",
-            WebkitMaskRepeat: "no-repeat",
-            maskRepeat: "no-repeat",
-          }}
-        >
-          <span
-            ref={lightRef}
-            className="absolute left-0 top-0 block"
-            style={{
-              width: LIGHT_SIZE,
-              height: LIGHT_SIZE,
-              backgroundImage: `radial-gradient(circle, ${LIGHT_STOPS})`,
-              filter: `blur(${LIGHT_BLUR}px)`,
-              transform: `translate(${-LIGHT_SIZE / 2}px, ${-LIGHT_SIZE / 2}px)`,
-            }}
-          />
-          <span
-            className="absolute inset-0 block"
-            style={{
-              zIndex: 5,
-              backgroundImage: `url(${grainAsset.url})`,
-              backgroundSize: `${GRAIN_TILE}px ${GRAIN_TILE}px`,
-              backgroundRepeat: "repeat",
-            }}
-          />
-        </span>
-      )}
     </div>
   );
 }
