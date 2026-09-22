@@ -170,7 +170,9 @@ export function Results() {
                 &ldquo;
               </span>
               <p className="fh-body mt-6 italic">{results.quote}</p>
-              <p className="fh-mono mt-6 text-[color:var(--fh-ink-ghost)]">{results.sampleNote}</p>
+              <p className="mt-6 text-[0.6875rem] leading-[1.7] text-[color:var(--fh-ink-ghost)]">
+                {results.sampleNote}
+              </p>
             </Frame>
           </div>
 

@@ -130,7 +130,10 @@ export function Footer() {
         </div>
       </div>
 
-      <div className="fh-shell mt-[clamp(3rem,7vw,6rem)]">
+      {/* The wordmark runs at line-height 0.78, so the glyphs overflow their
+          line box by roughly 0.11em top and bottom. The extra block padding
+          keeps that overhang clear of the links above and the legal bar. */}
+      <div className="fh-shell mt-[clamp(3rem,7vw,6rem)] py-[0.12em] text-[clamp(2.75rem,12.2vw,11rem)]">
         <LiveWordmark />
       </div>
 
