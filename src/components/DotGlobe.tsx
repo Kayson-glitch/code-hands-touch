@@ -34,12 +34,22 @@ export function DotGlobe({
    * heavy enough to read as a surface rather than only as a rim at the limb.
    */
   oceanAlpha = 0.022,
+  /**
+   * Degrees between dots. The company hub wants the fine grid it was tuned
+   * with; the homepage panel is a third of the size on screen and needs a
+   * coarser one to read as dots rather than a wash.
+   */
+  step = LAT_STEP,
+  /** Pins that ride the rotation, so they stay on their own patch of ground. */
+  markers = [],
 }: {
   className?: string;
   style?: React.CSSProperties;
   ink?: string;
   landAlpha?: number;
   oceanAlpha?: number;
+  step?: number;
+  markers?: Array<{ lat: number; lon: number; size: number; ink: string }>;
 }) {
   const hostRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -58,9 +68,9 @@ export function DotGlobe({
     const dots: Dot[] = [];
     const buildDots = (maskData: ImageData | null, mw: number, mh: number) => {
       dots.length = 0;
-      for (let lat = -90 + LAT_STEP / 2; lat < 90; lat += LAT_STEP) {
+      for (let lat = -90 + step / 2; lat < 90; lat += step) {
         const rad = (lat * Math.PI) / 180;
-        const ring = Math.max(1, Math.round((360 / LON_STEP) * Math.cos(rad)));
+        const ring = Math.max(1, Math.round((360 / step) * Math.cos(rad)));
         for (let k = 0; k < ring; k++) {
           const lon = (k / ring) * 360 - 180;
           let land = false;
@@ -114,7 +124,7 @@ export function DotGlobe({
       const cosS = Math.cos(s);
       const sinS = Math.sin(s);
       // Grid spacing at the equator, so density is size-independent.
-      const spacing = r * 2 * Math.PI * (LON_STEP / 360);
+      const spacing = r * 2 * Math.PI * (step / 360);
       const rr = r * 0.94;
 
       for (const d of dots) {
@@ -139,6 +149,30 @@ export function DotGlobe({
         ctx.fillRect(px, py, side, side);
       }
       ctx.globalAlpha = 1;
+
+      // Pins, turned 45 degrees and flattened by their own facing so they sit
+      // on the surface rather than floating over it.
+      for (const m of markers) {
+        const rad = (m.lat * Math.PI) / 180;
+        const lonRad = (m.lon * Math.PI) / 180;
+        const mx = Math.cos(rad) * Math.sin(lonRad);
+        const mz = Math.cos(rad) * Math.cos(lonRad);
+        const x = mx * cosS + mz * sinS;
+        const zs = -mx * sinS + mz * cosS;
+        const y = Math.sin(rad) * cosT - zs * sinT;
+        const z = Math.sin(rad) * sinT + zs * cosT;
+        if (z <= 0.02) continue;
+        const half = ((m.size / 800) * r * 2) / 2;
+        ctx.save();
+        ctx.translate(r + x * rr, r - y * rr);
+        ctx.rotate(Math.PI / 4);
+        ctx.globalAlpha = Math.min(1, 0.3 + z * 0.7);
+        ctx.fillStyle = m.ink;
+        ctx.fillRect(-half * z, -half, half * 2 * z, half * 2);
+        ctx.restore();
+      }
+      ctx.globalAlpha = 1;
+      ctx.fillStyle = ink;
     };
 
     const tick = (now: number) => {
@@ -235,7 +269,7 @@ export function DotGlobe({
       host.removeEventListener("pointerleave", onLeave);
       img.onload = null;
     };
-  }, [ink, landAlpha, oceanAlpha]);
+  }, [ink, landAlpha, oceanAlpha, step, markers]);
 
   return (
     <div ref={hostRef} className={className} style={{ aspectRatio: "1 / 1", ...style }}>
