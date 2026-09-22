@@ -38,7 +38,7 @@ export const Route = createFileRoute("/platform/rag")({
 /** Page accent — the Platform menu's "Engine" square. */
 const SKY = "#8CE0FF";
 const HAIRLINE = "#E1E0E4";
-/** Engine module, from Figma 3050:29390. */
+/** Engine module tile ground, from Figma 3050:29390. */
 const TILE_FILL = "#F7F7F7";
 /** Crop marks on the stat tiles: 8px arms, near-black, 1px. */
 const MARK = 8;
@@ -57,7 +57,7 @@ const ENGINE = {
   body: "A proprietary retrieval and orchestration pipeline that understands intent deeply, so every response stays accurate and on-brand.",
   stats: [
     { label: "Knowledge retrieval accuracy", value: "100", unit: "%" },
-    { label: "First contact\nresolution", value: "70", unit: "%", prefix: "+" },
+    { label: "First contact resolution", value: "70", unit: "%", prefix: "+" },
   ],
 };
 
@@ -111,24 +111,16 @@ function StatTile({
             }}
           />
         ))}
-        <p style={{ margin: 0, fontSize: 16, lineHeight: "20.8px", color: "var(--ink, #0E0B22)" }}>
-          <BreakLines text={label} />
+        <p style={{ margin: 0, fontSize: 14, lineHeight: "20px", color: "var(--ink, #0E0B22)" }}>
+          {label}
         </p>
         <p
-          className="whitespace-nowrap"
-          style={{
-            margin: 0,
-            fontSize: fluid(40, 30),
-            lineHeight: "48.8px",
-            fontWeight: 500,
-            color: "var(--ink, #0E0B22)",
-          }}
+          className="font-display whitespace-nowrap"
+          style={{ margin: 0, fontSize: fluid(40, 32), lineHeight: 1.1, fontWeight: 400, color: "var(--ink, #0E0B22)" }}
         >
-          {/* One text node in the frame, so the sign and the unit carry the
-              same ink as the figure rather than being dropped back. */}
-          {prefix}
+          {prefix ? <span style={{ color: "#A1A0A9" }}>{prefix}</span> : null}
           <RollingNumber value={value} />
-          {unit}
+          {unit ? <span style={{ color: "#A1A0A9" }}>{unit}</span> : null}
         </p>
       </div>
     </Reveal>
@@ -182,13 +174,7 @@ function RagPage() {
                 <Reveal y={24} duration={1600}>
                   <h2
                     className="font-display text-ink"
-                    style={{
-                      margin: 0,
-                      fontSize: fluid(44, 30),
-                      lineHeight: 1.227,
-                      letterSpacing: "0.02em",
-                      fontWeight: 400,
-                    }}
+                    style={{ margin: 0, fontSize: fluid(48, 30), lineHeight: 1.1667, fontWeight: 400 }}
                   >
                     <BreakLines text={ENGINE.title} />
                   </h2>
@@ -197,9 +183,9 @@ function RagPage() {
                   <p
                     style={{
                       margin: "20px 0 0",
-                      maxWidth: 560,
-                      fontSize: fluid(18, 15),
-                      lineHeight: 1.7,
+                      maxWidth: 532,
+                      fontSize: 14,
+                      lineHeight: "22px",
                       color: "var(--ink-muted, #7A7885)",
                     }}
                   >
