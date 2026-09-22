@@ -14,14 +14,20 @@ import { useEffect, useRef } from "react";
  * 53% in the frame, and clusters correlating over roughly 220 rendered px.
  */
 
-/** Warm off-white, the fill the frames sit on. */
-const GROUND = "#F1EEE9";
 /**
- * Dot ink. Nearly black on purpose: each dot covers about 2% of its cell, so
- * the field still reads as a light wash, and a lighter ink flattens the
- * clusters out — matching the raster took this rather than a mid grey.
+ * The frames sit on #F1EEE9, a warm cream — the one warm value in a palette
+ * that runs neutral to violet everywhere else. `--surface-inset` is the same
+ * lightness (both start at 241) with the hue brought back onto the family, so
+ * the ground keeps the separation the frame designed and stops reading as a
+ * different system.
  */
-const INK = "8, 8, 7";
+const GROUND = "#F1F1F3";
+/**
+ * Dot ink: `--ink-faint`. Matching the raster's contrast statistically took an
+ * almost black dot, which read far heavier than the texture should — this is
+ * the palette's faint step instead, and the field stays a wash.
+ */
+const INK = "161, 160, 169";
 /** Distance between dots, in CSS px. */
 const PITCH = 9;
 /** Dot radius at full weight. */
