@@ -1,4 +1,5 @@
 import { useEffect, useState, type CSSProperties } from "react";
+import { closingPanelAssets } from "@/lib/media";
 
 type Point = { label: string; text: string };
 
@@ -206,7 +207,9 @@ export function FeaturePanels({
                     [ <Typed text={panel.eyebrow} active={active} delay={eyebrowDelay} /> ]
                   </p>
                   <div className="artemis-gallery__row">
-                    <div className="artemis-gallery__media" aria-hidden />
+                    <div className="artemis-gallery__media" aria-hidden>
+                      <img src={closingPanelAssets[index]?.url} alt="" draggable={false} />
+                    </div>
                     <div className="artemis-gallery__copy">
                       <h3 className="artemis-gallery__title">
                         <Typed text={panel.title} active={active} delay={titleDelay} />

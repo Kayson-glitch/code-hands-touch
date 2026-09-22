@@ -36,6 +36,17 @@ export const solutionFlowAsset = media("solution-cs-flow.webp");
 /** Platform → RAG 2.0 demo transcript card, exported from Figma at 2× (588×568). */
 export const platformRagDemoAsset = media("platform-rag-demo.webp");
 
+/**
+ * Homepage closing gallery — one subject per panel, from Figma's 网页配图 sheet.
+ * Kept as SVG rather than exported to raster: the source is vector, every
+ * shape stays addressable for motion, and the five together are 89KB gzipped
+ * against 507KB as WebP. Indexed by panel order, on the full 800×800 canvas
+ * so the margins Figma composed around each subject are preserved.
+ */
+export const closingPanelAssets = [1, 2, 3, 4, 5].map((n) =>
+  media(`closing-panel-${n}.svg`),
+);
+
 /** Company page — the San Francisco card, from Figma at 2×. */
 export const companySanFranciscoAsset = media("company-san-francisco.webp");
 /**
