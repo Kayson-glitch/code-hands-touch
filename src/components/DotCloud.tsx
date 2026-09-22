@@ -31,8 +31,8 @@ const INK = "161, 160, 169";
  * stay a field rather than a screen.
  */
 const PITCH = 15;
-/** Dot radius at full weight, opened up to match the wider pitch. */
-const DOT_R = 1.7;
+/** Dot radius at full weight: the largest dot covers a fifth of its cell. */
+const DOT_R = 1.45;
 /** Cluster size, in CSS px: the wavelength of the coarse noise. */
 const CLUSTER = 220;
 /** Floor and ceiling of a dot's weight, so nothing is fully absent or solid. */

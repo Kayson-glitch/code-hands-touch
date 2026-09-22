@@ -136,8 +136,10 @@ const FIGURES = {
     alt: "24/7 support console with live conversations being resolved",
   },
   flow: {
+    // 27 piled its clusters into the bottom third, which averaged 0.83 against
+    // 0.51 up top; this one holds 0.48-0.50 across all three bands.
     src: solutionFlowAsset.url,
-    seed: 27,
+    seed: 293,
     alt: "Self-service flow: inbound request, intent detection, automated solution, instant resolution",
   },
 } as const;
