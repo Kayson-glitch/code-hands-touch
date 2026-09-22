@@ -119,6 +119,43 @@ function Bullet({ diamond }: { diamond: boolean }) {
 }
 
 /**
+ * The hub at the centre of the ecosystem figure: one knowledge base the four
+ * channels around it all resolve against. It replaces a filled mark that sat
+ * at 63% of its containing disc against the 40% the channel icons keep, and in
+ * solid greys against their line work. Drawn here rather than baked into the
+ * asset so it stays sharp and stays adjustable.
+ *
+ * The viewBox is in display px at the figure's full width, so the 1.5 stroke
+ * is the same weight the channel icons carry.
+ */
+function KnowledgeBaseMark({
+  className,
+  style,
+}: {
+  className?: string;
+  style?: React.CSSProperties;
+}) {
+  return (
+    <svg
+      viewBox="0 0 76 76"
+      fill="none"
+      stroke="#171A26"
+      strokeWidth={1.5}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={className}
+      style={style}
+      aria-hidden
+    >
+      <ellipse cx="38" cy="20" rx="26" ry="9" />
+      <path d="M12 20v36a26 9 0 0 0 52 0V20" />
+      <path d="M12 32a26 9 0 0 0 52 0" />
+      <path d="M12 44a26 9 0 0 0 52 0" />
+    </svg>
+  );
+}
+
+/**
  * Feature illustration: the subject exported from Figma with its ground
  * removed, over a ground that is drawn instead. The frames shared one
  * 1232x1160 raster for that ground; `DotCloud` generates it, so each figure
@@ -161,6 +198,14 @@ function Figure({ kind, from }: { kind: Feature["figure"]; from: "left" | "right
           draggable={false}
           className="absolute inset-0 block h-full w-full select-none"
         />
+        {kind === "channels" && (
+          <KnowledgeBaseMark
+            className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2"
+            /* 14.1% of the frame puts the mark at 40% of its disc, the
+               proportion the channel icons hold in theirs. */
+            style={{ width: "14.1%" }}
+          />
+        )}
       </div>
     </HoverTilt>
   );
