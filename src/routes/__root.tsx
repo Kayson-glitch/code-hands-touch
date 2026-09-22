@@ -112,7 +112,10 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         rel: "stylesheet",
         href: "https://api.fontshare.com/v2/css?f[]=clash-display@variable&display=swap",
       },
-
+      {
+        rel: "stylesheet",
+        href: "https://fonts.googleapis.com/css2?family=Inter+Tight:ital,wght@0,400..700;1,400..600&family=JetBrains+Mono:wght@400..700&display=swap",
+      },
     ],
   }),
   shellComponent: RootShell,
