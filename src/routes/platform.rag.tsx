@@ -38,6 +38,11 @@ export const Route = createFileRoute("/platform/rag")({
 /** Page accent — the Platform menu's "Engine" square. */
 const SKY = "#8CE0FF";
 const HAIRLINE = "#E1E0E4";
+/** Engine module, from Figma 3050:29390. */
+const TILE_FILL = "#F7F7F7";
+/** Crop marks on the stat tiles: 8px arms, near-black, 1px. */
+const MARK = 8;
+const MARK_INK = "#000000";
 
 /* ------------------------------------------------------------------ data */
 
@@ -52,7 +57,7 @@ const ENGINE = {
   body: "A proprietary retrieval and orchestration pipeline that understands intent deeply, so every response stays accurate and on-brand.",
   stats: [
     { label: "Knowledge retrieval accuracy", value: "100", unit: "%" },
-    { label: "First contact resolution", value: "70", unit: "%", prefix: "+" },
+    { label: "First contact\nresolution", value: "70", unit: "%", prefix: "+" },
   ],
 };
 
@@ -75,24 +80,55 @@ function StatTile({
   return (
     <Reveal y={20} duration={1600} delay={delay} className="flex-1" style={{ minWidth: 0 }}>
       <div
-        className="flex h-full flex-col justify-between"
+        className="relative flex h-full flex-col justify-between"
         style={{
-          gap: 12,
+          gap: 9,
           padding: "20px 20px 16px",
-          background: "#F8F9FA",
+          background: TILE_FILL,
           border: `1px solid ${HAIRLINE}`,
         }}
       >
-        <p style={{ margin: 0, fontSize: 14, lineHeight: "20px", color: "var(--ink, #0E0B22)" }}>
-          {label}
+        {/* Crop marks on the four corners, 8px arms straddling the hairline. */}
+        {(
+          [
+            ["top", "left"],
+            ["top", "right"],
+            ["bottom", "left"],
+            ["bottom", "right"],
+          ] as const
+        ).map(([y, x]) => (
+          <span
+            key={`${y}-${x}`}
+            aria-hidden
+            className="pointer-events-none absolute"
+            style={{
+              [y]: -1,
+              [x]: -1,
+              width: MARK,
+              height: MARK,
+              [`border${y === "top" ? "Top" : "Bottom"}`]: `1px solid ${MARK_INK}`,
+              [`border${x === "left" ? "Left" : "Right"}`]: `1px solid ${MARK_INK}`,
+            }}
+          />
+        ))}
+        <p style={{ margin: 0, fontSize: 16, lineHeight: "20.8px", color: "var(--ink, #0E0B22)" }}>
+          <BreakLines text={label} />
         </p>
         <p
-          className="font-display whitespace-nowrap"
-          style={{ margin: 0, fontSize: fluid(40, 32), lineHeight: 1.1, fontWeight: 400, color: "var(--ink, #0E0B22)" }}
+          className="whitespace-nowrap"
+          style={{
+            margin: 0,
+            fontSize: fluid(40, 30),
+            lineHeight: "48.8px",
+            fontWeight: 500,
+            color: "var(--ink, #0E0B22)",
+          }}
         >
-          {prefix ? <span style={{ color: "#A1A0A9" }}>{prefix}</span> : null}
+          {/* One text node in the frame, so the sign and the unit carry the
+              same ink as the figure rather than being dropped back. */}
+          {prefix}
           <RollingNumber value={value} />
-          {unit ? <span style={{ color: "#A1A0A9" }}>{unit}</span> : null}
+          {unit}
         </p>
       </div>
     </Reveal>
@@ -103,13 +139,13 @@ function StatTile({
 function DemoCard() {
   return (
     <Reveal y={32} duration={1600} delay={160} className="flex flex-1 md:justify-end" style={{ minWidth: 0 }}>
-      <HoverTilt from="left" className="w-full" style={{ maxWidth: 588 }}>
+      <HoverTilt from="left" className="w-full" style={{ maxWidth: 560 }}>
         <img
           src={platformRagDemoAsset.url}
-          alt="Synergy RAG 2.0 working a return request: intent detection, knowledge retrieval, function calling, drafted reply"
+          alt="Synergy RAG 2.0 working a return request: the orchestration steps it runs, and the reply they produce"
           draggable={false}
           className="block h-auto w-full select-none"
-          style={{ aspectRatio: "588 / 568" }}
+          style={{ aspectRatio: "1 / 1" }}
         />
       </HoverTilt>
     </Reveal>
@@ -146,7 +182,13 @@ function RagPage() {
                 <Reveal y={24} duration={1600}>
                   <h2
                     className="font-display text-ink"
-                    style={{ margin: 0, fontSize: fluid(48, 30), lineHeight: 1.1667, fontWeight: 400 }}
+                    style={{
+                      margin: 0,
+                      fontSize: fluid(44, 30),
+                      lineHeight: 1.227,
+                      letterSpacing: "0.02em",
+                      fontWeight: 400,
+                    }}
                   >
                     <BreakLines text={ENGINE.title} />
                   </h2>
@@ -155,9 +197,9 @@ function RagPage() {
                   <p
                     style={{
                       margin: "20px 0 0",
-                      maxWidth: 532,
-                      fontSize: 14,
-                      lineHeight: "22px",
+                      maxWidth: 560,
+                      fontSize: fluid(18, 15),
+                      lineHeight: 1.7,
                       color: "var(--ink-muted, #7A7885)",
                     }}
                   >
