@@ -63,7 +63,7 @@ function Bullet({ diamond }: { diamond: boolean }) {
 }
 
 function Hairline({ dark = false, dashed = false }: { dark?: boolean; dashed?: boolean }) {
-  const color = dark ? "rgba(255,255,255,0.18)" : "#F1F1F3";
+  const color = dark ? "rgba(255,255,255,0.18)" : "var(--surface-inset, #F1F1F3)";
   if (dashed) {
     return (
       <div
@@ -425,7 +425,7 @@ function FigureSlot({ figure }: { figure: Figure }) {
       style={{
         minHeight: fluid(260, 200),
         padding: `${fluid(32, 24)} ${fluid(36, 24)}`,
-        background: "#F8F9FA",
+        background: "var(--surface-soft, #F7F7F8)",
       }}
     >
       {figure.kind === "stat" ? (

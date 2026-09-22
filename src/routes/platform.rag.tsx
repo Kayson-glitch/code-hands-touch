@@ -39,7 +39,7 @@ export const Route = createFileRoute("/platform/rag")({
 const SKY = "#8CE0FF";
 const HAIRLINE = "#E1E0E4";
 /** Engine module tile ground, from Figma 3050:29390. */
-const TILE_FILL = "#F7F7F7";
+const TILE_FILL = "var(--surface-soft, #F7F7F8)";
 /** Crop marks on the stat tiles: 8px arms, near-black, 1px. */
 const MARK = 8;
 const MARK_INK = "#000000";

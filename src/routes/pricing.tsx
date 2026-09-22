@@ -44,7 +44,7 @@ const ACCENT = "#EBA753";
  * weights, and a warm graphite for the inverted panels instead of #000.
  */
 const SURFACE = "#FFFFFF";
-const SURFACE_SOFT = "#F6F6F8";
+const SURFACE_SOFT = "var(--surface-soft, #F7F7F8)";
 const RULE = "rgba(14, 11, 34, 0.10)";
 const RULE_SOFT = "rgba(14, 11, 34, 0.06)";
 /** The estimate panel: one step darker than the section, still paper. */

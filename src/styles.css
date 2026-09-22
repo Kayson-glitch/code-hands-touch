@@ -35,6 +35,14 @@ body::-webkit-scrollbar {
   --hairline: #e1e0e4;
   --accent-blue: #137dff;
   --paper: #fafafa;
+  /*
+   * Two greys between paper and the hairline. Cards and tiles had drifted to
+   * four values for the same job (#F6F6F8, #F7F7F7, #F8F8F9, #F8F9FA); they
+   * are one now. `inset` is the darker step the controls already shared — the
+   * nav's button, the preloader's track, a divider.
+   */
+  --surface-soft: #f7f7f8;
+  --surface-inset: #f1f1f3;
 }
 
 html,
@@ -57,6 +65,8 @@ body {
   --color-hairline: var(--hairline);
   --color-paper: var(--paper);
   --color-accent-blue: var(--accent-blue);
+  --color-surface-soft: var(--surface-soft);
+  --color-surface-inset: var(--surface-inset);
 }
 
 

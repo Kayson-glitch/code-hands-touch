@@ -47,7 +47,7 @@ const CELL_W = "min(44vw, 520px)";
 const CELL_H = "clamp(20px, 2.93vw, 35px)";
 const CELL_INSET = "clamp(3px, 0.38vw, 5px)";
 /** One grey for the track and the frame's rules, so they read as one drawing. */
-const TRACK = "#F1F1F3";
+const TRACK = "var(--surface-inset, #F1F1F3)";
 const RULE = TRACK;
 /** How far the frame's rules run past the cell before they fade out. */
 const FRAME_REACH_X = 112;

@@ -393,7 +393,7 @@ export function StatsCard({
 }) {
   const t = tone(dark);
   return (
-    <Reveal y={32} duration={1600} style={{ background: dark ? "#0E0B22" : "#F8F9FA" }}>
+    <Reveal y={32} duration={1600} style={{ background: dark ? "#0E0B22" : "var(--surface-soft, #F7F7F8)" }}>
       <div
         className="relative flex flex-col md:flex-row"
         style={{ padding: `${fluid(56, 36)} ${fluid(40, 16)}`, gap: fluid(40, 20) }}

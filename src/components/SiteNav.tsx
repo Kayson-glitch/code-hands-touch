@@ -100,7 +100,7 @@ export function SiteNav({
   const glassBg = onDark ? "rgba(0,0,0,0.72)" : "rgba(250,250,250,0.72)";
   const inkStrong = onDark ? "#FFFFFF" : "#0E0B22";
   const inkSoft = "#7A7885";
-  const hairline = onDark ? "rgba(255,255,255,0.15)" : "#F1F1F3";
+  const hairline = onDark ? "rgba(255,255,255,0.15)" : "var(--surface-inset, #F1F1F3)";
   // Hover: color change only, no background fill.
   const itemStyle = (i: number) => ({
     color: hovered === i ? inkStrong : inkSoft,
@@ -228,7 +228,7 @@ export function SiteNav({
                 padding: "0 16px",
                 borderRadius: 0,
                 color: onDark ? "#FFFFFF" : "#0E0B22",
-                background: onDark ? "rgba(255, 255, 255, 0.15)" : "#F1F1F3",
+                background: onDark ? "rgba(255, 255, 255, 0.15)" : "var(--surface-inset, #F1F1F3)",
                 border: "none",
               }}
               onMouseEnter={(e) => {
@@ -239,7 +239,7 @@ export function SiteNav({
               onMouseLeave={(e) => {
                 (e.currentTarget as HTMLButtonElement).style.background = onDark
                   ? "rgba(255, 255, 255, 0.15)"
-                  : "#F1F1F3";
+                  : "var(--surface-inset, #F1F1F3)";
               }}
             >
               Book a Demo
@@ -450,7 +450,7 @@ function WhySynergyMenu({ open }: { open: boolean }) {
             style={{
               padding: 30,
               gap: 8,
-              background: hover === i ? "#F8F8F9" : "transparent",
+              background: hover === i ? "var(--surface-soft, #F7F7F8)" : "transparent",
               borderRight: i % 2 === 0 ? `1px solid ${MENU_RULE}` : "none",
               borderBottom: i < 2 ? `1px solid ${MENU_RULE}` : "none",
               ...cellReveal(open, i),
@@ -527,7 +527,7 @@ function RichCell({
         padding: "22px 30px",
         gap: 8,
         minHeight: 105,
-        background: hovered ? "#F8F8F9" : "transparent",
+        background: hovered ? "var(--surface-soft, #F7F7F8)" : "transparent",
         borderBottom: last ? "none" : "1px solid #E1E0E4",
         ...reveal,
       }}
@@ -601,7 +601,7 @@ function ListRow({
       style={{
         padding: "18px 24px 18px 30px",
         gap: 10,
-        background: hovered ? "#F8F8F9" : "transparent",
+        background: hovered ? "var(--surface-soft, #F7F7F8)" : "transparent",
         borderBottom: last ? "none" : "1px solid #E1E0E4",
         ...reveal,
       }}

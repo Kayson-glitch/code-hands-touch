@@ -225,7 +225,7 @@ function OutcomeCard({
         style={{
           gap: 32,
           padding: `${fluid(24, 18)} ${fluid(28, 18)} ${fluid(24, 18)}`,
-          background: "#F8F9FA",
+          background: "var(--surface-soft, #F7F7F8)",
           border: `1px solid ${HAIRLINE}`,
           minHeight: fluid(200, 150),
         }}

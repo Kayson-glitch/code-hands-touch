@@ -321,7 +321,7 @@ function CompanyPage() {
               style={{
                 padding: fluid(56, 32),
                 gap: fluid(40, 28),
-                background: "#F6F6F8",
+                background: "var(--surface-soft, #F7F7F8)",
                 border: `1px solid ${HAIRLINE}`,
               }}
             >
