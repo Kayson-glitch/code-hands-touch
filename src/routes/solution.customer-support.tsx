@@ -5,7 +5,12 @@ import { FinChatDock } from "@/components/FinChatDock";
 import { SiteFooter } from "@/components/SiteFooter";
 import { RollingNumber } from "@/components/RollingNumber";
 import { BreakLines, ProductHero, RainbowButton } from "@/components/ProductHero";
-import { solutionChannelsAsset, solutionConsoleAsset, solutionFlowAsset } from "@/lib/media";
+import {
+  solutionChannelsAsset,
+  solutionConsoleAsset,
+  solutionFlowAsset,
+  solutionHubAsset,
+} from "@/lib/media";
 import { HoverTilt } from "@/components/HoverTilt";
 import { DotCloud } from "@/components/DotCloud";
 import { fluid } from "@/lib/fluid";
@@ -119,41 +124,13 @@ function Bullet({ diamond }: { diamond: boolean }) {
 }
 
 /**
- * The hub at the centre of the ecosystem figure: the one store of answers the
- * four channels around it resolve against. It replaces a filled mark that sat
- * at 63% of its containing disc against the 40% the channel icons keep, and in
- * solid greys against their line work; the stacked reading is the one that
- * mark was already reaching for. Drawn here rather than baked into the asset
- * so it stays sharp and stays adjustable.
+ * The mark at the centre of the ecosystem figure, lifted out of the asset so
+ * its size is one number here rather than a re-export. Its own ground is the
+ * flat white of the disc it sits on, so the crop's edges do not show.
  *
- * The viewBox is in display px at the figure's full width, so the 1.5 stroke
- * is the same weight the channel icons carry.
+ * The mark reads 54% of that disc at the size Figma drew it; this is 47%.
  */
-function HubMark({
-  className,
-  style,
-}: {
-  className?: string;
-  style?: React.CSSProperties;
-}) {
-  return (
-    <svg
-      viewBox="0 0 76 76"
-      fill="none"
-      stroke="#171A26"
-      strokeWidth={1.5}
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      className={className}
-      style={style}
-      aria-hidden
-    >
-      <path d="M38 16 62 29 38 42 14 29Z" />
-      <path d="M14 38 38 51 62 38" />
-      <path d="M14 47 38 60 62 47" />
-    </svg>
-  );
-}
+const HUB_MARK_WIDTH = "21%";
 
 /**
  * Feature illustration: the subject exported from Figma with its ground
@@ -199,11 +176,12 @@ function Figure({ kind, from }: { kind: Feature["figure"]; from: "left" | "right
           className="absolute inset-0 block h-full w-full select-none"
         />
         {kind === "channels" && (
-          <HubMark
-            className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2"
-            /* 14.1% of the frame puts the mark at 40% of its disc, the
-               proportion the channel icons hold in theirs. */
-            style={{ width: "14.1%" }}
+          <img
+            src={solutionHubAsset.url}
+            alt=""
+            draggable={false}
+            className="absolute left-1/2 top-1/2 block -translate-x-1/2 -translate-y-1/2 select-none"
+            style={{ width: HUB_MARK_WIDTH }}
           />
         )}
       </div>
