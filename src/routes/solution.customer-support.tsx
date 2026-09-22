@@ -119,16 +119,17 @@ function Bullet({ diamond }: { diamond: boolean }) {
 }
 
 /**
- * The hub at the centre of the ecosystem figure: one knowledge base the four
- * channels around it all resolve against. It replaces a filled mark that sat
+ * The hub at the centre of the ecosystem figure: the one store of answers the
+ * four channels around it resolve against. It replaces a filled mark that sat
  * at 63% of its containing disc against the 40% the channel icons keep, and in
- * solid greys against their line work. Drawn here rather than baked into the
- * asset so it stays sharp and stays adjustable.
+ * solid greys against their line work; the stacked reading is the one that
+ * mark was already reaching for. Drawn here rather than baked into the asset
+ * so it stays sharp and stays adjustable.
  *
  * The viewBox is in display px at the figure's full width, so the 1.5 stroke
  * is the same weight the channel icons carry.
  */
-function KnowledgeBaseMark({
+function HubMark({
   className,
   style,
 }: {
@@ -147,10 +148,9 @@ function KnowledgeBaseMark({
       style={style}
       aria-hidden
     >
-      <ellipse cx="38" cy="20" rx="26" ry="9" />
-      <path d="M12 20v36a26 9 0 0 0 52 0V20" />
-      <path d="M12 32a26 9 0 0 0 52 0" />
-      <path d="M12 44a26 9 0 0 0 52 0" />
+      <path d="M38 16 62 29 38 42 14 29Z" />
+      <path d="M14 38 38 51 62 38" />
+      <path d="M14 47 38 60 62 47" />
     </svg>
   );
 }
@@ -199,7 +199,7 @@ function Figure({ kind, from }: { kind: Feature["figure"]; from: "left" | "right
           className="absolute inset-0 block h-full w-full select-none"
         />
         {kind === "channels" && (
-          <KnowledgeBaseMark
+          <HubMark
             className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2"
             /* 14.1% of the frame puts the mark at 40% of its disc, the
                proportion the channel icons hold in theirs. */
