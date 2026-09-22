@@ -2,6 +2,10 @@ import { results } from "../content";
 import { Counter, Frame, ScanHeading, Section, SectionHeader } from "../components/primitives";
 import { useInView } from "../hooks";
 
+/** Accuracy axis floor. Nothing here has ever scored below it. */
+const AXIS_FLOOR = 65;
+const scale = (v: number) => ((v - AXIS_FLOOR) / (100 - AXIS_FLOOR)) * 100;
+
 function MetricRow({ metric, delay }: { metric: (typeof results.metrics)[number]; delay: number }) {
   const [ref, inView] = useInView<HTMLDivElement>({ threshold: 0.4 });
 
@@ -37,50 +41,59 @@ function MetricRow({ metric, delay }: { metric: (typeof results.metrics)[number]
       </div>
 
       {/* The gain, drawn. The bar fills to the old score in grey, then the
-          acid segment extends past it — the release, made visible. */}
+          acid segment extends past it — the release, made visible. The axis
+          starts at the floor rather than zero, otherwise a 12pp jump is a
+          sliver and the whole point of the chart is lost. */}
       <div className="lg:col-span-5">
-        <div className="relative h-8">
+        <div className="relative h-9">
           <span className="absolute inset-x-0 top-1/2 h-px -translate-y-1/2 bg-[color:var(--fh-line)]" />
           <span
             className="absolute top-1/2 h-[3px] -translate-y-1/2 bg-[color:var(--fh-ink-ghost)]"
             style={{
               left: 0,
-              width: inView ? `${metric.before}%` : "0%",
+              width: inView ? `${scale(metric.before)}%` : "0%",
               transition: `width 760ms var(--fh-ease-out) ${delay}ms`,
             }}
           />
           <span
             className="absolute top-1/2 h-[3px] -translate-y-1/2 bg-[color:var(--fh-acid)]"
             style={{
-              left: `${metric.before}%`,
-              width: inView ? `${metric.after - metric.before}%` : "0%",
+              left: `${scale(metric.before)}%`,
+              width: inView ? `${scale(metric.after) - scale(metric.before)}%` : "0%",
               transition: `width 700ms var(--fh-ease-out) ${delay + 780}ms`,
             }}
           />
           <span
-            className="absolute top-1/2 block h-3 w-px -translate-y-1/2 bg-[color:var(--fh-acid)]"
+            className="absolute top-1/2 block h-3.5 w-[2px] -translate-y-1/2 bg-[color:var(--fh-acid)]"
             style={{
-              left: `${metric.after}%`,
+              left: `${scale(metric.after)}%`,
               opacity: inView ? 1 : 0,
               transition: `opacity 300ms linear ${delay + 1400}ms`,
             }}
           />
+
+          <span className="fh-mono absolute bottom-0 left-0 text-[9px] text-[color:var(--fh-ink-ghost)]">
+            {AXIS_FLOOR}%
+          </span>
           <span
-            className="fh-mono absolute bottom-0 text-[9px] text-[color:var(--fh-ink-ghost)]"
-            style={{ left: 0 }}
+            className="fh-mono absolute bottom-0 text-[9px] text-[color:var(--fh-ink-faint)]"
+            style={{ left: `${scale(metric.before)}%`, transform: "translateX(-50%)" }}
           >
-            {metric.before.toFixed(1)}%
+            {metric.before.toFixed(1)}
           </span>
           <span
             className="fh-mono absolute bottom-0 text-[9px] text-[color:var(--fh-acid)]"
             style={{
-              left: `${metric.after}%`,
-              transform: "translateX(-100%)",
+              left: `${scale(metric.after)}%`,
+              transform: "translateX(-50%)",
               opacity: inView ? 1 : 0,
               transition: `opacity 400ms linear ${delay + 1400}ms`,
             }}
           >
-            {metric.after}%
+            {metric.after}
+          </span>
+          <span className="fh-mono absolute bottom-0 right-0 text-[9px] text-[color:var(--fh-ink-ghost)]">
+            100%
           </span>
         </div>
       </div>
@@ -151,12 +164,12 @@ export function Results() {
           <div className="lg:col-span-6">
             <Frame className="border border-[color:var(--fh-line)] bg-[color:var(--fh-surface)] p-7">
               <span
-                className="block text-[2.5rem] leading-none text-[color:var(--fh-acid)]"
+                className="block font-serif text-[4rem] leading-[0.5] text-[color:var(--fh-acid)]"
                 aria-hidden
               >
-                “
+                &ldquo;
               </span>
-              <p className="fh-body mt-2 italic">{results.quote}</p>
+              <p className="fh-body mt-6 italic">{results.quote}</p>
               <p className="fh-mono mt-6 text-[color:var(--fh-ink-ghost)]">{results.sampleNote}</p>
             </Frame>
           </div>

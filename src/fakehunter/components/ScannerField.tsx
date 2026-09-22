@@ -5,6 +5,11 @@ const CELL = 15;
 const GLYPHS = "01234567890ABCDEF<>/\\|+-=*#%$@?";
 const LENS_RADIUS = 190;
 
+/** Canvas parses `font` as a CSS shorthand but cannot resolve `var()`, so the
+ *  stack has to be written out literally or the assignment silently no-ops. */
+const MONO = '"JetBrains Mono", ui-monospace, SFMono-Regular, monospace';
+const glyphFont = `500 ${CELL - 4}px ${MONO}`;
+
 /**
  * Tamper blobs in normalised coords. They sit in the right two thirds, which
  * is the part of the hero the copy does not cover, so the lens has something
@@ -56,6 +61,43 @@ export function ScannerField({ className }: { className?: string }) {
     const still = document.createElement("canvas");
     const stillCtx = still.getContext("2d");
 
+    /**
+     * Static equivalent of the lens: the noise floor with the tampered
+     * regions already resolved and boxed. Nothing moves, but the reader still
+     * gets the finding the animated version exists to deliver.
+     */
+    const paintStatic = () => {
+      ctx.clearRect(0, 0, width, height);
+      ctx.drawImage(still, 0, 0, width, height);
+      ctx.font = glyphFont;
+      ctx.textBaseline = "top";
+
+      for (let r = 0; r < rows; r++) {
+        for (let c = 0; c < cols; c++) {
+          const cell = cells[r * cols + c];
+          if (cell.tamper <= 0.02) continue;
+          ctx.fillStyle = `rgba(255,90,77,${Math.min(0.9, 0.2 + cell.tamper)})`;
+          ctx.fillText(cell.ch, c * CELL, r * CELL);
+        }
+      }
+
+      for (const blob of TAMPER) {
+        const bx = blob.x * width;
+        const by = blob.y * height;
+        const bw = blob.rx * width;
+        const bh = blob.ry * height;
+        ctx.save();
+        ctx.setLineDash([5, 4]);
+        ctx.strokeStyle = "rgba(255,90,77,0.7)";
+        ctx.lineWidth = 1;
+        ctx.strokeRect(bx - bw, by - bh, bw * 2, bh * 2);
+        ctx.restore();
+        ctx.fillStyle = "rgba(255,90,77,0.9)";
+        ctx.font = `600 9px ${MONO}`;
+        ctx.fillText("TAMPERED", bx - bw, by - bh - 13);
+      }
+    };
+
     const build = () => {
       const rect = parent.getBoundingClientRect();
       width = Math.max(1, Math.round(rect.width));
@@ -98,7 +140,7 @@ export function ScannerField({ className }: { className?: string }) {
       if (stillCtx) {
         stillCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
         stillCtx.clearRect(0, 0, width, height);
-        stillCtx.font = `500 ${CELL - 4}px var(--font-fh-mono, monospace)`;
+        stillCtx.font = glyphFont;
         stillCtx.textBaseline = "top";
         for (let r = 0; r < rows; r++) {
           for (let c = 0; c < cols; c++) {
@@ -108,6 +150,11 @@ export function ScannerField({ className }: { className?: string }) {
           }
         }
       }
+
+      // Resizing reallocates the backing store, which wipes the canvas. The
+      // animation loop repaints on the next frame, but the static path has no
+      // next frame, so it has to repaint here or the field goes blank.
+      if (reduced) paintStatic();
     };
 
     build();
@@ -156,7 +203,7 @@ export function ScannerField({ className }: { className?: string }) {
       ctx.clearRect(0, 0, width, height);
       ctx.drawImage(still, 0, 0, width, height);
 
-      ctx.font = `500 ${CELL - 4}px var(--font-fh-mono, monospace)`;
+      ctx.font = glyphFont;
       ctx.textBaseline = "top";
 
       // Sweep band: a slow horizontal rule that travels top to bottom and
@@ -237,9 +284,9 @@ export function ScannerField({ className }: { className?: string }) {
         ctx.restore();
 
         ctx.fillStyle = `rgba(255,90,77,${lock})`;
-        ctx.font = `600 9px var(--font-fh-mono, monospace)`;
+        ctx.font = `600 9px ${MONO}`;
         ctx.fillText("TAMPERED", bx - bw, by - bh - 13);
-        ctx.font = `500 ${CELL - 4}px var(--font-fh-mono, monospace)`;
+        ctx.font = glyphFont;
       }
 
       // Instrument chrome: ring + crosshair, thin and unfilled.
@@ -259,9 +306,7 @@ export function ScannerField({ className }: { className?: string }) {
     };
 
     if (reduced) {
-      // Static: show the noise floor and the lens at rest, nothing moving.
-      ctx.clearRect(0, 0, width, height);
-      ctx.drawImage(still, 0, 0, width, height);
+      paintStatic();
     } else {
       frame = requestAnimationFrame(draw);
     }

@@ -301,6 +301,8 @@
   overflow: hidden;
 }
 
+/* A tight band, not a wash — on a three-line headline a wide gradient reads
+   as a flare rather than a scan. */
 .fh-scan__beam {
   position: absolute;
   inset-block: -0.2em;
@@ -310,12 +312,11 @@
   background: linear-gradient(
     90deg,
     transparent 0%,
-    var(--fh-acid-ghost) 42%,
-    var(--fh-acid) 50%,
-    var(--fh-acid-ghost) 58%,
+    rgba(225, 240, 86, 0.03) 45%,
+    rgba(225, 240, 86, 0.4) 50%,
+    rgba(225, 240, 86, 0.03) 55%,
     transparent 100%
   );
-  mix-blend-mode: screen;
 }
 
 .fh-scan[data-shown="true"] .fh-scan__beam {

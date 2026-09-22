@@ -22,12 +22,21 @@ export function Hero() {
             "radial-gradient(60% 55% at 22% 38%, rgba(225,240,86,0.14) 0%, transparent 72%), radial-gradient(48% 48% at 78% 68%, rgba(64,140,96,0.16) 0%, transparent 70%)",
         }}
       />
-      {/* Layer 3 — keeps the copy legible wherever the lens happens to be. */}
+      {/* Layer 3 — keeps the copy legible wherever the lens happens to be.
+          Narrow viewports get a vertical scrim instead: there is no empty
+          right-hand column to push the field into. */}
       <div
-        className="pointer-events-none absolute inset-0"
+        className="pointer-events-none absolute inset-0 hidden md:block"
         style={{
           background:
             "linear-gradient(90deg, rgba(10,10,11,0.9) 0%, rgba(10,10,11,0.62) 38%, rgba(10,10,11,0) 66%), linear-gradient(to top, var(--fh-bg) 1%, transparent 26%)",
+        }}
+      />
+      <div
+        className="pointer-events-none absolute inset-0 md:hidden"
+        style={{
+          background:
+            "linear-gradient(to bottom, rgba(10,10,11,0.62) 0%, rgba(10,10,11,0.86) 46%, var(--fh-bg) 88%)",
         }}
       />
 

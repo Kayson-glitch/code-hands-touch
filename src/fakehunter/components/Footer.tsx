@@ -94,7 +94,7 @@ export function Footer() {
                   {sent ? "Done" : footer.newsletter.submit}
                 </button>
               </div>
-              <p className="fh-mono mt-3 max-w-[48ch] normal-case leading-[1.6] tracking-[0.02em] text-[color:var(--fh-ink-ghost)]">
+              <p className="mt-3 max-w-[52ch] text-[0.6875rem] leading-[1.7] text-[color:var(--fh-ink-ghost)]">
                 {footer.newsletter.privacyNotice}
               </p>
             </form>
