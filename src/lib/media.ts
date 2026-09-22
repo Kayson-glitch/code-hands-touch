@@ -56,9 +56,6 @@ export const companySanFranciscoAsset = media("company-san-francisco.webp");
  */
 export const worldLandMaskAsset = media("world-land-mask.png");
 
-/** 64px tile of quiet noise, for grain inside the footer wordmark. */
-export const grainAsset = media("grain.png");
-
 export const cometAsset = media("kore-comet.svg");
 export const valueAsset = media("kore-value.svg");
 export const scaleAsset = media("kore-scale.svg");
