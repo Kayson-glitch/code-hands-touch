@@ -7,6 +7,7 @@ import { RollingNumber } from "@/components/RollingNumber";
 import { BreakLines, ProductHero, RainbowButton } from "@/components/ProductHero";
 import { solutionChannelsAsset, solutionConsoleAsset, solutionFlowAsset } from "@/lib/media";
 import { HoverTilt } from "@/components/HoverTilt";
+import { DotCloud } from "@/components/DotCloud";
 import { fluid } from "@/lib/fluid";
 
 export const Route = createFileRoute("/solution/customer-support")({
@@ -117,24 +118,43 @@ function Bullet({ diamond }: { diamond: boolean }) {
   );
 }
 
-/** Feature illustration — the card designed in Figma, exported at 2×. */
+/**
+ * Feature illustration: the subject exported from Figma with its ground
+ * removed, over a ground that is drawn instead. The frames shared one
+ * 1232x1160 raster for that ground; `DotCloud` generates it, so each figure
+ * gets its own field from a different seed.
+ */
 const FIGURES = {
-  channels: { src: solutionChannelsAsset.url, alt: "One knowledge base answering web, email, mobile apps and social platforms" },
-  console: { src: solutionConsoleAsset.url, alt: "24/7 support console with live conversations being resolved" },
-  flow: { src: solutionFlowAsset.url, alt: "Self-service flow: inbound request, intent detection, automated solution, instant resolution" },
+  channels: {
+    src: solutionChannelsAsset.url,
+    seed: 3,
+    alt: "One knowledge base answering web, email, mobile apps and social platforms",
+  },
+  console: {
+    src: solutionConsoleAsset.url,
+    seed: 11,
+    alt: "24/7 support console with live conversations being resolved",
+  },
+  flow: {
+    src: solutionFlowAsset.url,
+    seed: 27,
+    alt: "Self-service flow: inbound request, intent detection, automated solution, instant resolution",
+  },
 } as const;
 
 function Figure({ kind, from }: { kind: Feature["figure"]; from: "left" | "right" }) {
   const f = FIGURES[kind];
   return (
     <HoverTilt from={from} className="w-full" style={{ maxWidth: 540 }}>
-      <img
-        src={f.src}
-        alt={f.alt}
-        draggable={false}
-        className="block h-auto w-full select-none"
-        style={{ aspectRatio: "1 / 1" }}
-      />
+      <div className="relative" style={{ aspectRatio: "1 / 1" }}>
+        <DotCloud className="absolute inset-0" seed={f.seed} />
+        <img
+          src={f.src}
+          alt={f.alt}
+          draggable={false}
+          className="absolute inset-0 block h-full w-full select-none"
+        />
+      </div>
     </HoverTilt>
   );
 }
@@ -143,8 +163,8 @@ function Figure({ kind, from }: { kind: Feature["figure"]; from: "left" | "right
 
 function FeatureSection({ feature, flip }: { feature: Feature; flip: boolean }) {
   return (
-    // White, not paper: the illustrations fade to pure white at their edges,
-    // so on #FAFAFA their bounding box would read as a faint lighter block.
+    // The figures carry their own warm ground now, so the section can sit on
+    // white without its bounding box reading as a lighter block.
     <section style={{ borderTop: `1px solid ${HAIRLINE}`, background: "#FFFFFF" }}>
       <div style={{ padding: `${fluid(100, 56)} ${fluid(120, 24)}` }}>
         <div
