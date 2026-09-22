@@ -62,15 +62,30 @@ function valueNoise(x: number, y: number, scale: number, seed: number) {
   return (a * (1 - fx) + b * fx) * (1 - fy) + (c * (1 - fx) + d * fx) * fy;
 }
 
+/**
+ * Fraction of the half-width inside which the dots are cleared, and the
+ * fraction by which they are back to full. The ecosystem figure sits on a
+ * large opaque shape whose edge, in Figma, is softened by a 150px background
+ * blur frosting the ground around it. Exporting the subject on its own loses
+ * that blur, leaving the dots running sharp into a hard edge; clearing them
+ * over the same radius puts the softness back. Measured off the Figma frame,
+ * where dot energy is near zero inside 0.35 and level again past 0.45.
+ */
+const CLEAR_INNER = 0.36;
+const CLEAR_OUTER = 0.52;
+
 export function DotCloud({
   className,
   style,
   seed = 1,
+  clearCenter = false,
 }: {
   className?: string;
   style?: React.CSSProperties;
   /** Redraws the same field for a given number; vary it per figure. */
   seed?: number;
+  /** Fades the dots out behind a subject that covers the middle of the frame. */
+  clearCenter?: boolean;
 }) {
   const hostRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -96,6 +111,19 @@ export function DotCloud({
       ctx.fillStyle = GROUND;
       ctx.fillRect(0, 0, w, h);
 
+      // The frost does two things in Figma: it clears the dots and it lifts the
+      // ground towards white, and it is the lift that keeps the subject's edge
+      // from stepping against the ground. Clearing alone leaves the step.
+      if (clearCenter) {
+        const rOuter = (Math.min(w, h) / 2) * CLEAR_OUTER;
+        const g = ctx.createRadialGradient(w / 2, h / 2, 0, w / 2, h / 2, rOuter);
+        g.addColorStop(0, "rgba(255, 255, 255, 1)");
+        g.addColorStop(CLEAR_INNER / CLEAR_OUTER, "rgba(255, 255, 255, 0.85)");
+        g.addColorStop(1, "rgba(255, 255, 255, 0)");
+        ctx.fillStyle = g;
+        ctx.fillRect(0, 0, w, h);
+      }
+
       // Two octaves: the coarse one makes the clusters, the finer one keeps
       // neighbouring dots from stepping in lockstep.
       for (let y = PITCH / 2; y < h; y += PITCH) {
@@ -106,6 +134,15 @@ export function DotCloud({
           // Push the mid-tones apart so the clusters have edges.
           weight = fade(Math.min(1, Math.max(0, (weight - 0.2) / 0.6)));
           weight = WEIGHT_MIN + (WEIGHT_MAX - WEIGHT_MIN) * weight;
+          if (clearCenter) {
+            const dx = (x - w / 2) / (w / 2);
+            const dy = (y - h / 2) / (h / 2);
+            const d = Math.sqrt(dx * dx + dy * dy);
+            weight *= fade(
+              Math.min(1, Math.max(0, (d - CLEAR_INNER) / (CLEAR_OUTER - CLEAR_INNER))),
+            );
+          }
+          if (weight <= 0.002) continue;
           const r = DOT_R * (0.25 + 0.75 * weight);
           ctx.globalAlpha = weight;
           ctx.fillStyle = `rgb(${INK})`;
@@ -121,7 +158,7 @@ export function DotCloud({
     const ro = new ResizeObserver(draw);
     ro.observe(host);
     return () => ro.disconnect();
-  }, [seed]);
+  }, [seed, clearCenter]);
 
   return (
     <div ref={hostRef} className={className} style={style} aria-hidden>

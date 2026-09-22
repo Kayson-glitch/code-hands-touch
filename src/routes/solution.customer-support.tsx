@@ -128,6 +128,7 @@ const FIGURES = {
   channels: {
     src: solutionChannelsAsset.url,
     seed: 3,
+    clearCenter: true,
     alt: "One knowledge base answering web, email, mobile apps and social platforms",
   },
   console: {
@@ -149,7 +150,11 @@ function Figure({ kind, from }: { kind: Feature["figure"]; from: "left" | "right
   return (
     <HoverTilt from={from} className="w-full" style={{ maxWidth: 540 }}>
       <div className="relative" style={{ aspectRatio: "1 / 1" }}>
-        <DotCloud className="absolute inset-0" seed={f.seed} />
+        <DotCloud
+          className="absolute inset-0"
+          seed={f.seed}
+          clearCenter={"clearCenter" in f && f.clearCenter}
+        />
         <img
           src={f.src}
           alt={f.alt}
