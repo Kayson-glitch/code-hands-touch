@@ -25,14 +25,14 @@ const GROUND = "#F7F7F8";
 /** Dot ink: `--ink-faint`. */
 const INK = "161, 160, 169";
 /**
- * Distance between dots, in CSS px. The raster's own 9px pitch fills the frame
- * with a mesh dense enough that the dots stop reading as dots, so this is
- * deliberately looser than the reference: half the dot count, spaced enough to
- * stay a field rather than a screen.
+ * Distance between dots, in CSS px, close to the raster's own 9px. What made
+ * the reference read as a mesh rather than a field was not the spacing but how
+ * much of each cell the dot filled: at this radius the dots cover 3.5% of the
+ * ground against the raster's 8%, so the grain stays fine.
  */
-const PITCH = 15;
-/** Dot radius at full weight: the largest dot covers a fifth of its cell. */
-const DOT_R = 1.45;
+const PITCH = 10;
+/** Dot radius at full weight. */
+const DOT_R = 1.05;
 /** Cluster size, in CSS px: the wavelength of the coarse noise. */
 const CLUSTER = 220;
 /** Floor and ceiling of a dot's weight, so nothing is fully absent or solid. */
