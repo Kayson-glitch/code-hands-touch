@@ -74,8 +74,13 @@ export default defineConfig(async ({ command, mode }): Promise<UserConfig> => {
     },
     plugins,
     server: {
-      host: "::",
+      // All interfaces, v4 included. Binding only to "::" leaves an IPv6
+      // socket that port forwarders reaching 127.0.0.1 can't always open.
+      host: true,
       port: 8080,
+      // Fail loudly when 8080 is taken instead of quietly moving to 8081 —
+      // a forwarded port that silently changed looks exactly like a crash.
+      strictPort: true,
       // The dev server is reached through forwarded/proxied hostnames (cloud
       // previews, tunnels); Vite would otherwise answer 403 for any Host that
       // isn't localhost.
