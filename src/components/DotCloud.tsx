@@ -16,18 +16,18 @@ import { useEffect, useRef } from "react";
 
 /**
  * The frames sit on #F1EEE9, a warm cream — the one warm value in a palette
- * that runs neutral to violet everywhere else. `--surface-inset` is the same
- * lightness (both start at 241) with the hue brought back onto the family, so
- * the ground keeps the separation the frame designed and stops reading as a
- * different system.
+ * that runs neutral to violet everywhere else. `--surface-soft` drops the warm
+ * cast and sits a step lighter than the frame's own value, which keeps the
+ * block from reading as a panel against the white section.
  */
-const GROUND = "#F1F1F3";
+const GROUND = "#F7F7F8";
 /**
- * Dot ink: `--ink-faint`. Matching the raster's contrast statistically took an
- * almost black dot, which read far heavier than the texture should — this is
- * the palette's faint step instead, and the field stays a wash.
+ * Dot ink: `--ink-ghost`. Matching the raster's contrast statistically took an
+ * almost black dot, which read far heavier than a texture should. Against a
+ * ground this light the field carries on about 48 levels of separation, which
+ * is enough to read the clusters and little enough to stay a wash.
  */
-const INK = "161, 160, 169";
+const INK = "199, 198, 205";
 /** Distance between dots, in CSS px. */
 const PITCH = 9;
 /** Dot radius at full weight. */
