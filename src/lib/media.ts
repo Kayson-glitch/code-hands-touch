@@ -37,18 +37,15 @@ export const solutionFlowAsset = media("solution-cs-flow.webp");
 export const platformRagDemoAsset = media("platform-rag-demo.webp");
 
 /**
- * Homepage closing gallery stills, from Figma's 网页配图 sheet. Kept as SVG
- * rather than exported to raster: the source is vector, every shape stays
- * addressable for motion, and the four together are 22KB gzipped against
- * 400KB as WebP. Keyed by panel id — 004 is the globe, which DotGlobe draws
- * from geometry, so it has no still.
+ * Homepage closing gallery — one subject per panel, from Figma's 网页配图 sheet.
+ * Kept as SVG rather than exported to raster: the source is vector, every
+ * shape stays addressable for motion, and the five together are 89KB gzipped
+ * against 507KB as WebP. Indexed by panel order, on the full 800×800 canvas
+ * so the margins Figma composed around each subject are preserved.
  */
-export const closingPanelStills: Record<string, { url: string }> = {
-  "001": media("closing-panel-1.svg"),
-  "002": media("closing-panel-2.svg"),
-  "003": media("closing-panel-3.svg"),
-  "005": media("closing-panel-5.svg"),
-};
+export const closingPanelAssets = [1, 2, 3, 4, 5].map((n) =>
+  media(`closing-panel-${n}.svg`),
+);
 
 /** Company page — the San Francisco card, from Figma at 2×. */
 export const companySanFranciscoAsset = media("company-san-francisco.webp");

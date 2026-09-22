@@ -991,22 +991,12 @@ html.lenis body {
   height: 480px;
 }
 
-.artemis-gallery__media img,
-.artemis-gallery__globe {
+.artemis-gallery__media img {
   display: block;
   width: 100%;
   height: 100%;
   object-fit: contain;
   user-select: none;
-}
-
-/* The canvas is square and DotGlobe fills whatever box it gets, so the slot
-   is narrowed to leave the frame's own margin around the disc. */
-.artemis-gallery__globe {
-  display: grid;
-  place-items: center;
-  width: 85%;
-  margin-inline: auto;
 }
 
 

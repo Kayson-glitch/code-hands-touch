@@ -1,6 +1,5 @@
 import { useEffect, useState, type CSSProperties } from "react";
-import { closingPanelStills } from "@/lib/media";
-import { DotGlobe } from "@/components/DotGlobe";
+import { closingPanelAssets } from "@/lib/media";
 
 type Point = { label: string; text: string };
 
@@ -95,24 +94,6 @@ function tickerColour(hex: string, lum: number) {
   const b = to(n & 255);
   return `rgba(${r}, ${g}, ${b}, ${(0.32 + 0.68 * lum).toFixed(3)})`;
 }
-
-/**
- * The lime pins on the closing gallery's globe, inverse-projected from the
- * frame's markers back to lat/lon so they sit where they were drawn and then
- * travel with the rotation.
- */
-const GLOBE_PINS = [
-  { lat: 53.5, lon: 4.5, size: 11.7, ink: "#D1E486" },
-  { lat: 46.0, lon: 25.8, size: 13.0, ink: "#A9B86D" },
-  { lat: 34.9, lon: 46.2, size: 11.3, ink: "#D1E486" },
-  { lat: 34.8, lon: -13.7, size: 11.6, ink: "#D1E486" },
-  { lat: 29.9, lon: 15.8, size: 13.1, ink: "#D1E486" },
-  { lat: 22.3, lon: 42.3, size: 11.7, ink: "#D1E486" },
-  { lat: 1.9, lon: -41.3, size: 14.8, ink: "#D1E486" },
-  { lat: 0.3, lon: -51.3, size: 15.3, ink: "#A9B86D" },
-  { lat: -5.0, lon: -24.2, size: 13.9, ink: "#C6D77F" },
-  { lat: -15.5, lon: -22.8, size: 13.1, ink: "#A9B86D" },
-];
 
 /** Milliseconds per typed character. */
 const CHAR_MS = 30;
@@ -227,19 +208,7 @@ export function FeaturePanels({
                   </p>
                   <div className="artemis-gallery__row">
                     <div className="artemis-gallery__media" aria-hidden>
-                      {/* The globe is geometry, so it turns; the rest are stills. */}
-                      {panel.id === "004" ? (
-                        <DotGlobe
-                          className="artemis-gallery__globe"
-                          ink="#F8F8F8"
-                          landAlpha={0.56}
-                          oceanAlpha={0.06}
-                          step={4.5}
-                          markers={GLOBE_PINS}
-                        />
-                      ) : (
-                        <img src={closingPanelStills[panel.id]?.url} alt="" draggable={false} />
-                      )}
+                      <img src={closingPanelAssets[index]?.url} alt="" draggable={false} />
                     </div>
                     <div className="artemis-gallery__copy">
                       <h3 className="artemis-gallery__title">
