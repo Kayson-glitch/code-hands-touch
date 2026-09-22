@@ -746,21 +746,20 @@ html.lenis body {
   );
 }
 
-/* Original Figma crosshair (10×10, 1px strokes at 20%) on the upper-left
-   intersection; it appears once both rules have arrived. */
+/* The registration mark the rest of the site puts where hairlines cross (see
+   CropFrame): a 6px square filled with the surface it sits on, outlined in the
+   rule's own colour. Same offset formula, so it centres on the 1px crossing.
+   It appears once both rules have arrived. */
 .artemis-closing__converge-cross {
   position: absolute;
   display: block;
-  left: calc(var(--grid-x-inset) - 5px);
-  top: calc(var(--grid-y-start) - 5px);
-  width: 11px;
-  height: 11px;
-  background-image:
-    linear-gradient(rgba(255, 255, 255, 0.15), rgba(255, 255, 255, 0.15)),
-    linear-gradient(rgba(255, 255, 255, 0.15), rgba(255, 255, 255, 0.15));
-  background-repeat: no-repeat;
-  background-size: 11px 1px, 1px 11px;
-  background-position: 0 5px, 5px 0;
+  left: var(--grid-x-inset);
+  top: var(--grid-y-start);
+  transform: translate(calc(-50% + 0.5px), calc(-50% + 0.5px));
+  width: 6px;
+  height: 6px;
+  background: #000000;
+  border: 1px solid rgba(255, 255, 255, 0.15);
   z-index: 2;
   opacity: 0;
   animation: artemis-converge-cross 0.2s 0.95s ease-out both;
@@ -839,7 +838,7 @@ html.lenis body {
   right: 0;
   top: var(--grid-y-start);
   /* Include the terminal lattice coordinate itself. Without this extra pixel,
-     the 1px bottom rule is painted one pixel above the crosshair centre. */
+     the 1px bottom rule is painted one pixel above the crossing centre. */
   bottom: calc(100% - var(--grid-y-end) - 1px);
   background-image:
     linear-gradient(
