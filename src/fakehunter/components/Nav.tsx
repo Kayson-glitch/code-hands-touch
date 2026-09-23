@@ -1,14 +1,14 @@
 import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
-import { nav, sections } from "../content";
 import { useActiveSection, useDocumentProgress } from "../hooks";
 import { Mark, Wordmark } from "./Mark";
 import { Button } from "./primitives";
 
-const anchorIds = nav.links.map((l) => l.href.slice(1));
+export type NavLink = { label: string; href: string };
+export type NavSection = { id: string; index: string; label: string };
 
 /**
- * Fixed header.
+ * Fixed header, shared by both pages.
  *
  * Three things happen on scroll, all driven by the same 0→1 document progress:
  * a hairline acid bar fills across the very top, the bar itself condenses onto
@@ -16,8 +16,23 @@ const anchorIds = nav.links.map((l) => l.href.slice(1));
  * lights up. Nothing here animates on a timer — it is all positional, so the
  * header always tells the truth about where you are.
  */
-export function Nav() {
+export function Nav({
+  links,
+  sections,
+  cta,
+  ctaHref,
+  aside,
+}: {
+  links: readonly NavLink[];
+  /** Full section list, used for the mobile sheet. */
+  sections: readonly NavSection[];
+  cta: string;
+  ctaHref: string;
+  /** A link off this page, set apart from the in-page anchors. */
+  aside?: NavLink;
+}) {
   const progress = useDocumentProgress();
+  const anchorIds = links.filter((l) => l.href.startsWith("#")).map((l) => l.href.slice(1));
   const active = useActiveSection(anchorIds);
   const [condensed, setCondensed] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -59,7 +74,7 @@ export function Nav() {
             </a>
 
             <nav className="hidden items-center gap-1 lg:flex">
-              {nav.links.map((link) => {
+              {links.map((link) => {
                 const id = link.href.slice(1);
                 const on = active === id;
                 return (
@@ -80,11 +95,27 @@ export function Nav() {
                   </a>
                 );
               })}
+              {aside && (
+                <a
+                  href={aside.href}
+                  className="fh-label group ml-3 flex items-center gap-2 border-l border-[color:var(--fh-line)] pl-4 text-[color:var(--fh-ink-faint)] transition-colors duration-300 hover:text-[color:var(--fh-acid)]"
+                >
+                  {aside.label}
+                  <svg width="9" height="9" viewBox="0 0 9 9" fill="none" aria-hidden>
+                    <path
+                      d="M1 8L8 1M8 1H3M8 1v5"
+                      stroke="currentColor"
+                      strokeWidth="1.2"
+                      className="transition-transform duration-300 group-hover:translate-x-[1px]"
+                    />
+                  </svg>
+                </a>
+              )}
             </nav>
 
             <div className="flex items-center gap-3">
-              <Button href="#next-step" className="hidden !px-4 !py-2.5 sm:inline-flex">
-                {nav.cta}
+              <Button href={ctaHref} className="hidden !px-4 !py-2.5 sm:inline-flex">
+                {cta}
               </Button>
               <button
                 type="button"
@@ -129,10 +160,28 @@ export function Nav() {
                 transition: `opacity 420ms var(--fh-ease-out) ${i * 40}ms, transform 420ms var(--fh-ease-out) ${i * 40}ms`,
               }}
             >
-              <span className="fh-label text-[color:var(--fh-acid)]">{s.index}</span>
+              <span className="fh-figure text-[1.125rem] font-semibold text-[color:var(--fh-acid)]">
+                {s.index}
+              </span>
               <span className="text-xl font-medium">{s.label}</span>
             </a>
           ))}
+          {aside && (
+            <a
+              href={aside.href}
+              onClick={() => setMenuOpen(false)}
+              className="mt-6 flex items-center gap-3 text-[color:var(--fh-acid)]"
+              style={{
+                opacity: menuOpen ? 1 : 0,
+                transition: `opacity 420ms var(--fh-ease-out) ${sections.length * 40}ms`,
+              }}
+            >
+              <span className="fh-label">{aside.label}</span>
+              <svg width="11" height="11" viewBox="0 0 9 9" fill="none" aria-hidden>
+                <path d="M1 8L8 1M8 1H3M8 1v5" stroke="currentColor" strokeWidth="1.2" />
+              </svg>
+            </a>
+          )}
         </div>
       </div>
     </>

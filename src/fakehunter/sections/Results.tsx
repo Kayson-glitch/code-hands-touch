@@ -24,7 +24,7 @@ function MetricRow({ metric, delay }: { metric: (typeof results.metrics)[number]
             className="text-[clamp(2.25rem,4.4vw,3.5rem)] font-semibold leading-none tracking-[-0.028em]"
           />
           <span
-            className="fh-label inline-flex items-center gap-1 text-[color:var(--fh-acid)]"
+            className="fh-figure inline-flex items-center gap-1 text-[0.9375rem] font-semibold text-[color:var(--fh-acid)]"
             style={{
               opacity: inView ? 1 : 0,
               transform: inView ? "none" : "translateY(6px)",
@@ -72,17 +72,17 @@ function MetricRow({ metric, delay }: { metric: (typeof results.metrics)[number]
             }}
           />
 
-          <span className="fh-label absolute bottom-0 left-0 text-[9px] text-[color:var(--fh-ink-ghost)]">
+          <span className="fh-figure absolute bottom-0 left-0 text-[0.6875rem] font-semibold text-[color:var(--fh-ink-ghost)]">
             {AXIS_FLOOR}%
           </span>
           <span
-            className="fh-label absolute bottom-0 text-[9px] text-[color:var(--fh-ink-faint)]"
+            className="fh-figure absolute bottom-0 text-[0.6875rem] font-semibold text-[color:var(--fh-ink-faint)]"
             style={{ left: `${scale(metric.before)}%`, transform: "translateX(-50%)" }}
           >
             {metric.before.toFixed(1)}
           </span>
           <span
-            className="fh-label absolute bottom-0 text-[9px] text-[color:var(--fh-acid)]"
+            className="fh-figure absolute bottom-0 text-[0.6875rem] font-semibold text-[color:var(--fh-acid)]"
             style={{
               left: `${scale(metric.after)}%`,
               transform: "translateX(-50%)",
@@ -92,7 +92,7 @@ function MetricRow({ metric, delay }: { metric: (typeof results.metrics)[number]
           >
             {metric.after}
           </span>
-          <span className="fh-label absolute bottom-0 right-0 text-[9px] text-[color:var(--fh-ink-ghost)]">
+          <span className="fh-figure absolute bottom-0 right-0 text-[0.6875rem] font-semibold text-[color:var(--fh-ink-ghost)]">
             100%
           </span>
         </div>

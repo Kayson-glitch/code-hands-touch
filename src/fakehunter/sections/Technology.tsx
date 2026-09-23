@@ -80,7 +80,7 @@ export function Technology() {
               <Specimen id={line.id} active={inView} key={line.id} />
               <div className="flex items-center justify-between border-t border-[color:var(--fh-line)] px-5 py-3">
                 <span className="fh-label text-[color:var(--fh-acid)]">{line.tag}</span>
-                <span className="fh-label text-[color:var(--fh-ink-ghost)]">
+                <span className="fh-figure text-[0.8125rem] font-semibold text-[color:var(--fh-ink-ghost)]">
                   {String(active + 1).padStart(2, "0")} / 03
                 </span>
               </div>

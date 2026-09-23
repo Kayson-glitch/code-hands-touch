@@ -104,7 +104,7 @@ export function CaseFiles() {
                     animation: `fh-rise 560ms var(--fh-ease-out) ${180 + i * 130}ms both`,
                   }}
                 >
-                  <span className="fh-label mt-[3px] shrink-0 text-[color:var(--fh-acid)]">
+                  <span className="fh-figure mt-px shrink-0 text-[0.875rem] font-semibold text-[color:var(--fh-acid)]">
                     {String(i + 1).padStart(2, "0")}
                   </span>
                   <p className="text-[0.875rem] leading-[1.65] text-[color:var(--fh-ink-dim)]">

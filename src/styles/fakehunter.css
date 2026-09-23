@@ -40,10 +40,14 @@
   --fh-ease-out: cubic-bezier(0.16, 1, 0.3, 1);
   --fh-ease-snap: cubic-bezier(0.34, 1.32, 0.64, 1);
 
-  /* One family for the whole site. Red Hat Display carries both the display
-     sizes and the small tracked labels, so the technical voice comes from
-     case and tracking rather than from a second typeface. */
+  /* Red Hat Display carries all the prose: display sizes down to the small
+     tracked labels, where the technical voice comes from case and tracking
+     rather than a second typeface. */
   --font-fh-sans: "Red Hat Display", ui-sans-serif, system-ui, sans-serif;
+  /* Smooch Sans is reserved for measured values. Condensed and tall, it
+     reads as an instrument readout and keeps every number on the page
+     visually separate from the argument around it. */
+  --font-fh-figure: "Smooch Sans", "Red Hat Display", ui-sans-serif, sans-serif;
 
   background-color: var(--fh-bg);
   color: var(--fh-ink);
@@ -117,6 +121,22 @@
 .fh-tnum {
   font-variant-numeric: tabular-nums;
   font-feature-settings: "tnum";
+}
+
+/**
+ * Measured value. Anything the engine reports — accuracy, throughput, price,
+ * timecode, a document's amount — is set in this, so a number is always
+ * recognisable as a number before it is read.
+ *
+ * Smooch Sans runs tall and narrow with a very large x-height, so at a given
+ * font-size it reads noticeably bigger than the surrounding Red Hat Display.
+ * Call sites compensate with `em` sizing rather than hard-coded values.
+ */
+.fh-figure {
+  font-family: var(--font-fh-figure);
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
+  letter-spacing: 0.01em;
 }
 
 /* ------------------------------------------------------------- corner frame */

@@ -91,7 +91,7 @@ export function Pricing() {
                     {plan.name}
                   </span>
 
-                  <div className="mt-7 flex items-baseline gap-1">
+                  <div className="fh-figure mt-7 flex items-baseline gap-1">
                     {plan.monthly === null ? (
                       <span className="text-[1.75rem] font-semibold tracking-[-0.022em]">
                         {pricing.letsTalk}
@@ -108,7 +108,7 @@ export function Pricing() {
                           duration={700}
                           className="text-[clamp(2rem,3vw,2.75rem)] font-semibold leading-none tracking-[-0.028em]"
                         />
-                        <span className="fh-label text-[color:var(--fh-ink-faint)]">
+                        <span className="text-[1.0625rem] font-medium text-[color:var(--fh-ink-faint)]">
                           {pricing.perMonth}
                         </span>
                       </>
@@ -118,12 +118,12 @@ export function Pricing() {
                   <div className="mt-6 space-y-2 border-t border-[color:var(--fh-line)] pt-5">
                     <div className="flex items-baseline justify-between gap-3">
                       <span className="fh-label text-[color:var(--fh-ink-ghost)]">Credits</span>
-                      <span className="fh-tnum text-[0.8125rem]">{plan.credits}</span>
+                      <span className="fh-figure text-[0.8125rem]">{plan.credits}</span>
                     </div>
                     <div className="flex items-baseline justify-between gap-3">
                       <span className="fh-label text-[color:var(--fh-ink-ghost)]">Per credit</span>
                       <span
-                        className="fh-tnum text-[0.8125rem]"
+                        className="fh-figure text-[0.8125rem]"
                         style={{ color: lit ? "var(--fh-acid)" : undefined }}
                       >
                         ${(plan.perCredit * factor).toFixed(4).replace(/0+$/, "")}
@@ -186,7 +186,7 @@ export function Pricing() {
                       {(["image", "pdf", "video7d", "video30d"] as const).map((k) => (
                         <td
                           key={k}
-                          className="fh-tnum border-b border-[color:var(--fh-line)] px-3 py-3.5 text-[0.8125rem] text-[color:var(--fh-ink-dim)]"
+                          className="fh-figure border-b border-[color:var(--fh-line)] px-3 py-3.5 text-[0.8125rem] text-[color:var(--fh-ink-dim)]"
                         >
                           {plan.perCheck[k]}
                         </td>

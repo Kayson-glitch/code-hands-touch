@@ -47,14 +47,16 @@ export function NextStep() {
                 transition: `opacity 700ms var(--fh-ease-out) ${i * 120}ms, transform 700ms var(--fh-ease-out) ${i * 120}ms`,
               }}
             >
-              <div className="flex items-baseline gap-1">
+              <div className="fh-figure flex items-baseline gap-1">
                 <Counter
                   value={m.value}
                   decimals={m.unit === "%" ? 2 : 0}
                   duration={1500 + i * 150}
                   className="text-[clamp(2.25rem,4vw,3.25rem)] font-semibold leading-none tracking-[-0.028em]"
                 />
-                <span className="fh-label text-[color:var(--fh-acid)]">{m.unit}</span>
+                <span className="text-[1.125rem] font-semibold text-[color:var(--fh-acid)]">
+                  {m.unit}
+                </span>
               </div>
               <p className="mt-4 max-w-[34ch] text-[0.8125rem] leading-[1.6] text-[color:var(--fh-ink-dim)]">
                 {m.label}

@@ -28,7 +28,7 @@ function FailCard({
     >
       <Frame lit={hover} className="fh-card h-full p-6 lg:p-7">
         <div className="flex items-baseline justify-between gap-4">
-          <span className="fh-label text-[color:var(--fh-ink-ghost)]">
+          <span className="fh-figure text-[0.875rem] font-semibold text-[color:var(--fh-ink-ghost)]">
             {String(n).padStart(2, "0")}
           </span>
           {/* Coverage meter — every one of these reads zero on payment proof,

@@ -33,7 +33,7 @@ function DocumentFace({
       <div className="flex-1 px-5 py-5">
         <div className="fh-label text-[9px] text-[#0a0a0b]/45">TOTAL</div>
         <div
-          className="fh-tnum mt-1 text-[clamp(1.5rem,3vw,2.25rem)] font-semibold tracking-[-0.022em]"
+          className="fh-figure mt-1 text-[clamp(1.5rem,3vw,2.25rem)] font-semibold tracking-[-0.022em]"
           style={{ color: accent }}
         >
           {doc.amount}
@@ -50,7 +50,7 @@ function DocumentFace({
             >
               <span className="fh-label text-[9px] text-[#0a0a0b]/50">{row.key}</span>
               <span
-                className="fh-tnum text-[0.8125rem] font-medium"
+                className="fh-figure text-[0.8125rem] font-medium"
                 style={{ color: showFlags && row.flag ? "var(--fh-forged)" : undefined }}
               >
                 {row.value}

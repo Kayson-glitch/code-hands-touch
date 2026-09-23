@@ -45,8 +45,10 @@ export function SectionHeader({
 
   return (
     <div ref={ref} className={cn("relative", className)}>
-      <div className="flex items-baseline gap-3">
-        <span className="fh-label text-[color:var(--fh-acid)]">{index}</span>
+      <div className="flex items-baseline gap-2.5">
+        <span className="fh-figure text-[0.9375rem] font-semibold leading-none text-[color:var(--fh-acid)]">
+          {index}
+        </span>
         <span className="fh-label text-[color:var(--fh-acid)]">{label}</span>
       </div>
       <div className="relative mt-3 h-px w-full overflow-hidden bg-[color:var(--fh-line)]">
@@ -110,6 +112,7 @@ export function Counter({
   suffix = "",
   className,
   duration,
+  active,
 }: {
   value: number;
   decimals?: number;
@@ -117,12 +120,18 @@ export function Counter({
   suffix?: string;
   className?: string;
   duration?: number;
+  /**
+   * Overrides the built-in observer. Needed where the number sits at the very
+   * edge of the viewport — the observer's bottom margin would never let it
+   * count, and a readout stuck on zero is worse than one that never moves.
+   */
+  active?: boolean;
 }) {
   const [ref, inView] = useInView<HTMLSpanElement>({ threshold: 0.5 });
-  const live = useCountUp(value, inView, duration);
+  const live = useCountUp(value, active ?? inView, duration);
 
   return (
-    <span ref={ref} className={cn("fh-tnum", className)}>
+    <span ref={ref} className={cn("fh-figure", className)}>
       {prefix}
       {live.toLocaleString("en-US", {
         minimumFractionDigits: decimals,

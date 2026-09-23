@@ -1,18 +1,17 @@
-import { sections } from "../content";
+import { useMemo } from "react";
+import type { NavSection } from "./Nav";
 import { useActiveSection, useDocumentProgress } from "../hooks";
-
-const ids = sections.map((s) => s.id);
 
 /**
  * Fixed vertical index down the right edge (desktop only).
  *
- * It carries the H5's dashed rail forward: one tick per section, a filled
- * acid segment tracking document progress, and the active section's label
- * sliding out on hover. It doubles as navigation, so the page never needs a
- * "back to top" button.
+ * One tick per section, a filled acid segment tracking document progress, and
+ * the active section's label sliding out on hover. It doubles as navigation, so
+ * the page never needs a "back to top" button.
  */
-export function ScrollRail() {
+export function ScrollRail({ sections }: { sections: readonly NavSection[] }) {
   const progress = useDocumentProgress();
+  const ids = useMemo(() => sections.map((s) => s.id), [sections]);
   const active = useActiveSection(ids);
 
   return (
@@ -52,7 +51,7 @@ export function ScrollRail() {
                   transform: "translateX(6px)",
                 }}
               >
-                {s.index} {s.label}
+                <span className="fh-figure font-semibold">{s.index}</span> {s.label}
               </span>
               <span
                 className="block transition-all duration-300"

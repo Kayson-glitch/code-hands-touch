@@ -482,6 +482,12 @@ export const nextStep = {
 } as const;
 
 export const footer = {
+  description: "Mitigate today's financial risk. Accelerate tomorrow's growth.",
+  address: "399 Boylston St, Boston, MA 02116",
+  social: [
+    { id: "discord", label: "Discord" },
+    { id: "x", label: "X" },
+  ],
   newsletter: {
     title: "Be the first to know.",
     subtitle: "Join our email list for exclusive FakeHunter.AI updates.",

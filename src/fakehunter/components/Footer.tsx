@@ -64,7 +64,22 @@ export function Footer() {
       <div className="fh-shell">
         <div ref={ref} className="grid gap-12 lg:grid-cols-12 lg:gap-16">
           <div className="lg:col-span-5">
-            <h2 className="fh-h3">{footer.newsletter.title}</h2>
+            <p className="fh-body max-w-[26rem] text-[0.9375rem]">{footer.description}</p>
+
+            <div className="mt-6 flex items-center gap-2">
+              {footer.social.map((s) => (
+                <a
+                  key={s.id}
+                  href="#hero"
+                  aria-label={s.label}
+                  className="fh-label flex h-9 items-center border border-[color:var(--fh-line-strong)] px-3 text-[color:var(--fh-ink-faint)] transition-colors duration-300 hover:border-[color:var(--fh-acid)] hover:text-[color:var(--fh-ink)]"
+                >
+                  {s.label}
+                </a>
+              ))}
+            </div>
+
+            <h2 className="fh-h3 mt-10">{footer.newsletter.title}</h2>
             <p className="fh-body mt-2 text-[0.875rem]">{footer.newsletter.subtitle}</p>
 
             <form
@@ -140,7 +155,7 @@ export function Footer() {
       <div className="fh-shell mt-8 flex flex-wrap items-center justify-between gap-4 border-t border-[color:var(--fh-line)] py-6">
         <div className="flex items-center gap-2.5">
           <Mark size={18} />
-          <span className="fh-label text-[color:var(--fh-ink-faint)]">{brand.tagline}</span>
+          <span className="fh-label text-[color:var(--fh-ink-faint)]">{footer.address}</span>
         </div>
         <span className="fh-label text-[color:var(--fh-ink-ghost)]">{footer.copyright}</span>
       </div>
