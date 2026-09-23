@@ -593,16 +593,17 @@ export function ThresholdField({
                 style={{ top: lineY, width: g.scanX, opacity: dragging ? 1 : 0.8 }}
               />
 
-              {/* The tiers, named where they are. */}
+              {/* The tiers, named where they are. Backed, because the record
+                  drifts underneath them on its way out of the engine. */}
               <span
-                className="fh-label absolute text-right text-[10px] text-[color:var(--fh-forged)]"
+                className="fh-label absolute bg-[rgba(10,10,11,0.78)] px-1 text-right text-[10px] text-[color:var(--fh-forged)]"
                 style={{ top: lineY - 18, right: size.w - g.scanX + 34 }}
               >
                 {tf.tiers[2].label}
               </span>
               {bandY - lineY > 16 && (
                 <span
-                  className="fh-label absolute -translate-y-1/2 text-right text-[10px] text-[color:var(--fh-acid)]"
+                  className="fh-label absolute -translate-y-1/2 bg-[rgba(10,10,11,0.78)] px-1 text-right text-[10px] text-[color:var(--fh-acid)]"
                   style={{ top: (lineY + bandY) / 2, right: size.w - g.scanX + 34 }}
                 >
                   {tf.tiers[1].label}
@@ -610,7 +611,7 @@ export function ThresholdField({
               )}
               {g.bottom - bandY > 22 && (
                 <span
-                  className="fh-label absolute text-right text-[10px] text-[color:var(--fh-ink-faint)]"
+                  className="fh-label absolute bg-[rgba(10,10,11,0.78)] px-1 text-right text-[10px] text-[color:var(--fh-ink-faint)]"
                   style={{ top: bandY + 7, right: size.w - g.scanX + 34 }}
                 >
                   {tf.tiers[0].label}
