@@ -16,7 +16,12 @@ const GHOST = "rgba(255,255,255,0.05)";
 
 const ease = "cubic-bezier(0.16,1,0.3,1)";
 
-export type GlyphState = { shown: boolean; probe: boolean };
+export type GlyphState = {
+  shown: boolean;
+  probe: boolean;
+  /** Portrait layout for the wide diagram, used once the card stops being wide. */
+  compact?: boolean;
+};
 
 function Ticks({ w = 100, h = 75 }: { w?: number; h?: number }) {
   /* Survey brackets in the diagram corners — the same motif as Frame. */
@@ -336,7 +341,7 @@ function Frames({ shown, probe }: GlyphState) {
 
 /* ------------------------------------------------- 5 · latency waterfall -- */
 
-function Latency({ shown, probe }: GlyphState) {
+function Latency({ shown, probe, compact }: GlyphState) {
   const bars = [
     { label: "Queue", ms: 38, x: 0 },
     { label: "Route", ms: 6, x: 38 },
@@ -344,6 +349,111 @@ function Latency({ shown, probe }: GlyphState) {
     { label: "Fuse", ms: 9, x: 85 },
   ];
   const scope = ["Image", "PDF", "Video", "Layout", "Pixels", "Temporal", "Rules", "Semantics"];
+
+  /* Stacked when the card is no longer wide: the waterfall keeps its shape but
+     the frame goes portrait, which is the only way the labels stay legible at
+     phone widths. */
+  if (compact) {
+    const originX = 30;
+    const scale = 0.62;
+    return (
+      <svg viewBox="0 0 110 96" className="h-full w-full" aria-hidden>
+        <g style={{ opacity: shown ? 1 : 0, transition: `opacity 520ms ${ease}` }}>
+          <path
+            d={`M${originX + 100 * scale} 8 V46`}
+            stroke={ACID}
+            strokeWidth="0.6"
+            strokeDasharray="2.5 2.5"
+            opacity="0.6"
+          />
+          <text
+            x={originX + 100 * scale}
+            y="5.5"
+            fill={ACID}
+            fontSize="5"
+            textAnchor="end"
+            opacity="0.85"
+          >
+            100 ms budget
+          </text>
+        </g>
+
+        {bars.map((b, i) => (
+          <g key={b.label}>
+            <rect
+              x={originX + b.x * scale}
+              y={12 + i * 8}
+              width={b.ms * scale}
+              height="5"
+              fill={ACID}
+              fillOpacity={0.2 + i * 0.16}
+              style={{
+                transform: shown ? "scaleX(1)" : "scaleX(0)",
+                transformOrigin: `${originX + b.x * scale}px 0`,
+                transition: `transform 520ms ${ease} ${i * 110}ms`,
+              }}
+            />
+            <text
+              x={originX - 3}
+              y={16.4 + i * 8}
+              fill="#fff"
+              fillOpacity="0.34"
+              fontSize="5"
+              textAnchor="end"
+            >
+              {b.label}
+            </text>
+          </g>
+        ))}
+
+        <text x={originX - 3} y="52" fill="#fff" fillOpacity="0.34" fontSize="5" textAnchor="end">
+          Total
+        </text>
+        <text
+          x={originX}
+          y="52.5"
+          fill={ACID}
+          fontSize="7"
+          style={{ opacity: shown ? 1 : 0, transition: `opacity 420ms ${ease} 620ms` }}
+        >
+          94 ms
+        </text>
+
+        {scope.map((s, i) => {
+          const col = i % 4;
+          const row = Math.floor(i / 4);
+          return (
+            <g key={s}>
+              <rect
+                x={4 + col * 25.8}
+                y={64 + row * 13}
+                width="24"
+                height="10"
+                fill={probe ? ACID : "#fff"}
+                fillOpacity={probe ? 0.1 : 0.04}
+                stroke={probe ? ACID : LINE}
+                strokeOpacity={probe ? 0.5 : 1}
+                strokeWidth="0.6"
+                style={{ transition: `all 400ms linear ${i * 55}ms` }}
+              />
+              <text
+                x={16 + col * 25.8}
+                y={70.8 + row * 13}
+                fill="#fff"
+                fillOpacity={probe ? 0.68 : 0.3}
+                fontSize="4.6"
+                textAnchor="middle"
+                style={{ transition: `fill-opacity 400ms linear ${i * 55}ms` }}
+              >
+                {s}
+              </text>
+            </g>
+          );
+        })}
+      </svg>
+    );
+  }
+
   /* 1ms = 1.1 units, so the 100ms budget lands at x = 42 + 110. */
   const originX = 42;
   const scale = 1.1;
@@ -449,7 +559,7 @@ const GLYPHS = {
 
 export type GlyphKind = keyof typeof GLYPHS;
 
-export function TechGlyph({ kind, shown, probe }: { kind: GlyphKind } & GlyphState) {
+export function TechGlyph({ kind, shown, probe, compact }: { kind: GlyphKind } & GlyphState) {
   const Glyph = GLYPHS[kind];
-  return <Glyph shown={shown} probe={probe} />;
+  return <Glyph shown={shown} probe={probe} compact={compact} />;
 }

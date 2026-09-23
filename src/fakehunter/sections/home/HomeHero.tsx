@@ -72,7 +72,7 @@ export function HomeHero() {
 
       <div
         ref={ref}
-        className="fh-shell relative flex min-h-[calc(100svh-4rem)] flex-col items-center justify-center pb-10 pt-10 text-center"
+        className="fh-shell relative flex min-h-[calc(100svh-4rem)] flex-col items-center justify-center pb-10 pt-12 text-center sm:pt-10"
       >
         <span
           className="fh-label inline-flex items-center gap-2 border border-[color:var(--fh-line-strong)] px-4 py-1.5 text-[color:var(--fh-ink-dim)]"
@@ -116,9 +116,12 @@ export function HomeHero() {
           </Button>
         </div>
 
-        {/* Telemetry. The three facts the subtitle implies, stated as values. */}
+        {/* Telemetry. The three facts the subtitle implies, stated as values.
+            Pinned to the fold on a wide screen; on a phone it follows the
+            buttons directly, because a full-height gap above it reads as a
+            layout fault rather than as breathing room. */}
         <div
-          className="mt-auto w-full border-t border-[color:var(--fh-line)] pt-5"
+          className="mt-14 w-full border-t border-[color:var(--fh-line)] pt-5 sm:mt-auto"
           style={{
             opacity: inView ? 1 : 0,
             transition: "opacity 900ms var(--fh-ease-out) 1020ms",

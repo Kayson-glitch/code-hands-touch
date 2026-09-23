@@ -15,6 +15,9 @@ function TechCard({ card, wide = false }: { card: Card; wide?: boolean }) {
      for it. Without a pointer there is nothing to reach with, so arriving does
      both. */
   const probe = canHover ? hovered : inView;
+  /* The wide card only keeps its wide frame where the grid keeps it wide. */
+  const wideLayout = useMediaQuery("(min-width: 1024px)");
+  const compact = wide && !wideLayout;
 
   return (
     <article
@@ -26,10 +29,10 @@ function TechCard({ card, wide = false }: { card: Card; wide?: boolean }) {
       <div
         className={cn(
           "relative overflow-hidden border-b border-[color:var(--fh-line)] bg-[color:var(--fh-void)]",
-          wide ? "aspect-[200/80]" : "aspect-[4/3]",
+          compact ? "aspect-[110/96]" : wide ? "aspect-[200/80]" : "aspect-[4/3]",
         )}
       >
-        <TechGlyph kind={card.glyph as GlyphKind} shown={inView} probe={probe} />
+        <TechGlyph kind={card.glyph as GlyphKind} shown={inView} probe={probe} compact={compact} />
         <span
           className="pointer-events-none absolute inset-x-0 top-0 h-px bg-[color:var(--fh-acid)] origin-left"
           style={{

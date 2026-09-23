@@ -17,7 +17,7 @@ export const homeNav = {
     { label: "Accuracy", href: "#accuracy" },
     { label: "Performance", href: "#performance" },
   ],
-  solution: { label: "Product Solution", href: "/fakehunter/solution" },
+  solution: { label: "Product Solution", short: "Solution", href: "/fakehunter/solution" },
   cta: "Book a Demo",
   fastTry: "Fast Try",
 } as const;

@@ -4,7 +4,7 @@ import { useActiveSection, useDocumentProgress } from "../hooks";
 import { Mark, Wordmark } from "./Mark";
 import { Button } from "./primitives";
 
-export type NavLink = { label: string; href: string };
+export type NavLink = { label: string; href: string; short?: string };
 export type NavSection = { id: string; index: string; label: string };
 
 /**
@@ -81,12 +81,12 @@ export function Nav({
                   <a
                     key={link.href}
                     href={link.href}
-                    className="fh-label relative px-3 py-2 transition-colors duration-300"
+                    className="fh-label relative px-2.5 py-2 transition-colors duration-300 xl:px-3"
                     style={{ color: on ? "var(--fh-ink)" : "var(--fh-ink-faint)" }}
                   >
                     {link.label}
                     <span
-                      className="absolute inset-x-3 bottom-1 h-px origin-left bg-[color:var(--fh-acid)]"
+                      className="absolute inset-x-2.5 bottom-1 h-px origin-left bg-[color:var(--fh-acid)] xl:inset-x-3"
                       style={{
                         transform: `scaleX(${on ? 1 : 0})`,
                         transition: "transform 420ms var(--fh-ease-out)",
@@ -98,9 +98,12 @@ export function Nav({
               {aside && (
                 <a
                   href={aside.href}
-                  className="fh-label group ml-3 flex items-center gap-2 border-l border-[color:var(--fh-line)] pl-4 text-[color:var(--fh-ink-faint)] transition-colors duration-300 hover:text-[color:var(--fh-acid)]"
+                  className="fh-label group ml-2 flex items-center gap-2 whitespace-nowrap border-l border-[color:var(--fh-line)] pl-3.5 text-[color:var(--fh-ink-faint)] transition-colors duration-300 hover:text-[color:var(--fh-acid)]"
                 >
-                  {aside.label}
+                  {/* Abbreviated until there is room for the full label: at
+                      laptop widths the nav has no slack left. */}
+                  <span className="xl:hidden">{aside.short ?? aside.label}</span>
+                  <span className="hidden xl:inline">{aside.label}</span>
                   <svg width="9" height="9" viewBox="0 0 9 9" fill="none" aria-hidden>
                     <path
                       d="M1 8L8 1M8 1H3M8 1v5"
@@ -114,7 +117,9 @@ export function Nav({
             </nav>
 
             <div className="flex items-center gap-3">
-              <Button href={ctaHref} className="hidden !px-4 !py-2.5 sm:inline-flex">
+              {/* `!` on display too: .fh-btn sets inline-flex and is loaded
+                  after the utilities, so a plain `hidden` loses the tie. */}
+              <Button href={ctaHref} className="!hidden !px-4 !py-2.5 sm:!inline-flex">
                 {cta}
               </Button>
               <button

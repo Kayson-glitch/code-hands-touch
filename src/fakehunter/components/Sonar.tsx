@@ -82,6 +82,7 @@ export function Sonar({ className }: { className?: string }) {
     let cx = 0;
     let cy = 0;
     let field = 0;
+    let narrow = false;
     /** Pointer, in field-space. null until the cursor enters. */
     let px: number | null = null;
     let py = 0;
@@ -104,10 +105,12 @@ export function Sonar({ className }: { className?: string }) {
       canvas.style.height = `${height}px`;
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
       cx = width / 2;
-      cy = height * 0.44;
-      // Tied to the shorter axis so the rings stay circular and never crowd
-      // the headline sitting on top of them.
-      field = Math.min(width * 0.3, height * 0.42);
+      narrow = width < 700;
+      // A phone has no room beside the dial, so it goes under the copy and
+      // takes most of the width; a desktop has columns to spare and the dial
+      // is sized off the shorter axis to stay clear of the headline.
+      cy = height * (narrow ? 0.5 : 0.44);
+      field = narrow ? Math.min(width * 0.46, height * 0.3) : Math.min(width * 0.3, height * 0.42);
 
       // Brightest just off the centre, gone by the rim — a returning ping
       // loses energy with distance, and without that the wedge reads as a
@@ -161,16 +164,19 @@ export function Sonar({ className }: { className?: string }) {
         ctx.stroke();
       }
 
-      /* Bearings. */
-      ctx.font = `500 9px ${MONO}`;
-      ctx.fillStyle = "rgba(255,255,255,0.26)";
-      ctx.textAlign = "center";
-      ctx.textBaseline = "middle";
-      BEARINGS.forEach((label, i) => {
-        const a = -Math.PI / 2 + (i * Math.PI) / 2;
-        ctx.fillText(label, Math.cos(a) * (field + 20), Math.sin(a) * (field + 20));
-      });
-      ctx.textAlign = "left";
+      /* Bearings. Skipped on a phone, where the dial fills the width and they
+         would sit off the edge or under the buttons. */
+      if (!narrow) {
+        ctx.font = `500 9px ${MONO}`;
+        ctx.fillStyle = "rgba(255,255,255,0.26)";
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        BEARINGS.forEach((label, i) => {
+          const a = -Math.PI / 2 + (i * Math.PI) / 2;
+          ctx.fillText(label, Math.cos(a) * (field + 20), Math.sin(a) * (field + 20));
+        });
+        ctx.textAlign = "left";
+      }
 
       /* Cross-hair through the centre. */
       ctx.strokeStyle = `rgba(${ACID},0.32)`;
@@ -185,11 +191,13 @@ export function Sonar({ className }: { className?: string }) {
          One gradient, reused for every slice, with the angular falloff applied
          through globalAlpha. */
       if (!reduced && wedgeFill) {
-        const steps = 26;
+        /* Slice count follows the radius: at a fixed count the steps in alpha
+           separate into visible stripes once the dial gets large. */
+        const steps = Math.min(72, Math.max(26, Math.round(field / 8)));
         ctx.fillStyle = wedgeFill;
         for (let i = 0; i < steps; i++) {
           const a0 = sweep - (WEDGE * (i + 1)) / steps;
-          const a1 = sweep - (WEDGE * i) / steps + 0.004;
+          const a1 = sweep - (WEDGE * i) / steps + WEDGE / steps / 2;
           ctx.globalAlpha = Math.pow(1 - i / steps, 1.9);
           ctx.beginPath();
           ctx.moveTo(0, 0);
