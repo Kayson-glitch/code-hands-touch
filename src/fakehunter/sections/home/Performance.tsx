@@ -55,9 +55,13 @@ export function Performance() {
   return (
     <section
       id="performance"
-      className="relative scroll-mt-24 border-y border-[color:var(--fh-line)] bg-[color:var(--fh-void)] py-[clamp(4rem,8vw,7.5rem)]"
+      className="relative scroll-mt-24 border-y border-[color:var(--fh-line)] py-[clamp(4rem,8vw,7.5rem)]"
     >
-      <div className="fh-shell">
+      {/* The band is set apart by texture rather than value. Darkening it to
+          --fh-void would collide with the wells the charts sit in, and the
+          cards would stop reading as cards. */}
+      <div className="fh-grid-bg pointer-events-none absolute inset-0 opacity-60" aria-hidden />
+      <div className="fh-shell relative">
         <div className="grid gap-6 lg:grid-cols-12 lg:items-end">
           <div className="lg:col-span-7">
             <SectionHeader index={perf.index} label={perf.label} />

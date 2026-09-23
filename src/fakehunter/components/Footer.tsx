@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { brand, footer } from "../content";
 import { Mark } from "./Mark";
 import { useInView } from "../hooks";
@@ -12,8 +12,28 @@ import { useInView } from "../hooks";
  */
 function LiveWordmark() {
   const ref = useRef<HTMLDivElement | null>(null);
+  const spans = useRef<(HTMLSpanElement | null)[]>([]);
+  const [centres, setCentres] = useState<number[]>([]);
   const [x, setX] = useState<number | null>(null);
   const letters = brand.wordmark.split("");
+
+  /* Measured, not assumed. The row is justified, so the gaps between letters
+     are uneven and the glyphs themselves range from 105px to 124px wide — a
+     uniform pitch puts the falloff up to a sixth of a letter off target. */
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const measure = () =>
+      setCentres(spans.current.map((s) => (s ? s.offsetLeft + s.offsetWidth / 2 : 0)));
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+
+  /* Falloff radius: two letters' worth of pitch either side. */
+  const pitch =
+    centres.length > 1 ? (centres[centres.length - 1] - centres[0]) / (centres.length - 1) : 1;
 
   return (
     <div
@@ -27,15 +47,17 @@ function LiveWordmark() {
       aria-label={brand.wordmark}
     >
       {letters.map((ch, i) => {
-        const width = (ref.current?.offsetWidth ?? 1) / letters.length;
-        const centre = width * (i + 0.5);
-        const d = x === null ? Infinity : Math.abs(x - centre);
-        const near = Math.max(0, 1 - d / (width * 2.2));
+        const centre = centres[i];
+        const d = x === null || centre === undefined ? Infinity : Math.abs(x - centre);
+        const near = Math.max(0, 1 - d / (pitch * 2.1));
         return (
           <span
             key={`${ch}-${i}`}
+            ref={(el) => {
+              spans.current[i] = el;
+            }}
             aria-hidden
-            className="block font-semibold leading-[0.78]"
+            className="block font-semibold leading-[0.86]"
             style={{
               fontSize: "clamp(2.75rem,12.2vw,11rem)",
               letterSpacing: "-0.03em",
@@ -145,10 +167,10 @@ export function Footer() {
         </div>
       </div>
 
-      {/* The wordmark runs at line-height 0.78, so the glyphs overflow their
-          line box by roughly 0.11em top and bottom. The extra block padding
-          keeps that overhang clear of the links above and the legal bar. */}
-      <div className="fh-shell mt-[clamp(3rem,7vw,6rem)] py-[0.12em] text-[clamp(2.75rem,12.2vw,11rem)]">
+      {/* Line-height 0.86 leaves the caps just inside their line box, so the
+          glyph tops do not sit flush against the edge and read as cut off.
+          The block padding covers the remaining descender overhang. */}
+      <div className="fh-shell mt-[clamp(3rem,7vw,6rem)] py-[0.06em] text-[clamp(2.75rem,12.2vw,11rem)]">
         <LiveWordmark />
       </div>
 
