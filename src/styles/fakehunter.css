@@ -445,6 +445,26 @@
   animation: fh-blink 1.4s steps(1, end) infinite;
 }
 
+/* A control that has not been touched yet lifts a few pixels now and then,
+   so it reads as something to grab. Stops for good on first use. */
+@keyframes fh-nudge {
+  0%,
+  70%,
+  100% {
+    transform: translateY(0);
+  }
+  80% {
+    transform: translateY(-4px);
+  }
+  90% {
+    transform: translateY(2px);
+  }
+}
+
+.fh-nudge {
+  animation: fh-nudge 2.6s var(--fh-ease-out) 1.6s infinite;
+}
+
 /* ------------------------------------------------------------ grain overlay */
 /* Static film grain. Fixed, 3.5% — it only has to break up the flat black. */
 .fh-grain {

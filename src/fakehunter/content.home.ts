@@ -18,42 +18,87 @@
 /**
  * The hero. Authored.
  *
- * A first-time visitor arrives knowing nothing, and the wordmark is already in
- * the header — so the headline spends itself on the decision the product is
- * bought to make, and the subtitle names the three things it reads. The Caltech
- * line is a credential, not a value proposition, so it sits at credential size.
+ * The headline names the product's one decision and hands it to the reader:
+ * every proof gets a probability, and where the line sits is a policy choice,
+ * not a property of the model. The field underneath is that sentence working —
+ * drag the line and the tiers re-sort under your hand.
  */
 export const homeHero = {
   badge: "Payment-proof forensics",
-  titleLead: "Rule on every payment proof",
-  titleAccent: "before the money moves.",
+  credential: "Powered by Caltech Research Institute computer vision",
+  titleLead: "Every payment proof, ruled on.",
+  titleAccent: "You decide where the line is.",
   subtitle:
     /* Balanced line breaks must not split the product's name. */
-    "Payment screenshots, bank statements, screen recordings. FakeHunter\u00A0AI reads each one the way a forensic examiner would — pixels, document structure, timeline — and returns a verdict with its reasons in under a second.",
-  credential: "Powered by Caltech Research Institute computer vision",
+    "Screenshots, bank statements and screen recordings each come back from FakeHunter\u00A0AI with a fake probability and the reasons behind it. Your threshold decides what happens next.",
   primaryCta: "Book a Demo",
   /* The live site labels this "Fast Try", which is the name of its batch
      workspace — a different surface. This one goes to the demo, so it says so. */
   secondaryCta: "Product Demo",
-  /** Readouts under the fold line — the sweep's own telemetry. */
-  telemetry: [
+} as const;
+
+/**
+ * The threshold field under the hero headline.
+ *
+ * The traffic is simulated and says so on screen. Scores are drawn from a
+ * mix shaped like the case files — most proofs clean, a hard core of obvious
+ * forgeries, and a band of ambiguous ones that are the reason a review tier
+ * exists at all. Amounts and file names use the markets the product serves.
+ */
+export const thresholdField = {
+  axis: "Fake probability",
+  engine: "Engine",
+  incoming: "Incoming",
+  threshold: "Threshold",
+  thresholdAria: "Block threshold",
+  hint: "Drag to set your policy",
+  simulated: "Simulated traffic",
+  lastFlagged: "Last flagged",
+  /** Width of the review band, in points of probability, below the line. */
+  reviewBand: 14,
+  initialThreshold: 50,
+  /** Rates are computed over this many most recent checks. */
+  window: 200,
+  windowNote: "Rates over the last 200 checks",
+  ruled: "Ruled since you arrived",
+  tiers: [
+    { id: "pass", label: "Pass", detail: "Released automatically" },
+    { id: "review", label: "Review", detail: "Sent to a reviewer" },
+    { id: "block", label: "Block", detail: "Stopped before payout" },
+  ],
+  kinds: [
     {
-      label: "Modalities",
-      value: 3,
-      decimals: 0,
-      prefix: "",
-      suffix: "",
-      detail: "Image · PDF · Video",
+      kind: "IMG",
+      weight: 0.56,
+      names: [
+        "comprobante_4412.png",
+        "upi_receipt_8812.jpg",
+        "gcash_txn_0931.png",
+        "pix_comprovante_27.png",
+      ],
     },
-    { label: "Verdict", value: 100, decimals: 0, prefix: "<", suffix: "ms", detail: "API latency" },
     {
-      label: "Accuracy",
-      value: 93.8,
-      decimals: 1,
-      prefix: "",
-      suffix: "%",
-      detail: "Overall recognition",
+      kind: "PDF",
+      weight: 0.3,
+      names: [
+        "statement_apr.pdf",
+        "extracto_marzo.pdf",
+        "hdfc_estatement.pdf",
+        "rekening_koran.pdf",
+      ],
     },
+    {
+      kind: "MP4",
+      weight: 0.14,
+      names: ["transfer_screen.mp4", "nequi_recording.mp4", "bkash_payment.mp4"],
+    },
+  ],
+  currencies: [
+    { code: "ARS", min: 8_000, max: 240_000, locale: "es-AR" },
+    { code: "INR", min: 900, max: 85_000, locale: "en-IN" },
+    { code: "BRL", min: 60, max: 9_000, locale: "pt-BR" },
+    { code: "PHP", min: 500, max: 60_000, locale: "en-PH" },
+    { code: "MXN", min: 200, max: 40_000, locale: "es-MX" },
   ],
 } as const;
 

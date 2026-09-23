@@ -1,12 +1,12 @@
 import { Fragment } from "react";
-import { Button, Counter } from "../../components/primitives";
-import { Sonar } from "../../components/Sonar";
+import { Button } from "../../components/primitives";
+import { ThresholdField } from "../../components/ThresholdField";
 import { siteNav } from "../../content";
 import { homeHero } from "../../content.home";
 import { useInView } from "../../hooks";
 
 /**
- * The headline, raised word by word out of the field below it.
+ * The headline, raised word by word.
  *
  * Per-letter was right when this was one word of brand; on a sentence it turns
  * into a ticker. Words rise in reading order instead, 54ms apart, so the line
@@ -25,7 +25,7 @@ function Headline({ shown }: { shown: boolean }) {
 
   return (
     <h1
-      className="mt-7 text-balance text-[clamp(2.05rem,5.6vw,5.25rem)] font-medium leading-[1.04] tracking-[-0.026em]"
+      className="mt-6 text-[clamp(2.05rem,4.8vw,4.5rem)] font-medium leading-[1.04] tracking-[-0.026em] sm:mt-7"
       aria-label={`${homeHero.titleLead} ${homeHero.titleAccent}`}
     >
       {lines.map((line) => (
@@ -65,140 +65,56 @@ function Headline({ shown }: { shown: boolean }) {
 
 export function HomeHero() {
   const [ref, inView] = useInView<HTMLDivElement>({ threshold: 0.02 });
+  const rise = (delay: number) => ({
+    opacity: inView ? 1 : 0,
+    transform: inView ? "none" : "translateY(12px)",
+    transition: `opacity 800ms var(--fh-ease-out) ${delay}ms, transform 800ms var(--fh-ease-out) ${delay}ms`,
+  });
 
+  /* Copy on top, the field under it taking whatever height is left. The
+     headline says the reader sets the line; the line is right there. */
   return (
-    <section id="hero" className="relative min-h-[100svh] overflow-hidden pt-16">
-      {/* The sweep sits behind everything and is never interactive itself —
-          it reads the pointer off the window. */}
-      <div className="pointer-events-none absolute inset-0">
-        <Sonar className="absolute inset-0" />
-      </div>
-
-      {/* A single tight bloom at the dial's centre, and a scrim behind the type
-          only — the rings have to stay readable everywhere else, so there is
-          no full-frame wash over the field. */}
-      <div
-        className="pointer-events-none absolute inset-0"
-        style={{
-          background:
-            "radial-gradient(28% 26% at 50% 44%, rgba(225,240,86,0.075) 0%, transparent 72%)",
-        }}
-      />
-      <div
-        className="pointer-events-none absolute inset-0"
-        style={{
-          background:
-            "radial-gradient(40% 22% at 50% 28%, rgba(10,10,11,0.8) 0%, rgba(10,10,11,0) 100%), linear-gradient(to top, var(--fh-bg) 0.5%, transparent 22%)",
-        }}
-      />
-
-      <div
-        ref={ref}
-        className="fh-shell relative flex min-h-[calc(100svh-4rem)] flex-col items-center justify-center pb-9 pt-10 text-center sm:pb-10 sm:pt-10"
-      >
-        <span
-          className="fh-label inline-flex items-center gap-2 border border-[color:var(--fh-line-strong)] px-4 py-1.5 text-[color:var(--fh-ink-dim)]"
-          style={{
-            opacity: inView ? 1 : 0,
-            transform: inView ? "none" : "translateY(10px)",
-            transition:
-              "opacity 700ms var(--fh-ease-out) 80ms, transform 700ms var(--fh-ease-out) 80ms",
-          }}
-        >
-          <span className="fh-blink block h-1 w-1 bg-[color:var(--fh-acid)]" />
-          {homeHero.badge}
-        </span>
+    <section id="hero" className="relative flex min-h-[100svh] flex-col overflow-hidden pt-16">
+      <div ref={ref} className="fh-shell relative pt-[clamp(1.75rem,5.5vh,3.75rem)]">
+        <div className="flex items-center justify-between gap-6" style={rise(60)}>
+          <span className="fh-label inline-flex items-center gap-2 border border-[color:var(--fh-line-strong)] px-4 py-1.5 text-[color:var(--fh-ink-dim)]">
+            <span className="fh-blink block h-1 w-1 bg-[color:var(--fh-acid)]" />
+            {homeHero.badge}
+          </span>
+          <span className="fh-label hidden text-[10px] text-[color:var(--fh-ink-ghost)] lg:block">
+            {homeHero.credential}
+          </span>
+        </div>
 
         <Headline shown={inView} />
 
-        <p
-          className="fh-body mt-6 max-w-[44rem] text-balance sm:mt-7"
-          style={{
-            opacity: inView ? 1 : 0,
-            transform: inView ? "none" : "translateY(12px)",
-            transition:
-              "opacity 800ms var(--fh-ease-out) 780ms, transform 800ms var(--fh-ease-out) 780ms",
-          }}
-        >
-          {homeHero.subtitle}
-        </p>
-
-        <div
-          className="mt-8 flex flex-wrap items-center justify-center gap-3 sm:mt-9"
-          style={{
-            opacity: inView ? 1 : 0,
-            transform: inView ? "none" : "translateY(12px)",
-            transition:
-              "opacity 800ms var(--fh-ease-out) 860ms, transform 800ms var(--fh-ease-out) 860ms",
-          }}
-        >
-          <Button href="#start">{homeHero.primaryCta}</Button>
-          <Button href={siteNav.links[1].href} variant="ghost">
-            {homeHero.secondaryCta}
-          </Button>
-        </div>
-
-        {/* The provenance claim, at credential size and set between two short
-            rules so it reads as a stamp on the work rather than a sales line.
-            The rules are fixed-length rather than flexed: over the dial, a rule
-            that runs to the edge of the column disappears into the graticule. */}
-        <p
-          className="fh-label mt-7 flex items-center justify-center gap-4 text-[10px] text-[color:var(--fh-ink-ghost)] sm:mt-8"
-          style={{
-            opacity: inView ? 1 : 0,
-            transition: "opacity 900ms var(--fh-ease-out) 1000ms",
-          }}
-        >
-          <span
-            className="hidden h-px w-10 bg-[color:var(--fh-line-strong)] sm:block"
-            aria-hidden
-          />
-          {homeHero.credential}
-          <span
-            className="hidden h-px w-10 bg-[color:var(--fh-line-strong)] sm:block"
-            aria-hidden
-          />
-        </p>
-
-        {/* Telemetry. The three facts the subtitle implies, stated as values.
-            Pinned to the fold on a wide screen; on a phone it follows the
-            buttons directly, because a full-height gap above it reads as a
-            layout fault rather than as breathing room. */}
-        <div
-          className="mt-10 w-full border-t border-[color:var(--fh-line)] pt-5 sm:mt-auto"
-          style={{
-            opacity: inView ? 1 : 0,
-            transition: "opacity 900ms var(--fh-ease-out) 1120ms",
-          }}
-        >
-          <div className="grid grid-cols-3 gap-x-6">
-            {homeHero.telemetry.map((cell, i) => (
-              <div
-                key={cell.label}
-                className="flex flex-col items-center gap-1 border-l border-[color:var(--fh-line)] first:border-l-0 sm:items-start sm:pl-6 sm:first:pl-0"
-              >
-                <span className="fh-label text-[10px] text-[color:var(--fh-ink-ghost)]">
-                  {cell.label}
-                </span>
-                <div className="flex flex-col items-center gap-0.5 sm:flex-row sm:items-baseline sm:gap-2">
-                  <Counter
-                    value={cell.value}
-                    decimals={cell.decimals}
-                    prefix={cell.prefix}
-                    suffix={cell.suffix}
-                    duration={1400 + i * 140}
-                    active={inView}
-                    className="text-[clamp(1.375rem,2.2vw,1.875rem)] font-medium leading-none"
-                  />
-                  <span className="text-center text-[0.75rem] leading-tight text-[color:var(--fh-ink-faint)]">
-                    {cell.detail}
-                  </span>
-                </div>
-              </div>
-            ))}
+        <div className="mt-6 grid gap-6 lg:mt-8 lg:grid-cols-12 lg:items-end">
+          <p className="fh-body max-w-[36rem] text-pretty lg:col-span-6" style={rise(620)}>
+            {homeHero.subtitle}
+          </p>
+          <div
+            className="flex flex-wrap items-center gap-2.5 sm:gap-3 lg:col-span-6 lg:justify-end"
+            style={rise(720)}
+          >
+            {/* Side by side even on a phone: stacked, they push the field
+                below the fold, and the field is the point of this screen. */}
+            <Button href="#start" className="max-sm:!px-4">
+              {homeHero.primaryCta}
+            </Button>
+            <Button href={siteNav.links[1].href} variant="ghost" className="max-sm:!px-4">
+              {homeHero.secondaryCta}
+            </Button>
           </div>
         </div>
       </div>
+
+      <ThresholdField
+        className="mt-[clamp(1.25rem,4vh,2.75rem)] flex-1"
+        style={{
+          opacity: inView ? 1 : 0,
+          transition: "opacity 1000ms var(--fh-ease-out) 420ms",
+        }}
+      />
     </section>
   );
 }
