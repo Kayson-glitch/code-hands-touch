@@ -72,7 +72,7 @@ export function Marquee({
       <div ref={trackRef} className="flex w-max items-center">
         {run.map((item, i) => (
           <span key={`${item}-${i}`} className="flex items-center">
-            <span className="fh-mono whitespace-nowrap text-[color:var(--fh-ink-faint)]">
+            <span className="fh-label whitespace-nowrap text-[color:var(--fh-ink-faint)]">
               {item}
             </span>
             <span className="mx-6 text-[color:var(--fh-acid)] opacity-60">{separator ?? "×"}</span>

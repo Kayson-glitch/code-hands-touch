@@ -64,8 +64,8 @@ export function Technology() {
                     background: active === i ? "var(--fh-acid)" : "var(--fh-ink-ghost)",
                   }}
                 />
-                <span className="fh-mono">{l.short}</span>
-                <span className="fh-mono hidden text-[color:var(--fh-ink-ghost)] lg:inline">
+                <span className="fh-label">{l.short}</span>
+                <span className="fh-label hidden text-[color:var(--fh-ink-ghost)] lg:inline">
                   line
                 </span>
               </button>
@@ -79,8 +79,8 @@ export function Technology() {
             <div className="border-b border-[color:var(--fh-line)] lg:col-span-5 lg:border-b-0 lg:border-r">
               <Specimen id={line.id} active={inView} key={line.id} />
               <div className="flex items-center justify-between border-t border-[color:var(--fh-line)] px-5 py-3">
-                <span className="fh-mono text-[color:var(--fh-acid)]">{line.tag}</span>
-                <span className="fh-mono text-[color:var(--fh-ink-ghost)]">
+                <span className="fh-label text-[color:var(--fh-acid)]">{line.tag}</span>
+                <span className="fh-label text-[color:var(--fh-ink-ghost)]">
                   {String(active + 1).padStart(2, "0")} / 03
                 </span>
               </div>

@@ -17,7 +17,7 @@ export function Site() {
     <div data-fh className="relative min-h-screen overflow-x-clip">
       <a
         href="#problem"
-        className="fh-mono sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[110] focus:bg-[color:var(--fh-acid)] focus:px-4 focus:py-2 focus:text-[#0a0a0b]"
+        className="fh-label sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[110] focus:bg-[color:var(--fh-acid)] focus:px-4 focus:py-2 focus:text-[#0a0a0b]"
       >
         Skip to content
       </a>

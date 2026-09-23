@@ -46,7 +46,7 @@ export function ScrollRail() {
               className="pointer-events-auto group flex items-center justify-end gap-3 py-2.5"
             >
               <span
-                className="fh-mono whitespace-nowrap text-[10px] opacity-0 transition-all duration-300 group-hover:opacity-100"
+                className="fh-label whitespace-nowrap text-[10px] opacity-0 transition-all duration-300 group-hover:opacity-100"
                 style={{
                   color: on ? "var(--fh-acid)" : "var(--fh-ink-faint)",
                   transform: "translateX(6px)",

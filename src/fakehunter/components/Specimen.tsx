@@ -126,8 +126,10 @@ function PdfSpecimen({ anim, active }: { anim: boolean; active: boolean }) {
               className="block h-px w-2.5 shrink-0"
               style={{ background: row.flag ? "var(--fh-forged)" : "var(--fh-line-strong)" }}
             />
+            {/* PDF name objects are case-sensitive, so this one label keeps
+                its own case instead of taking the uppercase label style. */}
             <span
-              className="fh-mono text-[10px] tracking-[0.06em]"
+              className="text-[10px] font-medium tracking-[0.06em]"
               style={{ color: row.flag ? "var(--fh-forged)" : "var(--fh-ink-faint)" }}
             >
               {row.label}
@@ -135,7 +137,7 @@ function PdfSpecimen({ anim, active }: { anim: boolean; active: boolean }) {
           </div>
         ))}
         <div
-          className="fh-mono mt-3 inline-flex items-center gap-1.5 border border-[color:var(--fh-forged)] px-2 py-1 text-[9px]"
+          className="fh-label mt-3 inline-flex items-center gap-1.5 border border-[color:var(--fh-forged)] px-2 py-1 text-[9px]"
           style={{
             color: "var(--fh-forged)",
             opacity: active ? 1 : 0,
@@ -190,7 +192,7 @@ function VideoSpecimen({ anim, active }: { anim: boolean; active: boolean }) {
           }}
         />
         <span
-          className="fh-mono absolute top-3 text-[9px] text-[color:var(--fh-forged)]"
+          className="fh-label absolute top-3 text-[9px] text-[color:var(--fh-forged)]"
           style={{
             left: `${(SPLICE / FRAMES) * 100}%`,
             transform: "translateX(-50%)",
@@ -202,7 +204,7 @@ function VideoSpecimen({ anim, active }: { anim: boolean; active: boolean }) {
         </span>
       </div>
 
-      <span className="fh-mono mt-4 text-[9px] text-[color:var(--fh-ink-ghost)]">
+      <span className="fh-label mt-4 text-[9px] text-[color:var(--fh-ink-ghost)]">
         CUT AND REJOINED · FINGER JUMPS ACROSS THE SPLICE
       </span>
     </div>

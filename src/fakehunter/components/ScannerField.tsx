@@ -5,9 +5,16 @@ const CELL = 15;
 const GLYPHS = "01234567890ABCDEF<>/\\|+-=*#%$@?";
 const LENS_RADIUS = 190;
 
-/** Canvas parses `font` as a CSS shorthand but cannot resolve `var()`, so the
- *  stack has to be written out literally or the assignment silently no-ops. */
-const MONO = '"JetBrains Mono", ui-monospace, SFMono-Regular, monospace';
+/**
+ * The field is a fixed lattice, so this one place stays monospace — a
+ * proportional face would leave ragged gutters and read as broken type
+ * rather than as raw data. It is texture, not copy, so the system stack is
+ * enough and saves loading a second webfont.
+ *
+ * Canvas parses `font` as a CSS shorthand but cannot resolve `var()`, so the
+ * stack has to be written out literally or the assignment silently no-ops.
+ */
+const MONO = "ui-monospace, SFMono-Regular, Menlo, Consolas, monospace";
 const glyphFont = `500 ${CELL - 4}px ${MONO}`;
 
 /**

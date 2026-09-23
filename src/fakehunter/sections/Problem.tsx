@@ -46,7 +46,7 @@ export function Problem() {
         <Frame className="border border-[color:var(--fh-line)] bg-[color:var(--fh-surface)] p-[clamp(1.5rem,3.5vw,3rem)]">
           <div ref={lossRef} className="grid gap-8 lg:grid-cols-12 lg:items-end lg:gap-12">
             <div className="lg:col-span-6">
-              <div className="flex items-baseline text-[clamp(3rem,9vw,7rem)] font-semibold leading-none tracking-[-0.045em]">
+              <div className="flex items-baseline text-[clamp(3rem,9vw,7rem)] font-semibold leading-none tracking-[-0.022em]">
                 <span className="text-[0.42em] font-normal text-[color:var(--fh-ink-faint)]">
                   {problem.lossRange.currency}
                 </span>
@@ -67,7 +67,7 @@ export function Problem() {
                 <Counter value={problem.lossRange.to} duration={1900} />
                 <span className="text-[0.42em] font-normal">{problem.lossRange.unit}</span>
               </div>
-              <p className="fh-mono mt-4 text-[color:var(--fh-ink-faint)]">{problem.lossLabel}</p>
+              <p className="fh-label mt-4 text-[color:var(--fh-ink-faint)]">{problem.lossLabel}</p>
             </div>
 
             <div className="lg:col-span-6">
@@ -92,7 +92,7 @@ export function Problem() {
                   className="group flex w-full items-center gap-5 py-6 text-left"
                 >
                   <span
-                    className="fh-mono transition-colors duration-300"
+                    className="fh-label transition-colors duration-300"
                     style={{ color: isOpen ? "var(--fh-acid)" : "var(--fh-ink-ghost)" }}
                   >
                     {String(i + 1).padStart(2, "0")}

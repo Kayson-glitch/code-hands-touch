@@ -38,7 +38,7 @@ function LiveWordmark() {
             className="block font-semibold leading-[0.78]"
             style={{
               fontSize: "clamp(2.75rem,12.2vw,11rem)",
-              letterSpacing: "-0.045em",
+              letterSpacing: "-0.03em",
               color: near > 0.05 ? "var(--fh-acid)" : "var(--fh-ink)",
               opacity: 0.16 + near * 0.84,
               transform: `translateY(${-near * 8}px)`,
@@ -89,7 +89,7 @@ export function Footer() {
                 />
                 <button
                   type="submit"
-                  className="fh-mono shrink-0 bg-[color:var(--fh-acid)] px-5 text-[#0a0a0b] transition-colors duration-300 hover:bg-white"
+                  className="fh-label shrink-0 bg-[color:var(--fh-acid)] px-5 text-[#0a0a0b] transition-colors duration-300 hover:bg-white"
                 >
                   {sent ? "Done" : footer.newsletter.submit}
                 </button>
@@ -110,7 +110,7 @@ export function Footer() {
                   transition: `opacity 600ms var(--fh-ease-out) ${ci * 90}ms, transform 600ms var(--fh-ease-out) ${ci * 90}ms`,
                 }}
               >
-                <h3 className="fh-mono text-[color:var(--fh-acid)]">{col.title}</h3>
+                <h3 className="fh-label text-[color:var(--fh-acid)]">{col.title}</h3>
                 <ul className="mt-4 space-y-2.5">
                   {col.links.map((link) => (
                     <li key={link}>
@@ -140,9 +140,9 @@ export function Footer() {
       <div className="fh-shell mt-8 flex flex-wrap items-center justify-between gap-4 border-t border-[color:var(--fh-line)] py-6">
         <div className="flex items-center gap-2.5">
           <Mark size={18} />
-          <span className="fh-mono text-[color:var(--fh-ink-faint)]">{brand.tagline}</span>
+          <span className="fh-label text-[color:var(--fh-ink-faint)]">{brand.tagline}</span>
         </div>
-        <span className="fh-mono text-[color:var(--fh-ink-ghost)]">{footer.copyright}</span>
+        <span className="fh-label text-[color:var(--fh-ink-ghost)]">{footer.copyright}</span>
       </div>
     </footer>
   );

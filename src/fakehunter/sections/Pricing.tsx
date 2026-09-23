@@ -41,7 +41,7 @@ export function Pricing() {
                     type="button"
                     onClick={() => setAnnual(i === 1)}
                     aria-pressed={on}
-                    className="fh-mono px-4 py-2.5 transition-colors duration-300"
+                    className="fh-label px-4 py-2.5 transition-colors duration-300"
                     style={{
                       background: on ? "var(--fh-acid)" : "transparent",
                       color: on ? "#0a0a0b" : "var(--fh-ink-faint)",
@@ -81,7 +81,7 @@ export function Pricing() {
                     }}
                   />
                   <span
-                    className="fh-mono self-start border px-2 py-1"
+                    className="fh-label self-start border px-2 py-1"
                     style={{
                       borderColor: lit ? "var(--fh-acid)" : "var(--fh-line)",
                       color: lit ? "var(--fh-acid)" : "var(--fh-ink-faint)",
@@ -93,7 +93,7 @@ export function Pricing() {
 
                   <div className="mt-7 flex items-baseline gap-1">
                     {plan.monthly === null ? (
-                      <span className="text-[1.75rem] font-semibold tracking-[-0.03em]">
+                      <span className="text-[1.75rem] font-semibold tracking-[-0.022em]">
                         {pricing.letsTalk}
                       </span>
                     ) : (
@@ -106,9 +106,9 @@ export function Pricing() {
                           key={annual ? "a" : "m"}
                           value={Math.round(plan.monthly * factor)}
                           duration={700}
-                          className="text-[clamp(2rem,3vw,2.75rem)] font-semibold leading-none tracking-[-0.04em]"
+                          className="text-[clamp(2rem,3vw,2.75rem)] font-semibold leading-none tracking-[-0.028em]"
                         />
-                        <span className="fh-mono text-[color:var(--fh-ink-faint)]">
+                        <span className="fh-label text-[color:var(--fh-ink-faint)]">
                           {pricing.perMonth}
                         </span>
                       </>
@@ -117,11 +117,11 @@ export function Pricing() {
 
                   <div className="mt-6 space-y-2 border-t border-[color:var(--fh-line)] pt-5">
                     <div className="flex items-baseline justify-between gap-3">
-                      <span className="fh-mono text-[color:var(--fh-ink-ghost)]">Credits</span>
+                      <span className="fh-label text-[color:var(--fh-ink-ghost)]">Credits</span>
                       <span className="fh-tnum text-[0.8125rem]">{plan.credits}</span>
                     </div>
                     <div className="flex items-baseline justify-between gap-3">
-                      <span className="fh-mono text-[color:var(--fh-ink-ghost)]">Per credit</span>
+                      <span className="fh-label text-[color:var(--fh-ink-ghost)]">Per credit</span>
                       <span
                         className="fh-tnum text-[0.8125rem]"
                         style={{ color: lit ? "var(--fh-acid)" : undefined }}
@@ -159,7 +159,7 @@ export function Pricing() {
                   {pricing.tableHeaders.map((h) => (
                     <th
                       key={h}
-                      className="fh-mono border-b border-[color:var(--fh-line)] px-3 py-3 text-left text-[color:var(--fh-ink-ghost)] first:pl-0"
+                      className="fh-label border-b border-[color:var(--fh-line)] px-3 py-3 text-left text-[color:var(--fh-ink-ghost)] first:pl-0"
                     >
                       {h}
                     </th>
@@ -178,7 +178,7 @@ export function Pricing() {
                       style={{ background: lit ? "var(--fh-surface)" : undefined }}
                     >
                       <td
-                        className="fh-mono border-b border-[color:var(--fh-line)] px-3 py-3.5 first:pl-0"
+                        className="fh-label border-b border-[color:var(--fh-line)] px-3 py-3.5 first:pl-0"
                         style={{ color: lit ? "var(--fh-acid)" : "var(--fh-ink)" }}
                       >
                         {plan.name}

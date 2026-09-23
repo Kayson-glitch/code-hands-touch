@@ -47,8 +47,8 @@ export function CaseFiles() {
                   className="block h-1.5 w-1.5 transition-colors duration-300"
                   style={{ background: on ? "var(--fh-acid)" : "var(--fh-ink-ghost)" }}
                 />
-                <span className="fh-mono">{c.kind}</span>
-                <span className="fh-mono hidden text-[color:var(--fh-ink-ghost)] sm:inline">
+                <span className="fh-label">{c.kind}</span>
+                <span className="fh-label hidden text-[color:var(--fh-ink-ghost)] sm:inline">
                   {c.label}
                 </span>
               </button>
@@ -67,10 +67,10 @@ export function CaseFiles() {
             style={{ animation: "fh-rise 620ms var(--fh-ease-out) both" }}
           >
             <div className="mb-4 flex items-center justify-between">
-              <span className="fh-mono text-[color:var(--fh-acid)]">
+              <span className="fh-label text-[color:var(--fh-acid)]">
                 {current.kind} · {current.label}
               </span>
-              <span className="fh-mono text-[color:var(--fh-ink-ghost)]">
+              <span className="fh-label text-[color:var(--fh-ink-ghost)]">
                 {caseFiles.redactedNote}
               </span>
             </div>
@@ -94,7 +94,7 @@ export function CaseFiles() {
           </div>
 
           <div className="p-5 lg:col-span-6 lg:p-9">
-            <span className="fh-mono text-[color:var(--fh-ink-ghost)]">What the engine saw</span>
+            <span className="fh-label text-[color:var(--fh-ink-ghost)]">What the engine saw</span>
             <ul className="mt-5">
               {current.findings.map((f, i) => (
                 <li
@@ -104,7 +104,7 @@ export function CaseFiles() {
                     animation: `fh-rise 560ms var(--fh-ease-out) ${180 + i * 130}ms both`,
                   }}
                 >
-                  <span className="fh-mono mt-[3px] shrink-0 text-[color:var(--fh-acid)]">
+                  <span className="fh-label mt-[3px] shrink-0 text-[color:var(--fh-acid)]">
                     {String(i + 1).padStart(2, "0")}
                   </span>
                   <p className="text-[0.875rem] leading-[1.65] text-[color:var(--fh-ink-dim)]">

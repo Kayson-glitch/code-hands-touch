@@ -104,17 +104,17 @@ export function VideoScrub({
           />
 
           {atSplice && (
-            <span className="fh-mono absolute inset-x-0 bottom-2 text-center text-[8px] text-[color:var(--fh-forged)]">
+            <span className="fh-label absolute inset-x-0 bottom-2 text-center text-[8px] text-[color:var(--fh-forged)]">
               SPLICE
             </span>
           )}
         </div>
 
-        <span className="fh-mono absolute left-4 top-4 text-[9px] text-[color:var(--fh-ink-ghost)]">
+        <span className="fh-label absolute left-4 top-4 text-[9px] text-[color:var(--fh-ink-ghost)]">
           {mmss(t)} / {mmss(duration)}
         </span>
         <span
-          className="fh-mono absolute right-4 top-4 text-[9px]"
+          className="fh-label absolute right-4 top-4 text-[9px]"
           style={{ color: atSplice ? "var(--fh-forged)" : "var(--fh-ink-ghost)" }}
         >
           FRAME {String(Math.floor(t * 25)).padStart(4, "0")}

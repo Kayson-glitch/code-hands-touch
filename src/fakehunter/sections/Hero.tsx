@@ -53,7 +53,7 @@ export function Hero() {
             }}
           >
             <span className="block h-1.5 w-1.5 bg-[color:var(--fh-acid)]" />
-            <span className="fh-mono text-[color:var(--fh-acid)]">{hero.eyebrow}</span>
+            <span className="fh-label text-[color:var(--fh-acid)]">{hero.eyebrow}</span>
           </div>
 
           <h1 className="fh-h1 mt-5">
@@ -128,12 +128,12 @@ export function Hero() {
                   decimals={2}
                   suffix={stat.unit}
                   duration={1600 + i * 120}
-                  className="text-[clamp(1.5rem,2.4vw,2.125rem)] font-semibold tracking-[-0.03em]"
+                  className="text-[clamp(1.5rem,2.4vw,2.125rem)] font-semibold tracking-[-0.022em]"
                 />
-                <span className="fh-mono text-[10px] text-[color:var(--fh-acid)]">
+                <span className="fh-label text-[10px] text-[color:var(--fh-acid)]">
                   {stat.delta}
                 </span>
-                <span className="fh-mono text-[10px] text-[color:var(--fh-ink-faint)]">
+                <span className="fh-label text-[10px] text-[color:var(--fh-ink-faint)]">
                   {stat.label}
                 </span>
               </div>
@@ -142,9 +142,11 @@ export function Hero() {
         </div>
 
         <div className="mt-6 flex items-center gap-3">
-          <span className="fh-mono text-[10px] text-[color:var(--fh-ink-ghost)]">Move to scan</span>
+          <span className="fh-label text-[10px] text-[color:var(--fh-ink-ghost)]">
+            Move to scan
+          </span>
           <span className="h-px flex-1 bg-[color:var(--fh-line)]" />
-          <span className="fh-mono text-[10px] text-[color:var(--fh-ink-ghost)]">Scroll</span>
+          <span className="fh-label text-[10px] text-[color:var(--fh-ink-ghost)]">Scroll</span>
           <svg width="10" height="16" viewBox="0 0 10 16" fill="none" aria-hidden>
             <path
               d="M5 0v14M1 10l4 4 4-4"

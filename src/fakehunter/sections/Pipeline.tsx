@@ -117,7 +117,7 @@ function Diagram({ stage, focus }: { stage: number; focus: number | null }) {
       <text
         x={cx(byId.image) + 18}
         y={433}
-        className="fh-mono"
+        className="fh-label"
         fontSize="10"
         fill="var(--fh-acid)"
         style={{
@@ -186,7 +186,7 @@ function Diagram({ stage, focus }: { stage: number; focus: number | null }) {
               x={cx(node)}
               y={cy(node) + 4}
               textAnchor="middle"
-              className="fh-mono"
+              className="fh-label"
               fontSize="12"
               fill={node.tone ? stroke : "var(--fh-ink)"}
             >
@@ -261,8 +261,10 @@ export function Pipeline() {
           <div className="fh-shell">
             <div className="fh-grid-bg relative overflow-hidden border border-[color:var(--fh-line)] bg-[color:var(--fh-void)] px-4 py-6 lg:px-8 lg:py-8">
               <div className="mb-5 flex items-center justify-between">
-                <span className="fh-mono text-[color:var(--fh-ink-ghost)]">Detection pipeline</span>
-                <span className="fh-mono flex items-center gap-2 text-[color:var(--fh-acid)]">
+                <span className="fh-label text-[color:var(--fh-ink-ghost)]">
+                  Detection pipeline
+                </span>
+                <span className="fh-label flex items-center gap-2 text-[color:var(--fh-acid)]">
                   <span className="fh-blink block h-1.5 w-1.5 bg-[color:var(--fh-acid)]" />
                   {stage < 0 ? "IDLE" : stage >= 4 ? "LIVE" : `STAGE ${stage + 1}/5`}
                 </span>
@@ -284,7 +286,7 @@ export function Pipeline() {
                       transition: "opacity 500ms var(--fh-ease-out)",
                     }}
                   >
-                    <span className="fh-mono text-[color:var(--fh-acid)]">{s.kicker}</span>
+                    <span className="fh-label text-[color:var(--fh-acid)]">{s.kicker}</span>
                     <span>
                       <span className="block text-[0.95rem] font-medium">{s.title}</span>
                       <span className="mt-1 block text-[0.8125rem] leading-[1.5] text-[color:var(--fh-ink-dim)]">
@@ -312,7 +314,7 @@ export function Pipeline() {
                     className="group bg-[color:var(--fh-bg)] p-4 text-left transition-colors duration-300 hover:bg-[color:var(--fh-surface)]"
                   >
                     <span
-                      className="fh-mono block transition-colors duration-500"
+                      className="fh-label block transition-colors duration-500"
                       style={{
                         color: reached ? "var(--fh-acid)" : "var(--fh-ink-ghost)",
                       }}

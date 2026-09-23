@@ -21,10 +21,10 @@ function MetricRow({ metric, delay }: { metric: (typeof results.metrics)[number]
             decimals={2}
             suffix="%"
             duration={1500}
-            className="text-[clamp(2.25rem,4.4vw,3.5rem)] font-semibold leading-none tracking-[-0.04em]"
+            className="text-[clamp(2.25rem,4.4vw,3.5rem)] font-semibold leading-none tracking-[-0.028em]"
           />
           <span
-            className="fh-mono inline-flex items-center gap-1 text-[color:var(--fh-acid)]"
+            className="fh-label inline-flex items-center gap-1 text-[color:var(--fh-acid)]"
             style={{
               opacity: inView ? 1 : 0,
               transform: inView ? "none" : "translateY(6px)",
@@ -37,7 +37,7 @@ function MetricRow({ metric, delay }: { metric: (typeof results.metrics)[number]
             {metric.delta}
           </span>
         </div>
-        <p className="fh-mono mt-3 text-[color:var(--fh-ink-faint)]">{metric.label}</p>
+        <p className="fh-label mt-3 text-[color:var(--fh-ink-faint)]">{metric.label}</p>
       </div>
 
       {/* The gain, drawn. The bar fills to the old score in grey, then the
@@ -72,17 +72,17 @@ function MetricRow({ metric, delay }: { metric: (typeof results.metrics)[number]
             }}
           />
 
-          <span className="fh-mono absolute bottom-0 left-0 text-[9px] text-[color:var(--fh-ink-ghost)]">
+          <span className="fh-label absolute bottom-0 left-0 text-[9px] text-[color:var(--fh-ink-ghost)]">
             {AXIS_FLOOR}%
           </span>
           <span
-            className="fh-mono absolute bottom-0 text-[9px] text-[color:var(--fh-ink-faint)]"
+            className="fh-label absolute bottom-0 text-[9px] text-[color:var(--fh-ink-faint)]"
             style={{ left: `${scale(metric.before)}%`, transform: "translateX(-50%)" }}
           >
             {metric.before.toFixed(1)}
           </span>
           <span
-            className="fh-mono absolute bottom-0 text-[9px] text-[color:var(--fh-acid)]"
+            className="fh-label absolute bottom-0 text-[9px] text-[color:var(--fh-acid)]"
             style={{
               left: `${scale(metric.after)}%`,
               transform: "translateX(-50%)",
@@ -92,7 +92,7 @@ function MetricRow({ metric, delay }: { metric: (typeof results.metrics)[number]
           >
             {metric.after}
           </span>
-          <span className="fh-mono absolute bottom-0 right-0 text-[9px] text-[color:var(--fh-ink-ghost)]">
+          <span className="fh-label absolute bottom-0 right-0 text-[9px] text-[color:var(--fh-ink-ghost)]">
             100%
           </span>
         </div>
@@ -114,7 +114,7 @@ function ThroughputTable() {
     <div ref={ref}>
       <div className="grid grid-cols-[minmax(0,1fr)_minmax(0,1.6fr)_minmax(0,1.8fr)] gap-4 border-b border-[color:var(--fh-line)] pb-3">
         {results.throughput.headers.map((h) => (
-          <span key={h} className="fh-mono text-[color:var(--fh-ink-ghost)]">
+          <span key={h} className="fh-label text-[color:var(--fh-ink-ghost)]">
             {h}
           </span>
         ))}

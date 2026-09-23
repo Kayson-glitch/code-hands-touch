@@ -24,16 +24,16 @@ function DocumentFace({
   return (
     <div className="flex h-full w-full flex-col bg-[#f7f7f4] text-[#0a0a0b]">
       <div className="flex items-center justify-between px-5 py-3" style={{ background: accent }}>
-        <span className="fh-mono text-[10px] text-[#0a0a0b]">{headline}</span>
-        <span className="fh-mono text-[10px] text-[#0a0a0b]">
+        <span className="fh-label text-[10px] text-[#0a0a0b]">{headline}</span>
+        <span className="fh-label text-[10px] text-[#0a0a0b]">
           {tone === "forged" ? "FORGED" : "GENUINE"}
         </span>
       </div>
 
       <div className="flex-1 px-5 py-5">
-        <div className="fh-mono text-[9px] text-[#0a0a0b]/45">TOTAL</div>
+        <div className="fh-label text-[9px] text-[#0a0a0b]/45">TOTAL</div>
         <div
-          className="fh-tnum mt-1 text-[clamp(1.5rem,3vw,2.25rem)] font-semibold tracking-[-0.03em]"
+          className="fh-tnum mt-1 text-[clamp(1.5rem,3vw,2.25rem)] font-semibold tracking-[-0.022em]"
           style={{ color: accent }}
         >
           {doc.amount}
@@ -48,7 +48,7 @@ function DocumentFace({
                 background: showFlags && row.flag ? "rgba(255,90,77,0.12)" : undefined,
               }}
             >
-              <span className="fh-mono text-[9px] text-[#0a0a0b]/50">{row.key}</span>
+              <span className="fh-label text-[9px] text-[#0a0a0b]/50">{row.key}</span>
               <span
                 className="fh-tnum text-[0.8125rem] font-medium"
                 style={{ color: showFlags && row.flag ? "var(--fh-forged)" : undefined }}
@@ -165,7 +165,9 @@ export function Compare({
 
       <div className="mt-3 flex items-center justify-between">
         <Verdict tone="forged">Forged</Verdict>
-        <span className="fh-mono text-[9px] text-[color:var(--fh-ink-ghost)]">Drag to compare</span>
+        <span className="fh-label text-[9px] text-[color:var(--fh-ink-ghost)]">
+          Drag to compare
+        </span>
         <Verdict tone="genuine">Genuine</Verdict>
       </div>
     </div>

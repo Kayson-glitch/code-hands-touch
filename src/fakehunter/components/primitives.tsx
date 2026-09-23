@@ -46,8 +46,8 @@ export function SectionHeader({
   return (
     <div ref={ref} className={cn("relative", className)}>
       <div className="flex items-baseline gap-3">
-        <span className="fh-mono text-[color:var(--fh-acid)]">{index}</span>
-        <span className="fh-mono text-[color:var(--fh-acid)]">{label}</span>
+        <span className="fh-label text-[color:var(--fh-acid)]">{index}</span>
+        <span className="fh-label text-[color:var(--fh-acid)]">{label}</span>
       </div>
       <div className="relative mt-3 h-px w-full overflow-hidden bg-[color:var(--fh-line)]">
         <div
@@ -197,7 +197,7 @@ export function Verdict({ tone, children }: { tone: "forged" | "genuine"; childr
   const forged = tone === "forged";
   return (
     <span
-      className="fh-mono inline-flex items-center gap-1.5 px-2 py-1"
+      className="fh-label inline-flex items-center gap-1.5 px-2 py-1"
       style={{
         color: forged ? "var(--fh-forged)" : "var(--fh-genuine)",
         background: forged ? "var(--fh-forged-ghost)" : "var(--fh-genuine-ghost)",

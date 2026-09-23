@@ -52,9 +52,9 @@ export function NextStep() {
                   value={m.value}
                   decimals={m.unit === "%" ? 2 : 0}
                   duration={1500 + i * 150}
-                  className="text-[clamp(2.25rem,4vw,3.25rem)] font-semibold leading-none tracking-[-0.04em]"
+                  className="text-[clamp(2.25rem,4vw,3.25rem)] font-semibold leading-none tracking-[-0.028em]"
                 />
-                <span className="fh-mono text-[color:var(--fh-acid)]">{m.unit}</span>
+                <span className="fh-label text-[color:var(--fh-acid)]">{m.unit}</span>
               </div>
               <p className="mt-4 max-w-[34ch] text-[0.8125rem] leading-[1.6] text-[color:var(--fh-ink-dim)]">
                 {m.label}
@@ -65,7 +65,7 @@ export function NextStep() {
 
         <div className="mt-12 flex flex-wrap items-center gap-4">
           <Button href="#hero">{nextStep.cta}</Button>
-          <span className="fh-mono text-[color:var(--fh-ink-ghost)]">
+          <span className="fh-label text-[color:var(--fh-ink-ghost)]">
             Free two-week POC · your samples · your domain
           </span>
         </div>

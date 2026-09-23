@@ -66,7 +66,7 @@ export function Nav() {
                   <a
                     key={link.href}
                     href={link.href}
-                    className="fh-mono relative px-3 py-2 transition-colors duration-300"
+                    className="fh-label relative px-3 py-2 transition-colors duration-300"
                     style={{ color: on ? "var(--fh-ink)" : "var(--fh-ink-faint)" }}
                   >
                     {link.label}
@@ -129,7 +129,7 @@ export function Nav() {
                 transition: `opacity 420ms var(--fh-ease-out) ${i * 40}ms, transform 420ms var(--fh-ease-out) ${i * 40}ms`,
               }}
             >
-              <span className="fh-mono text-[color:var(--fh-acid)]">{s.index}</span>
+              <span className="fh-label text-[color:var(--fh-acid)]">{s.index}</span>
               <span className="text-xl font-medium">{s.label}</span>
             </a>
           ))}

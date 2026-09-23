@@ -28,13 +28,13 @@ function FailCard({
     >
       <Frame lit={hover} className="fh-card h-full p-6 lg:p-7">
         <div className="flex items-baseline justify-between gap-4">
-          <span className="fh-mono text-[color:var(--fh-ink-ghost)]">
+          <span className="fh-label text-[color:var(--fh-ink-ghost)]">
             {String(n).padStart(2, "0")}
           </span>
           {/* Coverage meter — every one of these reads zero on payment proof,
               which is the section's whole argument stated as a gauge. */}
           <span className="flex items-center gap-2">
-            <span className="fh-mono text-[9px] text-[color:var(--fh-ink-ghost)]">
+            <span className="fh-label text-[9px] text-[color:var(--fh-ink-ghost)]">
               PAYMENT PROOF
             </span>
             <span className="relative block h-1 w-14 bg-[color:var(--fh-line)]">
@@ -50,7 +50,7 @@ function FailCard({
         </div>
 
         <h3 className="fh-h3 mt-5">{card.title}</h3>
-        <p className="fh-mono mt-2 text-[color:var(--fh-ink-faint)]">{card.subtitle}</p>
+        <p className="fh-label mt-2 text-[color:var(--fh-ink-faint)]">{card.subtitle}</p>
 
         <ul className="mt-6 space-y-0">
           {card.items.map((item, i) => (
@@ -145,7 +145,7 @@ export function ToolGap() {
           </div>
           <div className="lg:col-span-5">
             <p className="fh-body">{toolGap.quote.after}</p>
-            <p className="fh-mono mt-6 text-[color:var(--fh-ink-ghost)]">— {toolGap.footnote}</p>
+            <p className="fh-label mt-6 text-[color:var(--fh-ink-ghost)]">— {toolGap.footnote}</p>
           </div>
         </div>
       </div>
