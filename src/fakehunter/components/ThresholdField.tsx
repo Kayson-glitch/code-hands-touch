@@ -5,18 +5,20 @@ import { thresholdField as tf } from "../content.home";
 import { useReducedMotion } from "../hooks";
 
 /**
- * The hero field: a live stream of payment proofs meeting a threshold.
+ * The hero field: a live stream of payment proofs meeting two policy lines.
  *
  * Proofs arrive from the right as small typed chips and meet the engine line.
  * Each one leaves it as a point, placed at its fake probability, and drifts
  * left into the record — so the left of the field is a scatter plot of every
  * verdict so far, with time running right to left.
  *
- * One horizontal line cuts through that record. Above it is blocked; a band
- * just under it goes to review; everything below is released. The line is the
- * only interactive thing here and it is the point of the whole hero: drag it
- * and every verdict already on screen re-sorts, and the rates underneath move
- * with it. The model's output does not change. Your policy does.
+ * Two horizontal lines cut through that record — the customer's policy. At or
+ * above the block line a proof is rejected without a person; below the pass
+ * line it is released without one; between them it goes to a reviewer. The
+ * lines are the only interactive things here and the point of the whole hero:
+ * drag either and every verdict already on screen re-sorts, and the rates
+ * underneath move with it. The model's output does not change. Your policy
+ * does.
  *
  * Positions are a pure function of a simulated clock — an item's place is
  * derived from when it crosses the engine, never integrated frame to frame —
@@ -53,18 +55,23 @@ const V_OUT = 34;
 const RESOLVE = 0.62;
 /** Mean seconds between arrivals. */
 const SPAWN = 0.46;
-const MIN_T = 12;
-const MAX_T = 86;
+const MIN_LINE = 4;
+const MAX_LINE = 96;
 const PAD_T = 46;
 const PAD_B = 34;
 const CHIP_W = 40;
 const CHIP_H = 18;
 
-function tierOf(score: number, threshold: number): Tier {
-  if (score >= threshold) return "block";
-  if (score >= threshold - tf.reviewBand) return "review";
+type LineId = "block" | "pass";
+type Lines = Record<LineId, number>;
+
+function tierOf(score: number, lines: Lines): Tier {
+  if (score >= lines.block) return "block";
+  if (score >= lines.pass) return "review";
   return "pass";
 }
+
+const INITIAL_LINES: Lines = { block: tf.lines.block.initial, pass: tf.lines.pass.initial };
 
 function geometry(w: number, h: number) {
   const narrow = w < 700;
@@ -92,7 +99,7 @@ function gauss() {
 }
 
 /* The mix: mostly clean, a hard core of obvious forgeries, and an ambiguous
-   middle — which is the only reason the threshold is a decision at all. */
+   middle — which is the only reason where the lines sit is a decision at all. */
 function drawScore() {
   const r = Math.random();
   if (r < 0.68) return clamp(Math.abs(3 + gauss() * 8), 0.4, 34);
@@ -156,24 +163,24 @@ export function ThresholdField({
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
   const [size, setSize] = useState({ w: 0, h: 0 });
-  const [threshold, setThreshold] = useState<number>(tf.initialThreshold);
+  const [lines, setLines] = useState<Lines>(INITIAL_LINES);
   const [touched, setTouched] = useState(false);
-  const [dragging, setDragging] = useState(false);
+  const [dragging, setDragging] = useState<LineId | null>(null);
   const [rates, setRates] = useState<Record<Tier, number>>({ pass: 0, review: 0, block: 0 });
   const [ruled, setRuled] = useState(0);
   const [flag, setFlag] = useState<Item | null>(null);
 
-  const thresholdRef = useRef<number>(tf.initialThreshold);
+  const linesRef = useRef<Lines>(INITIAL_LINES);
   const scoresRef = useRef<number[]>([]);
   const ruledRef = useRef(0);
   const flagIdRef = useRef<number | null>(null);
   const repaintRef = useRef<() => void>(() => {});
-  const grabRef = useRef<number | null>(null);
+  const grabRef = useRef<{ id: LineId; offset: number } | null>(null);
 
   const computeRates = useCallback(() => {
     const xs = scoresRef.current;
     if (!xs.length) return;
-    const t = thresholdRef.current;
+    const t = linesRef.current;
     let review = 0;
     let block = 0;
     for (const s of xs) {
@@ -251,7 +258,7 @@ export function ThresholdField({
 
     const paint = () => {
       ctx.clearRect(0, 0, w, h);
-      const T = thresholdRef.current;
+      const L = linesRef.current;
       const { top, bottom, scanX, laneY, laneSpread, yOf } = g;
 
       /* Probability rules across the record. */
@@ -328,7 +335,7 @@ export function ThresholdField({
         const e = 1 - (1 - k) ** 3;
         const target = yOf(it.score);
         const y = laneAt + (target - laneAt) * e;
-        const tier = tierOf(it.score, T);
+        const tier = tierOf(it.score, L);
         const tone = TIER_TONE[tier];
         const reveal = clamp((sim - it.reveal) / 0.35, 0, 1);
         const fade = clamp(x / (w * 0.14), 0, 1);
@@ -389,7 +396,7 @@ export function ThresholdField({
         record(it.score);
         ruledRef.current++;
         pulse = 1;
-        const tier = tierOf(it.score, thresholdRef.current);
+        const tier = tierOf(it.score, linesRef.current);
         /* The readout holds each flag long enough to be read. */
         if (tier !== "pass" && to - lastFlagAt > 2.2) {
           lastFlagAt = to;
@@ -479,12 +486,19 @@ export function ThresholdField({
 
   /* ----------------------------------------------------------- the control */
 
+  /* The lines can meet but not cross: a pass line above the block line would
+     be a policy that releases what it also rejects. */
   const apply = useCallback(
-    (value: number) => {
-      const v = Math.round(clamp(value, MIN_T, MAX_T));
-      if (v === thresholdRef.current) return;
-      thresholdRef.current = v;
-      setThreshold(v);
+    (id: LineId, value: number) => {
+      const cur = linesRef.current;
+      const v =
+        id === "block"
+          ? Math.round(clamp(value, cur.pass + tf.minGap, MAX_LINE))
+          : Math.round(clamp(value, MIN_LINE, cur.block - tf.minGap));
+      if (v === cur[id]) return;
+      const next = { ...cur, [id]: v };
+      linesRef.current = next;
+      setLines(next);
       setTouched(true);
       computeRates();
       repaintRef.current();
@@ -494,61 +508,71 @@ export function ThresholdField({
 
   const scoreAt = (clientY: number) => {
     const field = fieldRef.current;
-    if (!field) return thresholdRef.current;
+    if (!field) return 0;
     const rect = field.getBoundingClientRect();
     const g = geometry(rect.width, rect.height);
     return ((g.bottom - (clientY - rect.top)) / (g.bottom - g.top)) * 100;
   };
 
-  const onDown = (e: ReactPointerEvent<HTMLElement>) => {
-    e.preventDefault();
-    e.currentTarget.setPointerCapture(e.pointerId);
-    /* Grabbing the handle off-centre must not make the line jump. */
-    grabRef.current = scoreAt(e.clientY) - thresholdRef.current;
-    setDragging(true);
-    setTouched(true);
-  };
-  const onMove = (e: ReactPointerEvent<HTMLElement>) => {
-    if (grabRef.current === null) return;
-    apply(scoreAt(e.clientY) - grabRef.current);
-  };
-  const onUp = () => {
-    grabRef.current = null;
-    setDragging(false);
-  };
-  const onKey = (e: KeyboardEvent<HTMLDivElement>) => {
+  const dragFor = (id: LineId) => ({
+    onPointerDown: (e: ReactPointerEvent<HTMLElement>) => {
+      e.preventDefault();
+      e.currentTarget.setPointerCapture(e.pointerId);
+      /* Grabbing a handle off-centre must not make its line jump. */
+      grabRef.current = { id, offset: scoreAt(e.clientY) - linesRef.current[id] };
+      setDragging(id);
+      setTouched(true);
+    },
+    onPointerMove: (e: ReactPointerEvent<HTMLElement>) => {
+      const grab = grabRef.current;
+      if (!grab || grab.id !== id) return;
+      apply(id, scoreAt(e.clientY) - grab.offset);
+    },
+    onPointerUp: () => {
+      grabRef.current = null;
+      setDragging(null);
+    },
+    onPointerCancel: () => {
+      grabRef.current = null;
+      setDragging(null);
+    },
+  });
+
+  const keyFor = (id: LineId) => (e: KeyboardEvent<HTMLDivElement>) => {
     const step = e.shiftKey ? 5 : 1;
-    const t = thresholdRef.current;
+    const t = linesRef.current[id];
     const next =
       e.key === "ArrowUp" || e.key === "ArrowRight"
         ? t + step
         : e.key === "ArrowDown" || e.key === "ArrowLeft"
           ? t - step
           : e.key === "Home"
-            ? MIN_T
+            ? MIN_LINE
             : e.key === "End"
-              ? MAX_T
+              ? MAX_LINE
               : null;
     if (next === null) return;
     e.preventDefault();
-    apply(next);
+    apply(id, next);
   };
 
   const g = geometry(size.w || 1, size.h || 1);
-  const lineY = g.yOf(threshold);
-  const bandY = Math.min(g.bottom, g.yOf(threshold - tf.reviewBand));
+  const blockY = g.yOf(lines.block);
+  const passY = g.yOf(lines.pass);
+  const midY = (blockY + passY) / 2;
   const ready = size.w > 0;
-  const flagTier = flag ? tierOf(flag.score, threshold) : null;
-  const drag = {
-    onPointerDown: onDown,
-    onPointerMove: onMove,
-    onPointerUp: onUp,
-    onPointerCancel: onUp,
-  };
+  const flagTier = flag ? tierOf(flag.score, lines) : null;
+  /* When the lines come close the two handles would stack; the lower one
+     steps aside rather than hide under the upper. */
+  const crowded = passY - blockY < 34;
+  const handles: { id: LineId; y: number; tone: string; ink: string }[] = [
+    { id: "block", y: blockY, tone: "var(--fh-forged)", ink: "#0a0a0b" },
+    { id: "pass", y: passY, tone: "var(--fh-ink)", ink: "#0a0a0b" },
+  ];
 
   return (
     <div className={cn("flex flex-col", className)} style={style}>
-      <div ref={fieldRef} className="relative min-h-[17rem] flex-1 select-none">
+      <div ref={fieldRef} className="relative min-h-[16rem] flex-1 select-none">
         <canvas ref={canvasRef} className="absolute inset-0" aria-hidden />
 
         {ready && (
@@ -577,54 +601,80 @@ export function ThresholdField({
                 </span>
               ))}
 
-              {/* Review band, then the line on top of it. */}
+              {/* The review band is whatever lies between the two lines. */}
               <div
                 className="absolute left-0 transition-[background-color] duration-300"
                 style={{
-                  top: lineY,
-                  height: bandY - lineY,
+                  top: blockY,
+                  height: passY - blockY,
                   width: g.scanX,
-                  background: `rgba(${ACID},${dragging ? 0.075 : 0.045})`,
-                  borderBottom: `1px dashed rgba(${ACID},0.22)`,
+                  background: `rgba(${ACID},${dragging ? 0.075 : 0.05})`,
                 }}
               />
               <div
-                className="absolute left-0 h-px bg-[color:var(--fh-acid)]"
-                style={{ top: lineY, width: g.scanX, opacity: dragging ? 1 : 0.8 }}
+                className="absolute left-0 h-px"
+                style={{
+                  top: blockY,
+                  width: g.scanX,
+                  background: "var(--fh-forged)",
+                  opacity: dragging === "block" ? 1 : 0.75,
+                }}
+              />
+              <div
+                className="absolute left-0 h-px"
+                style={{
+                  top: passY,
+                  width: g.scanX,
+                  background: "var(--fh-ink)",
+                  opacity: dragging === "pass" ? 0.9 : 0.5,
+                }}
               />
 
               {/* The tiers, named where they are. Backed, because the record
                   drifts underneath them on its way out of the engine. */}
-              <span
-                className="fh-label absolute bg-[rgba(10,10,11,0.78)] px-1 text-right text-[10px] text-[color:var(--fh-forged)]"
-                style={{ top: lineY - 18, right: size.w - g.scanX + 34 }}
-              >
-                {tf.tiers[2].label}
-              </span>
-              {bandY - lineY > 16 && (
+              {blockY - g.top > 16 && (
+                <span
+                  className="fh-label absolute bg-[rgba(10,10,11,0.78)] px-1 text-right text-[10px] text-[color:var(--fh-forged)]"
+                  style={{ top: blockY - 18, right: size.w - g.scanX + 34 }}
+                >
+                  {tf.tiers[2].label}
+                </span>
+              )}
+              {passY - blockY > 18 && (
                 <span
                   className="fh-label absolute -translate-y-1/2 bg-[rgba(10,10,11,0.78)] px-1 text-right text-[10px] text-[color:var(--fh-acid)]"
-                  style={{ top: (lineY + bandY) / 2, right: size.w - g.scanX + 34 }}
+                  style={{ top: midY, right: size.w - g.scanX + 34 }}
                 >
                   {tf.tiers[1].label}
                 </span>
               )}
-              {g.bottom - bandY > 22 && (
+              {g.bottom - passY > 22 && (
                 <span
                   className="fh-label absolute bg-[rgba(10,10,11,0.78)] px-1 text-right text-[10px] text-[color:var(--fh-ink-faint)]"
-                  style={{ top: bandY + 7, right: size.w - g.scanX + 34 }}
+                  style={{ top: passY + 7, right: size.w - g.scanX + 34 }}
                 >
                   {tf.tiers[0].label}
                 </span>
               )}
             </div>
 
-            {/* Hit strip along the line, for a mouse. On touch only the handle
-                takes the drag, so the page still scrolls under a thumb. */}
+            {/* Hit strips along each line, for a mouse, split at the midpoint so
+                two close lines never fight over the same pixels. On touch only
+                the handles take the drag, so the page still scrolls under a
+                thumb. */}
             <div
               className="absolute left-0 hidden cursor-ns-resize touch-none [@media(hover:hover)]:block"
-              style={{ top: lineY - 12, height: 24, width: g.scanX }}
-              {...drag}
+              style={{ top: blockY - 12, height: Math.min(24, midY - blockY + 12), width: g.scanX }}
+              {...dragFor("block")}
+            />
+            <div
+              className="absolute left-0 hidden cursor-ns-resize touch-none [@media(hover:hover)]:block"
+              style={{
+                top: Math.max(passY - 12, midY),
+                height: passY + 12 - Math.max(passY - 12, midY),
+                width: g.scanX,
+              }}
+              {...dragFor("pass")}
             />
 
             {/* Shell layer: labels and the handle, aligned to the page grid. */}
@@ -634,39 +684,61 @@ export function ThresholdField({
                   ↑ {tf.axis}
                 </span>
 
-                <div
-                  role="slider"
-                  tabIndex={0}
-                  aria-label={tf.thresholdAria}
-                  aria-valuemin={MIN_T}
-                  aria-valuemax={MAX_T}
-                  aria-valuenow={threshold}
-                  onKeyDown={onKey}
-                  {...drag}
-                  className="pointer-events-auto absolute left-[var(--fh-gutter)] -translate-y-1/2 cursor-ns-resize touch-none"
-                  style={{ top: lineY }}
-                >
-                  <div
-                    className={cn(
-                      "flex items-center gap-2.5 bg-[color:var(--fh-acid)] py-1.5 pl-2.5 pr-3 text-[#0a0a0b] transition-transform duration-200",
-                      !touched && !reduced && "fh-nudge",
-                      dragging && "scale-[1.04]",
-                    )}
-                  >
-                    <svg width="8" height="10" viewBox="0 0 8 10" aria-hidden>
-                      <path d="M4 0L7.5 3.5H0.5z M4 10L0.5 6.5H7.5z" fill="currentColor" />
-                    </svg>
-                    <span className="fh-label text-[10px]">{tf.threshold}</span>
-                    <span className="fh-figure min-w-[1.4em] text-[1.0625rem] font-medium leading-none">
-                      {threshold}
-                    </span>
-                  </div>
-                </div>
+                {handles.map((h, i) => {
+                  const line = tf.lines[h.id];
+                  const active = dragging === h.id;
+                  return (
+                    <div
+                      key={h.id}
+                      role="slider"
+                      tabIndex={0}
+                      aria-label={line.aria}
+                      aria-valuemin={MIN_LINE}
+                      aria-valuemax={MAX_LINE}
+                      aria-valuenow={lines[h.id]}
+                      onKeyDown={keyFor(h.id)}
+                      {...dragFor(h.id)}
+                      className={cn(
+                        "group pointer-events-auto absolute -translate-y-1/2 cursor-ns-resize touch-none outline-none",
+                        h.id === "pass" && crowded
+                          ? "left-[calc(var(--fh-gutter)+8.75rem)]"
+                          : "left-[var(--fh-gutter)]",
+                      )}
+                      style={{ top: h.y }}
+                    >
+                      {/* Outlined at rest, filled while held or focused. */}
+                      <div
+                        className={cn(
+                          "flex items-center gap-2.5 border py-1.5 pl-2.5 pr-3 transition-[transform,background-color,color] duration-200",
+                          !touched && !reduced && "fh-nudge",
+                          active && "scale-[1.04]",
+                        )}
+                        style={{
+                          borderColor: h.tone,
+                          background: active ? h.tone : "rgba(10,10,11,0.9)",
+                          color: active ? h.ink : h.tone,
+                          animationDelay: `${1.6 + i * 0.35}s`,
+                        }}
+                      >
+                        <svg width="8" height="10" viewBox="0 0 8 10" aria-hidden>
+                          <path d="M4 0L7.5 3.5H0.5z M4 10L0.5 6.5H7.5z" fill="currentColor" />
+                        </svg>
+                        <span className="fh-label text-[10px]">
+                          {line.label} {line.sign}
+                        </span>
+                        <span className="fh-figure min-w-[1.4em] text-[1.0625rem] font-medium leading-none">
+                          {lines[h.id]}
+                        </span>
+                      </div>
+                      <span className="pointer-events-none absolute -inset-1 border border-[color:var(--fh-acid)] opacity-0 group-focus-visible:opacity-100" />
+                    </div>
+                  );
+                })}
 
                 {!g.narrow && (
                   <span
-                    className="fh-label absolute left-[calc(var(--fh-gutter)+10.25rem)] -translate-y-full pb-2 text-[10px] text-[color:var(--fh-ink-faint)] transition-opacity duration-500"
-                    style={{ top: lineY, opacity: touched ? 0 : 1 }}
+                    className="fh-label absolute left-[calc(var(--fh-gutter)+8.75rem)] -translate-y-full pb-2 text-[10px] text-[color:var(--fh-ink-faint)] transition-opacity duration-500"
+                    style={{ top: blockY, opacity: touched ? 0 : 1 }}
                     aria-hidden
                   >
                     {tf.hint}

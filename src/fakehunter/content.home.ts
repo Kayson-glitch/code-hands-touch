@@ -27,10 +27,10 @@ export const homeHero = {
   badge: "Payment-proof forensics",
   credential: "Powered by Caltech Research Institute computer vision",
   titleLead: "Every payment proof, ruled on.",
-  titleAccent: "You decide where the line is.",
+  titleAccent: "You decide where the lines are.",
   subtitle:
     /* Balanced line breaks must not split the product's name. */
-    "Screenshots, bank statements and screen recordings each come back from FakeHunter\u00A0AI with a fake probability and the reasons behind it. Your threshold decides what happens next.",
+    "Screenshots, bank statements and screen recordings each come back from FakeHunter\u00A0AI with a fake probability and its reasons. Above your block line a proof is stopped, below your pass line it clears, and anything in between goes to a reviewer.",
   primaryCta: "Book a Demo",
   /* The live site labels this "Fast Try", which is the name of its batch
      workspace — a different surface. This one goes to the demo, so it says so. */
@@ -49,14 +49,31 @@ export const thresholdField = {
   axis: "Fake probability",
   engine: "Engine",
   incoming: "Incoming",
-  threshold: "Threshold",
-  thresholdAria: "Block threshold",
-  hint: "Drag to set your policy",
+  /**
+   * Two policy lines, each the customer's own call. At or above the block
+   * line the engine is sure enough to reject without a person; below the pass
+   * line it is sure enough to release. Everything between is the doubt a
+   * reviewer is paid to resolve — so the band's size is a staffing decision.
+   */
+  lines: {
+    block: {
+      label: "Block",
+      sign: "≥",
+      aria: "Block line: proofs scoring at or above it are rejected automatically",
+      initial: 70,
+    },
+    pass: {
+      label: "Pass",
+      sign: "<",
+      aria: "Pass line: proofs scoring below it are released automatically",
+      initial: 30,
+    },
+  },
+  /** Closest the two lines may come, in points of probability. */
+  minGap: 6,
+  hint: "Drag either line to set your policy",
   simulated: "Simulated traffic",
   lastFlagged: "Last flagged",
-  /** Width of the review band, in points of probability, below the line. */
-  reviewBand: 14,
-  initialThreshold: 50,
   /** Rates are computed over this many most recent checks. */
   window: 200,
   windowNote: "Rates over the last 200 checks",

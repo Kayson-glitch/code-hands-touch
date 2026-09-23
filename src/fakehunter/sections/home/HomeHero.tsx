@@ -88,7 +88,7 @@ export function HomeHero() {
         }}
       />
 
-      <div className="fh-shell relative pb-[clamp(1.75rem,5vh,3.5rem)] pt-[clamp(1.5rem,4vh,2.75rem)]">
+      <div className="fh-shell relative pb-[clamp(1.25rem,4vh,3.5rem)] pt-[clamp(1.5rem,4vh,2.75rem)]">
         <div className="flex items-center justify-between gap-6" style={rise(380)}>
           <span className="fh-label inline-flex items-center gap-2 border border-[color:var(--fh-line-strong)] px-4 py-1.5 text-[color:var(--fh-ink-dim)]">
             <span className="fh-blink block h-1 w-1 bg-[color:var(--fh-acid)]" />
