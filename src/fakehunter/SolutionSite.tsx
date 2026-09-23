@@ -2,7 +2,7 @@ import { Footer } from "./components/Footer";
 import { Nav } from "./components/Nav";
 import { Preloader } from "./components/Preloader";
 import { ScrollRail } from "./components/ScrollRail";
-import { nav, sections } from "./content";
+import { sections } from "./content";
 import { CaseFiles } from "./sections/CaseFiles";
 import { Hero } from "./sections/Hero";
 import { NextStep } from "./sections/NextStep";
@@ -29,13 +29,7 @@ export function SolutionSite() {
         Skip to content
       </a>
       <Preloader />
-      <Nav
-        links={nav.links}
-        sections={sections}
-        cta={nav.cta}
-        ctaHref="#next-step"
-        aside={{ label: "Home", href: "/fakehunter" }}
-      />
+      <Nav sections={sections} ctaHref="#next-step" />
       <ScrollRail sections={sections} />
       <main id="main">
         <Hero />

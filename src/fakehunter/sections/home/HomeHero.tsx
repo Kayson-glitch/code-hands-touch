@@ -1,5 +1,6 @@
 import { Button, Counter } from "../../components/primitives";
 import { Sonar } from "../../components/Sonar";
+import { siteNav } from "../../content";
 import { homeHero } from "../../content.home";
 import { useInView } from "../../hooks";
 
@@ -111,7 +112,7 @@ export function HomeHero() {
           }}
         >
           <Button href="#start">{homeHero.primaryCta}</Button>
-          <Button href="#demo" variant="ghost">
+          <Button href={siteNav.links[1].href} variant="ghost">
             {homeHero.secondaryCta}
           </Button>
         </div>

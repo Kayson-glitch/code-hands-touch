@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from "react";
-import { Button, Counter, SectionHeader, ScanHeading } from "../../components/primitives";
-import { detector, homeNav } from "../../content.home";
-import { useReducedMotion } from "../../hooks";
+import { Button, Counter } from "../components/primitives";
+import { siteNav } from "../content";
+import { detector } from "../content.home";
+import { useReducedMotion } from "../hooks";
 
 type Specimen = (typeof detector.specimens)[number];
 
@@ -160,6 +161,10 @@ function SegmentTrack({ start, end, duration }: { start: number; end: number; du
 /*  Detector                                                                  */
 /* -------------------------------------------------------------------------- */
 
+/**
+ * The trial module. It has its own page, so this renders the instrument only —
+ * the page around it owns the title and the closing CTA.
+ */
 export function Detector() {
   const [mode, setMode] = useState<Mode>("idle");
   const [staged, setStaged] = useState<Staged | null>(null);
@@ -224,18 +229,10 @@ export function Detector() {
   };
 
   return (
-    <section id="demo" className="relative scroll-mt-24 py-[clamp(4rem,8vw,7.5rem)]">
+    <section id="demo" className="relative scroll-mt-24">
       <div className="fh-shell">
-        <div className="grid gap-8 lg:grid-cols-12 lg:items-end">
-          <div className="lg:col-span-7">
-            <SectionHeader index={detector.index} label={detector.label} />
-            <ScanHeading className="fh-h2 mt-7">{detector.heading}</ScanHeading>
-          </div>
-          <p className="fh-body lg:col-span-5">{detector.description}</p>
-        </div>
-
         {/* ------------------------------------------------------ the window */}
-        <div className="mt-12 border border-[color:var(--fh-line-strong)] bg-[color:var(--fh-surface)]">
+        <div className="border border-[color:var(--fh-line-strong)] bg-[color:var(--fh-surface)]">
           {/* Chrome. Squares rather than traffic lights — this is an instrument,
               not a desktop app. */}
           <div className="relative flex h-12 items-center justify-between border-b border-[color:var(--fh-line)] bg-[color:var(--fh-void)] px-4">
@@ -504,7 +501,7 @@ export function Detector() {
                 </p>
 
                 <div className="flex flex-wrap items-center justify-center gap-3">
-                  <Button href="#start">{homeNav.cta}</Button>
+                  <Button href="#trial">{siteNav.cta}</Button>
                   <button
                     type="button"
                     onClick={reset}

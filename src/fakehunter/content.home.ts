@@ -1,5 +1,5 @@
 /**
- * Copy for the corporate homepage.
+ * Copy for the corporate homepage and the product demo page.
  *
  * Every string is lifted from fakehunter.co as it ships today — the i18n
  * catalogue for the localised blocks, the compiled bundle for the ones that are
@@ -10,18 +10,6 @@
  * /fakehunter/solution, mirroring the site's own /about route.
  */
 
-export const homeNav = {
-  links: [
-    { label: "Demo", href: "#demo" },
-    { label: "Technology", href: "#technology" },
-    { label: "Accuracy", href: "#accuracy" },
-    { label: "Performance", href: "#performance" },
-  ],
-  solution: { label: "Product Solution", short: "Solution", href: "/fakehunter/solution" },
-  cta: "Book a Demo",
-  fastTry: "Fast Try",
-} as const;
-
 export const homeHero = {
   badge: "Built on FakeHunter AI",
   title: "FAKEHUNTER",
@@ -29,7 +17,9 @@ export const homeHero = {
   subtitle:
     "A Multimodal AI Detection System Powered by Caltech Research Institute's Leading Computer Vision Algorithms.",
   primaryCta: "Book a Demo",
-  secondaryCta: "Fast Try",
+  /* The live site labels this "Fast Try", which is the name of its batch
+     workspace — a different surface. This one goes to the demo, so it says so. */
+  secondaryCta: "Product Demo",
   /** Readouts under the fold line — the sweep's own telemetry. */
   telemetry: [
     {
@@ -62,7 +52,6 @@ export const homeHero = {
  * product page publishes.
  */
 export const detector = {
-  index: "01",
   label: "Product Demo",
   title: "Product Demo",
   heading: "Drop a file in and watch the engine rule on it",
@@ -81,6 +70,10 @@ export const detector = {
   analysisResults: "Analysis Results",
   queueMs: "Queue Ms",
   inferenceMs: "Inference Ms",
+  returns: "Returns",
+  specimensTerm: "Specimens",
+  returnFields:
+    "Fake probability against the decision threshold, the verdict, the reasons behind it, and the queue and inference time it took.",
   specimenLabel: "Or run a redacted specimen",
   runAnother: "Run another",
   redacted: "Sample · redacted",
@@ -162,7 +155,7 @@ export const detector = {
 } as const;
 
 export const wallOfLove = {
-  index: "02",
+  index: "01",
   label: "Wall Of Love",
   title: "Wall of Love.",
   description:
@@ -219,7 +212,7 @@ export const wallOfLove = {
 } as const;
 
 export const techSolution = {
-  index: "03",
+  index: "02",
   label: "Technology & Solution",
   titleTop: "TECHNOLOGY",
   titleAccent: "& SOLUTION",
@@ -261,7 +254,7 @@ export const techSolution = {
 } as const;
 
 export const accurate = {
-  index: "04",
+  index: "03",
   label: "Why Are We Most Accurate",
   titleLine1: "why are we",
   titleWhite: "most",
@@ -295,7 +288,7 @@ export const accurate = {
 } as const;
 
 export const performance = {
-  index: "05",
+  index: "04",
   label: "Sustained Performance",
   titleTop: "Sustained",
   titleAccent: "Performance",
@@ -348,13 +341,15 @@ export const performance = {
 } as const;
 
 export const secure = {
-  index: "06",
+  index: "05",
   label: "Start Now",
   badge: "Start Now",
   titlePrefix: "LET",
   titleHighlight: "FAKEHUNTER.AI",
   titleSuffix: "SECURE YOUR BUSINESS.",
-  cta: "Book a Demo",
+  /* The closing pair sends you to the two things there are to do: try it, or
+     read the case in full. "Book a Demo" already sits in the header. */
+  demoCta: "Try the product demo",
   secondaryCta: "Read the product solution",
   cards: [
     {
@@ -387,10 +382,9 @@ export const secure = {
   ],
 } as const;
 
-/** Homepage anchors, in page order — drives the nav and the scroll rail. */
+/** Homepage anchors, in page order — drives the scroll rail and mobile sheet. */
 export const homeSections = [
   { id: "hero", index: "00", label: "Top" },
-  { id: "demo", index: detector.index, label: detector.label },
   { id: "voices", index: wallOfLove.index, label: wallOfLove.label },
   { id: "technology", index: techSolution.index, label: techSolution.label },
   { id: "accuracy", index: accurate.index, label: accurate.label },

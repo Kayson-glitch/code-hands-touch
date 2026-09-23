@@ -1,5 +1,6 @@
 import { Button, Counter, SectionHeader } from "../../components/primitives";
-import { homeNav, secure, wallOfLove } from "../../content.home";
+import { siteNav } from "../../content";
+import { secure, wallOfLove } from "../../content.home";
 import { useInView } from "../../hooks";
 
 /** Return on investment, as the shape of a return. */
@@ -155,8 +156,8 @@ export function Secure() {
         </div>
 
         <div className="mt-14 flex flex-wrap items-center justify-center gap-3">
-          <Button href="#demo">{secure.cta}</Button>
-          <Button href={homeNav.solution.href} variant="ghost">
+          <Button href={siteNav.links[1].href}>{secure.demoCta}</Button>
+          <Button href={siteNav.links[0].href} variant="ghost">
             {secure.secondaryCta}
           </Button>
         </div>

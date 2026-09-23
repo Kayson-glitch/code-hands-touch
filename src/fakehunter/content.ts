@@ -13,15 +13,21 @@ export const brand = {
   tagline: "Multimodal forgery detection for payment proof",
 } as const;
 
-export const nav = {
+/**
+ * The site header, shared by every page.
+ *
+ * Two destinations, no in-page anchors. Section-level navigation belongs to the
+ * scroll rail on the right edge and to the mobile sheet, which both already
+ * carry the numbered index of whichever page you are on — duplicating it in the
+ * header only made the header the busiest thing on the screen.
+ */
+export const siteNav = {
   links: [
-    { label: "Problem", href: "#problem" },
-    { label: "Product", href: "#product" },
-    { label: "Technology", href: "#technology" },
-    { label: "Evidence", href: "#evidence" },
-    { label: "Pricing", href: "#pricing" },
+    { label: "Product Solution", short: "Solution", href: "/fakehunter/solution" },
+    { label: "Product Demo", short: "Demo", href: "/fakehunter/demo" },
   ],
   cta: "Book a Demo",
+  home: "/fakehunter",
 } as const;
 
 export const hero = {
