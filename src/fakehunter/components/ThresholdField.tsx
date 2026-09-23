@@ -168,7 +168,9 @@ export function ThresholdField({
   const [dragging, setDragging] = useState<LineId | null>(null);
   const [rates, setRates] = useState<Record<Tier, number>>({ pass: 0, review: 0, block: 0 });
   const [ruled, setRuled] = useState(0);
-  const [flag, setFlag] = useState<Item | null>(null);
+  /* The tier an item held when it was flagged, kept so the readout can say
+     when a change of policy has moved it since. */
+  const [flag, setFlag] = useState<(Item & { flaggedAs: Tier }) | null>(null);
 
   const linesRef = useRef<Lines>(INITIAL_LINES);
   const scoresRef = useRef<number[]>([]);
@@ -401,7 +403,7 @@ export function ThresholdField({
         if (tier !== "pass" && to - lastFlagAt > 2.2) {
           lastFlagAt = to;
           flagIdRef.current = it.id;
-          setFlag(it);
+          setFlag({ ...it, flaggedAs: tier });
         }
       }
     };
@@ -699,7 +701,7 @@ export function ThresholdField({
                       onKeyDown={keyFor(h.id)}
                       {...dragFor(h.id)}
                       className={cn(
-                        "group pointer-events-auto absolute -translate-y-1/2 cursor-ns-resize touch-none outline-none",
+                        "group pointer-events-auto absolute -translate-y-1/2 cursor-ns-resize touch-none outline-none transition-[left] duration-300 ease-[var(--fh-ease-out)]",
                         h.id === "pass" && crowded
                           ? "left-[calc(var(--fh-gutter)+8.75rem)]"
                           : "left-[var(--fh-gutter)]",
@@ -760,6 +762,7 @@ export function ThresholdField({
                         className="fh-label text-[10px]"
                         style={{ color: `rgb(${TIER_TONE[flagTier]})` }}
                       >
+                        {flagTier !== flag.flaggedAs && "→ "}
                         {tf.tiers.find((t) => t.id === flagTier)?.label}
                       </span>
                     </div>
