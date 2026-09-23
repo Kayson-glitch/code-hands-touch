@@ -126,7 +126,7 @@ export function Footer() {
                 />
                 <button
                   type="submit"
-                  className="fh-label shrink-0 bg-[color:var(--fh-acid)] px-5 text-[#0a0a0b] transition-colors duration-300 hover:bg-white"
+                  className="fh-label shrink-0 bg-[color:var(--fh-ink)] px-5 text-[#0a0a0b] transition-colors duration-300 hover:bg-[color:var(--fh-acid)] focus-visible:bg-[color:var(--fh-acid)]"
                 >
                   {sent ? "Done" : footer.newsletter.submit}
                 </button>

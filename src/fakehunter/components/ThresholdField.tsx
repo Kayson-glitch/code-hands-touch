@@ -721,7 +721,7 @@ export function ThresholdField({
 
       {/* The rates, which are the policy's consequences. */}
       <div className="fh-shell">
-        <div className="grid grid-cols-3 border-t border-[color:var(--fh-line)] lg:grid-cols-4">
+        <div className="grid grid-cols-3 border-y border-[color:var(--fh-line)] lg:grid-cols-4">
           {tf.tiers.map((t) => (
             <div
               key={t.id}

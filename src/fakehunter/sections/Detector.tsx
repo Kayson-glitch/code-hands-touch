@@ -489,7 +489,7 @@ export function Detector() {
                     className="min-w-0 flex-1 bg-transparent px-4 py-3 text-[0.875rem] outline-none placeholder:text-[color:var(--fh-ink-ghost)]"
                   />
                   <span
-                    className="fh-label shrink-0 bg-[color:var(--fh-acid)] px-4 py-3 text-[#0a0a0b]"
+                    className="fh-label shrink-0 bg-[color:var(--fh-ink)] px-4 py-3 text-[#0a0a0b]"
                     aria-hidden
                   >
                     →

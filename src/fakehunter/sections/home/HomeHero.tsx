@@ -16,7 +16,7 @@ import { useInView } from "../../hooks";
  * descenders survive the clip, and the resting transform clears that padding
  * as well as the line box — otherwise the tops of the glyphs peek out.
  */
-function Headline({ shown }: { shown: boolean }) {
+function Headline({ shown, delay: start = 150 }: { shown: boolean; delay?: number }) {
   const lines = [
     { text: homeHero.titleLead, accent: false },
     { text: homeHero.titleAccent, accent: true },
@@ -25,7 +25,7 @@ function Headline({ shown }: { shown: boolean }) {
 
   return (
     <h1
-      className="mt-6 text-[clamp(2.05rem,4.8vw,4.5rem)] font-medium leading-[1.04] tracking-[-0.026em] sm:mt-7"
+      className="mt-5 text-[clamp(2.05rem,4.8vw,4.5rem)] font-medium leading-[1.04] tracking-[-0.026em] sm:mt-6"
       aria-label={`${homeHero.titleLead} ${homeHero.titleAccent}`}
     >
       {lines.map((line) => (
@@ -35,7 +35,7 @@ function Headline({ shown }: { shown: boolean }) {
            inline-blocks separated by actual spaces. */
         <span key={line.text} className="block text-balance" aria-hidden>
           {line.text.split(" ").map((word, i) => {
-            const delay = 150 + n++ * 54;
+            const delay = start + n++ * 54;
             return (
               <Fragment key={`${word}-${i}`}>
                 {i > 0 && " "}
@@ -64,19 +64,32 @@ function Headline({ shown }: { shown: boolean }) {
 }
 
 export function HomeHero() {
-  const [ref, inView] = useInView<HTMLDivElement>({ threshold: 0.02 });
+  const [ref, inView] = useInView<HTMLElement>({ threshold: 0.02 });
   const rise = (delay: number) => ({
     opacity: inView ? 1 : 0,
     transform: inView ? "none" : "translateY(12px)",
     transition: `opacity 800ms var(--fh-ease-out) ${delay}ms, transform 800ms var(--fh-ease-out) ${delay}ms`,
   });
 
-  /* Copy on top, the field under it taking whatever height is left. The
-     headline says the reader sets the line; the line is right there. */
+  /* The field first, directly under the header, taking whatever height the
+     copy leaves it; the claim underneath reads as the caption to what you
+     have just watched happen. The entrance follows the same order. */
   return (
-    <section id="hero" className="relative flex min-h-[100svh] flex-col overflow-hidden pt-16">
-      <div ref={ref} className="fh-shell relative pt-[clamp(1.75rem,5.5vh,3.75rem)]">
-        <div className="flex items-center justify-between gap-6" style={rise(60)}>
+    <section
+      id="hero"
+      ref={ref}
+      className="relative flex min-h-[100svh] flex-col overflow-hidden pt-16"
+    >
+      <ThresholdField
+        className="mt-3 flex-1"
+        style={{
+          opacity: inView ? 1 : 0,
+          transition: "opacity 1000ms var(--fh-ease-out) 120ms",
+        }}
+      />
+
+      <div className="fh-shell relative pb-[clamp(1.75rem,5vh,3.5rem)] pt-[clamp(1.5rem,4vh,2.75rem)]">
+        <div className="flex items-center justify-between gap-6" style={rise(380)}>
           <span className="fh-label inline-flex items-center gap-2 border border-[color:var(--fh-line-strong)] px-4 py-1.5 text-[color:var(--fh-ink-dim)]">
             <span className="fh-blink block h-1 w-1 bg-[color:var(--fh-acid)]" />
             {homeHero.badge}
@@ -86,18 +99,18 @@ export function HomeHero() {
           </span>
         </div>
 
-        <Headline shown={inView} />
+        <Headline shown={inView} delay={460} />
 
-        <div className="mt-6 grid gap-6 lg:mt-8 lg:grid-cols-12 lg:items-end">
-          <p className="fh-body max-w-[36rem] text-pretty lg:col-span-6" style={rise(620)}>
+        <div className="mt-5 grid gap-6 lg:mt-7 lg:grid-cols-12 lg:items-end">
+          <p className="fh-body max-w-[36rem] text-pretty lg:col-span-6" style={rise(920)}>
             {homeHero.subtitle}
           </p>
           <div
             className="flex flex-wrap items-center gap-2.5 sm:gap-3 lg:col-span-6 lg:justify-end"
-            style={rise(720)}
+            style={rise(1020)}
           >
-            {/* Side by side even on a phone: stacked, they push the field
-                below the fold, and the field is the point of this screen. */}
+            {/* Side by side even on a phone, so the pair stays one row and the
+                screen does not end on a stack of buttons. */}
             <Button href="#start" className="max-sm:!px-4">
               {homeHero.primaryCta}
             </Button>
@@ -107,14 +120,6 @@ export function HomeHero() {
           </div>
         </div>
       </div>
-
-      <ThresholdField
-        className="mt-[clamp(1.25rem,4vh,2.75rem)] flex-1"
-        style={{
-          opacity: inView ? 1 : 0,
-          transition: "opacity 1000ms var(--fh-ease-out) 420ms",
-        }}
-      />
     </section>
   );
 }
