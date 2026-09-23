@@ -1,4 +1,4 @@
-import { Counter, SectionHeader } from "../../components/primitives";
+import { Counter, MoreLink, SectionHeader } from "../../components/primitives";
 import { MetricVisual, type VisualKind } from "../../components/MetricVisual";
 import { performance as perf } from "../../content.home";
 import { useInView } from "../../hooks";
@@ -37,15 +37,14 @@ function PerformanceCard({ card, order }: { card: Card; order: number }) {
               {card.unit}
             </span>
           </div>
-          <p className="mt-2.5 text-[0.8125rem] leading-[1.45] text-[color:var(--fh-ink-dim)]">
-            {card.metric}
-          </p>
+          {/* The measurement names the number it sits under, rather than being
+              repeated as a second heading in the half below. */}
+          <h3 className="fh-h3 mt-2.5 text-[0.9375rem] leading-[1.35]">{card.metric}</h3>
         </div>
       </div>
 
       <div className="p-5 sm:p-7">
-        <h3 className="fh-h3 text-[1.0625rem]">{card.title}</h3>
-        <p className="fh-body mt-2.5 text-[0.875rem]">{card.description}</p>
+        <p className="fh-body text-[0.875rem]">{card.description}</p>
       </div>
     </article>
   );
@@ -68,7 +67,6 @@ export function Performance() {
             <h2 className="fh-h2 mt-7">
               <span className="block">{perf.titleTop}</span>
               <span className="block text-[color:var(--fh-acid)]">{perf.titleAccent}</span>
-              <span className="block">{perf.titleTail}</span>
             </h2>
           </div>
           <p className="fh-body lg:col-span-5">{perf.subtitle}</p>
@@ -78,6 +76,10 @@ export function Performance() {
           {perf.cards.map((card, i) => (
             <PerformanceCard key={card.id} card={card} order={i} />
           ))}
+        </div>
+
+        <div className="mt-10">
+          <MoreLink href={perf.more.href}>{perf.more.label}</MoreLink>
         </div>
       </div>
     </section>

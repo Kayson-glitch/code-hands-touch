@@ -1,39 +1,60 @@
+import { Fragment } from "react";
 import { Button, Counter } from "../../components/primitives";
 import { Sonar } from "../../components/Sonar";
 import { siteNav } from "../../content";
 import { homeHero } from "../../content.home";
 import { useInView } from "../../hooks";
 
-/** Per-letter mask rise. The name assembles itself out of the field. */
-function Wordmark({ shown }: { shown: boolean }) {
-  const parts = [
-    { text: homeHero.title, accent: false },
-    { text: homeHero.titleSuffix, accent: true },
+/**
+ * The headline, raised word by word out of the field below it.
+ *
+ * Per-letter was right when this was one word of brand; on a sentence it turns
+ * into a ticker. Words rise in reading order instead, 54ms apart, so the line
+ * arrives at about the speed you would read it.
+ *
+ * Each word is clipped by its own box. The box is padded past the baseline so
+ * descenders survive the clip, and the resting transform clears that padding
+ * as well as the line box — otherwise the tops of the glyphs peek out.
+ */
+function Headline({ shown }: { shown: boolean }) {
+  const lines = [
+    { text: homeHero.titleLead, accent: false },
+    { text: homeHero.titleAccent, accent: true },
   ];
   let n = 0;
 
   return (
     <h1
-      className="mt-6 flex flex-wrap items-baseline gap-x-[0.28em] text-[clamp(2.7rem,8.4vw,8.5rem)] font-extrabold leading-[0.92] tracking-[-0.025em]"
-      aria-label={`${homeHero.title} ${homeHero.titleSuffix}`}
+      className="mt-7 text-balance text-[clamp(2.05rem,5.6vw,5.25rem)] font-extrabold leading-[1.02] tracking-[-0.032em]"
+      aria-label={`${homeHero.titleLead} ${homeHero.titleAccent}`}
     >
-      {parts.map((part) => (
-        <span key={part.text} className="flex" aria-hidden>
-          {part.text.split("").map((ch, i) => {
-            const delay = 180 + n++ * 34;
+      {lines.map((line) => (
+        /* Balanced rather than flexed: on a phone each line has to wrap again,
+           and `balance` splits it evenly instead of stranding the last word on
+           a line of its own. That needs real inline layout, so the words are
+           inline-blocks separated by actual spaces. */
+        <span key={line.text} className="block text-balance" aria-hidden>
+          {line.text.split(" ").map((word, i) => {
+            const delay = 150 + n++ * 54;
             return (
-              <span key={`${ch}-${i}`} className="block overflow-hidden">
-                <span
-                  className="block"
-                  style={{
-                    color: part.accent ? "var(--fh-acid)" : undefined,
-                    transform: shown ? "translateY(0)" : "translateY(104%)",
-                    transition: `transform 880ms var(--fh-ease-out) ${delay}ms`,
-                  }}
-                >
-                  {ch}
+              <Fragment key={`${word}-${i}`}>
+                {i > 0 && " "}
+                {/* `align-top` matters: an inline-block with overflow hidden
+                    takes its bottom margin edge as its baseline, which adds a
+                    strut's worth of descender to every line box. */}
+                <span className="-mb-[0.18em] inline-block overflow-hidden pb-[0.18em] align-top">
+                  <span
+                    className="block"
+                    style={{
+                      color: line.accent ? "var(--fh-acid)" : undefined,
+                      transform: shown ? "translateY(0)" : "translateY(calc(100% + 0.2em))",
+                      transition: `transform 900ms var(--fh-ease-out) ${delay}ms`,
+                    }}
+                  >
+                    {word}
+                  </span>
                 </span>
-              </span>
+              </Fragment>
             );
           })}
         </span>
@@ -73,7 +94,7 @@ export function HomeHero() {
 
       <div
         ref={ref}
-        className="fh-shell relative flex min-h-[calc(100svh-4rem)] flex-col items-center justify-center pb-10 pt-12 text-center sm:pt-10"
+        className="fh-shell relative flex min-h-[calc(100svh-4rem)] flex-col items-center justify-center pb-9 pt-10 text-center sm:pb-10 sm:pt-10"
       >
         <span
           className="fh-label inline-flex items-center gap-2 border border-[color:var(--fh-line-strong)] px-4 py-1.5 text-[color:var(--fh-ink-dim)]"
@@ -88,22 +109,22 @@ export function HomeHero() {
           {homeHero.badge}
         </span>
 
-        <Wordmark shown={inView} />
+        <Headline shown={inView} />
 
         <p
-          className="fh-body mt-7 max-w-[40rem] text-balance"
+          className="fh-body mt-6 max-w-[44rem] text-balance sm:mt-7"
           style={{
             opacity: inView ? 1 : 0,
             transform: inView ? "none" : "translateY(12px)",
             transition:
-              "opacity 800ms var(--fh-ease-out) 720ms, transform 800ms var(--fh-ease-out) 720ms",
+              "opacity 800ms var(--fh-ease-out) 780ms, transform 800ms var(--fh-ease-out) 780ms",
           }}
         >
           {homeHero.subtitle}
         </p>
 
         <div
-          className="mt-9 flex flex-wrap items-center justify-center gap-3"
+          className="mt-8 flex flex-wrap items-center justify-center gap-3 sm:mt-9"
           style={{
             opacity: inView ? 1 : 0,
             transform: inView ? "none" : "translateY(12px)",
@@ -117,15 +138,37 @@ export function HomeHero() {
           </Button>
         </div>
 
+        {/* The provenance claim, at credential size and set between two short
+            rules so it reads as a stamp on the work rather than a sales line.
+            The rules are fixed-length rather than flexed: over the dial, a rule
+            that runs to the edge of the column disappears into the graticule. */}
+        <p
+          className="fh-label mt-7 flex items-center justify-center gap-4 text-[10px] text-[color:var(--fh-ink-ghost)] sm:mt-8"
+          style={{
+            opacity: inView ? 1 : 0,
+            transition: "opacity 900ms var(--fh-ease-out) 1000ms",
+          }}
+        >
+          <span
+            className="hidden h-px w-10 bg-[color:var(--fh-line-strong)] sm:block"
+            aria-hidden
+          />
+          {homeHero.credential}
+          <span
+            className="hidden h-px w-10 bg-[color:var(--fh-line-strong)] sm:block"
+            aria-hidden
+          />
+        </p>
+
         {/* Telemetry. The three facts the subtitle implies, stated as values.
             Pinned to the fold on a wide screen; on a phone it follows the
             buttons directly, because a full-height gap above it reads as a
             layout fault rather than as breathing room. */}
         <div
-          className="mt-14 w-full border-t border-[color:var(--fh-line)] pt-5 sm:mt-auto"
+          className="mt-10 w-full border-t border-[color:var(--fh-line)] pt-5 sm:mt-auto"
           style={{
             opacity: inView ? 1 : 0,
-            transition: "opacity 900ms var(--fh-ease-out) 1020ms",
+            transition: "opacity 900ms var(--fh-ease-out) 1120ms",
           }}
         >
           <div className="grid grid-cols-3 gap-x-6">

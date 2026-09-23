@@ -13,9 +13,11 @@ import { WallOfLove } from "./sections/home/WallOfLove";
 /**
  * The corporate homepage.
  *
- * Section order follows fakehunter.co — hero, testimonial band, technology,
- * accuracy, performance, closing CTA — because that order is the argument the
- * company makes. What changed is everything about how it is put on screen: one
+ * The sections are the ones fakehunter.co ships, in a different order. The
+ * original opens on five testimonials, before a first-time visitor has been
+ * told what the product is; here the argument runs first — what it does, why it
+ * is accurate, what it measures — and the customers close it, landing directly
+ * above the CTA. What also changed is how all of it is put on screen: one
  * accent instead of a violet-and-blue gradient wash, and live instruments where
  * the original ships screenshots.
  *
@@ -27,7 +29,7 @@ export function HomeSite() {
   return (
     <div data-fh className="relative min-h-screen overflow-x-clip">
       <a
-        href="#voices"
+        href="#technology"
         className="fh-label sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[110] focus:bg-[color:var(--fh-acid)] focus:px-4 focus:py-2 focus:text-[#0a0a0b]"
       >
         Skip to content
@@ -37,10 +39,10 @@ export function HomeSite() {
       <ScrollRail sections={homeSections} />
       <main id="main">
         <HomeHero />
-        <WallOfLove />
         <TechSolution />
         <Accurate />
         <Performance />
+        <WallOfLove />
         <Secure />
       </main>
       <Footer />

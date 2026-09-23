@@ -1,21 +1,36 @@
 /**
  * Copy for the corporate homepage and the product demo page.
  *
- * Every string is lifted from fakehunter.co as it ships today — the i18n
+ * Almost every string is lifted from fakehunter.co as it ships today — the i18n
  * catalogue for the localised blocks, the compiled bundle for the ones that are
- * still hard-coded there. The redesign changes how this reads on screen and
- * what it does when you touch it; it does not change what it says.
+ * still hard-coded there.
+ *
+ * The exceptions are marked `authored` and were written for this build, in the
+ * two places where the original copy was not doing its job: the hero, which led
+ * with the company's own name instead of what the product is for, and a handful
+ * of section subtitles that repeated a card's text back verbatim. Authored
+ * strings never make a claim the rest of the site does not already make.
  *
  * The deep product page lives in `content.ts` and renders at
  * /fakehunter/solution, mirroring the site's own /about route.
  */
 
+/**
+ * The hero. Authored.
+ *
+ * A first-time visitor arrives knowing nothing, and the wordmark is already in
+ * the header — so the headline spends itself on the decision the product is
+ * bought to make, and the subtitle names the three things it reads. The Caltech
+ * line is a credential, not a value proposition, so it sits at credential size.
+ */
 export const homeHero = {
-  badge: "Built on FakeHunter AI",
-  title: "FAKEHUNTER",
-  titleSuffix: "AI",
+  badge: "Payment-proof forensics",
+  titleLead: "Rule on every payment proof",
+  titleAccent: "before the money moves.",
   subtitle:
-    "A Multimodal AI Detection System Powered by Caltech Research Institute's Leading Computer Vision Algorithms.",
+    /* Balanced line breaks must not split the product's name. */
+    "Payment screenshots, bank statements, screen recordings. FakeHunter\u00A0AI reads each one the way a forensic examiner would — pixels, document structure, timeline — and returns a verdict with its reasons in under a second.",
+  credential: "Powered by Caltech Research Institute computer vision",
   primaryCta: "Book a Demo",
   /* The live site labels this "Fast Try", which is the name of its batch
      workspace — a different surface. This one goes to the demo, so it says so. */
@@ -155,7 +170,7 @@ export const detector = {
 } as const;
 
 export const wallOfLove = {
-  index: "01",
+  index: "04",
   label: "Wall Of Love",
   title: "Wall of Love.",
   description:
@@ -212,11 +227,17 @@ export const wallOfLove = {
 } as const;
 
 export const techSolution = {
-  index: "02",
+  index: "01",
   label: "Technology & Solution",
   titleTop: "TECHNOLOGY",
   titleAccent: "& SOLUTION",
-  subtitle: "Pixel-Precision Analysis to Identify Digital Forgeries.",
+  /* Authored. The site repeats the first card's description here, which leaves
+     the section itself unexplained and the card redundant. This says what the
+     set of cards has in common instead. */
+  subtitle:
+    "Four forensic reads — pixels, layout, document structure and time — running inside a single millisecond-scale call.",
+  /** Where the same subject is treated at full depth. */
+  more: { label: "The three detection lines in full", href: "/fakehunter/solution#technology" },
   cards: [
     {
       id: "image",
@@ -254,14 +275,16 @@ export const techSolution = {
 } as const;
 
 export const accurate = {
-  index: "03",
+  index: "02",
   label: "Why Are We Most Accurate",
   titleLine1: "why are we",
   titleWhite: "most",
   titleHighlight: "accurate",
   titleTail: "?",
+  /* Authored, lightly: the site's own sentence says the right thing in a
+     grammar that stumbles on the way out. Same claim, read aloud cleanly. */
   subtitle:
-    "AI Detectors without an in-depth analysis verified by third party studies should be used with caution.",
+    "Treat any AI detector with caution until its accuracy has been examined in depth and verified against third-party studies. Here is what ours rests on.",
   cards: [
     {
       id: "pretraining",
@@ -287,13 +310,26 @@ export const accurate = {
   ],
 } as const;
 
+/**
+ * The four numbers, each drawn as well as stated.
+ *
+ * The site gives every card an adjective for a heading — "Sub-Second",
+ * "Industry-Leading", "Significant" — and then spends the sentence underneath
+ * saying the adjective again. The measurement is the heading here, and the
+ * sentence is where the number gets its context.
+ */
 export const performance = {
-  index: "04",
+  index: "03",
   label: "Sustained Performance",
   titleTop: "Sustained",
   titleAccent: "Performance",
-  titleTail: "We Make It Possible.",
-  subtitle: "Multimodal Payment Voucher Verification Solution.",
+  /* The site closes this title with "We Make It Possible." and subtitles it
+     "Multimodal Payment Voucher Verification Solution." — a slogan and a noun
+     phrase, neither of which says anything about the four numbers underneath.
+     Dropped in favour of one line about where the numbers come from, which is
+     the only question a reader has at this point. Authored. */
+  subtitle:
+    "Measured on live payment traffic across all three detection lines, not on a curated benchmark set.",
   cards: [
     {
       id: "hit-rate",
@@ -301,8 +337,7 @@ export const performance = {
       decimals: 2,
       unit: "%",
       metric: "Fraud Detection Hit Rate",
-      title: "Sub-Second",
-      description: "Your first line of defense: Sub-second interception for every request.",
+      description: "Your first line of defence: sub-second interception on every request.",
       visual: "bars",
     },
     {
@@ -311,8 +346,7 @@ export const performance = {
       decimals: 1,
       unit: "%",
       metric: "Overall Recognition Accuracy",
-      title: "Industry-Leading",
-      description: "The industry-leading performance your business deserves.",
+      description: "Across all three detection lines, on genuine and forged samples mixed.",
       visual: "gauge",
     },
     {
@@ -322,8 +356,7 @@ export const performance = {
       prefix: "+",
       unit: "%",
       metric: "South/Southeast Asia Recognition Rate",
-      title: "Proven Stability",
-      description: "Scaling growth with proven stability in emerging markets.",
+      description: "Held in the markets where forgery templates circulate fastest.",
       visual: "stability",
     },
     {
@@ -333,11 +366,12 @@ export const performance = {
       prefix: "+",
       unit: "%",
       metric: "Reduction in Bad Debt Rate",
-      title: "Significant",
-      description: "Hardening your defenses with significant risk mitigation impact.",
+      description: "What risk teams report after a pilot, read straight off the bottom line.",
       visual: "decline",
     },
   ],
+  /** Where the same subject is treated at full depth. */
+  more: { label: "How these were measured", href: "/fakehunter/solution#results" },
 } as const;
 
 export const secure = {
@@ -357,9 +391,13 @@ export const secure = {
       value: 85.8,
       decimals: 1,
       unit: "%",
-      title: "Recognition Accuracy",
+      /* The site labels this "Recognition Accuracy", which reads as a second,
+         lower answer to the 93.8% stated two sections up. It is the image line
+         measured on its own — 85.86% on the solution page — so it says which
+         line it belongs to and the two numbers stop arguing. */
+      title: "Image-Line Accuracy",
       description: "Precision detection for even the most advanced forgeries.",
-      button: "Loss Reduction",
+      button: "See the measurements",
     },
     {
       id: "roi",
@@ -382,12 +420,20 @@ export const secure = {
   ],
 } as const;
 
-/** Homepage anchors, in page order — drives the scroll rail and mobile sheet. */
+/**
+ * Homepage anchors, in page order — drives the scroll rail and mobile sheet.
+ *
+ * The live site opens on testimonials, before it has said what the product is.
+ * Here the argument runs first — what it does, why it is accurate, what it
+ * measures — and the customers speak last, to a reader who now knows what they
+ * are agreeing with. It also puts the quotes directly above the closing CTA,
+ * where they do the most work.
+ */
 export const homeSections = [
   { id: "hero", index: "00", label: "Top" },
-  { id: "voices", index: wallOfLove.index, label: wallOfLove.label },
   { id: "technology", index: techSolution.index, label: techSolution.label },
   { id: "accuracy", index: accurate.index, label: accurate.label },
   { id: "performance", index: performance.index, label: performance.label },
+  { id: "voices", index: wallOfLove.index, label: wallOfLove.label },
   { id: "start", index: secure.index, label: secure.label },
 ] as const;

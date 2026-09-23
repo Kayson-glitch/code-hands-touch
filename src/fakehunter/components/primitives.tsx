@@ -199,6 +199,36 @@ export function Button({
 }
 
 /* -------------------------------------------------------------------------- */
+/*  Deep link                                                                  */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * The quiet route from a homepage section to the page that treats the same
+ * subject at full depth. Deliberately not a button: the CTAs are the loudest
+ * things on the page and this must not compete with them.
+ */
+export function MoreLink({ href, children }: { href: string; children: ReactNode }) {
+  return (
+    <a
+      href={href}
+      className="fh-label group inline-flex items-center gap-3 border-b border-[color:var(--fh-line)] pb-2.5 text-[color:var(--fh-ink-faint)] transition-colors duration-300 hover:border-[color:var(--fh-acid)] hover:text-[color:var(--fh-ink)]"
+    >
+      {children}
+      <svg
+        width="13"
+        height="9"
+        viewBox="0 0 14 10"
+        fill="none"
+        aria-hidden
+        className="transition-transform duration-300 group-hover:translate-x-1"
+      >
+        <path d="M9 1l4 4-4 4M13 5H0" stroke="currentColor" strokeWidth="1.4" />
+      </svg>
+    </a>
+  );
+}
+
+/* -------------------------------------------------------------------------- */
 /*  Verdict chip                                                               */
 /* -------------------------------------------------------------------------- */
 

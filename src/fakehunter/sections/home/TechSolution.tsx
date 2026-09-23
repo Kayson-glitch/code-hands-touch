@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { cn } from "@/lib/utils";
-import { SectionHeader } from "../../components/primitives";
+import { MoreLink, SectionHeader } from "../../components/primitives";
 import { TechGlyph, type GlyphKind } from "../../components/TechGlyph";
 import { techSolution } from "../../content.home";
 import { useInView, useMediaQuery } from "../../hooks";
@@ -79,6 +79,10 @@ export function TechSolution() {
           {bottomNarrow.map((card) => (
             <TechCard key={card.id} card={card} wide={"wide" in card && card.wide} />
           ))}
+        </div>
+
+        <div className="mt-10">
+          <MoreLink href={techSolution.more.href}>{techSolution.more.label}</MoreLink>
         </div>
       </div>
     </section>
