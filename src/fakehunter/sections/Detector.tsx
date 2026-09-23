@@ -96,7 +96,7 @@ function Gauge({ score, forged }: { score: number; forged: boolean }) {
           value={score}
           decimals={1}
           duration={900}
-          className="text-[clamp(2.75rem,5vw,3.75rem)] font-semibold leading-none"
+          className="text-[clamp(2.75rem,5vw,3.75rem)] font-medium leading-none"
         />
         <span className="fh-figure text-[1.5rem] font-normal opacity-70">%</span>
       </div>
@@ -414,7 +414,7 @@ export function Detector() {
                         <Counter
                           value={cell.value}
                           duration={800}
-                          className="mt-1 block text-[1.5rem] font-semibold leading-none"
+                          className="mt-1 block text-[1.5rem] font-medium leading-none"
                         />
                       </div>
                     ))}

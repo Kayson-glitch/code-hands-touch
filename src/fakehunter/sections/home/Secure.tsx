@@ -69,7 +69,7 @@ export function Secure() {
                   value={accuracy.value}
                   decimals={accuracy.decimals}
                   duration={1400}
-                  className="text-[clamp(2.5rem,4vw,3.25rem)] font-semibold leading-none"
+                  className="text-[clamp(2.5rem,4vw,3.25rem)] font-medium leading-none"
                 />
                 <span className="fh-figure text-[1.5rem] font-normal text-[color:var(--fh-ink-faint)]">
                   {accuracy.unit}
@@ -93,7 +93,7 @@ export function Secure() {
                   value={roi.value}
                   decimals={roi.decimals}
                   duration={1100}
-                  className="text-[clamp(3.25rem,5.4vw,4.5rem)] font-semibold leading-none text-[color:var(--fh-acid)]"
+                  className="text-[clamp(3.25rem,5.4vw,4.5rem)] font-medium leading-none text-[color:var(--fh-acid)]"
                 />
                 <span className="fh-figure text-[2rem] font-normal text-[color:var(--fh-acid)] opacity-70">
                   {roi.unit}
@@ -118,7 +118,7 @@ export function Secure() {
                   value={loss.value}
                   decimals={loss.decimals}
                   duration={1400}
-                  className="text-[clamp(2.5rem,4vw,3.25rem)] font-semibold leading-none"
+                  className="text-[clamp(2.5rem,4vw,3.25rem)] font-medium leading-none"
                 />
                 <span className="fh-figure text-[1.5rem] font-normal text-[color:var(--fh-ink-faint)]">
                   {loss.unit}
@@ -137,7 +137,7 @@ export function Secure() {
                 {wallOfLove.quotes.map((q, i) => (
                   <span
                     key={q.id}
-                    className="fh-figure relative flex h-10 w-10 items-center justify-center border border-[color:var(--fh-line-strong)] bg-[color:var(--fh-surface)] text-[1.125rem] font-semibold text-[color:var(--fh-ink-faint)] transition-colors duration-300 group-hover:text-[color:var(--fh-acid)]"
+                    className="fh-figure relative flex h-10 w-10 items-center justify-center border border-[color:var(--fh-line-strong)] bg-[color:var(--fh-surface)] text-[1.125rem] font-medium text-[color:var(--fh-ink-faint)] transition-colors duration-300 group-hover:text-[color:var(--fh-acid)]"
                     style={{ marginLeft: i === 0 ? 0 : -9, zIndex: 10 - i }}
                   >
                     {q.name

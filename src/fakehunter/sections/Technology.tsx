@@ -80,7 +80,7 @@ export function Technology() {
               <Specimen id={line.id} active={inView} key={line.id} />
               <div className="flex items-center justify-between border-t border-[color:var(--fh-line)] px-5 py-3">
                 <span className="fh-label text-[color:var(--fh-acid)]">{line.tag}</span>
-                <span className="fh-figure text-[0.8125rem] font-semibold text-[color:var(--fh-ink-ghost)]">
+                <span className="fh-figure text-[0.8125rem] font-medium text-[color:var(--fh-ink-ghost)]">
                   {String(active + 1).padStart(2, "0")} / 03
                 </span>
               </div>
@@ -109,7 +109,7 @@ export function Technology() {
                       <svg width="11" height="9" viewBox="0 0 11 9" fill="none" aria-hidden>
                         <path d="M1 4.6L4 7.5 10 1" stroke="var(--fh-acid)" strokeWidth="1.5" />
                       </svg>
-                      <h4 className="text-[0.9375rem] font-semibold">{p.title}</h4>
+                      <h4 className="text-[0.9375rem] font-medium">{p.title}</h4>
                     </div>
                     <p className="mt-2 max-w-[60ch] pl-[1.375rem] text-[0.875rem] leading-[1.6] text-[color:var(--fh-ink-dim)]">
                       {p.body}

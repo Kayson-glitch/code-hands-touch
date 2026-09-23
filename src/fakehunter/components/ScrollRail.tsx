@@ -51,7 +51,7 @@ export function ScrollRail({ sections }: { sections: readonly NavSection[] }) {
                   transform: "translateX(6px)",
                 }}
               >
-                <span className="fh-figure font-semibold">{s.index}</span> {s.label}
+                <span className="fh-figure font-medium">{s.index}</span> {s.label}
               </span>
               <span
                 className="block transition-all duration-300"

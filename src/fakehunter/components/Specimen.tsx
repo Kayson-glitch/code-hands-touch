@@ -192,7 +192,7 @@ function VideoSpecimen({ anim, active }: { anim: boolean; active: boolean }) {
           }}
         />
         <span
-          className="fh-figure absolute top-3 text-[0.6875rem] font-semibold text-[color:var(--fh-forged)]"
+          className="fh-figure absolute top-3 text-[0.6875rem] font-medium text-[color:var(--fh-forged)]"
           style={{
             left: `${(SPLICE / FRAMES) * 100}%`,
             transform: "translateX(-50%)",

@@ -264,7 +264,7 @@ export function Pipeline() {
                 <span className="fh-label text-[color:var(--fh-ink-ghost)]">
                   Detection pipeline
                 </span>
-                <span className="fh-figure flex items-center gap-2 text-[0.8125rem] font-semibold uppercase tracking-[0.08em] text-[color:var(--fh-acid)]">
+                <span className="fh-figure flex items-center gap-2 text-[0.8125rem] font-medium uppercase tracking-[0.08em] text-[color:var(--fh-acid)]">
                   <span className="fh-blink block h-1.5 w-1.5 bg-[color:var(--fh-acid)]" />
                   {stage < 0 ? "IDLE" : stage >= 4 ? "LIVE" : `STAGE ${stage + 1}/5`}
                 </span>
@@ -286,7 +286,7 @@ export function Pipeline() {
                       transition: "opacity 500ms var(--fh-ease-out)",
                     }}
                   >
-                    <span className="fh-figure text-[0.875rem] font-semibold text-[color:var(--fh-acid)]">
+                    <span className="fh-figure text-[0.875rem] font-medium text-[color:var(--fh-acid)]">
                       {s.kicker}
                     </span>
                     <span>
@@ -316,7 +316,7 @@ export function Pipeline() {
                     className="group bg-[color:var(--fh-bg)] p-4 text-left transition-colors duration-300 hover:bg-[color:var(--fh-surface)]"
                   >
                     <span
-                      className="fh-figure block text-[0.875rem] font-semibold transition-colors duration-500"
+                      className="fh-figure block text-[0.875rem] font-medium transition-colors duration-500"
                       style={{
                         color: reached ? "var(--fh-acid)" : "var(--fh-ink-ghost)",
                       }}

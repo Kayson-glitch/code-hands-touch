@@ -20,7 +20,7 @@ export function Problem() {
           <div className="lg:col-span-5 lg:pt-2">
             <p className="fh-body">
               {problem.description}{" "}
-              <em className="not-italic text-[color:var(--fh-ink)]">{problem.descriptionAccent}</em>
+              <em className=" text-[color:var(--fh-ink)]">{problem.descriptionAccent}</em>
             </p>
           </div>
         </div>
@@ -46,7 +46,7 @@ export function Problem() {
         <Frame className="border border-[color:var(--fh-line)] bg-[color:var(--fh-surface)] p-[clamp(1.5rem,3.5vw,3rem)]">
           <div ref={lossRef} className="grid gap-8 lg:grid-cols-12 lg:items-end lg:gap-12">
             <div className="lg:col-span-6">
-              <div className="fh-figure flex items-baseline text-[clamp(3rem,9vw,7rem)] font-semibold leading-none tracking-[-0.022em]">
+              <div className="fh-figure flex items-baseline text-[clamp(3rem,9vw,7rem)] font-medium leading-none tracking-[-0.022em]">
                 <span className="text-[0.42em] font-normal text-[color:var(--fh-ink-faint)]">
                   {problem.lossRange.currency}
                 </span>
@@ -71,7 +71,7 @@ export function Problem() {
             </div>
 
             <div className="lg:col-span-6">
-              <p className="fh-body border-l border-[color:var(--fh-acid)] pl-5 italic">
+              <p className="fh-body border-l border-[color:var(--fh-acid)] pl-5">
                 {problem.lossQuote}
               </p>
             </div>
@@ -92,7 +92,7 @@ export function Problem() {
                   className="group flex w-full items-center gap-5 py-6 text-left"
                 >
                   <span
-                    className="fh-figure text-[0.875rem] font-semibold transition-colors duration-300"
+                    className="fh-figure text-[0.875rem] font-medium transition-colors duration-300"
                     style={{ color: isOpen ? "var(--fh-acid)" : "var(--fh-ink-ghost)" }}
                   >
                     {String(i + 1).padStart(2, "0")}

@@ -33,7 +33,7 @@ function DocumentFace({
       <div className="flex-1 px-5 py-5">
         <div className="fh-label text-[9px] text-[#0a0a0b]/45">TOTAL</div>
         <div
-          className="fh-figure mt-1 text-[clamp(1.5rem,3vw,2.25rem)] font-semibold tracking-[-0.022em]"
+          className="fh-figure mt-1 text-[clamp(1.5rem,3vw,2.25rem)] font-medium tracking-[-0.022em]"
           style={{ color: accent }}
         >
           {doc.amount}

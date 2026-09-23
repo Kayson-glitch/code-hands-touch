@@ -21,10 +21,10 @@ function MetricRow({ metric, delay }: { metric: (typeof results.metrics)[number]
             decimals={2}
             suffix="%"
             duration={1500}
-            className="text-[clamp(2.25rem,4.4vw,3.5rem)] font-semibold leading-none tracking-[-0.028em]"
+            className="text-[clamp(2.25rem,4.4vw,3.5rem)] font-medium leading-none tracking-[-0.028em]"
           />
           <span
-            className="fh-figure inline-flex items-center gap-1 text-[0.9375rem] font-semibold text-[color:var(--fh-acid)]"
+            className="fh-figure inline-flex items-center gap-1 text-[0.9375rem] font-medium text-[color:var(--fh-acid)]"
             style={{
               opacity: inView ? 1 : 0,
               transform: inView ? "none" : "translateY(6px)",
@@ -72,17 +72,17 @@ function MetricRow({ metric, delay }: { metric: (typeof results.metrics)[number]
             }}
           />
 
-          <span className="fh-figure absolute bottom-0 left-0 text-[0.6875rem] font-semibold text-[color:var(--fh-ink-ghost)]">
+          <span className="fh-figure absolute bottom-0 left-0 text-[0.6875rem] font-medium text-[color:var(--fh-ink-ghost)]">
             {AXIS_FLOOR}%
           </span>
           <span
-            className="fh-figure absolute bottom-0 text-[0.6875rem] font-semibold text-[color:var(--fh-ink-faint)]"
+            className="fh-figure absolute bottom-0 text-[0.6875rem] font-medium text-[color:var(--fh-ink-faint)]"
             style={{ left: `${scale(metric.before)}%`, transform: "translateX(-50%)" }}
           >
             {metric.before.toFixed(1)}
           </span>
           <span
-            className="fh-figure absolute bottom-0 text-[0.6875rem] font-semibold text-[color:var(--fh-acid)]"
+            className="fh-figure absolute bottom-0 text-[0.6875rem] font-medium text-[color:var(--fh-acid)]"
             style={{
               left: `${scale(metric.after)}%`,
               transform: "translateX(-50%)",
@@ -92,7 +92,7 @@ function MetricRow({ metric, delay }: { metric: (typeof results.metrics)[number]
           >
             {metric.after}
           </span>
-          <span className="fh-figure absolute bottom-0 right-0 text-[0.6875rem] font-semibold text-[color:var(--fh-ink-ghost)]">
+          <span className="fh-figure absolute bottom-0 right-0 text-[0.6875rem] font-medium text-[color:var(--fh-ink-ghost)]">
             100%
           </span>
         </div>
@@ -164,12 +164,12 @@ export function Results() {
           <div className="lg:col-span-6">
             <Frame className="border border-[color:var(--fh-line)] bg-[color:var(--fh-surface)] p-7">
               <span
-                className="block font-serif text-[4rem] leading-[0.5] text-[color:var(--fh-acid)]"
+                className="block text-[4rem] leading-[0.5] text-[color:var(--fh-acid)]"
                 aria-hidden
               >
                 &ldquo;
               </span>
-              <p className="fh-body mt-6 italic">{results.quote}</p>
+              <p className="fh-body mt-6">{results.quote}</p>
               <p className="mt-6 text-[0.6875rem] leading-[1.7] text-[color:var(--fh-ink-ghost)]">
                 {results.sampleNote}
               </p>

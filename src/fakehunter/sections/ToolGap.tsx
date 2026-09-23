@@ -28,7 +28,7 @@ function FailCard({
     >
       <Frame lit={hover} className="fh-card h-full p-6 lg:p-7">
         <div className="flex items-baseline justify-between gap-4">
-          <span className="fh-figure text-[0.875rem] font-semibold text-[color:var(--fh-ink-ghost)]">
+          <span className="fh-figure text-[0.875rem] font-medium text-[color:var(--fh-ink-ghost)]">
             {String(n).padStart(2, "0")}
           </span>
           {/* Coverage meter — every one of these reads zero on payment proof,
@@ -118,7 +118,7 @@ export function ToolGap() {
               <p className="fh-h3 font-normal text-[color:var(--fh-ink-faint)]">
                 {toolGap.quote.beforeIdentity}{" "}
                 <span className="relative inline-block">
-                  <span className="italic">{toolGap.quote.identity}</span>
+                  <span className="text-[color:var(--fh-ink)]">{toolGap.quote.identity}</span>
                   <span
                     className="absolute left-0 top-1/2 h-px w-full origin-left bg-[color:var(--fh-forged)]"
                     style={{
@@ -130,7 +130,7 @@ export function ToolGap() {
               </p>
               <p className="fh-h3 font-normal">
                 {toolGap.quote.between}{" "}
-                <span className="relative inline-block italic text-[color:var(--fh-acid)]">
+                <span className="relative inline-block text-[color:var(--fh-acid)]">
                   {toolGap.quote.transaction}
                   <span
                     className="absolute -bottom-1 left-0 h-px w-full origin-left bg-[color:var(--fh-acid)]"

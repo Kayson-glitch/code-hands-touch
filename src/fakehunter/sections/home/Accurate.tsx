@@ -148,7 +148,7 @@ function AccurateCard({ card, order }: { card: (typeof accurate.cards)[number]; 
         <span className="flex h-14 w-14 items-center justify-center border border-[color:var(--fh-line-strong)] bg-[color:var(--fh-void)]">
           <Glyph on={inView} />
         </span>
-        <span className="fh-figure text-[1.25rem] font-semibold text-[color:var(--fh-ink-ghost)]">
+        <span className="fh-figure text-[1.25rem] font-medium text-[color:var(--fh-ink-ghost)]">
           {String(order + 1).padStart(2, "0")}
         </span>
       </div>

@@ -49,6 +49,12 @@
      visually separate from the argument around it. */
   --font-fh-figure: "Smooch Sans", "Red Hat Display", ui-sans-serif, sans-serif;
 
+  /* Two weights, and only two, across both families. Hierarchy comes from
+     size, colour and case; a third weight only ever added noise. No italics
+     either — emphasis is carried by ink colour. */
+  --fh-w-regular: 400;
+  --fh-w-medium: 500;
+
   background-color: var(--fh-bg);
   color: var(--fh-ink);
   font-family: var(--font-fh-sans);
@@ -79,7 +85,7 @@
    spacing so the site stays on one family. */
 .fh-label {
   font-size: 0.6875rem;
-  font-weight: 600;
+  font-weight: var(--fh-w-medium);
   letter-spacing: 0.15em;
   text-transform: uppercase;
   font-variant-numeric: tabular-nums;
@@ -87,21 +93,21 @@
 
 .fh-h1 {
   font-size: clamp(2.35rem, 5.4vw, 4.75rem);
-  font-weight: 600;
+  font-weight: var(--fh-w-medium);
   line-height: 0.98;
   letter-spacing: -0.022em;
 }
 
 .fh-h2 {
   font-size: clamp(2rem, 4.2vw, 3.5rem);
-  font-weight: 600;
+  font-weight: var(--fh-w-medium);
   line-height: 1.04;
   letter-spacing: -0.02em;
 }
 
 .fh-h3 {
   font-size: clamp(1.125rem, 1.6vw, 1.5rem);
-  font-weight: 600;
+  font-weight: var(--fh-w-medium);
   line-height: 1.25;
   letter-spacing: -0.01em;
 }
@@ -112,8 +118,12 @@
   color: var(--fh-ink-dim);
 }
 
+[data-fh] em,
+[data-fh] i {
+  font-style: normal;
+}
+
 .fh-body em {
-  font-style: italic;
   color: var(--fh-ink);
 }
 
@@ -234,7 +244,7 @@
   gap: 0.625rem;
   padding: 0.875rem 1.5rem;
   font-size: 0.75rem;
-  font-weight: 700;
+  font-weight: var(--fh-w-medium);
   letter-spacing: 0.11em;
   text-transform: uppercase;
   white-space: nowrap;

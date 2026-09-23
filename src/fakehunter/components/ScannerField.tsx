@@ -100,7 +100,7 @@ export function ScannerField({ className }: { className?: string }) {
         ctx.strokeRect(bx - bw, by - bh, bw * 2, bh * 2);
         ctx.restore();
         ctx.fillStyle = "rgba(255,90,77,0.9)";
-        ctx.font = `600 9px ${MONO}`;
+        ctx.font = `500 9px ${MONO}`;
         ctx.fillText("TAMPERED", bx - bw, by - bh - 13);
       }
     };
@@ -291,7 +291,7 @@ export function ScannerField({ className }: { className?: string }) {
         ctx.restore();
 
         ctx.fillStyle = `rgba(255,90,77,${lock})`;
-        ctx.font = `600 9px ${MONO}`;
+        ctx.font = `500 9px ${MONO}`;
         ctx.fillText("TAMPERED", bx - bw, by - bh - 13);
         ctx.font = glyphFont;
       }

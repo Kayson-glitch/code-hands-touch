@@ -31,7 +31,7 @@ function PerformanceCard({ card, order }: { card: Card; order: number }) {
               decimals={card.decimals}
               prefix={"prefix" in card ? card.prefix : ""}
               duration={1300 + order * 120}
-              className="text-[clamp(2rem,3.4vw,2.875rem)] font-semibold leading-none"
+              className="text-[clamp(2rem,3.4vw,2.875rem)] font-medium leading-none"
             />
             <span className="fh-figure text-[1.25rem] font-normal text-[color:var(--fh-ink-faint)]">
               {card.unit}

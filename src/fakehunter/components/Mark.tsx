@@ -37,13 +37,13 @@ export function Wordmark({ className }: { className?: string }) {
     <span className={className} style={{ display: "inline-flex", alignItems: "baseline" }}>
       <span
         style={{
-          fontWeight: 700,
+          fontWeight: 500,
           letterSpacing: "-0.02em",
         }}
       >
         FakeHunter
       </span>
-      <span style={{ color: "var(--fh-acid)", fontWeight: 700, letterSpacing: "-0.02em" }}>
+      <span style={{ color: "var(--fh-acid)", fontWeight: 500, letterSpacing: "-0.02em" }}>
         .AI
       </span>
     </span>

@@ -93,7 +93,7 @@ export function Pricing() {
 
                   <div className="fh-figure mt-7 flex items-baseline gap-1">
                     {plan.monthly === null ? (
-                      <span className="text-[1.75rem] font-semibold tracking-[-0.022em]">
+                      <span className="font-[family-name:var(--font-fh-sans)] text-[1.5rem] font-medium tracking-[-0.02em]">
                         {pricing.letsTalk}
                       </span>
                     ) : (
@@ -106,7 +106,7 @@ export function Pricing() {
                           key={annual ? "a" : "m"}
                           value={Math.round(plan.monthly * factor)}
                           duration={700}
-                          className="text-[clamp(2rem,3vw,2.75rem)] font-semibold leading-none tracking-[-0.028em]"
+                          className="text-[clamp(2rem,3vw,2.75rem)] font-medium leading-none tracking-[-0.028em]"
                         />
                         <span className="text-[1.0625rem] font-medium text-[color:var(--fh-ink-faint)]">
                           {pricing.perMonth}

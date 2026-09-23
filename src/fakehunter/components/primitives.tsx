@@ -46,7 +46,7 @@ export function SectionHeader({
   return (
     <div ref={ref} className={cn("relative", className)}>
       <div className="flex items-baseline gap-2.5">
-        <span className="fh-figure text-[0.9375rem] font-semibold leading-none text-[color:var(--fh-acid)]">
+        <span className="fh-figure text-[0.9375rem] font-medium leading-none text-[color:var(--fh-acid)]">
           {index}
         </span>
         <span className="fh-label text-[color:var(--fh-acid)]">{label}</span>

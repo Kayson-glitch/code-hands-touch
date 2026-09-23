@@ -67,7 +67,7 @@ export function Preloader({ onDone }: { onDone?: () => void }) {
           <div className="fh-scan__text flex items-center gap-3">
             <Mark size={34} scanning />
             <span
-              className="text-[clamp(1.5rem,4vw,2.5rem)] font-bold tracking-[-0.022em]"
+              className="text-[clamp(1.5rem,4vw,2.5rem)] font-medium tracking-[-0.022em]"
               style={{ color: "var(--fh-ink)" }}
             >
               FakeHunter<span style={{ color: "var(--fh-acid)" }}>.AI</span>

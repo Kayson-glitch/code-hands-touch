@@ -96,7 +96,7 @@ export const problem = {
 export const toolGap = {
   index: "02",
   label: "Where Existing Tools Fall Short",
-  title: 'None of them can answer "is this document real or fake"',
+  title: "None of them can answer “is this document real or fake”",
   description:
     "Every defence on the market was built for a different question. Run them against a payment screenshot and the gap shows up immediately.",
   cards: [
@@ -135,9 +135,9 @@ export const toolGap = {
   ],
   quote: {
     beforeIdentity: "Most existing tools ask",
-    identity: '"is this identity real".',
+    identity: "“is this identity real”.",
     between: "Payment proof fraud asks",
-    transaction: '"did this transaction happen".',
+    transaction: "“did this transaction happen”.",
     after:
       "A screenshot, a receipt, a screen recording is neither an ID nor a face. General tools cover the surrounding steps but cannot rule on the document itself — the gap a dedicated engine fills.",
   },

@@ -110,11 +110,11 @@ export function VideoScrub({
           )}
         </div>
 
-        <span className="fh-figure absolute left-4 top-4 text-[0.75rem] font-semibold text-[color:var(--fh-ink-ghost)]">
+        <span className="fh-figure absolute left-4 top-4 text-[0.75rem] font-medium text-[color:var(--fh-ink-ghost)]">
           {mmss(t)} / {mmss(duration)}
         </span>
         <span
-          className="fh-figure absolute right-4 top-4 text-[0.75rem] font-semibold"
+          className="fh-figure absolute right-4 top-4 text-[0.75rem] font-medium"
           style={{ color: atSplice ? "var(--fh-forged)" : "var(--fh-ink-ghost)" }}
         >
           FRAME {String(Math.floor(t * 25)).padStart(4, "0")}
@@ -177,7 +177,7 @@ export function VideoScrub({
         <Verdict tone="forged">0:24</Verdict>
       </div>
 
-      <p className="border-t border-[color:var(--fh-line)] px-4 py-3 text-[0.8125rem] italic leading-[1.5] text-[color:var(--fh-ink-faint)]">
+      <p className="border-t border-[color:var(--fh-line)] px-4 py-3 text-[0.8125rem] leading-[1.5] text-[color:var(--fh-ink-faint)]">
         {caption}
       </p>
     </div>

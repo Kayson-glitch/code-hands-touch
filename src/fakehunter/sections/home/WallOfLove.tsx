@@ -23,17 +23,16 @@ function initials(name: string) {
 function QuoteCard({ quote }: { quote: Quote }) {
   return (
     <figure className="flex h-full w-[22rem] shrink-0 flex-col justify-between border-l border-[color:var(--fh-line)] px-7 py-8 sm:w-[26rem] sm:px-9">
-      <blockquote className="text-[0.9375rem] italic leading-[1.7] text-[color:var(--fh-ink-dim)] sm:text-[1rem]">
-        <span aria-hidden className="mr-1 not-italic text-[color:var(--fh-acid)]">
+      <blockquote className="text-[0.9375rem] leading-[1.7] text-[color:var(--fh-ink-dim)] sm:text-[1rem]">
+        <span aria-hidden className="mr-1 text-[color:var(--fh-acid)]">
           “
         </span>
         {quote.before}{" "}
-        <em className="font-semibold not-italic text-[color:var(--fh-acid)]">{quote.highlight}</em>{" "}
-        {quote.after}
+        <em className="font-medium text-[color:var(--fh-acid)]">{quote.highlight}</em> {quote.after}
       </blockquote>
 
       <figcaption className="mt-8 flex items-center gap-4">
-        <span className="fh-figure flex h-12 w-12 items-center justify-center border border-[color:var(--fh-line-strong)] text-[1.25rem] font-semibold text-[color:var(--fh-acid)]">
+        <span className="fh-figure flex h-12 w-12 items-center justify-center border border-[color:var(--fh-line-strong)] text-[1.25rem] font-medium text-[color:var(--fh-acid)]">
           {initials(quote.name)}
         </span>
         <span className="flex flex-col gap-1">

@@ -25,7 +25,7 @@ function Headline({ shown }: { shown: boolean }) {
 
   return (
     <h1
-      className="mt-7 text-balance text-[clamp(2.05rem,5.6vw,5.25rem)] font-extrabold leading-[1.02] tracking-[-0.032em]"
+      className="mt-7 text-balance text-[clamp(2.05rem,5.6vw,5.25rem)] font-medium leading-[1.04] tracking-[-0.026em]"
       aria-label={`${homeHero.titleLead} ${homeHero.titleAccent}`}
     >
       {lines.map((line) => (
@@ -188,7 +188,7 @@ export function HomeHero() {
                     suffix={cell.suffix}
                     duration={1400 + i * 140}
                     active={inView}
-                    className="text-[clamp(1.375rem,2.2vw,1.875rem)] font-semibold leading-none"
+                    className="text-[clamp(1.375rem,2.2vw,1.875rem)] font-medium leading-none"
                   />
                   <span className="text-center text-[0.75rem] leading-tight text-[color:var(--fh-ink-faint)]">
                     {cell.detail}

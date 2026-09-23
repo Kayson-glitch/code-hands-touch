@@ -57,7 +57,7 @@ function LiveWordmark() {
               spans.current[i] = el;
             }}
             aria-hidden
-            className="block font-semibold leading-[0.86]"
+            className="block font-medium leading-[0.86]"
             style={{
               fontSize: "clamp(2.75rem,12.2vw,11rem)",
               letterSpacing: "-0.03em",

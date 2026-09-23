@@ -71,7 +71,7 @@ export function Hero() {
               </span>
             ))}
             <span
-              className="block italic font-normal text-[color:var(--fh-ink-dim)]"
+              className="block text-[color:var(--fh-ink-dim)]"
               style={{
                 opacity: inView ? 1 : 0,
                 transform: inView ? "none" : "translateY(14px)",
@@ -128,9 +128,9 @@ export function Hero() {
                   decimals={2}
                   suffix={stat.unit}
                   duration={1600 + i * 120}
-                  className="text-[clamp(1.5rem,2.4vw,2.125rem)] font-semibold tracking-[-0.022em]"
+                  className="text-[clamp(1.5rem,2.4vw,2.125rem)] font-medium tracking-[-0.022em]"
                 />
-                <span className="fh-figure text-[0.8125rem] font-semibold text-[color:var(--fh-acid)]">
+                <span className="fh-figure text-[0.8125rem] font-medium text-[color:var(--fh-acid)]">
                   {stat.delta}
                 </span>
                 <span className="fh-label text-[10px] text-[color:var(--fh-ink-faint)]">

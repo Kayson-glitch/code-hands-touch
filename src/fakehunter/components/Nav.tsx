@@ -148,7 +148,7 @@ export function Nav({
                 transition: `opacity 420ms var(--fh-ease-out) ${i * 60}ms, transform 420ms var(--fh-ease-out) ${i * 60}ms`,
               }}
             >
-              <span className="text-2xl font-semibold tracking-[-0.02em]">{link.label}</span>
+              <span className="text-2xl font-medium tracking-[-0.02em]">{link.label}</span>
               <svg width="12" height="12" viewBox="0 0 9 9" fill="none" aria-hidden>
                 <path d="M1 8L8 1M8 1H3M8 1v5" stroke="currentColor" strokeWidth="1.2" />
               </svg>
@@ -168,7 +168,7 @@ export function Nav({
                     transition: `opacity 420ms var(--fh-ease-out) ${180 + i * 40}ms`,
                   }}
                 >
-                  <span className="fh-figure text-[1rem] font-semibold text-[color:var(--fh-acid)]">
+                  <span className="fh-figure text-[1rem] font-medium text-[color:var(--fh-acid)]">
                     {s.index}
                   </span>
                   <span className="text-[0.9375rem] text-[color:var(--fh-ink-dim)]">{s.label}</span>

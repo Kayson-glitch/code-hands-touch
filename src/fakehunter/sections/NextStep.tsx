@@ -52,9 +52,9 @@ export function NextStep() {
                   value={m.value}
                   decimals={m.unit === "%" ? 2 : 0}
                   duration={1500 + i * 150}
-                  className="text-[clamp(2.25rem,4vw,3.25rem)] font-semibold leading-none tracking-[-0.028em]"
+                  className="text-[clamp(2.25rem,4vw,3.25rem)] font-medium leading-none tracking-[-0.028em]"
                 />
-                <span className="text-[1.125rem] font-semibold text-[color:var(--fh-acid)]">
+                <span className="text-[1.125rem] font-medium text-[color:var(--fh-acid)]">
                   {m.unit}
                 </span>
               </div>
