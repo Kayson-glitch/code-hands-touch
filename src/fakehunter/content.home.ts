@@ -30,7 +30,7 @@ export const homeHero = {
   titleAccent: "You decide where the lines are.",
   subtitle:
     /* Balanced line breaks must not split the product's name. */
-    "Screenshots, bank statements and screen recordings each come back from FakeHunter\u00A0AI with a fake probability and its reasons. Above your block line a proof is stopped, below your pass line it clears, and anything in between goes to a reviewer.",
+    "FakeHunter\u00A0AI scores every screenshot, statement and recording. Above your block line it’s stopped, below your pass line it clears, and in between a reviewer decides.",
   primaryCta: "Book a Demo",
   /* The live site labels this "Fast Try", which is the name of its batch
      workspace — a different surface. This one goes to the demo, so it says so. */
