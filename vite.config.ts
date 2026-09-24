@@ -77,8 +77,10 @@ export default defineConfig(async ({ command, mode }): Promise<UserConfig> => {
       // All interfaces, v4 included. Binding only to "::" leaves an IPv6
       // socket that port forwarders reaching 127.0.0.1 can't always open.
       host: true,
-      port: 8080,
-      // Fail loudly when 8080 is taken instead of quietly moving to 8081 —
+      // PORT gives a way past a busy 8080 without editing this file, since
+      // strictPort means a clash stops the server rather than moving it.
+      port: Number(process.env.PORT) || 8080,
+      // Fail loudly when the port is taken instead of quietly moving up one —
       // a forwarded port that silently changed looks exactly like a crash.
       strictPort: true,
       // The dev server is reached through forwarded/proxied hostnames (cloud
