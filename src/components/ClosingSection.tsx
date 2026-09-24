@@ -27,7 +27,6 @@ const slideState = (s: number) => {
   return Math.min(states - 1, Math.floor(clamp(s) * states));
 };
 
-
 const Words = () => (
   <p className="artemis-closing__text">
     {"{"}Artemis{"}"}
@@ -47,6 +46,11 @@ export function ClosingSection() {
   const [reduced, setReduced] = useState(false);
   const [desktop, setDesktop] = useState(true);
   const [inView, setInView] = useState(false);
+  // The footer rises over the stage during the hold; once it has covered the
+  // nav strip / dock strip, the dark-surface probes must switch off so the
+  // chrome flips back to its light variant on the CTA screen.
+  const [navCovered, setNavCovered] = useState(false);
+  const [dockCovered, setDockCovered] = useState(false);
   const [viewportH, setViewportH] = useState(900);
   const [travel, setTravel] = useState(0);
   const [titleW, setTitleW] = useState(0);
@@ -142,6 +146,10 @@ export function ClosingSection() {
       const distance = Math.max(1, rect.height - wh);
       setProgress(clamp(-rect.top / distance));
       setInView(rect.top < wh && rect.bottom > 0);
+      // Footer top in viewport coords = rect.bottom - wh (it starts 100vh before the wrapper ends).
+      const footerTop = rect.bottom - wh;
+      setNavCovered(footerTop <= 80);
+      setDockCovered(footerTop <= wh - 80);
       setViewportH(wh);
     };
     const request = () => {
@@ -162,6 +170,75 @@ export function ClosingSection() {
     };
   }, [pinned]);
 
+  // Leaving the last panel mirrors the hero → second-screen hand-off: once the
+  // panels have finished sliding, a single wheel notch slides the page a whole
+  // screen onto the CTA instead of dragging the footer up bit by bit. Scrolling
+  // up from the CTA snaps back to the settled last panel.
+  useEffect(() => {
+    if (!pinned) return;
+    const snap = { active: false };
+    const SNAP_MS = 900;
+    const easeInOut = (x: number) => (x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2);
+
+    const bounds = () => {
+      const el = wrapperRef.current;
+      if (!el) return null;
+      const rect = el.getBoundingClientRect();
+      const top = rect.top + window.scrollY;
+      const travel = rect.height - window.innerHeight;
+      // Scroll position where the last panel is settled and the footer has not
+      // yet started to rise, and where the CTA screen fully covers the stage.
+      return { settled: top + travel * SLIDE_END, end: top + travel };
+    };
+
+    const snapTo = (to: number) => {
+      if (snap.active) return;
+      snap.active = true;
+      const lenis = getLenis();
+      if (lenis) {
+        lenis.scrollTo(to, {
+          duration: SNAP_MS / 1000,
+          easing: easeInOut,
+          force: true,
+          lock: true,
+          onComplete: () => {
+            snap.active = false;
+          },
+        });
+        return;
+      }
+      const from = window.scrollY;
+      const t0 = performance.now();
+      const tick = (now: number) => {
+        const t = Math.min(1, (now - t0) / SNAP_MS);
+        window.scrollTo(0, from + (to - from) * easeInOut(t));
+        if (t < 1) requestAnimationFrame(tick);
+        else snap.active = false;
+      };
+      requestAnimationFrame(tick);
+    };
+
+    const onWheel = (e: WheelEvent) => {
+      if (snap.active) {
+        e.preventDefault();
+        return;
+      }
+      const b = bounds();
+      if (!b) return;
+      const dy = e.deltaY * (e.deltaMode === 1 ? 16 : e.deltaMode === 2 ? 100 : 1);
+      const y = window.scrollY;
+      if (dy > 0 && y >= b.settled - 2 && y < b.end - 2) {
+        e.preventDefault();
+        snapTo(b.end);
+      } else if (dy < 0 && y > b.settled + 2 && y <= b.end + 2) {
+        e.preventDefault();
+        snapTo(b.settled);
+      }
+    };
+    window.addEventListener("wheel", onWheel, { passive: false });
+    return () => window.removeEventListener("wheel", onWheel);
+  }, [pinned]);
+
   const p = clamp(progress);
   const wipe = pinned ? clamp(p / WIPE_END) : 1;
   const shrink = pinned ? easeOutCubic(clamp((p - WIPE_END) / (SHRINK_END - WIPE_END))) : 1;
@@ -174,9 +251,7 @@ export function ClosingSection() {
 
   const scale = pinned ? 1 - (1 - TITLE_SCALE) * shrink : TITLE_SCALE;
   const target =
-    state > 0 && offsets[state - 1] !== undefined
-      ? Math.max(0, offsets[state - 1]! - gridX)
-      : 0;
+    state > 0 && offsets[state - 1] !== undefined ? Math.max(0, offsets[state - 1]! - gridX) : 0;
   const x = pinned ? target : 0;
 
   /* Smooth glide between snapped states: instead of a CSS transition (which
@@ -240,13 +315,6 @@ export function ClosingSection() {
   const lead = pinned
     ? Math.max(0, viewportW - (titleLeft + titleW * TITLE_SCALE) - 2 * 128 - 200)
     : 0;
-  // The 16% boundary rules belong to the panels: one per module, laid out in
-  // track coordinates and moved by the same offset, so each rule travels left
-  // with its module instead of appearing in place.
-
-
-
-
   // Panel offsets shift while the headline shrinks (its layout width is
   // compensated with a negative margin), so re-measure whenever scale changes.
   useLayoutEffect(() => {
@@ -259,24 +327,38 @@ export function ClosingSection() {
     );
   }, [scale, travel, titleW, lead, desktop, gridX]);
 
-
-
   return (
     <section className="artemis-closing" aria-label="Artemis delivers certainty">
       {/* Surface probes: the dark wipe travels bottom-up, so the dock flips to
           its dark variant well before the nav does. */}
-      {inView && wipe * viewportH > viewportH - 80 && (
+      {inView && !navCovered && wipe * viewportH > viewportH - 80 && (
         <div
           aria-hidden
           data-dark-section=""
-          style={{ position: "fixed", top: 0, left: 0, right: 0, height: 80, pointerEvents: "none", zIndex: -1 }}
+          style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            right: 0,
+            height: 80,
+            pointerEvents: "none",
+            zIndex: -1,
+          }}
         />
       )}
-      {inView && wipe * viewportH > 80 && (
+      {inView && !dockCovered && wipe * viewportH > 80 && (
         <div
           aria-hidden
           data-dark-section=""
-          style={{ position: "fixed", bottom: 0, left: 0, right: 0, height: 80, pointerEvents: "none", zIndex: -1 }}
+          style={{
+            position: "fixed",
+            bottom: 0,
+            left: 0,
+            right: 0,
+            height: 80,
+            pointerEvents: "none",
+            zIndex: -1,
+          }}
         />
       )}
       <div
@@ -293,27 +375,22 @@ export function ClosingSection() {
           <div
             className="artemis-closing__invert"
             aria-hidden={pinned && wipe < 0.02 ? "true" : undefined}
-            style={pinned ? { clipPath: `inset(${((1 - wipe) * 100).toFixed(3)}% 0 0 0)` } : undefined}
+            style={
+              pinned ? { clipPath: `inset(${((1 - wipe) * 100).toFixed(3)}% 0 0 0)` } : undefined
+            }
           >
             {/* Dots are inside the pinned stage, so they stay locked while the
                 headline shrinks and the panels slide through. */}
             <div ref={dotsRef} className="artemis-closing__dots">
-              {pinned && (
-                <div className="artemis-closing__edges" aria-hidden>
-                  <div
-                    className="artemis-closing__edges-inner"
-                    style={{ transform: `translate3d(${-smoothX}px, 0, 0)` }}
-                  >
-                    {offsets.map((offset, index) => (
-                      <div
-                        key={PANELS[index]?.id ?? index}
-                        className="artemis-closing__edge"
-                        style={{ left: `${offset}px` }}
-                      >
-                        <div className="artemis-closing__edge-lines" />
-                      </div>
-                    ))}
-                  </div>
+              {pinned && state > 0 && (
+                <div
+                  key={PANELS[state - 1]?.id ?? state}
+                  className="artemis-closing__converge"
+                  aria-hidden
+                >
+                  <span className="artemis-closing__converge-horizontal" />
+                  <span className="artemis-closing__converge-vertical" />
+                  <span className="artemis-closing__converge-cross" />
                 </div>
               )}
             </div>
@@ -340,10 +417,18 @@ export function ClosingSection() {
               {/* Pushes the panel group past the right viewport edge, so the
                   first card is dragged in from off-screen instead of sitting
                   next to the shrunken headline. */}
-              <div className="artemis-closing__lead" style={{ flex: `0 0 ${lead}px` }} aria-hidden />
+              <div
+                className="artemis-closing__lead"
+                style={{ flex: `0 0 ${lead}px` }}
+                aria-hidden
+              />
               <FeaturePanels activeIndex={state - 1} pinned={pinned} tickerPos={tickerPos} />
               {/* Trailing room so the last module can also rest on the left grid line. */}
-              <div className="artemis-closing__lead" style={{ flex: `0 0 ${lead}px` }} aria-hidden />
+              <div
+                className="artemis-closing__lead"
+                style={{ flex: `0 0 ${lead}px` }}
+                aria-hidden
+              />
             </div>
           </div>
         </div>

@@ -14,13 +14,7 @@ type Props = {
  * Odometer-style digit roll. Non-digit characters render statically.
  * Animation starts when the element scrolls into view.
  */
-export function RollingNumber({
-  value,
-  stagger = 90,
-  duration = 1100,
-  className,
-  style,
-}: Props) {
+export function RollingNumber({ value, stagger = 90, duration = 1100, className, style }: Props) {
   const hostRef = useRef<HTMLSpanElement | null>(null);
   const [active, setActive] = useState(false);
 
@@ -83,7 +77,14 @@ export function RollingNumber({
             }}
           >
             {/* width sizer: the final digit only, so narrow digits keep their own width */}
-            <span style={{ visibility: "hidden", display: "block", height: "1.2em", lineHeight: "1.2em" }}>
+            <span
+              style={{
+                visibility: "hidden",
+                display: "block",
+                height: "1.2em",
+                lineHeight: "1.2em",
+              }}
+            >
               {ch}
             </span>
             <span
@@ -114,8 +115,6 @@ export function RollingNumber({
               ))}
             </span>
           </span>
-
-
         );
       })}
       <span className="sr-only">{value}</span>

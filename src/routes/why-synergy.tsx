@@ -11,7 +11,10 @@ import { ProgressiveBlur } from "@/components/ui/progressive-blur";
 function WhySynergyLayout() {
   return (
     <>
-      <Outlet />
+      {/* .why-synergy scopes the long-form typography rules (text-wrap) in styles.css */}
+      <div className="why-synergy">
+        <Outlet />
+      </div>
       <ProgressiveBlur
         className="fixed !z-20"
         position="bottom"
@@ -26,5 +29,3 @@ function WhySynergyLayout() {
 export const Route = createFileRoute("/why-synergy")({
   component: WhySynergyLayout,
 });
-
-export default WhySynergyLayout;

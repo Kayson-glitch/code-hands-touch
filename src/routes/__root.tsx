@@ -10,67 +10,135 @@ import {
 import { useEffect, type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
-import { reportLovableError } from "../lib/lovable-error-reporting";
 import { destroySmoothScroll, initSmoothScroll } from "../lib/smoothScroll";
+import { SitePreloader } from "../components/SitePreloader";
+import { fluid } from "../lib/fluid";
+
+/**
+ * What a shared link shows. `SITE_IMAGE` is relative because the deploy
+ * domain isn't known here — Slack, Facebook and LinkedIn resolve that against
+ * the page URL; set it to the absolute URL once the domain is fixed so X
+ * shows a card too.
+ */
+const SITE_TITLE = "Synergy.AI — Revenue-Driven AI Support";
+const SITE_DESCRIPTION =
+  "The intelligence layer for customer success. Synergy.AI resolves support conversations end to end and keeps people on the judgement calls.";
+const SITE_IMAGE = `${import.meta.env.BASE_URL}media/og-card.png`;
+
+const INK = "#0E0B22";
+const MUTED = "#7A7885";
+const FAINT = "#A1A0A9";
+const HAIRLINE = "rgba(14,11,34,0.10)";
+
+function Eyebrow({ children }: { children: ReactNode }) {
+  return (
+    <p
+      className="uppercase"
+      style={{ margin: 0, fontSize: 10, lineHeight: "16px", letterSpacing: "0.14em", color: FAINT }}
+    >
+      {children}
+    </p>
+  );
+}
+
+function HomeLink({ label }: { label: string }) {
+  return (
+    <Link
+      to="/"
+      className="inline-flex items-center gap-2"
+      style={{
+        fontSize: 13,
+        lineHeight: "20px",
+        color: INK,
+        borderBottom: `1px solid ${INK}`,
+        paddingBottom: 2,
+      }}
+    >
+      {label}
+      <span aria-hidden>&#8594;</span>
+    </Link>
+  );
+}
+
+/** Off-brand fallbacks read as a different product, so both shells stay in the site's paper/ink language. */
+function StatusShell({
+  eyebrow,
+  title,
+  body,
+  children,
+}: {
+  eyebrow: string;
+  title: string;
+  body: string;
+  children: ReactNode;
+}) {
+  return (
+    <div
+      className="flex min-h-screen items-center justify-center"
+      style={{ background: "#FAFAFA", padding: "0 24px" }}
+    >
+      <div
+        style={{ width: "100%", maxWidth: 520, borderTop: `1px solid ${HAIRLINE}`, paddingTop: 24 }}
+      >
+        <Eyebrow>{eyebrow}</Eyebrow>
+        <h1
+          className="font-display"
+          style={{
+            margin: "16px 0 0",
+            fontSize: fluid(44, 30),
+            lineHeight: 1.08,
+            fontWeight: 400,
+            color: INK,
+          }}
+        >
+          {title}
+        </h1>
+        <p style={{ margin: "12px 0 0", fontSize: 14, lineHeight: "22px", color: MUTED }}>{body}</p>
+        <div className="mt-8 flex flex-wrap items-center gap-6">{children}</div>
+      </div>
+    </div>
+  );
+}
 
 function NotFoundComponent() {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background px-4">
-      <div className="max-w-md text-center">
-        <h1 className="text-7xl font-bold text-foreground">404</h1>
-        <h2 className="mt-4 text-xl font-semibold text-foreground">Page not found</h2>
-        <p className="mt-2 text-sm text-muted-foreground">
-          The page you're looking for doesn't exist or has been moved.
-        </p>
-        <div className="mt-6">
-          <Link
-            to="/"
-            className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
-          >
-            Go home
-          </Link>
-        </div>
-      </div>
-    </div>
+    <StatusShell
+      eyebrow="404 / Not Found"
+      title="This page doesn't exist."
+      body="The link may be out of date, or the page has moved somewhere else on the site."
+    >
+      <HomeLink label="Back to home" />
+    </StatusShell>
   );
 }
 
 function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
   console.error(error);
   const router = useRouter();
-  useEffect(() => {
-    reportLovableError(error, { boundary: "tanstack_root_error_component" });
-  }, [error]);
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background px-4">
-      <div className="max-w-md text-center">
-        <h1 className="text-xl font-semibold tracking-tight text-foreground">
-          This page didn't load
-        </h1>
-        <p className="mt-2 text-sm text-muted-foreground">
-          Something went wrong on our end. You can try refreshing or head back home.
-        </p>
-        <div className="mt-6 flex flex-wrap justify-center gap-2">
-          <button
-            onClick={() => {
-              router.invalidate();
-              reset();
-            }}
-            className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
-          >
-            Try again
-          </button>
-          <Link
-            to="/"
-            className="inline-flex items-center justify-center rounded-md border border-input bg-background px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-accent"
-          >
-            Go home
-          </Link>
-
-        </div>
-      </div>
-    </div>
+    <StatusShell
+      eyebrow="Error / Load Failed"
+      title="This page didn't load."
+      body="Something went wrong on our end. Try again, or head back to the home page."
+    >
+      <button
+        onClick={() => {
+          router.invalidate();
+          reset();
+        }}
+        style={{
+          fontSize: 13,
+          lineHeight: "20px",
+          color: INK,
+          borderBottom: `1px solid ${INK}`,
+          paddingBottom: 2,
+        }}
+      >
+        Try again
+      </button>
+      <HomeLink label="Back to home" />
+    </StatusShell>
   );
 }
 
@@ -79,25 +147,27 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Good/Fella — ASCII Creation of Adam" },
-      { name: "description", content: "An interactive ASCII homage to Michelangelo's Creation of Adam — two hands sculpted from code, responding to your cursor." },
-      { name: "author", content: "Lovable" },
-      { property: "og:title", content: "Good/Fella — ASCII Creation of Adam" },
-      { property: "og:description", content: "An interactive ASCII homage to Michelangelo's Creation of Adam — two hands sculpted from code, responding to your cursor." },
+      { title: SITE_TITLE },
+      { name: "description", content: SITE_DESCRIPTION },
+      { property: "og:site_name", content: "Synergy.AI" },
+      { property: "og:title", content: SITE_TITLE },
+      { property: "og:description", content: SITE_DESCRIPTION },
       { property: "og:type", content: "website" },
+      { property: "og:image", content: SITE_IMAGE },
+      { property: "og:image:alt", content: "Synergy.AI — resolve support end to end, securely." },
+      { property: "og:image:width", content: "1200" },
+      { property: "og:image:height", content: "630" },
       { name: "twitter:card", content: "summary_large_image" },
-      { name: "twitter:site", content: "@Lovable" },
-      { name: "twitter:title", content: "Good/Fella — ASCII Creation of Adam" },
-      { name: "twitter:description", content: "An interactive ASCII homage to Michelangelo's Creation of Adam — two hands sculpted from code, responding to your cursor." },
-      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/29306ebd-bdea-4829-8e6d-9ff2f3f7f461/id-preview-4e39b9d3--5f189616-74af-43e1-9d81-6bf187196947.lovable.app-1784511719735.png" },
-      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/29306ebd-bdea-4829-8e6d-9ff2f3f7f461/id-preview-4e39b9d3--5f189616-74af-43e1-9d81-6bf187196947.lovable.app-1784511719735.png" },
+      { name: "twitter:title", content: SITE_TITLE },
+      { name: "twitter:description", content: SITE_DESCRIPTION },
+      { name: "twitter:image", content: SITE_IMAGE },
     ],
     links: [
       {
         rel: "stylesheet",
         href: appCss,
       },
-      { rel: "icon", href: "/favicon.png", type: "image/png" },
+      { rel: "icon", href: `${import.meta.env.BASE_URL}favicon.png`, type: "image/png" },
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
       {
         rel: "preconnect",
@@ -106,13 +176,12 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       },
       {
         rel: "stylesheet",
-        href: "https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500&display=swap",
+        href: "https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600&display=swap",
       },
       {
         rel: "stylesheet",
         href: "https://api.fontshare.com/v2/css?f[]=clash-display@variable&display=swap",
       },
-
     ],
   }),
   shellComponent: RootShell,
@@ -146,6 +215,8 @@ function RootComponent() {
 
   return (
     <QueryClientProvider client={queryClient}>
+      {/* Held over the first paint of a page load; route changes never see it. */}
+      <SitePreloader />
       {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
       <Outlet />
     </QueryClientProvider>

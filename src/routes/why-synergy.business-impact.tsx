@@ -1,16 +1,19 @@
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { MessageSquareCode, Map as MapIcon, Linkedin, Twitter, Youtube } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
+import { Coins, ChartPie, ClipboardCheck, Gauge, Headset, TrendingDown, Users } from "lucide-react";
 import { SiteNav } from "@/components/SiteNav";
-import { logoAsset as logo } from "@/lib/media";
+import { whyImpactAsset } from "@/lib/media";
 import { HalftoneHandStill } from "@/components/HalftoneHandStill";
+import { WHY_HERO_ART, whyHeroArtMask } from "@/lib/whyHeroArt";
 import { Reveal } from "@/components/Reveal";
 import { FinChatDock } from "@/components/FinChatDock";
+import { SiteFooter } from "@/components/SiteFooter";
 import { GradientHoverHeading } from "@/components/GradientHoverHeading";
-import { DotArrow } from "@/components/DotArrow";
+import { fluid } from "@/lib/fluid";
+import { RainbowButton } from "@/components/RainbowButton";
+import { BeforeAfter, PullQuote, StatFigure } from "@/components/WhyFigures";
 import { RollingNumber } from "@/components/RollingNumber";
-
-
 
 export const Route = createFileRoute("/why-synergy/business-impact")({
   head: () => ({
@@ -36,50 +39,6 @@ export const Route = createFileRoute("/why-synergy/business-impact")({
 
 /* --------------------------------------------------------------- helpers */
 
-/** 1440px design width → fluid value. */
-const fluid = (px: number, min = px * 0.7) =>
-  `clamp(${Math.round(min)}px, ${((px / 1440) * 100).toFixed(4)}vw, ${px}px)`;
-
-const GRADIENT = "linear-gradient(90deg, #137DFF 0%, #FF18AA 33.333%, #FFCD17 66.666%, #137DFF 100%)";
-
-function RainbowButton({ label, size = "lg" }: { label: string; size?: "lg" | "sm" }) {
-  const face = "#0E0B22";
-  const faceRgb = "14,11,34";
-  const lg = size === "lg";
-  return (
-    <button
-      className="group relative inline-flex shrink-0 cursor-pointer items-center justify-center font-normal transition-all"
-      style={{
-        height: 36,
-        fontSize: lg ? 14 : 13,
-        lineHeight: "20px",
-        fontWeight: 400,
-        padding: lg ? "0 20px" : "0 20px",
-        borderRadius: 0,
-        borderBottom: "1.5px solid transparent",
-        color: "#FFFFFF",
-        backgroundImage: [
-          `linear-gradient(${face},${face})`,
-          `linear-gradient(${face} 50%, rgba(${faceRgb},0.6) 80%, rgba(${faceRgb},0))`,
-          GRADIENT,
-        ].join(","),
-        backgroundClip: "padding-box, border-box, border-box",
-        backgroundColor: face,
-        backgroundOrigin: "border-box",
-        backgroundSize: "200%",
-        animation: "rainbow-btn-flow var(--rainbow-speed, 9s) infinite linear",
-      }}
-    >
-      <span className="relative z-10 inline-flex items-center gap-0">
-        {label}
-        <span className="inline-flex items-center ml-1.5">
-          <DotArrow size={16} className="flex-shrink-0" />
-        </span>
-      </span>
-    </button>
-  );
-}
-
 const ACCENT = "#5749FF";
 
 /** Alternating violet diamond / ink square bullet, as in the design. */
@@ -99,7 +58,7 @@ function Bullet({ diamond }: { diamond: boolean }) {
 }
 
 function Hairline({ dark = false, dashed = false }: { dark?: boolean; dashed?: boolean }) {
-  const color = dark ? "rgba(255,255,255,0.18)" : "#F1F1F3";
+  const color = dark ? "rgba(255,255,255,0.18)" : "var(--surface-inset, #F1F1F3)";
   if (dashed) {
     return (
       <div
@@ -120,42 +79,47 @@ const KPI_LEFT = {
   kicker: "Business Value · ROI",
   value: "$12M",
   unit: "/ yr",
-  caption: "Estimated cost optimization potential",
+  caption: "Projected annual labour-cost saving · not yet executed",
   bullets: [
-    "Current setup: 150 agents, costing RMB 1.5M/month",
-    "50 is sufficient: 20 VIP leads + 30 support staff",
-    "From repetitive replies to high value service",
-    "Capability precedes organizational rollout",
+    "150 agents today · ≈$1.5M a month",
+    "≈50 is enough: 20 VIP + 30 monitoring",
+    "Replies → VIP service and monitoring",
+    "Capability met; rollout is a pacing decision",
   ],
 };
 
 const KPI_RIGHT = {
   kicker: "Overall Impact",
-  value: "75",
+  value: "55",
   unit: "%",
-  caption: "AI resolution rate across 200K conversations/month",
+  caption: "AI auto-handling rate · 200K conversations a month",
   bullets: [
-    "AI resolves 55% of conversations end-to-end",
-    "AI handles 70% of messages, around 110K/month",
-    "Both metrics were zero before launch",
-    "No inflated metrics: human agent intervenes when necessary",
+    "55% of conversations closed by AI end-to-end",
+    "70% of messages by AI · ≈110K a month",
+    "Both were zero before the June 2026 launch",
+    "VIP threads always keep a human in the loop",
   ],
 };
 
 type BodySegment = { text: string; highlight?: boolean };
 type ArticleBlockData = {
-  icon: typeof MapIcon;
+  icon: LucideIcon;
   title: string;
   body: string | BodySegment[];
-  divider: boolean;
 };
+/** What fills the figure slot beside a text block (Figma 1551:20323 image slots). */
+type Figure =
+  | { kind: "stat"; value: string; unit?: string; caption: string }
+  | { kind: "compare"; before: string; after: string; beforeLabel: string; afterLabel: string }
+  | { kind: "quote"; text: string };
+type ArticleRow = { block: ArticleBlockData; figure: Figure };
 type ArticleSet = {
   eyebrow: string;
   titleAccent: string;
   titleRest: string;
   intro: string;
-  light: ArticleBlockData[];
-  dark: ArticleBlockData[];
+  /** Checkerboard rows: text and figure swap sides on every row. */
+  rows: ArticleRow[];
 };
 
 const ARTICLES: Record<"roi" | "impact", ArticleSet> = {
@@ -164,88 +128,141 @@ const ARTICLES: Record<"roi" | "impact", ArticleSet> = {
     titleAccent: "Scaling Support Smarter:",
     titleRest: "Cost Analysis from 150 to 50 Agents",
     intro:
-      "This article quantifies the impact of integrating an AI Customer Service system on operational costs, using the current CS workforce structure as the subject. The current global CS team consists of 150 agents, with a comprehensive per-capita cost.",
-    light: [
+      "For the people who sign the budget. BCGame's 150-agent support team costs about $1.5M a month; this article quantifies how the AI system changes that structure and what the data already supports.",
+    rows: [
       {
-        icon: MessageSquareCode,
-        title: "Analysis of Current Cost Structure",
-        body: [
-          { text: "Within the existing agent structure, the vast majority of labor hours are consumed by high-repetition, low-decision-density inquiries, such as order tracking, payment status checks, promotional rule explanations, and withdrawal verifications. These tasks dominate the inbound volume but require minimal human judgment. " },
-          { text: "During promotional cycles", highlight: true },
-          { text: ", inbound volume spikes exponentially, and the team typically relies on temporary hiring to cope. This leads to rising marginal labor costs, extended training cycles, and widening variances in service quality. The marginal efficiency between labor input and service output continues to diminish." },
-        ],
-        divider: true,
+        block: {
+          icon: Coins,
+          title: "Analysis of Current Cost Structure",
+          body: [
+            {
+              text: "Within the existing agent structure, the vast majority of labour hours are consumed by high-repetition, low-judgement inquiries: order tracking, payment progress, promotion rules, withdrawal status checks. These dominate inbound volume but need almost no human judgement. ",
+            },
+            { text: "During promotional cycles", highlight: true },
+            {
+              text: ", inbound volume multiplies and the team typically copes with temporary hires. Marginal labour cost rises, training cycles stretch, and service quality becomes uneven. The marginal efficiency between labour input and service output keeps falling.",
+            },
+          ],
+        },
+        figure: {
+          kind: "stat",
+          value: "150",
+          unit: "agents",
+          caption:
+            "Today's support team · about $1.5M a month in labour cost, most of it on repetitive inquiries",
+        },
       },
       {
-        icon: MapIcon,
-        title: "Target Structure: Reallocating Agent Functions",
-        body: [
-          { text: "Post-integration, based on business data from the current observation cycle, the CS team is well-positioned to be optimized down to approximately 50 agents. The target structure consists of 20 VIP agents (supervisor-level, dedicated to high-value client services) and 30 general agents. Crucially, the function of the 30 general agents will shift from frontline Q&A to online data monitoring, anomaly handling, and human fallback support. " },
-          { text: "This 30-agent headcount is a conservative configuration,", highlight: true },
-          { text: " retaining redundancy to handle sudden load surges. Under this structure, the AI system absorbs standardized tasks, while human resources are concentrated on high-decision-density and high-value workflows." },
-        ],
-        divider: false,
+        block: {
+          icon: Users,
+          title: "Target Structure: Reallocating Agent Functions",
+          body: [
+            {
+              text: "After integration, based on business data from the current observation cycle, the CS team can be optimised to about 50 agents: 20 VIP agents (supervisor-level, dedicated to high-value customers) and 30 general agents. Crucially, the 30 general agents move from front-line Q&A to online data monitoring, anomaly handling and human fallback. ",
+            },
+            { text: "This 30-agent headcount is a conservative configuration,", highlight: true },
+            {
+              text: " keeping redundancy for sudden load surges. Under this structure the AI system absorbs standardised work, while people concentrate on high-judgement, high-value workflows.",
+            },
+          ],
+        },
+        figure: {
+          kind: "compare",
+          before: "150",
+          after: "50",
+          beforeLabel: "Agents today",
+          afterLabel: "Target: 20 VIP + 30 monitoring",
+        },
       },
-    ],
-    dark: [
       {
-        icon: MessageSquareCode,
-        title: "Cost Impact Projection",
-        body: "Under the target structure, the team size is optimized by roughly 50%, translating to a monthly labor cost savings of about 1 million RMB, and an annual savings of roughly 12 million RMB. It is important to emphasize that this structure does not achieve cost reduction at the expense of service quality: VIP clients are served by dedicated agents, reinforcing service continuity and response quality; meanwhile, as general agents pivot to monitoring roles, the entire team shifts from a scale-driven model to an efficiency-driven one.",
-        divider: true,
+        block: {
+          icon: TrendingDown,
+          title: "Cost Impact Projection",
+          body: "Under the target structure the team shrinks by roughly 50%, which translates to about $1M a month and roughly $12M a year in labour cost. This is not cost reduction at the expense of service quality: VIP customers are served by dedicated agents, strengthening continuity and response quality, while general agents move into monitoring roles and the whole team shifts from a scale-driven to an efficiency-driven model.",
+        },
+        figure: {
+          kind: "stat",
+          value: "$12M",
+          unit: "/ yr",
+          caption: "Projected labour saving at the target structure · about $1M a month",
+        },
       },
       {
-        icon: MapIcon,
-        title: "Conclusion and Clarifications",
-        body: "This projection is based on the actual absorption capacity of the AI system during the current observation cycle, reflecting the achievable optimization space supported by data; the organizational labor adjustments have not yet been executed. The system's capacity has already reached the level required to support the aforementioned structure. The actual implementation of workforce adjustments falls under the client's operational decision-making, and the timing is at their discretion. Capabilities are met; implementation is merely a matter of pacing.",
-        divider: false,
+        block: {
+          icon: ClipboardCheck,
+          title: "Conclusion and Clarifications",
+          body: "This projection is based on the AI system's actual absorption capacity during the current observation cycle — it describes the optimisation space the data supports; the organisational adjustment itself has not been executed. The system's capacity already meets the level required for this structure; when and how headcount changes is the client's operating decision. Capability is met; implementation is a matter of pacing. Figures describe BCGame's results since the June 2026 launch and will move as the system iterates week by week.",
+        },
+        figure: {
+          kind: "quote",
+          text: "Capability is met; implementation is a matter of pacing.",
+        },
       },
     ],
   },
   impact: {
     eyebrow: "Overall Impact · Resolution",
-    titleAccent: "Resolution At Scale:",
-    titleRest: "How AI Absorbs 200K Conversations A Month",
+    titleAccent: "Resolution at Scale:",
+    titleRest: "How AI Absorbs 200K Conversations",
     intro:
-      "This article breaks down where the 75% figure comes from, separating conversation-level resolution from message-level handling, and explains how the system decides when a human agent should take over.",
-    light: [
+      "For support and business leads. How the 55% auto-handling rate and 70% reply rate are defined, where they come from, and why they are a boundary the team chose rather than a technical ceiling.",
+    rows: [
       {
-        icon: MessageSquareCode,
-        title: "How Resolution Is Measured",
-        body: "Resolution is counted at two independent levels. At the conversation level, a session is marked resolved only when the AI closes the request end-to-end with no human agent message in the thread and no reopen within the following 48 hours; this currently covers 55% of all sessions. At the message level, the system handles roughly 70% of inbound messages, about 110K per month, including the turns inside conversations that later escalate. Neither number is smoothed or weighted: sessions that end in silence are treated as unresolved rather than assumed successful.",
-        divider: true,
+        block: {
+          icon: Gauge,
+          title: "How Resolution Is Measured",
+          body: "Two independent metrics are tracked. The AI auto-handling rate — 55% — is the share of conversations completed entirely by AI with no human agent in the thread. The AI reply rate — 70% — is the share of customer messages answered by AI, including turns inside conversations that later escalate. At the current monthly volume that is about 110K conversations handled independently every month. Both figures were zero before launch; nothing here is smoothed, weighted, or inherited from earlier automation.",
+        },
+        figure: {
+          kind: "stat",
+          value: "55",
+          unit: "%",
+          caption:
+            "Auto-handling rate — conversations closed entirely by AI · reply rate 70% of all messages",
+        },
       },
       {
-        icon: MapIcon,
-        title: "Traffic Composition Across 200K Conversations",
-        body: "Monthly inbound volume sits at approximately 200K conversations, dominated by order tracking, payment and withdrawal status, promotional rule questions, and account verification. These intents are highly repetitive and have stable resolution paths, which is why they absorb first. The remaining volume — disputes, risk review, VIP negotiation, and anything requiring a policy exception — is intentionally routed to humans, and is excluded from the AI resolution target rather than counted as a failure.",
-        divider: false,
+        block: {
+          icon: ChartPie,
+          title: "Traffic Composition Across 200K Conversations",
+          body: "Monthly inbound sits at roughly 200K conversations with concurrency holding at QPS 20–50 — a genuinely high-volume production load that tests stability, precision and absorption capacity. The mix is dominated by order tracking, payment and withdrawal status, promotion rules and account verification: repetitive intents with stable resolution paths, which is why they are absorbed first. Disputes, risk review, VIP negotiation and anything needing a policy exception are routed to people by design and excluded from the AI target rather than counted as failures.",
+        },
+        figure: {
+          kind: "stat",
+          value: "200K",
+          unit: "/ mo",
+          caption:
+            "Inbound conversations a month at QPS 20–50 · about 110K of them handled by AI alone",
+        },
       },
-    ],
-    dark: [
       {
-        icon: MessageSquareCode,
-        title: "Escalation And Fallback Behaviour",
-        body: "The system escalates on low confidence, repeated user rephrasing, detected frustration, or any request that would change a balance or account state without an existing rule. Handover carries the full conversation context, so the human agent does not restart the exchange. Median first response stays under a few seconds for AI-handled turns, and escalated sessions inherit the queue priority of the original intent, which keeps the perceived service level intact even when the AI steps back.",
-        divider: true,
+        block: {
+          icon: Headset,
+          title: "Escalation and Fallback Behaviour",
+          body: "The handover policy is explicit. Anything beyond the current knowledge boundary, or involving a high-risk judgement, goes to a human — every time. VIP conversations keep a human in the loop by default. Handover carries the full context so the agent never restarts the exchange. Human-likeness is engineered rather than prompted: the target market's slang, abbreviations and scenario-specific phrasing are configured into the response layer, so most customers cannot tell they are talking to a system.",
+        },
+        figure: {
+          kind: "quote",
+          text: "Beyond the knowledge boundary, or any high-risk judgement: a human — every time.",
+        },
       },
       {
-        icon: MapIcon,
-        title: "Baseline And Clarifications",
-        body: "Both metrics were zero before launch: there was no automated coverage of any kind, so the current figures represent net new absorption rather than a migration of existing automation. The numbers reflect the current observation cycle and will shift as intent coverage expands. No metric here is inflated by counting deflected or abandoned sessions as resolved; a human agent intervenes whenever the request exceeds the system's authority.",
-        divider: false,
+        block: {
+          icon: ClipboardCheck,
+          title: "Baseline and Clarifications",
+          body: "Both metrics were zero before launch, so today's figures are net new absorption, not a migration of existing automation. 55% and 70% describe stable capacity within the range the system is confident about — not a technical maximum. Holding this level at 200K conversations a month is what makes the workforce restructuring in the previous article possible: it changes the staffing logic of the whole team, not the fate of individual agents. Why the rate is 55% rather than a forced 95% is covered under Technology → Zero Hallucinations. All numbers are a snapshot of the current observation cycle and will change as the system iterates weekly.",
+        },
+        figure: {
+          kind: "compare",
+          before: "0%",
+          after: "55%",
+          beforeLabel: "Before the June 2026 launch",
+          afterLabel: "Current cycle · not a ceiling",
+        },
       },
     ],
   },
 };
-
-const FOOTER_COLUMNS = [
-  { title: "why  synergy", links: ["Features", "Pricing", "Book a demo"] },
-  { title: "platform", links: ["Features", "Pricing", "Book a demo"] },
-  { title: "solution", links: ["Events", "Blog"] },
-  { title: "Company", links: ["About us", "Contact us"] },
-];
-
 
 /* ------------------------------------------------------------------ page */
 
@@ -294,7 +311,6 @@ function KpiColumn({
         {data.kicker}
       </p>
 
-
       <p
         className="font-display text-ink"
         style={{
@@ -319,7 +335,6 @@ function KpiColumn({
           lineHeight: "24px",
           color: "var(--ink-faint, #A1A0A9)",
         }}
-
       >
         {data.caption}
       </p>
@@ -346,31 +361,26 @@ function ArticleBlock({
   icon: Icon,
   title,
   body,
-  divider,
+  divider = false,
   dark,
   delay = 0,
   duration,
 }: {
-  icon: typeof MapIcon;
+  icon: LucideIcon;
   title: string;
   body: string | BodySegment[];
-  divider: boolean;
+  divider?: boolean;
   dark?: boolean;
   delay?: number;
   duration?: number;
 }) {
-  const bodyEl = Array.isArray(body) ? (
-    body.map((seg, i) => (
-      <span
-        key={i}
-        style={seg.highlight ? { color: "var(--ink, #0E0B22)" } : undefined}
-      >
-        {seg.text}
-      </span>
-    ))
-  ) : (
-    body
-  );
+  const bodyEl = Array.isArray(body)
+    ? body.map((seg, i) => (
+        <span key={i} style={seg.highlight ? { color: "var(--ink, #0E0B22)" } : undefined}>
+          {seg.text}
+        </span>
+      ))
+    : body;
   return (
     <Reveal delay={delay} y={20} duration={duration}>
       <Icon size={24} strokeWidth={1.5} color={dark ? "#FFFFFF" : "#0E0B22"} />
@@ -405,6 +415,101 @@ function ArticleBlock({
   );
 }
 
+/** Figure slot beside a text block — the design's 480×260 image box, filled
+ *  with a figure drawn from the block's own numbers. */
+function FigureSlot({ figure }: { figure: Figure }) {
+  return (
+    <div
+      className="flex h-full w-full flex-col justify-center"
+      style={{
+        minHeight: fluid(260, 200),
+        padding: `${fluid(32, 24)} ${fluid(36, 24)}`,
+        background: "var(--surface-soft, #F7F7F8)",
+      }}
+    >
+      {figure.kind === "stat" ? (
+        <StatFigure value={figure.value} unit={figure.unit} caption={figure.caption} />
+      ) : figure.kind === "compare" ? (
+        <BeforeAfter
+          before={figure.before}
+          after={figure.after}
+          beforeLabel={figure.beforeLabel}
+          afterLabel={figure.afterLabel}
+          accent={ACCENT}
+          plain
+        />
+      ) : (
+        <PullQuote text={figure.text} accent={ACCENT} />
+      )}
+    </div>
+  );
+}
+
+/**
+ * Article body — Figma 1551:20323: rows of text + figure that swap sides on
+ * every row, dashed rules between rows, a dashed centre line, and a small
+ * square where they cross. Below md the rows stack: text, then figure.
+ */
+/** Figma's 4/4 dash — browsers' `dashed` keyword picks its own rhythm, so draw it. */
+const DASH_X = "repeating-linear-gradient(90deg, #E1E0E4 0 4px, transparent 4px 8px)";
+const DASH_Y = "repeating-linear-gradient(180deg, #E1E0E4 0 4px, transparent 4px 8px)";
+
+function ArticleRows({ rows }: { rows: ArticleRow[] }) {
+  const cell = `${fluid(60, 32)} ${fluid(60, 24)}`;
+  return (
+    <div
+      className="relative"
+      style={{ borderTop: "1px solid #F1F1F3", borderBottom: "1px solid #F1F1F3" }}
+    >
+      {/* centre line */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-y-0 hidden md:block"
+        style={{ left: "calc(50% - 0.5px)", width: 1, backgroundImage: DASH_Y }}
+      />
+      {rows.map((row, i) => {
+        const flip = i % 2 === 1;
+        return (
+          <div key={row.block.title} className="relative grid md:grid-cols-2">
+            {i > 0 ? (
+              <>
+                <span
+                  aria-hidden
+                  className="pointer-events-none absolute inset-x-0 top-0"
+                  style={{ height: 1, backgroundImage: DASH_X }}
+                />
+                {/* crossing marker — same 6px white square as the Platform frame */}
+                <span
+                  aria-hidden
+                  className="absolute left-1/2 hidden md:block"
+                  style={{
+                    // the 1px rules are centred at 0.5px; sit the square on those centres
+                    top: -2.5,
+                    width: 6,
+                    height: 6,
+                    transform: "translateX(-50%)",
+                    background: "#FFFFFF",
+                    border: "1px solid #E1E0E4",
+                  }}
+                />
+              </>
+            ) : null}
+
+            <div className={flip ? "md:order-2" : ""} style={{ padding: cell }}>
+              <ArticleBlock {...row.block} duration={1600} />
+            </div>
+            <div className={flip ? "md:order-1" : ""} style={{ padding: cell }}>
+              <Reveal y={20} duration={1600} delay={120} className="h-full">
+                <FigureSlot figure={row.figure} />
+              </Reveal>
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
 function BusinessImpactPage() {
   const pad = `0 ${fluid(120, 24)}`;
   const [tab, setTab] = useState<"roi" | "impact">("roi");
@@ -418,37 +523,29 @@ function BusinessImpactPage() {
       <header className="relative overflow-hidden">
         {/* single halftone hand — bleeds off the right viewport edge */}
         <HalftoneHandStill
-          cropX={0.5}
-          cropW={0.5}
-          cropY={0.32}
-          cropH={0.52}
-          pitch={6}
-          className="pointer-events-none absolute select-none"
-          style={{
-            top: fluid(115, 66),
-            left: fluid(780, 420),
-            width: fluid(741, 400),
-            height: fluid(425, 230),
-          }}
+          src={whyImpactAsset.url}
+          contrast={1.25}
+          cropX={0.166}
+          cropW={0.834}
+          cropY={0.095}
+          cropH={0.85}
+          className="pointer-events-none absolute hidden select-none lg:block"
+          style={{ ...whyHeroArtMask(), ...WHY_HERO_ART }}
         />
 
         <div style={{ padding: pad }}>
           <div className="relative mx-auto w-full max-w-[1200px]">
             <div
-              className="relative z-10"
-              style={{ maxWidth: 680, paddingTop: fluid(162, 104), paddingBottom: fluid(172, 100) }}
+              className="why-hero-copy relative z-10"
+              style={{ paddingTop: fluid(160, 104), paddingBottom: fluid(172, 100) }}
             >
               <Reveal immediate className="flex items-center gap-2">
                 <span aria-hidden style={{ width: 8, height: 8, background: ACCENT }} />
                 <span
-                  style={{
-                    fontSize: 14,
-                    lineHeight: "22px",
-                    letterSpacing: "0.01em",
-                    color: "#7A7885",
-                  }}
+                  className="uppercase"
+                  style={{ fontSize: 14, lineHeight: "22px", color: "#7A7885" }}
                 >
-                  Impact
+                  impact
                 </span>
               </Reveal>
 
@@ -456,18 +553,17 @@ function BusinessImpactPage() {
                 <GradientHoverHeading
                   as="h1"
                   className="font-display text-ink"
-                  text={"From AI Support To\nMeasurable Business Value"}
+                  text={"From AI Support\nto Measurable\nBusiness Value"}
+                  breakFrom="md"
                   style={{
                     margin: "10px 0 0",
-                    fontSize: fluid(48, 30),
-                    lineHeight: 1.1667,
-                    fontWeight: 500,
-                    letterSpacing: "-0.01em",
+                    fontSize: fluid(60, 36),
+                    lineHeight: 1.1,
+                    fontWeight: 400,
                     cursor: "default",
                   }}
                 />
               </Reveal>
-
 
               <Reveal immediate delay={240}>
                 <p
@@ -479,8 +575,9 @@ function BusinessImpactPage() {
                     color: "var(--ink-muted, #7A7885)",
                   }}
                 >
-                  Resolving 55% of conversations across 200K monthly inquiries, with a clear path to
-                  lower operating costs.
+                  BCGame, an iGaming platform serving 22 languages: 55% of 200K monthly
+                  conversations closed by AI at QPS 20–50, with a clear path to lower operating
+                  costs.
                 </p>
               </Reveal>
 
@@ -517,8 +614,6 @@ function BusinessImpactPage() {
             </div>
           </div>
 
-
-
           <div className="grid md:grid-cols-2">
             <KpiColumn
               data={KPI_LEFT}
@@ -546,16 +641,24 @@ function BusinessImpactPage() {
             />
           </div>
 
-          {/* closing hairline under the KPI block */}
-          <div aria-hidden style={{ height: 1, background: "var(--hairline, #E1E0E4)" }} />
-
+          {/* The article card's own top border closes this block — a rule here
+              too would stack two hairlines into one heavy 2px line, and pull
+              apart into two while the reveals are still travelling. */}
         </Reveal>
       </section>
 
-
       {/* -------------------------------------------------------- article */}
       <section style={{ padding: pad, marginTop: 0 }}>
-        <Reveal key={tab} y={32} duration={1600} className="mx-auto w-full max-w-[1200px] overflow-hidden bg-white">
+        <Reveal
+          key={tab}
+          y={32}
+          duration={1600}
+          className="mx-auto w-full max-w-[1200px] overflow-hidden bg-white"
+        >
+          {/* module top hairline — the rule that opens every article module;
+              the other three modules are open on their other three sides too */}
+          <Hairline />
+
           {/* card header */}
           <div style={{ padding: `${fluid(60, 32)} ${fluid(60, 24)} 0` }}>
             <p
@@ -574,18 +677,16 @@ function BusinessImpactPage() {
 
             <div
               className="flex flex-col gap-8 md:flex-row md:items-start md:justify-between"
-              style={{ marginTop: fluid(24, 18) }}
+              style={{ marginTop: fluid(24, 18), columnGap: fluid(72, 40) }}
             >
-              <div style={{ maxWidth: 800 }}>
+              <div style={{ maxWidth: 760, minWidth: 0 }}>
                 <h2
                   className="font-display"
                   style={{
                     margin: 0,
                     fontSize: fluid(48, 30),
-                    lineHeight: "56px",
+                    lineHeight: "1.1667",
                     fontWeight: 400,
-
-                    letterSpacing: "-0.01em",
                   }}
                 >
                   <span style={{ color: "#9E8CFF" }}>{article.titleAccent}</span>{" "}
@@ -605,258 +706,22 @@ function BusinessImpactPage() {
               </div>
 
               <div className="shrink-0">
-                <button
-                  style={{
-                    background: "#0E0B22",
-                    borderBottom: "1.5px solid #137DFF",
-                    borderRadius: 0,
-                    height: 36,
-                    padding: "0 24px",
-                    fontSize: 12,
-                    lineHeight: "20px",
-                    fontWeight: 500,
-                    color: "#FFFFFF",
-                    cursor: "pointer",
-                    transition: "opacity 0.2s",
-                  }}
-                >
-                  Book a Demo
-                </button>
+                <RainbowButton label="Book a Demo" />
               </div>
             </div>
           </div>
 
-          {/* dark block — full-bleed inside the card */}
-          <div
-            data-dark-section
-            style={{
-              background: "#000000",
-              padding: `${fluid(80, 44)} ${fluid(60, 24)}`,
-              display: "flex",
-              flexDirection: "column",
-              gap: fluid(60, 36),
-              marginTop: fluid(80, 44),
-            }}
-          >
-            {article.dark.map((b, i) => (
-              <ArticleBlock key={b.title} {...b} dark delay={i * 260} duration={1600} />
-            ))}
+          {/* body — checkerboard of text + figure rows */}
+          <div style={{ padding: `${fluid(80, 44)} ${fluid(60, 24)} ${fluid(60, 32)}` }}>
+            <ArticleRows rows={article.rows} />
           </div>
-
-          {/* light blocks */}
-          <div
-            style={{
-              padding: `${fluid(80, 44)} ${fluid(60, 24)} ${fluid(80, 44)}`,
-            }}
-          >
-            <div className="flex flex-col" style={{ gap: fluid(60, 36) }}>
-              {article.light.map((b, i) => (
-                <ArticleBlock key={b.title} {...b} delay={i * 260} duration={1600} />
-              ))}
-            </div>
-          </div>
-
         </Reveal>
       </section>
 
-      {/* ------------------------------------------------------------- CTA */}
-      <section className="relative overflow-hidden" style={{ padding: `${fluid(160, 80)} 0` }}>
-        <div
-          aria-hidden
-          className="pointer-events-none absolute inset-0"
-          style={{
-            backgroundImage:
-              "radial-gradient(circle, rgba(14,11,34,0.16) 1px, transparent 1px)",
-            backgroundSize: "20px 21px",
-            maskImage:
-              "radial-gradient(120% 80% at 50% 50%, #000 25%, transparent 78%)",
-            WebkitMaskImage:
-              "radial-gradient(120% 80% at 50% 50%, #000 25%, transparent 78%)",
-          }}
-        />
-        <div className="relative mx-auto flex w-full max-w-[800px] flex-col items-center px-6 text-center">
-          <Reveal>
-            <h2
-              className="font-display"
-              style={{ margin: 0, fontSize: fluid(48, 28), lineHeight: 1.1667, fontWeight: 500 }}
-            >
-              <span className="text-ink-ghost">Get started with the</span>
-              <br />
-              <span className="text-ink">Synergy.AI today</span>
-            </h2>
-          </Reveal>
-          <Reveal delay={150} style={{ marginTop: fluid(40, 28) }}>
-            <RainbowButton label="Book a Demo" />
-          </Reveal>
-        </div>
-      </section>
-
-      {/* ---------------------------------------------------------- footer */}
-      <footer data-dark-section data-progressive-blur-hide className="relative overflow-hidden" style={{ background: "#0A0A0A" }}>
-        <div aria-hidden style={{ height: 2, backgroundImage: GRADIENT, backgroundSize: "200%" }} />
-
-        {/* header row — 80px, bottom hairline spans full width (Figma 1553:20545) */}
-        <div style={{ borderBottom: "1px solid rgba(255,255,255,0.1)", height: 80, boxSizing: "border-box" }}>
-          <div className="h-full" style={{ padding: pad }}>
-            <div className="mx-auto grid h-full w-full max-w-[1200px] grid-cols-2 items-center gap-9 md:grid-cols-4">
-              <div className="flex items-center justify-start gap-2">
-                <img
-                  src={logo.url}
-                  alt="Synergy.AI"
-                  style={{
-                    width: 28,
-                    height: 28,
-                    display: "block",
-                    borderRadius: 999,
-                    objectFit: "cover",
-                  }}
-                />
-                <span
-                  style={{ color: "#FFFFFF", fontSize: 18, lineHeight: "24px", fontWeight: 500 }}
-                >
-                  Synergy.AI
-                </span>
-              </div>
-              <div className="hidden md:block md:col-span-3 md:text-right">
-                <span
-                  style={{
-                    color: "rgba(255,255,255,0.5)",
-                    fontSize: 12,
-                    lineHeight: "20px",
-                  }}
-                >
-                  Revenue-Driven AI Support. Engineered on Synergy. Scale Securely.
-                </span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* footer body — Figma 1553:20553: fixed 400px, wordmark absolutely placed */}
-        <div className="relative overflow-hidden" style={{ height: 400 }}>
-          <div className="flex h-full items-center" style={{ padding: pad }}>
-            <div className="mx-auto w-full max-w-[1200px]">
-              <div className="grid grid-cols-2 gap-9 md:grid-cols-4">
-                {FOOTER_COLUMNS.map((col, i) => (
-                  <Reveal key={col.title} delay={i * 90} y={18} className="flex flex-col items-start text-left">
-                    <p
-                      className="capitalize"
-                      style={{
-                        margin: 0,
-                        color: "rgba(255,255,255,0.65)",
-                        fontSize: 12,
-                        lineHeight: "20px",
-                        fontWeight: 400,
-                        whiteSpace: "pre-wrap",
-                      }}
-                    >
-                      {col.title}
-                    </p>
-                    <ul className="mt-6 flex flex-col items-start gap-[18px]">
-                      {col.links.map((l) => (
-                        <li key={l}>
-                          <span
-                            className="cursor-pointer transition-opacity hover:opacity-70"
-                            style={{ color: "#FFFFFF", fontSize: 14, lineHeight: "22px" }}
-                          >
-                            {l}
-                          </span>
-                        </li>
-                      ))}
-                    </ul>
-                  </Reveal>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          {/* oversized wordmark watermark — uniform scale, never stretched */}
-          <div className="absolute left-0 w-full" style={{ top: 198 }}>
-            <FitWordmark text="Synergy.AI" />
-          </div>
-        </div>
-
-        {/* bottom bar — 68px, top hairline spans full width (Figma 1553:20582) */}
-        <div style={{ borderTop: "1px solid rgba(255,255,255,0.1)", boxSizing: "border-box" }} className="md:h-[68px]">
-          <div className="h-full" style={{ padding: pad }}>
-            <div className="mx-auto grid w-full max-w-[1200px] grid-cols-2 items-center gap-9 py-7 md:h-full md:grid-cols-4 md:py-0">
-              <span className="flex justify-start" style={{ color: "rgba(255,255,255,0.65)", fontSize: 12, lineHeight: "20px", fontWeight: 500 }}>
-
-                © {new Date().getFullYear()} Synergy.AI. All rights reserved.
-              </span>
-              <div className="hidden md:col-span-3 md:flex md:items-center md:justify-end md:gap-4">
-                {[Youtube, Twitter, Linkedin].map((Icon, i) => (
-                  <span
-                    key={i}
-                    className="cursor-pointer transition-opacity hover:opacity-70"
-                    style={{ color: "#FFFFFF", display: "inline-flex" }}
-                  >
-                    <Icon size={20} strokeWidth={1.5} />
-                  </span>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
-
-
-      </footer>
+      {/* CTA + brand footer, shared with the homepage */}
+      <SiteFooter />
 
       <FinChatDock alwaysVisible />
-    </div>
-  );
-}
-
-export default BusinessImpactPage;
-
-/** Wordmark that fills its container width by uniform font scaling (no glyph stretching). */
-function FitWordmark({ text }: { text: string }) {
-  const boxRef = useRef<HTMLDivElement>(null);
-  const textRef = useRef<HTMLSpanElement>(null);
-  const [size, setSize] = useState(200);
-
-  const fit = () => {
-    const box = boxRef.current;
-    const el = textRef.current;
-    if (!box || !el) return;
-    const probe = 200;
-    el.style.fontSize = `${probe}px`;
-    const w = el.scrollWidth;
-    const next = w > 0 ? (probe * box.clientWidth) / w : probe;
-    el.style.fontSize = `${next}px`;
-    setSize(next);
-  };
-
-
-  useLayoutEffect(fit);
-  useEffect(() => {
-    window.addEventListener("resize", fit);
-    if (document.fonts?.ready) document.fonts.ready.then(fit);
-    return () => window.removeEventListener("resize", fit);
-  }, []);
-
-  return (
-    <div
-      ref={boxRef}
-      aria-hidden
-      className="pointer-events-none w-full select-none overflow-hidden"
-      style={{ lineHeight: 0 }}
-    >
-      <span
-        ref={textRef}
-        className="font-sans block whitespace-nowrap"
-        style={{
-          fontSize: size,
-          lineHeight: 0.8,
-          fontWeight: 500,
-          letterSpacing: "-0.02em",
-          color: "rgba(255,255,255,0.08)",
-          display: "inline-block",
-          transform: "translateY(12%)",
-        }}
-      >
-        {text}
-      </span>
     </div>
   );
 }

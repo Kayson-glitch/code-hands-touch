@@ -12,6 +12,25 @@ bun install
 bun run dev      # http://localhost:8080
 ```
 
+## 启动失败：端口被占
+
+dev server 固定用 8080，端口被占时会直接退出而不是换一个端口：
+
+```
+error when starting dev server:
+Error: Port 8080 is already in use
+```
+
+这是刻意的——端口被静默换掉后，转发出去的预览地址看起来和崩溃一模一样。
+看到这个报错，要么腾出 8080，要么换个端口跑：
+
+```bash
+lsof -ti :8080            # 看是谁占着（macOS / Linux）
+lsof -ti :8080 | xargs kill   # 多半是上次没退干净的 dev server
+
+PORT=8090 bun run dev     # 或者直接换端口
+```
+
 ## 其他命令
 
 ```bash

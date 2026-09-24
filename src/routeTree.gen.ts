@@ -10,14 +10,41 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as WhySynergyRouteImport } from './routes/why-synergy'
+import { Route as SolutionRouteImport } from './routes/solution'
+import { Route as PricingRouteImport } from './routes/pricing'
+import { Route as PlatformRouteImport } from './routes/platform'
+import { Route as CompanyRouteImport } from './routes/company'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as WhySynergyTechnologyRouteImport } from './routes/why-synergy.technology'
 import { Route as WhySynergyStoriesRouteImport } from './routes/why-synergy.stories'
+import { Route as WhySynergySecurityRouteImport } from './routes/why-synergy.security'
 import { Route as WhySynergyBusinessImpactRouteImport } from './routes/why-synergy.business-impact'
+import { Route as SolutionCustomerSupportRouteImport } from './routes/solution.customer-support'
+import { Route as PlatformRagRouteImport } from './routes/platform.rag'
 
 const WhySynergyRoute = WhySynergyRouteImport.update({
   id: '/why-synergy',
   path: '/why-synergy',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SolutionRoute = SolutionRouteImport.update({
+  id: '/solution',
+  path: '/solution',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PricingRoute = PricingRouteImport.update({
+  id: '/pricing',
+  path: '/pricing',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PlatformRoute = PlatformRouteImport.update({
+  id: '/platform',
+  path: '/platform',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CompanyRoute = CompanyRouteImport.update({
+  id: '/company',
+  path: '/company',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IndexRoute = IndexRouteImport.update({
@@ -35,32 +62,68 @@ const WhySynergyStoriesRoute = WhySynergyStoriesRouteImport.update({
   path: '/stories',
   getParentRoute: () => WhySynergyRoute,
 } as any)
+const WhySynergySecurityRoute = WhySynergySecurityRouteImport.update({
+  id: '/security',
+  path: '/security',
+  getParentRoute: () => WhySynergyRoute,
+} as any)
 const WhySynergyBusinessImpactRoute =
   WhySynergyBusinessImpactRouteImport.update({
     id: '/business-impact',
     path: '/business-impact',
     getParentRoute: () => WhySynergyRoute,
   } as any)
+const SolutionCustomerSupportRoute = SolutionCustomerSupportRouteImport.update({
+  id: '/customer-support',
+  path: '/customer-support',
+  getParentRoute: () => SolutionRoute,
+} as any)
+const PlatformRagRoute = PlatformRagRouteImport.update({
+  id: '/rag',
+  path: '/rag',
+  getParentRoute: () => PlatformRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/company': typeof CompanyRoute
+  '/platform': typeof PlatformRouteWithChildren
+  '/pricing': typeof PricingRoute
+  '/solution': typeof SolutionRouteWithChildren
   '/why-synergy': typeof WhySynergyRouteWithChildren
+  '/platform/rag': typeof PlatformRagRoute
+  '/solution/customer-support': typeof SolutionCustomerSupportRoute
   '/why-synergy/business-impact': typeof WhySynergyBusinessImpactRoute
+  '/why-synergy/security': typeof WhySynergySecurityRoute
   '/why-synergy/stories': typeof WhySynergyStoriesRoute
   '/why-synergy/technology': typeof WhySynergyTechnologyRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/company': typeof CompanyRoute
+  '/platform': typeof PlatformRouteWithChildren
+  '/pricing': typeof PricingRoute
+  '/solution': typeof SolutionRouteWithChildren
   '/why-synergy': typeof WhySynergyRouteWithChildren
+  '/platform/rag': typeof PlatformRagRoute
+  '/solution/customer-support': typeof SolutionCustomerSupportRoute
   '/why-synergy/business-impact': typeof WhySynergyBusinessImpactRoute
+  '/why-synergy/security': typeof WhySynergySecurityRoute
   '/why-synergy/stories': typeof WhySynergyStoriesRoute
   '/why-synergy/technology': typeof WhySynergyTechnologyRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/company': typeof CompanyRoute
+  '/platform': typeof PlatformRouteWithChildren
+  '/pricing': typeof PricingRoute
+  '/solution': typeof SolutionRouteWithChildren
   '/why-synergy': typeof WhySynergyRouteWithChildren
+  '/platform/rag': typeof PlatformRagRoute
+  '/solution/customer-support': typeof SolutionCustomerSupportRoute
   '/why-synergy/business-impact': typeof WhySynergyBusinessImpactRoute
+  '/why-synergy/security': typeof WhySynergySecurityRoute
   '/why-synergy/stories': typeof WhySynergyStoriesRoute
   '/why-synergy/technology': typeof WhySynergyTechnologyRoute
 }
@@ -68,28 +131,53 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/company'
+    | '/platform'
+    | '/pricing'
+    | '/solution'
     | '/why-synergy'
+    | '/platform/rag'
+    | '/solution/customer-support'
     | '/why-synergy/business-impact'
+    | '/why-synergy/security'
     | '/why-synergy/stories'
     | '/why-synergy/technology'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/company'
+    | '/platform'
+    | '/pricing'
+    | '/solution'
     | '/why-synergy'
+    | '/platform/rag'
+    | '/solution/customer-support'
     | '/why-synergy/business-impact'
+    | '/why-synergy/security'
     | '/why-synergy/stories'
     | '/why-synergy/technology'
   id:
     | '__root__'
     | '/'
+    | '/company'
+    | '/platform'
+    | '/pricing'
+    | '/solution'
     | '/why-synergy'
+    | '/platform/rag'
+    | '/solution/customer-support'
     | '/why-synergy/business-impact'
+    | '/why-synergy/security'
     | '/why-synergy/stories'
     | '/why-synergy/technology'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  CompanyRoute: typeof CompanyRoute
+  PlatformRoute: typeof PlatformRouteWithChildren
+  PricingRoute: typeof PricingRoute
+  SolutionRoute: typeof SolutionRouteWithChildren
   WhySynergyRoute: typeof WhySynergyRouteWithChildren
 }
 
@@ -100,6 +188,34 @@ declare module '@tanstack/react-router' {
       path: '/why-synergy'
       fullPath: '/why-synergy'
       preLoaderRoute: typeof WhySynergyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/solution': {
+      id: '/solution'
+      path: '/solution'
+      fullPath: '/solution'
+      preLoaderRoute: typeof SolutionRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/pricing': {
+      id: '/pricing'
+      path: '/pricing'
+      fullPath: '/pricing'
+      preLoaderRoute: typeof PricingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/platform': {
+      id: '/platform'
+      path: '/platform'
+      fullPath: '/platform'
+      preLoaderRoute: typeof PlatformRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/company': {
+      id: '/company'
+      path: '/company'
+      fullPath: '/company'
+      preLoaderRoute: typeof CompanyRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/': {
@@ -123,6 +239,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof WhySynergyStoriesRouteImport
       parentRoute: typeof WhySynergyRoute
     }
+    '/why-synergy/security': {
+      id: '/why-synergy/security'
+      path: '/security'
+      fullPath: '/why-synergy/security'
+      preLoaderRoute: typeof WhySynergySecurityRouteImport
+      parentRoute: typeof WhySynergyRoute
+    }
     '/why-synergy/business-impact': {
       id: '/why-synergy/business-impact'
       path: '/business-impact'
@@ -130,17 +253,57 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof WhySynergyBusinessImpactRouteImport
       parentRoute: typeof WhySynergyRoute
     }
+    '/solution/customer-support': {
+      id: '/solution/customer-support'
+      path: '/customer-support'
+      fullPath: '/solution/customer-support'
+      preLoaderRoute: typeof SolutionCustomerSupportRouteImport
+      parentRoute: typeof SolutionRoute
+    }
+    '/platform/rag': {
+      id: '/platform/rag'
+      path: '/rag'
+      fullPath: '/platform/rag'
+      preLoaderRoute: typeof PlatformRagRouteImport
+      parentRoute: typeof PlatformRoute
+    }
   }
 }
 
+interface PlatformRouteChildren {
+  PlatformRagRoute: typeof PlatformRagRoute
+}
+
+const PlatformRouteChildren: PlatformRouteChildren = {
+  PlatformRagRoute: PlatformRagRoute,
+}
+
+const PlatformRouteWithChildren = PlatformRoute._addFileChildren(
+  PlatformRouteChildren,
+)
+
+interface SolutionRouteChildren {
+  SolutionCustomerSupportRoute: typeof SolutionCustomerSupportRoute
+}
+
+const SolutionRouteChildren: SolutionRouteChildren = {
+  SolutionCustomerSupportRoute: SolutionCustomerSupportRoute,
+}
+
+const SolutionRouteWithChildren = SolutionRoute._addFileChildren(
+  SolutionRouteChildren,
+)
+
 interface WhySynergyRouteChildren {
   WhySynergyBusinessImpactRoute: typeof WhySynergyBusinessImpactRoute
+  WhySynergySecurityRoute: typeof WhySynergySecurityRoute
   WhySynergyStoriesRoute: typeof WhySynergyStoriesRoute
   WhySynergyTechnologyRoute: typeof WhySynergyTechnologyRoute
 }
 
 const WhySynergyRouteChildren: WhySynergyRouteChildren = {
   WhySynergyBusinessImpactRoute: WhySynergyBusinessImpactRoute,
+  WhySynergySecurityRoute: WhySynergySecurityRoute,
   WhySynergyStoriesRoute: WhySynergyStoriesRoute,
   WhySynergyTechnologyRoute: WhySynergyTechnologyRoute,
 }
@@ -151,6 +314,10 @@ const WhySynergyRouteWithChildren = WhySynergyRoute._addFileChildren(
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  CompanyRoute: CompanyRoute,
+  PlatformRoute: PlatformRouteWithChildren,
+  PricingRoute: PricingRoute,
+  SolutionRoute: SolutionRouteWithChildren,
   WhySynergyRoute: WhySynergyRouteWithChildren,
 }
 export const routeTree = rootRouteImport

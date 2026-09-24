@@ -9,7 +9,8 @@
   --font-display: "Clash Display Variable", "Clash Display", "Montserrat", sans-serif;
 }
 
-html, body {
+html,
+body {
   font-family: var(--font-sans);
   scrollbar-width: none;
   -ms-overflow-style: none;
@@ -22,7 +23,7 @@ body::-webkit-scrollbar {
 
 .font-display {
   font-family: var(--font-display);
-  font-weight: 500;
+  font-weight: 400;
   font-synthesis-weight: none;
 }
 
@@ -35,6 +36,14 @@ body::-webkit-scrollbar {
   --hairline: #e1e0e4;
   --accent-blue: #137dff;
   --paper: #fafafa;
+  /*
+   * Two greys between paper and the hairline. Cards and tiles had drifted to
+   * four values for the same job (#F6F6F8, #F7F7F7, #F8F8F9, #F8F9FA); they
+   * are one now. `inset` is the darker step the controls already shared — the
+   * nav's button, the preloader's track, a divider.
+   */
+  --surface-soft: #f7f7f8;
+  --surface-inset: #f1f1f3;
 }
 
 html,
@@ -57,8 +66,9 @@ body {
   --color-hairline: var(--hairline);
   --color-paper: var(--paper);
   --color-accent-blue: var(--accent-blue);
+  --color-surface-soft: var(--surface-soft);
+  --color-surface-inset: var(--surface-inset);
 }
-
 
 /*
  * Design system definition.
@@ -200,27 +210,53 @@ body {
 }
 
 @keyframes synergy-gradient-flow {
-  0%   { background-position: 0% 50%;   background-size: 220% 220%; }
-  25%  { background-position: 40% 45%;  background-size: 260% 240%; }
-  50%  { background-position: 100% 55%; background-size: 300% 260%; }
-  75%  { background-position: 60% 50%;  background-size: 260% 240%; }
-  100% { background-position: 0% 50%;   background-size: 220% 220%; }
+  0% {
+    background-position: 0% 50%;
+    background-size: 220% 220%;
+  }
+  25% {
+    background-position: 40% 45%;
+    background-size: 260% 240%;
+  }
+  50% {
+    background-position: 100% 55%;
+    background-size: 300% 260%;
+  }
+  75% {
+    background-position: 60% 50%;
+    background-size: 260% 240%;
+  }
+  100% {
+    background-position: 0% 50%;
+    background-size: 220% 220%;
+  }
 }
 
 @keyframes rainbow-btn-flow {
-  0%   { background-position: 0%; }
-  100% { background-position: 200%; }
+  0% {
+    background-position: 0%;
+  }
+  100% {
+    background-position: 200%;
+  }
 }
 
-
 @keyframes nav-border-flow {
-  0%   { background-position: 0vw 50%; }
-  100% { background-position: -120vw 50%; }
+  0% {
+    background-position: 0vw 50%;
+  }
+  100% {
+    background-position: -120vw 50%;
+  }
 }
 
 @keyframes btn-border-flow {
-  0%   { background-position: 0% 50%; }
-  100% { background-position: -300% 50%; }
+  0% {
+    background-position: 0% 50%;
+  }
+  100% {
+    background-position: -300% 50%;
+  }
 }
 
 /* Third-screen outcomes module — geometry mirrors the reference interaction. */
@@ -270,20 +306,19 @@ body {
 .kore-outcomes__header h2 {
   margin: 0;
   font-family: var(--font-display);
-  font-size: clamp(2.25rem, 3.3333vw, 3.75rem);
-  font-weight: 500;
-  line-height: 1.1;
+  font-size: clamp(30px, 3.3333vw, 48px);
+  font-weight: 400;
+  line-height: 1.1667;
   letter-spacing: 0;
 }
 
-
 .kore-outcomes__header strong {
-  color: #5749FF;
-  font-weight: 500;
+  color: #5749ff;
+  font-weight: 400;
 }
 
 .kore-outcomes__header em {
-  font-weight: 400;
+  font-weight: 300;
 }
 
 .kore-outcomes__cards-container {
@@ -306,7 +341,13 @@ body {
   width: 100%;
   height: 100%;
   clip-path: inset(0 calc((1 - var(--p, 0)) * 100%) 0 0);
-  background-image: linear-gradient(90deg, #137DFF 0%, #FF18AA 33.333%, #FFCD17 66.666%, #137DFF 100%);
+  background-image: linear-gradient(
+    90deg,
+    #137dff 0%,
+    #ff18aa 33.333%,
+    #ffcd17 66.666%,
+    #137dff 100%
+  );
   background-size: 120vw 100%;
   background-repeat: repeat;
   animation: nav-border-flow 9s linear infinite;
@@ -323,7 +364,6 @@ body {
   grid-template-columns: repeat(3, minmax(0, 1fr));
   overflow: hidden;
 }
-
 
 .kore-outcomes__item {
   display: grid;
@@ -352,7 +392,6 @@ body {
   box-shadow: inset -1px 0 0 var(--hairline);
 }
 
-
 .kore-outcomes__media {
   padding: clamp(1rem, 0.8571rem + 0.7143vw, 1.5rem) clamp(1rem, 0.8571rem + 0.7143vw, 1.5rem) 0;
 }
@@ -368,7 +407,8 @@ body {
   display: flex;
   flex-direction: column;
   gap: 1rem;
-  padding: 1.5rem clamp(1rem, 0.8571rem + 0.7143vw, 1.5rem) clamp(1rem, 0.8571rem + 0.7143vw, 1.5rem);
+  padding: 1.5rem clamp(1rem, 0.8571rem + 0.7143vw, 1.5rem)
+    clamp(1rem, 0.8571rem + 0.7143vw, 1.5rem);
 }
 
 .kore-outcomes__copy h3,
@@ -419,7 +459,6 @@ body {
   letter-spacing: 0;
 }
 
-
 .kore-outcomes__footer {
   position: relative;
   padding-block: 3rem;
@@ -428,17 +467,17 @@ body {
 .kore-outcomes__footer p {
   font-family: var(--font-display);
   font-size: clamp(5rem, 12.5vw, 11.75rem);
-  font-weight: 500;
+  font-weight: 400;
   line-height: 0.86;
   letter-spacing: 0;
 }
 
 .kore-outcomes__footer span {
-  color: #5749FF;
+  color: #5749ff;
 }
 
 .kore-outcomes__footer em {
-  font-weight: 400;
+  font-weight: 300;
 }
 
 @media (max-width: 990px) {
@@ -484,7 +523,6 @@ body {
     border-right: 1px solid var(--hairline);
   }
 
-
   .kore-outcomes__number {
     display: none;
   }
@@ -521,7 +559,6 @@ body {
   }
 }
 
-
 /* ------------------------------------------------ Lenis smooth scroll (page) */
 html.lenis,
 html.lenis body {
@@ -549,13 +586,12 @@ html.lenis body {
   position: relative;
   z-index: 10;
   width: 100%;
-  background-color: #FAFAFA;
+  background-color: #fafafa;
 }
 
 .artemis-closing__wrapper {
   height: 820vh;
 }
-
 
 .artemis-closing__sticky {
   position: sticky;
@@ -579,7 +615,7 @@ html.lenis body {
   display: flex;
   align-items: center;
   background-color: #000000;
-  color: #FAFAFA;
+  color: #fafafa;
   will-change: clip-path;
 }
 
@@ -587,18 +623,18 @@ html.lenis body {
   margin: 0;
   font-family: var(--font-display);
   font-size: clamp(3.5rem, 11.6667vw, 12.5rem);
-  font-weight: 500;
+  font-weight: 400;
   line-height: 0.86;
   letter-spacing: 0;
-  color: #0A0A0A;
+  color: #0a0a0a;
 }
 
 .artemis-closing__invert .artemis-closing__text {
-  color: #FAFAFA;
+  color: #fafafa;
 }
 
 .artemis-closing__text em {
-  font-weight: 400;
+  font-weight: 300;
 }
 
 /* Horizontal track inside the dark layer: headline first, then the panels. */
@@ -659,7 +695,8 @@ html.lenis body {
     var(--grid-x-min) + mod(calc(100% - 2 * var(--grid-x-min)), var(--grid-step)) / 2
   );
   --grid-y-inset: calc(
-    var(--grid-y-min) + mod(calc(100% - var(--grid-nav) - 2 * var(--grid-y-min)), var(--grid-step)) / 2
+    var(--grid-y-min) +
+      mod(calc(100% - var(--grid-nav) - 2 * var(--grid-y-min)), var(--grid-step)) / 2
   );
   --grid-y-start: var(--grid-y-inset);
   --grid-y-end: calc(100% - var(--grid-y-inset));
@@ -672,44 +709,64 @@ html.lenis body {
   z-index: 0;
 }
 
-/* Left boundary rules (16%): one per feature panel. They live in a layer that
-   shares the horizontal track's transform, so each rule travels left together
-   with its module and acts as the visible scroll reference. */
-.artemis-closing__edges {
+/* On every panel change, the two stronger boundary rules redraw from the
+   outer endpoints and meet at the upper-left lattice intersection. */
+.artemis-closing__converge {
   position: absolute;
   inset: 0;
   overflow: hidden;
   pointer-events: none;
-  /* Above the dots ::after horizontal layer so the edge's #000 occluder also
-     erases the 8% horizontal rules where they cross the 20% edge. */
   z-index: 2;
 }
 
-.artemis-closing__edges-inner {
+/* Both rules keep the original treatment: 20% white over an opaque #000
+   occluder that erases the 8% lattice, plus the original fade masks. The
+   reveal uses clip-path so the masks are never scaled with the animation. */
+.artemis-closing__converge-horizontal,
+.artemis-closing__converge-vertical {
   position: absolute;
-  inset: 0;
-  will-change: transform;
+  display: block;
+  background:
+    linear-gradient(rgba(255, 255, 255, 0.15), rgba(255, 255, 255, 0.15)),
+    linear-gradient(#000000, #000000);
+  will-change: clip-path;
+  animation-duration: 1s;
+  animation-timing-function: cubic-bezier(0.65, 0, 0.35, 1);
+  animation-fill-mode: both;
 }
 
-/* Each rule spans nav → stage bottom so it can carry the same vertical fade
-   the static grid had: fading in over --grid-y-inset above the top lattice
-   boundary and fading out over --grid-y-inset below the bottom boundary. */
-.artemis-closing__edge {
-  position: absolute;
+/* Horizontal rule: full stage width, fading in over --grid-x-inset on the
+   left and out over --grid-x-inset on the right, exactly as before. */
+.artemis-closing__converge-horizontal {
+  top: var(--grid-y-start);
+  left: 0;
+  width: 100%;
+  height: 1px;
+  animation-name: artemis-converge-horizontal;
+  -webkit-mask-image: linear-gradient(
+    to right,
+    transparent 0,
+    #000 var(--grid-x-inset),
+    #000 calc(100% - var(--grid-x-inset)),
+    transparent 100%
+  );
+  mask-image: linear-gradient(
+    to right,
+    transparent 0,
+    #000 var(--grid-x-inset),
+    #000 calc(100% - var(--grid-x-inset)),
+    transparent 100%
+  );
+}
+
+/* Vertical rule: nav → stage bottom with the original vertical fade above the
+   top lattice boundary and below the bottom boundary. */
+.artemis-closing__converge-vertical {
   top: 0;
   bottom: 0;
+  left: var(--grid-x-inset);
   width: 1px;
-}
-
-/* The rule itself: 20% white over an opaque #000 occluder that erases the 8%
-   static vertical grid in this column, with the original vertical fade. */
-.artemis-closing__edge::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background:
-    linear-gradient(rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.2)),
-    linear-gradient(#000000, #000000);
+  animation-name: artemis-converge-vertical;
   -webkit-mask-image: linear-gradient(
     to bottom,
     transparent calc(var(--grid-y-start) - var(--grid-y-fade)),
@@ -726,67 +783,63 @@ html.lenis body {
   );
 }
 
-/* Exact Figma crosshair asset: 10×10, 1px strokes at 20% opacity, centred on
-   the upper and lower boundary intersections. */
-.artemis-closing__edge::after {
-  content: "";
+/* The registration mark the rest of the site puts where hairlines cross (see
+   CropFrame): a 6px square filled with the surface it sits on, outlined in the
+   rule's own colour. Same offset formula, so it centres on the 1px crossing.
+   It appears once both rules have arrived. */
+.artemis-closing__converge-cross {
   position: absolute;
-  left: -5px;
-  width: 11px;
-  top: calc(var(--grid-y-start) - 5px);
-  bottom: calc(100% - var(--grid-y-end) - 5px);
-  /* Only the top crosshair is drawn; the bottom crosshair was removed
-     together with the bottom horizontal boundary line. */
-  background-image:
-    linear-gradient(rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.2)),
-    linear-gradient(rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.2));
-  background-repeat: no-repeat;
-  background-size: 11px 1px, 1px 11px;
-  background-position: 0 5px, 5px 0;
-  z-index: 2;
-}
-
-/* Per-module horizontal boundary rules: each panel's edge carries the 20%
-   top/bottom lines, so they slide left in lockstep with the module and its
-   vertical rule. The element spans from the edge column to well past the
-   right viewport edge (clipped by .artemis-closing__edges). Each rule sits
-   on an opaque #000 occluder that erases the 8% lattice where they cross. */
-.artemis-closing__edge-lines {
-  position: absolute;
-  left: calc(-1 * var(--grid-x-inset));
-  width: 100vw;
+  display: block;
+  left: var(--grid-x-inset);
   top: var(--grid-y-start);
-  /* Extend 1px past the bottom boundary: percentage background-position
-     subtracts the tile height, so this makes the bottom tile land exactly on
-     the --grid-y-end lattice coordinate. */
-  bottom: calc(100% - var(--grid-y-end) - 1px);
-  /* Only the top 20% boundary rule is drawn; the bottom rule and its
-     occluder were removed, so the 8% lattice shows through normally there. */
-  background-image:
-    linear-gradient(rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.2)),
-    linear-gradient(#000000, #000000);
-  background-repeat: no-repeat;
-  background-size: 100% 1px, 100% 1px;
-  background-position:
-    0 0,
-    0 0;
-  -webkit-mask-image: linear-gradient(
-    to right,
-    transparent 0,
-    #000 var(--grid-x-inset),
-    #000 calc(100% - var(--grid-x-inset)),
-    transparent 100%
-  );
-  mask-image: linear-gradient(
-    to right,
-    transparent 0,
-    #000 var(--grid-x-inset),
-    #000 calc(100% - var(--grid-x-inset)),
-    transparent 100%
-  );
+  transform: translate(calc(-50% + 0.5px), calc(-50% + 0.5px));
+  width: 6px;
+  height: 6px;
+  background: #000000;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  z-index: 2;
+  opacity: 0;
+  animation: artemis-converge-cross 0.2s 0.95s ease-out both;
 }
 
+/* Right → left */
+@keyframes artemis-converge-horizontal {
+  from {
+    clip-path: inset(0 0 0 100%);
+  }
+  to {
+    clip-path: inset(0 0 0 0);
+  }
+}
 
+/* Bottom → top */
+@keyframes artemis-converge-vertical {
+  from {
+    clip-path: inset(100% 0 0 0);
+  }
+  to {
+    clip-path: inset(0 0 0 0);
+  }
+}
+
+@keyframes artemis-converge-cross {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .artemis-closing__converge-horizontal,
+  .artemis-closing__converge-vertical,
+  .artemis-closing__converge-cross {
+    animation: none;
+    clip-path: none;
+    opacity: 1;
+  }
+}
 
 /* Vertical rules */
 .artemis-closing__dots::before {
@@ -797,12 +850,11 @@ html.lenis body {
   left: var(--grid-x-inset);
   right: var(--grid-x-inset);
   background-image:
-    /* inner rules (8%) — same origin and strict 40px pitch */
-    linear-gradient(
-      to right,
-      rgba(255, 255, 255, 0.1) 0 1px,
-      transparent 1px var(--grid-step)
-    );
+    /* inner rules (8%) — same origin and strict 40px pitch */ linear-gradient(
+    to right,
+    rgba(255, 255, 255, 0.08) 0 1px,
+    transparent 1px var(--grid-step)
+  );
   background-repeat: repeat-x;
   background-size: var(--grid-step) 100%;
   background-position: 0 0;
@@ -823,10 +875,8 @@ html.lenis body {
   );
 }
 
-/* Horizontal rules — 8% lattice only. The 20% top/bottom boundary rules are
-   no longer static: each feature panel carries its own set (drawn in
-   .artemis-closing__edge::after) that slides in from the right together with
-   the module, so the title state shows a clean 8% grid with no 20% rules. */
+/* Horizontal rules — 8% lattice only. The stronger boundary rule is drawn by
+   the convergence animation, so the title state keeps a clean 8% grid. */
 .artemis-closing__dots::after {
   content: "";
   position: absolute;
@@ -834,14 +884,13 @@ html.lenis body {
   right: 0;
   top: var(--grid-y-start);
   /* Include the terminal lattice coordinate itself. Without this extra pixel,
-     the 1px bottom rule is painted one pixel above the crosshair centre. */
+     the 1px bottom rule is painted one pixel above the crossing centre. */
   bottom: calc(100% - var(--grid-y-end) - 1px);
-  background-image:
-    linear-gradient(
-      to bottom,
-      rgba(255, 255, 255, 0.1) 0 1px,
-      transparent 1px var(--grid-step)
-    );
+  background-image: linear-gradient(
+    to bottom,
+    rgba(255, 255, 255, 0.08) 0 1px,
+    transparent 1px var(--grid-step)
+  );
   background-repeat: repeat-y;
   background-size: 100% var(--grid-step);
   background-position: 0 0;
@@ -861,7 +910,6 @@ html.lenis body {
     transparent 100%
   );
 }
-
 
 /* ------------------------------------- Feature panels on the closing screen */
 
@@ -907,18 +955,69 @@ html.lenis body {
   animation-delay: 0.06s;
 }
 
+/* Entrance for the subject itself: a soft edge travels up the frame so the art
+   draws in rather than only fading up, alongside the 28px rise the panel
+   already carries.
+
+   It moves `mask-position`, not the gradient's stops. Chrome treats
+   `mask-image` as a discrete property — keyframing the stops does not tween,
+   it flips at the halfway mark — so the mask is built once at twice the
+   element's height and slid into place instead.
+
+   The artwork is never touched: the only thing that moves is the mask, which
+   is why this cannot disturb the layers Figma composed. */
+@keyframes artemis-gallery-develop {
+  from {
+    -webkit-mask-position: 0% 0%;
+    mask-position: 0% 0%;
+  }
+  to {
+    -webkit-mask-position: 0% 100%;
+    mask-position: 0% 100%;
+  }
+}
+
+.artemis-gallery__panel.is-active .artemis-gallery__media img {
+  --edge: linear-gradient(
+    to bottom,
+    rgba(0, 0, 0, 0) 0%,
+    rgba(0, 0, 0, 0) 32%,
+    #000 48%,
+    #000 100%
+  );
+  -webkit-mask-image: var(--edge);
+  mask-image: var(--edge);
+  -webkit-mask-size: 100% 200%;
+  mask-size: 100% 200%;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  animation: artemis-gallery-develop 0.85s 0.12s cubic-bezier(0.45, 0.05, 0.55, 0.95) both;
+}
+
 .artemis-gallery__panel.is-active .artemis-gallery__title {
   animation-delay: 0.12s;
 }
 
-.artemis-gallery__panel.is-active .artemis-gallery__item:nth-child(1) { animation-delay: 0.2s; }
-.artemis-gallery__panel.is-active .artemis-gallery__item:nth-child(2) { animation-delay: 0.28s; }
-.artemis-gallery__panel.is-active .artemis-gallery__item:nth-child(3) { animation-delay: 0.36s; }
-.artemis-gallery__panel.is-active .artemis-gallery__item:nth-child(4) { animation-delay: 0.44s; }
+.artemis-gallery__panel.is-active .artemis-gallery__item:nth-child(1) {
+  animation-delay: 0.2s;
+}
+.artemis-gallery__panel.is-active .artemis-gallery__item:nth-child(2) {
+  animation-delay: 0.28s;
+}
+.artemis-gallery__panel.is-active .artemis-gallery__item:nth-child(3) {
+  animation-delay: 0.36s;
+}
+.artemis-gallery__panel.is-active .artemis-gallery__item:nth-child(4) {
+  animation-delay: 0.44s;
+}
 
 @media (prefers-reduced-motion: reduce) {
-  .artemis-gallery__panel { opacity: 1; }
-  .artemis-gallery__panel.is-active * { animation: none !important; }
+  .artemis-gallery__panel {
+    opacity: 1;
+  }
+  .artemis-gallery__panel.is-active * {
+    animation: none !important;
+  }
 }
 
 .artemis-gallery__row {
@@ -952,6 +1051,15 @@ html.lenis body {
   }
 }
 
+/* Section square, as in the nav dropdown cells: 8px, on the eyebrow's cap line. */
+.artemis-gallery__mark {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  margin-right: 10px;
+  vertical-align: 0.06em;
+}
+
 .artemis-gallery__eyebrow {
   margin: 0;
   /* Left edge aligns with the media block below (which is offset 80px from
@@ -965,18 +1073,25 @@ html.lenis body {
   color: rgba(255, 255, 255, 0.5);
 }
 
-
 /* Placeholder media block (Figma: 360×480, square corners).
    Sits 80px right of the module's 16% boundary rule. */
+/* Holds a transparent cut-out on the section's black, so there is no box to
+   fill — the slot keeps its footprint and the square subject sits centred in
+   it rather than being cropped to the portrait ratio. */
 .artemis-gallery__media {
   flex: 0 0 auto;
   margin-left: 80px;
   width: 360px;
   height: 480px;
-  border-radius: 0;
-  background: #d9d9d9;
 }
 
+.artemis-gallery__media img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  user-select: none;
+}
 
 .artemis-gallery__copy {
   display: flex;
@@ -988,7 +1103,7 @@ html.lenis body {
 .artemis-gallery__title {
   margin: 0;
   font-family: var(--font-display);
-  font-weight: 500;
+  font-weight: 400;
   font-size: 28px;
   line-height: 36px;
   color: #fff;
@@ -1042,20 +1157,8 @@ html.lenis body {
   max-width: 100%;
   height: 20px;
   overflow: hidden;
-  -webkit-mask-image: linear-gradient(
-    90deg,
-    transparent 0,
-    #000 16%,
-    #000 84%,
-    transparent 100%
-  );
-  mask-image: linear-gradient(
-    90deg,
-    transparent 0,
-    #000 16%,
-    #000 84%,
-    transparent 100%
-  );
+  -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 16%, #000 84%, transparent 100%);
+  mask-image: linear-gradient(90deg, transparent 0, #000 16%, #000 84%, transparent 100%);
 }
 
 .artemis-gallery__ticker {
@@ -1094,11 +1197,11 @@ html.lenis body {
   color: #ffffff;
 }
 
-
 @media (prefers-reduced-motion: reduce) {
-  .artemis-gallery__ticker { transition: none; }
+  .artemis-gallery__ticker {
+    transition: none;
+  }
 }
-
 
 /* Narrow laptops / landscape tablets: panels snap to the 120px lattice inset,
    so the intrinsic 1023px module would overflow the clipped stage. Scale the
@@ -1129,7 +1232,6 @@ html.lenis body {
   }
 }
 
-
 /* Stacked fallback: no pinning, no horizontal travel. */
 
 @media (max-width: 990px) {
@@ -1137,13 +1239,15 @@ html.lenis body {
     --grid-x-min: 16px;
   }
 
-
   .artemis-closing__wrapper {
     height: auto !important;
   }
 
   .artemis-closing__sticky {
     position: static;
+    /* block, not flex: as a flex item the dark layer would shrink-to-fit its
+       widest child and push the layout viewport past the screen */
+    display: block;
     height: auto;
     overflow: visible;
   }
@@ -1155,6 +1259,7 @@ html.lenis body {
 
   .artemis-closing__invert {
     position: static;
+    width: 100%;
     clip-path: none !important;
     padding-block: 4rem;
   }
@@ -1177,6 +1282,9 @@ html.lenis body {
     flex-direction: column;
     align-items: flex-start;
     gap: 1.5rem;
+    /* the desktop "one module per viewport" pitch would force horizontal scroll here */
+    min-width: 0;
+    width: 100%;
     opacity: 1 !important;
     transform: none !important;
   }
@@ -1188,11 +1296,16 @@ html.lenis body {
     width: 100%;
   }
 
-
   .artemis-gallery__media {
+    margin-left: 0;
     width: min(100%, 480px);
     height: auto;
     aspect-ratio: 3 / 2;
+  }
+
+  .artemis-gallery__progress {
+    --track-w: min(360px, 100%);
+    margin-left: 0;
   }
 
   .artemis-gallery__copy {
@@ -1237,33 +1350,224 @@ html.lenis body {
   }
 }
 
-
 /* Business-impact KPI tabs: selected column's top rule flows like the nav border. */
 .kpi-rule-active {
-  background-image: linear-gradient(90deg, #137DFF 0%, #FF18AA 33.333%, #FFCD17 66.666%, #137DFF 100%);
+  background-image: linear-gradient(
+    90deg,
+    #137dff 0%,
+    #ff18aa 33.333%,
+    #ffcd17 66.666%,
+    #137dff 100%
+  );
   background-size: 120vw 100%;
   background-repeat: repeat;
-  animation: nav-border-flow 14s linear infinite, kpi-rule-extend 12s linear infinite;
+  animation:
+    nav-border-flow 14s linear infinite,
+    kpi-rule-extend 12s linear infinite;
 }
 
 @keyframes kpi-rule-extend {
-  0% { width: 120px; }
-  100% { width: 600px; }
+  0% {
+    width: 120px;
+  }
+  100% {
+    width: 600px;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .kpi-rule-active { animation: none; width: 600px; }
+  .kpi-rule-active {
+    animation: none;
+    width: 600px;
+  }
 }
-
 
 /* Stories sidebar: only the active module carries the flowing brand gradient. */
 .stories-rail-flow {
-  background-image: linear-gradient(90deg, #137DFF 0%, #FF18AA 33.333%, #FFCD17 66.666%, #137DFF 100%);
+  background-image: linear-gradient(
+    90deg,
+    #137dff 0%,
+    #ff18aa 33.333%,
+    #ffcd17 66.666%,
+    #137dff 100%
+  );
   background-size: 120vw 100%;
   background-repeat: repeat;
   animation: nav-border-flow 9s linear infinite;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .stories-rail-flow { animation: none; }
+  .stories-rail-flow {
+    animation: none;
+  }
+}
+
+/* Why Synergy long-form pages: no one-word last lines in copy, even-length
+   title lines. Hero titles carry hand-set breaks from md up, so they are only
+   balanced where they wrap on their own. */
+.why-synergy p {
+  text-wrap: pretty;
+}
+.why-synergy h2,
+.why-synergy h3 {
+  text-wrap: balance;
+}
+@media (max-width: 767px) {
+  .why-synergy h1 {
+    text-wrap: balance;
+  }
+}
+
+/* Why Synergy step diagram: a vertical timeline below xl (the article column
+   is too narrow for four columns beside the index), one column per step
+   (--steps, set inline) from xl up. */
+.why-steps {
+  grid-template-columns: minmax(0, 1fr);
+}
+@media (min-width: 1280px) {
+  .why-steps {
+    grid-template-columns: repeat(var(--steps, 4), minmax(0, 1fr));
+    /* rail · numeral · label · note — shared by every step via subgrid */
+    grid-template-rows: auto auto auto auto;
+  }
+}
+
+/* Pricing calculator sliders: 2px hairline track, ink fill up to the value
+   (--p, 0–100%), square ink thumb. */
+.calc-range {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 20px;
+  margin: 0;
+  background: transparent;
+  cursor: pointer;
+}
+.calc-range:focus-visible {
+  outline: none;
+}
+/* Track and handle sit on the page's rule weights, so a row of sliders reads
+   as structure rather than six black bars. */
+.calc-range::-webkit-slider-runnable-track {
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    rgba(14, 11, 34, 0.55) 0 var(--p, 0%),
+    rgba(14, 11, 34, 0.12) var(--p, 0%) 100%
+  );
+}
+.calc-range::-moz-range-track {
+  height: 1px;
+  background: rgba(14, 11, 34, 0.12);
+}
+.calc-range::-moz-range-progress {
+  height: 1px;
+  background: rgba(14, 11, 34, 0.55);
+}
+.calc-range::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 9px;
+  height: 9px;
+  margin-top: -4px;
+  background: #ffffff;
+  border: 1px solid rgba(14, 11, 34, 0.55);
+  border-radius: 0;
+  transition:
+    transform 160ms ease,
+    border-color 160ms ease;
+}
+.calc-range::-moz-range-thumb {
+  width: 9px;
+  height: 9px;
+  background: #ffffff;
+  border: 1px solid rgba(14, 11, 34, 0.55);
+  border-radius: 0;
+}
+.calc-range:hover::-webkit-slider-thumb {
+  border-color: #0e0b22;
+}
+.calc-range:hover::-webkit-slider-thumb,
+.calc-range:focus-visible::-webkit-slider-thumb {
+  transform: scale(1.25);
+}
+
+/* First-load bar. The server ships this markup before the bundle lands, so the
+   fill creeps on its own until the script takes over; `is-live` then hands the
+   width back to the component. */
+@keyframes site-preloader-creep {
+  from {
+    width: 0%;
+  }
+  to {
+    width: 88%;
+  }
+}
+.site-preloader-fill {
+  animation: site-preloader-creep 4s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+.site-preloader-fill.is-live {
+  animation: none;
+}
+
+/* The figure counts in CSS too, so it starts at nought with the bar rather
+   than waiting for the script and appearing part-way up. */
+@property --site-preloader-count {
+  syntax: "<integer>";
+  inherits: false;
+  initial-value: 0;
+}
+@keyframes site-preloader-counting {
+  from {
+    --site-preloader-count: 0;
+  }
+  to {
+    --site-preloader-count: 88;
+  }
+}
+.site-preloader-count {
+  counter-reset: site-preloader var(--site-preloader-count);
+  animation: site-preloader-counting 4s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+.site-preloader-count::before {
+  content: counter(site-preloader);
+}
+.site-preloader-count.is-live {
+  animation: none;
+}
+.site-preloader-count.is-live::before {
+  content: none;
+}
+
+/* Company page — the cards pinned on the globe lift a little under the cursor,
+   as if they were floating just off it. Transform only, so nothing reflows. */
+.company-float {
+  transition:
+    transform 420ms cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 420ms cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: transform;
+}
+.company-float:hover {
+  transform: translate3d(0, -6px, 0);
+  box-shadow: 0 12px 28px rgba(14, 11, 34, 0.08);
+}
+@media (prefers-reduced-motion: reduce) {
+  .company-float {
+    transition: none;
+  }
+  .company-float:hover {
+    transform: none;
+  }
+}
+
+/* Why Synergy hero copy column. Between lg and xl the halftone subject starts
+   60px right of the viewport centre, so the column yields to it instead of
+   running underneath. */
+.why-hero-copy {
+  max-width: 680px;
+}
+@media (min-width: 1024px) and (max-width: 1279px) {
+  .why-hero-copy {
+    max-width: min(680px, calc(100% - 340px));
+  }
 }

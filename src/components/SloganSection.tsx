@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 
-
 const LINES: string[][] = [
   ["We", "craft", "intelligent", "support", "experiences"],
   ["that", "keep", "pace", "with", "your", "ambition."],
@@ -15,16 +14,27 @@ const smoothstep = (a: number, b: number, x: number) => {
 
 const REVIEWS: ReactNode[] = [
   <>
-    Synergy cut our <span style={{ color: "#5749FF" }}>first-response time</span> by <span style={{ color: "#5749FF" }}>80%</span> and freed the team to focus on high-impact conversations. It feels like every customer is talking to a real agent who actually remembers the context.
+    Synergy cut our <span style={{ color: "#5749FF" }}>first-response time</span> by{" "}
+    <span style={{ color: "#5749FF" }}>80%</span> and freed the team to focus on high-impact
+    conversations. It feels like every customer is talking to a real agent who actually remembers
+    the context.
   </>,
   <>
-    The bot learned our brand voice in <span style={{ color: "#5749FF" }}>a single afternoon</span>. <span style={{ color: "#5749FF" }}>Within a week</span> it was handling routine questions, escalating complex issues, and sounding indistinguishable from our best support rep.
+    The bot learned our brand voice in <span style={{ color: "#5749FF" }}>a single afternoon</span>.{" "}
+    <span style={{ color: "#5749FF" }}>Within a week</span> it was handling routine questions,
+    escalating complex issues, and sounding indistinguishable from our best support rep.
   </>,
   <>
-    I was skeptical about AI support, but the <span style={{ color: "#5749FF" }}>24/7 coverage</span> alone paid for itself within the <span style={{ color: "#5749FF" }}>first month</span>. Our customers get instant answers at 2 a.m. without us hiring a night shift.
+    I was skeptical about AI support, but the{" "}
+    <span style={{ color: "#5749FF" }}>24/7 coverage</span> alone paid for itself within the{" "}
+    <span style={{ color: "#5749FF" }}>first month</span>. Our customers get instant answers at 2
+    a.m. without us hiring a night shift.
   </>,
   <>
-    It routes complex tickets to humans <span style={{ color: "#5749FF" }}>instantly</span> while handling the repetitive work on its own. That balance saved us <span style={{ color: "#5749FF" }}>hours every day</span> and made the whole support experience feel effortless.
+    It routes complex tickets to humans <span style={{ color: "#5749FF" }}>instantly</span> while
+    handling the repetitive work on its own. That balance saved us{" "}
+    <span style={{ color: "#5749FF" }}>hours every day</span> and made the whole support experience
+    feel effortless.
   </>,
 ];
 
@@ -32,10 +42,7 @@ export function SloganSection() {
   const sectionRef = useRef<HTMLElement | null>(null);
   const [progress, setProgress] = useState(0);
   const words = useMemo(() => LINES.flat(), []);
-  const totalChars = useMemo(
-    () => words.reduce((sum, w) => sum + w.length, 0),
-    [words]
-  );
+  const totalChars = useMemo(() => words.reduce((sum, w) => sum + w.length, 0), [words]);
 
   useEffect(() => {
     const reduced =
@@ -63,7 +70,6 @@ export function SloganSection() {
       const scrolled = LEAD_IN - rect.top;
       const p = scrolled / travel;
       setProgress(Math.max(0, Math.min(1, p)));
-
     };
 
     const schedule = () => {
@@ -83,7 +89,7 @@ export function SloganSection() {
           window.removeEventListener("resize", schedule);
         }
       },
-      { threshold: 0, rootMargin: "100% 0px 0px 0px" }
+      { threshold: 0, rootMargin: "100% 0px 0px 0px" },
     );
     if (sectionRef.current) io.observe(sectionRef.current);
 
@@ -125,12 +131,11 @@ export function SloganSection() {
       data-dark-section=""
       className="relative w-full"
       style={{
-        backgroundColor: "#0A0A0A",
+        backgroundColor: "#000000",
         height: "260vh",
         position: "relative",
         zIndex: 10,
       }}
-
     >
       {/* Faint dot-grid texture over the black backdrop */}
       <div
@@ -142,8 +147,7 @@ export function SloganSection() {
           bottom: 0,
           left: "100px",
           pointerEvents: "none",
-          backgroundImage:
-            "radial-gradient(rgba(255,255,255,0.08) 2px, transparent 2.4px)",
+          backgroundImage: "radial-gradient(rgba(255,255,255,0.08) 2px, transparent 2.4px)",
           backgroundSize: "40px 40px",
           backgroundPosition: "0 0",
           zIndex: 0,
@@ -162,60 +166,65 @@ export function SloganSection() {
           zIndex: 1,
         }}
       >
-      <div
-        className="font-display"
-        style={{
-          maxWidth: 1100,
-          textAlign: "center",
-          fontSize: "clamp(28px, 4.2vw, 54px)",
-          lineHeight: 1.25,
-          letterSpacing: "-0.01em",
-          fontWeight: 500,
-          color: "#FAFAFA",
-        }}
-      >
-        {LINES.map((line, li) => (
-          <div key={li} style={{ display: "block" }}>
-            {line.map((word, i) => {
-              return (
-                <span
-                  key={`${li}-${i}`}
-                  style={{
-                    display: "inline-block",
-                    whiteSpace: "nowrap",
-                    marginRight: i === line.length - 1 ? 0 : "0.28em",
-                  }}
-                >
-                  {word.split("").map((ch, ki) => {
-                    const a = reveal(ci++);
-                    const opacity = 0.18 + a * 0.82;
-                    const blur = (1 - a) * 2;
-                    return (
-                      <span
-                        key={ki}
-                        style={{
-                          display: "inline-block",
-                          opacity,
-                          filter:
-                            blur > 0.02 ? `blur(${blur.toFixed(2)}px)` : "none",
-                          transition:
-                            "opacity 220ms ease-out, filter 220ms ease-out",
-                          willChange: "opacity, filter",
-                        }}
-                      >
-                        {ch}
-                      </span>
-                    );
-                  })}
-                </span>
-              );
-            })}
-          </div>
-        ))}
-      </div>
+        <div
+          className="font-display"
+          style={{
+            maxWidth: 1400,
+            textAlign: "center",
+            // A standalone slogan screen, not a module title — keeps its own
+            // larger scale, above the 60px heroes rather than under them.
+            // The line breaks are hand-set, so the ceiling is the longest line
+            // clearing the 6vw gutters: it runs 19.7x the font size, so 4.4vw is
+            // the hard limit and this sits under it — the fallback face during
+            // the font swap is wider than Clash Display and would wrap on the
+            // last few pixels.
+            fontSize: "clamp(28px, 4.3vw, 68px)",
+            lineHeight: 1.25,
+            letterSpacing: "-0.01em",
+            fontWeight: 400,
+            color: "#FAFAFA",
+          }}
+        >
+          {LINES.map((line, li) => (
+            <div key={li} style={{ display: "block" }}>
+              {line.map((word, i) => {
+                return (
+                  <span
+                    key={`${li}-${i}`}
+                    style={{
+                      display: "inline-block",
+                      whiteSpace: "nowrap",
+                      marginRight: i === line.length - 1 ? 0 : "0.28em",
+                    }}
+                  >
+                    {word.split("").map((ch, ki) => {
+                      const a = reveal(ci++);
+                      const opacity = 0.18 + a * 0.82;
+                      const blur = (1 - a) * 2;
+                      return (
+                        <span
+                          key={ki}
+                          style={{
+                            display: "inline-block",
+                            opacity,
+                            filter: blur > 0.02 ? `blur(${blur.toFixed(2)}px)` : "none",
+                            transition: "opacity 220ms ease-out, filter 220ms ease-out",
+                            willChange: "opacity, filter",
+                          }}
+                        >
+                          {ch}
+                        </span>
+                      );
+                    })}
+                  </span>
+                );
+              })}
+            </div>
+          ))}
+        </div>
 
-      {/* Auto-scrolling customer reviews */}
-      <style>{`
+        {/* Auto-scrolling customer reviews */}
+        <style>{`
         @keyframes testimonial-marquee {
           0% { transform: translateX(0); }
           100% { transform: translateX(-50%); }
@@ -226,88 +235,86 @@ export function SloganSection() {
           }
         }
       `}</style>
-      <div
-        style={{
-          position: "absolute",
-          bottom: 120,
-          left: 0,
-          right: 0,
-          overflow: "hidden",
-          zIndex: 2,
-        }}
-      >
         <div
           style={{
-            position: "relative",
-            width: "min(100%, 1200px)",
-            margin: "0 auto",
+            position: "absolute",
+            bottom: 120,
+            left: 0,
+            right: 0,
             overflow: "hidden",
+            zIndex: 2,
           }}
         >
           <div
-            className="testimonial-track"
             style={{
-              display: "flex",
-              width: "max-content",
-              animation: "testimonial-marquee 60s linear infinite",
+              position: "relative",
+              width: "min(100%, 1200px)",
+              margin: "0 auto",
+              overflow: "hidden",
             }}
           >
-            {[...REVIEWS, ...REVIEWS].map((text, i) => (
-              <div
-                key={i}
-                style={{
-                  width: 480,
-                  padding: "0 48px",
-                  borderRight: "1px solid rgba(255,255,255,0.12)",
-                  flexShrink: 0,
-                }}
-              >
-                <p
+            <div
+              className="testimonial-track"
+              style={{
+                display: "flex",
+                width: "max-content",
+                animation: "testimonial-marquee 60s linear infinite",
+              }}
+            >
+              {[...REVIEWS, ...REVIEWS].map((text, i) => (
+                <div
+                  key={i}
                   style={{
-                    margin: 0,
-                    fontFamily: "var(--font-sans)",
-                    fontStyle: "italic",
-                    fontWeight: 400,
-                    fontSize: 14,
-                    lineHeight: "22px",
-                    color: "rgba(255,255,255,0.6)",
-                    display: "-webkit-box",
-                    WebkitLineClamp: 3,
-                    WebkitBoxOrient: "vertical",
-                    overflow: "hidden",
+                    width: 480,
+                    padding: "0 48px",
+                    borderRight: "1px solid rgba(255,255,255,0.12)",
+                    flexShrink: 0,
                   }}
                 >
-                  “{text}”
-                </p>
-              </div>
-            ))}
-          </div>
+                  <p
+                    style={{
+                      margin: 0,
+                      fontFamily: "var(--font-sans)",
+                      fontStyle: "italic",
+                      fontWeight: 400,
+                      fontSize: 14,
+                      lineHeight: "22px",
+                      color: "rgba(255,255,255,0.6)",
+                      display: "-webkit-box",
+                      WebkitLineClamp: 3,
+                      WebkitBoxOrient: "vertical",
+                      overflow: "hidden",
+                    }}
+                  >
+                    “{text}”
+                  </p>
+                </div>
+              ))}
+            </div>
 
-          {/* Left / right edge fades */}
-          <div
-            aria-hidden
-            style={{
-              position: "absolute",
-              inset: "0 auto 0 0",
-              width: 80,
-              pointerEvents: "none",
-              background:
-                "linear-gradient(to right, #0A0A0A 0%, rgba(10,10,10,0) 100%)",
-            }}
-          />
-          <div
-            aria-hidden
-            style={{
-              position: "absolute",
-              inset: "0 0 0 auto",
-              width: 80,
-              pointerEvents: "none",
-              background:
-                "linear-gradient(to left, #0A0A0A 0%, rgba(10,10,10,0) 100%)",
-            }}
-          />
+            {/* Left / right edge fades */}
+            <div
+              aria-hidden
+              style={{
+                position: "absolute",
+                inset: "0 auto 0 0",
+                width: 80,
+                pointerEvents: "none",
+                background: "linear-gradient(to right, #000000 0%, rgba(0,0,0,0) 100%)",
+              }}
+            />
+            <div
+              aria-hidden
+              style={{
+                position: "absolute",
+                inset: "0 0 0 auto",
+                width: 80,
+                pointerEvents: "none",
+                background: "linear-gradient(to left, #000000 0%, rgba(0,0,0,0) 100%)",
+              }}
+            />
+          </div>
         </div>
-      </div>
       </div>
     </section>
   );

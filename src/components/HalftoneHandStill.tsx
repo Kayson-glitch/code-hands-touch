@@ -1,10 +1,13 @@
 import { useEffect, useRef } from "react";
 import { handsFramesAsset } from "@/lib/media";
 import {
+  DYE_STRENGTH,
   FluidField,
+  INK_STOPS,
   breathWave,
   dyeAt,
 } from "@/components/HalftoneHandsFooter";
+import { useHeroLayout } from "@/hooks/useHeroLayout";
 
 /**
  * Halftone rendering of ONE hand, taken from the same sprite atlas the homepage
@@ -21,12 +24,10 @@ const FRAME_H = 178;
 const DOT_FILL = 0.9;
 const MIN_DENSITY = 0.05;
 const SQUARE_AT = 0.88;
-/** Light ink stops — for dark backgrounds (the homepage hero). */
-const INK_STOPS_LIGHT: Array<[number, number, number]> = [
-  [0xdc, 0xdc, 0xdc],
-  [0xb4, 0xb4, 0xb4],
-  [0x82, 0x82, 0x82],
-];
+/** Light ink stops — the homepage hands' ramp, so tone matches the first screen. */
+const INK_STOPS_LIGHT: Array<[number, number, number]> = INK_STOPS;
+/** Homepage fluid grid: 110 cells across the viewport → dye radius in CSS px. */
+const FLUID_TARGET_COLS = 110;
 /** Dark ink stops — mirror of the light set, for light/white backgrounds. */
 const INK_STOPS_DARK: Array<[number, number, number]> = [
   [0x7d, 0x7d, 0x7d],
@@ -41,10 +42,12 @@ const BREATH_AMP = 0.035;
 const BREATH_PERIOD = 5200;
 const DOT_ALPHA_AMP = 0.2;
 const DOT_ALPHA_PERIOD = 5000;
+// Entrance: the print "develops" — dots grow in from nothing on a scattered
+// stagger with a gentle left → right drift, in step with the hero copy reveal.
+const ENTER_MS = 1400;
+const ENTER_WINDOW = 0.35;
 
-const BAYER = [0, 8, 2, 10, 12, 4, 14, 6, 3, 11, 1, 9, 15, 7, 13, 5].map(
-  (v) => (v + 0.5) / 16,
-);
+const BAYER = [0, 8, 2, 10, 12, 4, 14, 6, 3, 11, 1, 9, 15, 7, 13, 5].map((v) => (v + 0.5) / 16);
 
 function inkAt(d: number, stops: Array<[number, number, number]>) {
   const t = Math.min(1, Math.max(0, d));
@@ -87,9 +90,22 @@ type Dot = {
   cx: number;
   alphaPhase: number;
   alphaSpeed: number;
+  /** Entrance stagger, 0..1 − ENTER_WINDOW (fraction of the entrance). */
+  enterDelay: number;
 };
 
 type Props = {
+  /**
+   * Any grayscale image on a white background to halftone instead of the hands
+   * atlas. Dark = ink. When set, `frame` is ignored and the crop fractions
+   * apply to this image.
+   */
+  src?: string;
+  /**
+   * Tone multiplier applied to darkness before dot sizing (1 = as drawn).
+   * Marble renders are very light; ~1.7 brings them to the hands' weight.
+   */
+  contrast?: number;
   /** Atlas frame to freeze on (defaults to the last frame). */
   frame?: number;
   /** Horizontal crop of the source frame, 0..1. Defaults to the right hand. */
@@ -98,7 +114,7 @@ type Props = {
   /** Vertical crop of the source frame, 0..1. */
   cropY?: number;
   cropH?: number;
-  /** Dot pitch in CSS px. */
+  /** Dot pitch in CSS px. Defaults to the homepage hands' pitch for the current viewport. */
   pitch?: number;
   /** Ink tone: "light" (default, for dark backgrounds) or "dark" (for light backgrounds). */
   ink?: "light" | "dark";
@@ -107,16 +123,21 @@ type Props = {
 };
 
 export function HalftoneHandStill({
+  src,
+  contrast = 1,
   frame = FRAME_COUNT - 1,
   cropX = 0.44,
   cropW = 0.56,
   cropY = 0,
   cropH = 1,
-  pitch = 5,
+  pitch: pitchProp,
   ink = "light",
   className,
   style,
 }: Props) {
+  const layout = useHeroLayout();
+  // Same rule as HalftoneHandsFooter, so dots are the same size on every page.
+  const pitch = pitchProp ?? Math.max(5, Math.round(layout.cellSize * 0.62));
   const hostRef = useRef<HTMLDivElement | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const pointerRef = useRef({ tx: 0, ty: 0, x: 0, y: 0 });
@@ -127,10 +148,11 @@ export function HalftoneHandStill({
     let raf = 0;
     let atlas: HTMLImageElement | null = null;
     let dots: Dot[] = [];
+    // Set on the first successful build; resizes later on rebuild the field
+    // without replaying the entrance.
+    let enterStart = 0;
     const stops = ink === "dark" ? INK_STOPS_DARK : INK_STOPS_LIGHT;
-    const prefersReduce = window.matchMedia(
-      "(prefers-reduced-motion: reduce)",
-    ).matches;
+    const prefersReduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     const maxR = pitch * 0.5 * DOT_FILL;
 
     /** Rebuild the dot field for the current host size. */
@@ -150,10 +172,16 @@ export function HalftoneHandStill({
       if (!ctx) return;
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
-      fluidRef.current = new FluidField(w, h);
+      // Match the homepage's fluid cell size in CSS px (its grid spans the
+      // viewport), so the cursor's dye trail covers the same area here.
+      const fluidCols = Math.round((FLUID_TARGET_COLS * w) / Math.max(w, window.innerWidth));
+      fluidRef.current = new FluidField(w, h, Math.max(16, fluidCols));
 
-      // Contain-fit the cropped source so the hand keeps its aspect ratio.
-      const srcAr = (cropW * FRAME_W) / (cropH * FRAME_H);
+      // Source rectangle: a frame of the hands atlas, or the whole custom image.
+      const baseW = src ? atlas.naturalWidth : FRAME_W;
+      const baseH = src ? atlas.naturalHeight : FRAME_H;
+      // Contain-fit the cropped source so the subject keeps its aspect ratio.
+      const srcAr = (cropW * baseW) / (cropH * baseH);
       let drawW = w;
       let drawH = drawW / srcAr;
       if (drawH > h) {
@@ -175,20 +203,10 @@ export function HalftoneHandStill({
       octx.fillRect(0, 0, cols, rows);
       octx.imageSmoothingEnabled = true;
       const idx = Math.min(FRAME_COUNT - 1, Math.max(0, frame));
-      const sx = (idx % ATLAS_COLS) * FRAME_W + cropX * FRAME_W;
-      const sy = Math.floor(idx / ATLAS_COLS) * FRAME_H + cropY * FRAME_H;
+      const sx = src ? cropX * baseW : (idx % ATLAS_COLS) * FRAME_W + cropX * FRAME_W;
+      const sy = src ? cropY * baseH : Math.floor(idx / ATLAS_COLS) * FRAME_H + cropY * FRAME_H;
       (octx as unknown as { filter: string }).filter = "blur(0.5px)";
-      octx.drawImage(
-        atlas,
-        sx,
-        sy,
-        cropW * FRAME_W,
-        cropH * FRAME_H,
-        0,
-        0,
-        cols,
-        rows,
-      );
+      octx.drawImage(atlas, sx, sy, cropW * baseW, cropH * baseH, 0, 0, cols, rows);
       (octx as unknown as { filter: string }).filter = "none";
       const data = octx.getImageData(0, 0, cols, rows).data;
 
@@ -196,9 +214,8 @@ export function HalftoneHandStill({
       for (let j = 0; j < rows; j++) {
         for (let i = 0; i < cols; i++) {
           const p = (j * cols + i) * 4;
-          const luma =
-            (0.2126 * data[p] + 0.7152 * data[p + 1] + 0.0722 * data[p + 2]) /
-            255;
+          const rawLuma = (0.2126 * data[p] + 0.7152 * data[p + 1] + 0.0722 * data[p + 2]) / 255;
+          const luma = 1 - Math.min(1, (1 - rawLuma) * contrast);
           const t = Math.min(1, Math.max(0, (1 - luma - 0.02) / 0.88));
           let density = Math.pow(t, 0.8);
           const dither = (BAYER[(j & 3) * 4 + (i & 3)] - 0.5) * 0.07;
@@ -215,10 +232,12 @@ export function HalftoneHandStill({
             cx: 1 - Math.abs(nx * 2 - 1),
             alphaPhase: hash2(i * 3.7, j * 1.9) * Math.PI * 2,
             alphaSpeed: 0.7 + hash2(j * 5.1, i * 2.3) * 0.6,
+            enterDelay: (1 - ENTER_WINDOW) * (0.7 * hash2(i * 1.3 + 7, j * 2.1 + 3) + 0.3 * nx),
           });
         }
       }
       dots = next;
+      if (!enterStart && next.length) enterStart = performance.now();
     };
 
     const draw = (now: number, last: { t: number }) => {
@@ -248,8 +267,21 @@ export function HalftoneHandStill({
       const fluid = fluidRef.current;
       if (fluid && !prefersReduce) fluid.step(dt);
 
+      const enter = prefersReduce || !enterStart ? 1 : Math.min(1, (now - enterStart) / ENTER_MS);
+
       for (let k = 0; k < dots.length; k++) {
         const dot = dots[k];
+
+        // Entrance: each dot grows and fades in over its own slice of the run.
+        let grow = 1;
+        let fade = 1;
+        if (enter < 1) {
+          const local = (enter - dot.enterDelay) / ENTER_WINDOW;
+          if (local <= 0) continue;
+          fade = local >= 1 ? 1 : local;
+          grow = 1 - Math.pow(1 - fade, 3);
+        }
+
         const weight = 0.35 + dot.cx * 0.65;
         const x = dot.x + p.x * PARALLAX_X * weight;
         const y = dot.y + p.y * PARALLAX_Y * weight;
@@ -259,20 +291,20 @@ export function HalftoneHandStill({
 
         const raw = Math.min(1, dot.d * breath);
         const d = raw < 0.8 ? raw : 0.8 + (raw - 0.8) * 0.7;
-        const r = Math.max(0.35, maxR * Math.sqrt(d) * radiusScale);
+        const r = Math.max(0.35, maxR * Math.sqrt(d) * radiusScale * grow);
 
-        ctx.globalAlpha = prefersReduce
-          ? 1
-          : 1 -
-            breathWave(
-              (now / DOT_ALPHA_PERIOD) * dot.alphaSpeed +
-                dot.alphaPhase / (Math.PI * 2),
-            ) *
-              DOT_ALPHA_AMP;
+        ctx.globalAlpha =
+          (prefersReduce
+            ? 1
+            : 1 -
+              breathWave(
+                (now / DOT_ALPHA_PERIOD) * dot.alphaSpeed + dot.alphaPhase / (Math.PI * 2),
+              ) *
+                DOT_ALPHA_AMP) * fade;
 
         const [ir, ig, ib] = inkAt(d, stops);
         if (dye > 0.004) {
-          const mix = smoothstep(dye) * (0.45 + d * 0.55);
+          const mix = smoothstep(dye) * (0.45 + d * 0.55) * DYE_STRENGTH;
           const [dr, dg, db] = dyeAt(Math.min(1, dye * 0.9 + d * 0.02));
           ctx.fillStyle = `rgb(${Math.round(ir + (dr - ir) * mix)},${Math.round(
             ig + (dg - ig) * mix,
@@ -306,7 +338,7 @@ export function HalftoneHandStill({
       raf = requestAnimationFrame(loop);
     };
 
-    loadImage(handsFramesAsset.url)
+    loadImage(src ?? handsFramesAsset.url)
       .then((img) => {
         if (!alive) return;
         atlas = img;
@@ -338,13 +370,7 @@ export function HalftoneHandStill({
         const steps = Math.min(12, Math.max(1, Math.round(dist / 14)));
         for (let s = 1; s <= steps; s++) {
           const f = s / steps;
-          fluid.splat(
-            prev.x + (cx - prev.x) * f,
-            prev.y + (cy - prev.y) * f,
-            vx,
-            vy,
-            1 / steps,
-          );
+          fluid.splat(prev.x + (cx - prev.x) * f, prev.y + (cy - prev.y) * f, vx, vy, 1 / steps);
         }
       } else {
         fluid.splat(cx, cy, 0, 0, 1);
@@ -376,7 +402,7 @@ export function HalftoneHandStill({
       window.removeEventListener("mousemove", onMove);
       window.removeEventListener("mouseleave", onLeave);
     };
-  }, [frame, cropX, cropW, cropY, cropH, pitch, ink]);
+  }, [src, contrast, frame, cropX, cropW, cropY, cropH, pitch, ink]);
 
   return (
     <div ref={hostRef} className={className} style={style} aria-hidden>

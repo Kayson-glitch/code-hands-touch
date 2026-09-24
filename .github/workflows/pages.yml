@@ -1,0 +1,64 @@
+name: Pages
+
+# A stable address for the site served straight from the repository. The
+# Cloudflare build is untouched — this only runs the extra
+# STATIC_BASE pass, which prerenders every route to plain HTML.
+#
+# Dormant until Pages can be turned on, which this repository can't do yet:
+# it is private, and Pages on a private repository needs GitHub Pro. Make the
+# repository public (Settings → General → Danger Zone) or upgrade, then set
+# Settings → Actions → General → Workflow permissions to read and write, and
+# run this workflow once. It deploys on every push to main after that.
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Let a running deploy finish; queue at most one behind it.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - run: bun install --frozen-lockfile
+
+      # `enablement` creates the Pages site on the first run, so the repo
+      # needs no manual setup in Settings.
+      - id: pages
+        uses: actions/configure-pages@v5
+        with:
+          enablement: true
+
+      # Pages serves a project site from /<repo>/, so the build has to know
+      # its prefix. base_path arrives without a trailing slash; Vite wants one.
+      - run: STATIC_BASE="${{ steps.pages.outputs.base_path }}/" bun run build
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist/client
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

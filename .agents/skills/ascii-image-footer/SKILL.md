@@ -10,20 +10,18 @@ Locked, pre-tuned implementation of the ASCII image effect. Replacing the source
 ## Preflight
 
 1. Project must be TanStack Start (has `src/routes/` and `src/components/`). If not, stop and tell the user.
-2. `lovable-assets` must be on PATH: `command -v lovable-assets`. If missing, stop and tell the user the assets integration isn't active.
-3. Get the source image. Prefer a file the user just uploaded under `/mnt/user-uploads/`. If none is present and the user hasn't provided one, ask for an image before continuing.
+2. Get the source image. Prefer a file the user just uploaded under `/mnt/user-uploads/`. If none is present and the user hasn't provided one, ask for an image before continuing.
 
 ## Steps
 
 Run these in order. Batch independent file writes in parallel.
 
-1. **Upload the image as a CDN asset** — keep the pointer filename fixed so the component import never changes:
+1. **Drop the image into `public/`** — keep the filename fixed so the component never changes:
    ```bash
-   lovable-assets create --file <source-image-path> --filename hands-pair.png \
-     > src/assets/hands-pair.png.asset.json
+   mkdir -p public/media && cp <source-image-path> public/media/hands-pair.png
    ```
 2. **Install the component** — copy `assets/AsciiHandsFooter.tsx` from this skill verbatim to `src/components/AsciiHandsFooter.tsx`. Do not modify any constants.
-3. **Wire the route** — write `references/route-template.tsx.txt` to `src/routes/index.tsx`. Replace `{{TITLE}}` and `{{DESCRIPTION}}` with project-appropriate copy; if the user gave none, use the neutral fallbacks in the template comments. Do not add `og:image` here (leaf-route rule: only set og:image when there is a real meaningful image URL; the CDN hand image is decorative, so omit it and let hosting supply a preview).
+3. **Wire the route** — write `references/route-template.tsx.txt` to `src/routes/index.tsx`. Replace `{{TITLE}}` and `{{DESCRIPTION}}` with project-appropriate copy; if the user gave none, use the neutral fallbacks in the template comments. Do not add `og:image` here (leaf-route rule: only set og:image when there is a real meaningful image URL; the hand image is decorative, so omit it and let hosting supply a preview).
 4. **Verify** — run `bun run build`. If it fails, fix the failure in the same turn before finishing.
 5. **Report** — one short sentence to the user: image swapped, effect reproduced, tuning unchanged.
 
@@ -33,10 +31,10 @@ The constants at the top of `AsciiHandsFooter.tsx` are locked defaults from prio
 
 ## Contract with the component
 
-The component talks to the outside world through exactly one import:
+The component talks to the outside world through exactly one path:
 
 ```ts
-import handsPairAsset from "@/assets/hands-pair.png.asset.json";
+const handsPairAsset = { url: "/media/hands-pair.png" };
 ```
 
-Therefore: replacing the `.asset.json` pointer file swaps the visual; nothing else needs to change.
+Therefore: replacing that file under `public/media/` swaps the visual; nothing else needs to change.

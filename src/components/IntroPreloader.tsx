@@ -55,12 +55,26 @@ export function IntroPreloader({
     const waitFrame = (target: HTMLVideoElement, timeoutMs: number) =>
       new Promise<void>((resolve) => {
         let settled = false;
-        const finish = () => { if (settled) return; settled = true; resolve(); };
-        const rvfc = (target as unknown as {
-          requestVideoFrameCallback?: (cb: () => void) => number;
-        }).requestVideoFrameCallback;
-        if (typeof rvfc !== "function") { finish(); return; }
-        try { rvfc.call(target, finish); } catch { finish(); return; }
+        const finish = () => {
+          if (settled) return;
+          settled = true;
+          resolve();
+        };
+        const rvfc = (
+          target as unknown as {
+            requestVideoFrameCallback?: (cb: () => void) => number;
+          }
+        ).requestVideoFrameCallback;
+        if (typeof rvfc !== "function") {
+          finish();
+          return;
+        }
+        try {
+          rvfc.call(target, finish);
+        } catch {
+          finish();
+          return;
+        }
         setTimeout(finish, timeoutMs);
       });
 
@@ -84,7 +98,11 @@ export function IntroPreloader({
       document.body.appendChild(v);
       handshakeVideoRef.current = v;
       v.src = url;
-      try { v.load(); } catch { /* ignore */ }
+      try {
+        v.load();
+      } catch {
+        /* ignore */
+      }
       try {
         // A + B — metadata and first decoded frame
         if (v.readyState < 1) await waitEvent(v, "loadedmetadata", 1500);
@@ -98,19 +116,29 @@ export function IntroPreloader({
         try {
           v.currentTime = 0;
           await waitEvent(v, "seeked", 800);
-        } catch { /* ignore */ }
+        } catch {
+          /* ignore */
+        }
         if (cancelled) return null;
         // E — decoder warmup via play/pause
         try {
           const p = v.play();
           if (p && typeof (p as Promise<void>).then === "function") await p;
           v.pause();
-          try { v.currentTime = 0; } catch { /* ignore */ }
-        } catch { /* ignore (autoplay policy, blob quirks) */ }
+          try {
+            v.currentTime = 0;
+          } catch {
+            /* ignore */
+          }
+        } catch {
+          /* ignore (autoplay policy, blob quirks) */
+        }
         if (cancelled) return null;
         // F — one compositable frame
         await waitFrame(v, 500);
-      } catch { /* fall through */ }
+      } catch {
+        /* fall through */
+      }
       return v;
     };
 
@@ -207,8 +235,17 @@ export function IntroPreloader({
       // If a handshake video was created but never handed off, clean it up.
       const v = handshakeVideoRef.current;
       if (v && !handedOffRef.current) {
-        try { v.pause(); } catch { /* ignore */ }
-        try { v.removeAttribute("src"); v.load(); } catch { /* ignore */ }
+        try {
+          v.pause();
+        } catch {
+          /* ignore */
+        }
+        try {
+          v.removeAttribute("src");
+          v.load();
+        } catch {
+          /* ignore */
+        }
         if (v.parentNode) v.parentNode.removeChild(v);
       }
     };

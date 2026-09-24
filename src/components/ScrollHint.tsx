@@ -24,12 +24,18 @@ export function ScrollHint({ visible = true }: { visible?: boolean }) {
       setAtEntry(Boolean(detail?.atEntry));
     };
     window.addEventListener("hands-entry-state", onState as EventListener);
-    return () =>
-      window.removeEventListener("hands-entry-state", onState as EventListener);
+    return () => window.removeEventListener("hands-entry-state", onState as EventListener);
   }, []);
 
-  const on = visible && entered && atEntry;
+  // It sits above the nav, so it would otherwise read through the menu panel.
+  const [menuOpen, setMenuOpen] = useState(false);
+  useEffect(() => {
+    const onMenu = (e: Event) => setMenuOpen((e as CustomEvent<boolean>).detail);
+    window.addEventListener("app-menu-open", onMenu);
+    return () => window.removeEventListener("app-menu-open", onMenu);
+  }, []);
 
+  const on = visible && entered && atEntry && !menuOpen;
 
   return (
     <div
@@ -57,57 +63,57 @@ export function ScrollHint({ visible = true }: { visible?: boolean }) {
           willChange: "opacity",
         }}
       >
-      <span
-        style={{
-          fontFamily: "var(--font-sans)",
-          fontSize: "clamp(12px, 0.9722vw, 18px)",
-          lineHeight: "clamp(18px, 1.3889vw, 26px)",
-          fontWeight: 400,
-          textTransform: "capitalize",
-          color: "#000000",
-          whiteSpace: "nowrap",
-        }}
-      >
-        scroll
-      </span>
-      <span
-        style={{
-          width: "clamp(20px, 1.6667vw, 30px)",
-          height: "clamp(20px, 1.6667vw, 30px)",
-          padding: 2,
-          border: "1px solid #E1E0E4",
-          borderRadius: 999,
-          flexShrink: 0,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          boxSizing: "border-box",
-        }}
-      >
-        {/* Figma vuesax/linear/arrow-down (node 1415:20941) — icon 20x20 */}
-        <svg
-          width="100%"
-          height="100%"
-          viewBox="0 0 20 20"
-          fill="none"
-          style={{ animation: "scroll-hint-arrow 2.8s ease-in-out infinite" }}
+        <span
+          style={{
+            fontFamily: "var(--font-sans)",
+            fontSize: "clamp(12px, 0.9722vw, 18px)",
+            lineHeight: "clamp(18px, 1.3889vw, 26px)",
+            fontWeight: 400,
+            textTransform: "capitalize",
+            color: "#000000",
+            whiteSpace: "nowrap",
+          }}
         >
-          <path
-            d="M15.0581 10.3581L9.99974 15.4164L4.94141 10.3581"
-            stroke="#5E5C6A"
-            strokeMiterlimit="10"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-          <path
-            d="M10 4.58333V15.275"
-            stroke="#5E5C6A"
-            strokeMiterlimit="10"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-        </svg>
-      </span>
+          scroll
+        </span>
+        <span
+          style={{
+            width: "clamp(20px, 1.6667vw, 30px)",
+            height: "clamp(20px, 1.6667vw, 30px)",
+            padding: 2,
+            border: "1px solid #E1E0E4",
+            borderRadius: 999,
+            flexShrink: 0,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            boxSizing: "border-box",
+          }}
+        >
+          {/* Figma vuesax/linear/arrow-down (node 1415:20941) — icon 20x20 */}
+          <svg
+            width="100%"
+            height="100%"
+            viewBox="0 0 20 20"
+            fill="none"
+            style={{ animation: "scroll-hint-arrow 2.8s ease-in-out infinite" }}
+          >
+            <path
+              d="M15.0581 10.3581L9.99974 15.4164L4.94141 10.3581"
+              stroke="#5E5C6A"
+              strokeMiterlimit="10"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+            <path
+              d="M10 4.58333V15.275"
+              stroke="#5E5C6A"
+              strokeMiterlimit="10"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
+        </span>
       </div>
       <style>{`
         @keyframes scroll-hint-arrow {

@@ -1,4 +1,5 @@
-import { useEffect, useRef, useState, type CSSProperties } from "react";
+import { useEffect, useState, type CSSProperties } from "react";
+import { closingPanelAssets } from "@/lib/media";
 
 type Point = { label: string; text: string };
 
@@ -7,11 +8,14 @@ type Panel = {
   eyebrow: string;
   title: string;
   points: Point[];
+  /** The module's colour, from the same set the nav menus mark sections with. */
+  dot: string;
 };
 
 export const PANELS: Panel[] = [
   {
     id: "001",
+    dot: "#8CE0FF",
     eyebrow: "Rapid Response",
     title: "Resolve 93% of Customer Issues Instantly",
     points: [
@@ -24,59 +28,113 @@ export const PANELS: Panel[] = [
         label: "Complex Workflow Handling",
         text: "Handles complex workflows—not just questions—end to end.",
       },
-      { label: "Seamless Human Handoff", text: "Instant context summaries for smooth agent takeover." },
+      {
+        label: "Seamless Human Handoff",
+        text: "Instant context summaries for smooth agent takeover.",
+      },
     ],
   },
   {
     id: "002",
+    dot: "#FF9ED8",
     eyebrow: "Brand Voice",
     title: "Speak in Your Brand Voice, Every Time",
     points: [
-      { label: "Tone Control", text: "Tuned to your style guide, from playful to strictly formal." },
+      {
+        label: "Tone Control",
+        text: "Tuned to your style guide, from playful to strictly formal.",
+      },
       { label: "Grounded Answers", text: "Replies cite your help center, docs and policy pages." },
-      { label: "Multilingual by Default", text: "Answers in 30+ languages without separate content sets." },
-      { label: "Guardrails", text: "Blocks off-topic promises, refunds and claims you never approved." },
+      {
+        label: "Multilingual by Default",
+        text: "Answers in 30+ languages without separate content sets.",
+      },
+      {
+        label: "Guardrails",
+        text: "Blocks off-topic promises, refunds and claims you never approved.",
+      },
     ],
   },
   {
     id: "003",
+    dot: "#9E8CFF",
     eyebrow: "Smart Routing",
     title: "Route Every Conversation to the Right Place",
     points: [
-      { label: "Intent Detection", text: "Reads urgency, sentiment and account value in real time." },
-      { label: "Priority Queues", text: "VIP and at-risk customers reach a human before they churn." },
-      { label: "Skill Matching", text: "Billing, shipping or technical—each ticket finds its expert." },
-      { label: "Zero Repetition", text: "Full history travels with the customer, no retelling required." },
+      {
+        label: "Intent Detection",
+        text: "Reads urgency, sentiment and account value in real time.",
+      },
+      {
+        label: "Priority Queues",
+        text: "VIP and at-risk customers reach a human before they churn.",
+      },
+      {
+        label: "Skill Matching",
+        text: "Billing, shipping or technical—each ticket finds its expert.",
+      },
+      {
+        label: "Zero Repetition",
+        text: "Full history travels with the customer, no retelling required.",
+      },
     ],
   },
   {
     id: "004",
+    dot: "#D1E486",
     eyebrow: "Omnichannel",
     title: "One Conversation Across Every Channel",
     points: [
-      { label: "Unified Inbox", text: "Web chat, email, app and social threads live in one timeline." },
+      {
+        label: "Unified Inbox",
+        text: "Web chat, email, app and social threads live in one timeline.",
+      },
       { label: "Shared Context", text: "Start on mobile, finish on desktop—nothing gets lost." },
       { label: "Proactive Nudges", text: "Reaches out on order delays before the customer asks." },
-      { label: "Native Integrations", text: "Connects to your CRM, order system and ticketing in minutes." },
+      {
+        label: "Native Integrations",
+        text: "Connects to your CRM, order system and ticketing in minutes.",
+      },
     ],
   },
   {
     id: "005",
+    dot: "#EBA753",
     eyebrow: "Support Insight",
     title: "Turn Support Data Into Product Insight",
     points: [
       { label: "Auto Clustering", text: "Groups recurring questions into themes you can act on." },
-      { label: "Deflection Analytics", text: "Shows exactly which answers save the most agent hours." },
+      {
+        label: "Deflection Analytics",
+        text: "Shows exactly which answers save the most agent hours.",
+      },
       { label: "Quality Scoring", text: "Reviews every conversation, not a 2% random sample." },
       { label: "Continuous Learning", text: "Feeds gaps straight back into your knowledge base." },
     ],
   },
 ];
 
+/**
+ * Ticker label colour: paper grey out at the edges of the strip, lifting to
+ * the module's own hue as it slides into the centre. At lum 0 this is the
+ * same grey the CSS ramp used before.
+ */
+function tickerColour(hex: string, lum: number) {
+  const n = parseInt(hex.slice(1), 16);
+  const to = (channel: number) => Math.round(255 + (channel - 255) * lum);
+  const r = to(n >> 16);
+  const g = to((n >> 8) & 255);
+  const b = to(n & 255);
+  return `rgba(${r}, ${g}, ${b}, ${(0.32 + 0.68 * lum).toFixed(3)})`;
+}
+
 /** Milliseconds per typed character. */
-const CHAR_MS = 130;
+const CHAR_MS = 30;
 /** Extra jitter per character so the rhythm feels human. */
-const CHAR_JITTER_MS = 26;
+const CHAR_JITTER_MS = 12;
+/** Beats held after punctuation and between words. */
+const PUNCT_MS = 90;
+const SPACE_MS = 18;
 /** Delay before a field starts typing once its panel is active. */
 const BASE_DELAY = 140;
 
@@ -99,35 +157,30 @@ function Typed({
   style?: CSSProperties;
 }) {
   const [count, setCount] = useState(0);
-  const timerRef = useRef<number | null>(null);
 
   useEffect(() => {
     if (!active) {
       setCount(0);
       return;
     }
-    let cancelled = false;
+    // The chain has to schedule itself from the timer, not from inside the
+    // state updater: the updater only runs when React gets round to the
+    // render, so on this screen — a pinned canvas scrub with the wheel live —
+    // every character was waiting on a commit and the real cadence came out
+    // near twice the one set here.
+    let timer = 0;
+    let typed = 0;
     const step = () => {
-      if (cancelled) return;
-      setCount((c) => {
-        const next = c + 1;
-        if (next < text.length) {
-          // Pause a little longer after punctuation / spaces, like real typing.
-          const ch = text[next - 1] ?? "";
-          const punct = /[.,—:;!?]/.test(ch) ? 140 : ch === " " ? 40 : 0;
-          timerRef.current = window.setTimeout(
-            step,
-            CHAR_MS + Math.random() * CHAR_JITTER_MS + punct
-          );
-        }
-        return Math.min(next, text.length);
-      });
+      typed += 1;
+      setCount(typed);
+      if (typed >= text.length) return;
+      // Pause a little longer after punctuation / spaces, like real typing.
+      const ch = text[typed - 1] ?? "";
+      const beat = /[.,—:;!?]/.test(ch) ? PUNCT_MS : ch === " " ? SPACE_MS : 0;
+      timer = window.setTimeout(step, CHAR_MS + Math.random() * CHAR_JITTER_MS + beat);
     };
-    timerRef.current = window.setTimeout(step, delay);
-    return () => {
-      cancelled = true;
-      if (timerRef.current) window.clearTimeout(timerRef.current);
-    };
+    timer = window.setTimeout(step, delay);
+    return () => window.clearTimeout(timer);
   }, [active, text, delay]);
 
   const started = count > 0;
@@ -166,10 +219,7 @@ export function FeaturePanels({
       {PANELS.map((panel, index) => {
         const active = !pinned || index === activeIndex;
         return (
-          <article
-            key={panel.id}
-            className={`artemis-gallery__panel${active ? " is-active" : ""}`}
-          >
+          <article key={panel.id} className={`artemis-gallery__panel${active ? " is-active" : ""}`}>
             {(() => {
               // Simultaneous typing: every field starts at the same moment and
               // types at the same speed.
@@ -178,10 +228,18 @@ export function FeaturePanels({
               return (
                 <>
                   <p className="artemis-gallery__eyebrow">
+                    {/* The section square the nav menus use, in this module's colour. */}
+                    <span
+                      aria-hidden
+                      className="artemis-gallery__mark"
+                      style={{ background: panel.dot }}
+                    />
                     [ <Typed text={panel.eyebrow} active={active} delay={eyebrowDelay} /> ]
                   </p>
                   <div className="artemis-gallery__row">
-                    <div className="artemis-gallery__media" aria-hidden />
+                    <div className="artemis-gallery__media" aria-hidden>
+                      <img src={closingPanelAssets[index]?.url} alt="" draggable={false} />
+                    </div>
                     <div className="artemis-gallery__copy">
                       <h3 className="artemis-gallery__title">
                         <Typed text={panel.title} active={active} delay={titleDelay} />
@@ -214,7 +272,7 @@ export function FeaturePanels({
                       const n = PANELS.length;
                       const pos = tickerPos ?? index;
                       const items = Array.from({ length: n + CLONES * 2 }, (_, k) => {
-                        const real = ((k - CLONES) % n + n) % n;
+                        const real = (((k - CLONES) % n) + n) % n;
                         return { key: k, real, panel: PANELS[real] };
                       });
                       return (
@@ -227,13 +285,15 @@ export function FeaturePanels({
                             // across the wrap point.
                             const raw = Math.abs(pos - real);
                             const d = Math.min(raw, n - raw);
+                            const lum = Math.max(0, 1 - d);
                             return (
                               <span
                                 key={key}
                                 className="artemis-gallery__ticker-item"
                                 style={
                                   {
-                                    "--lum": Math.max(0, 1 - d).toFixed(3),
+                                    "--lum": lum.toFixed(3),
+                                    color: tickerColour(p.dot, lum),
                                   } as CSSProperties
                                 }
                               >
@@ -245,7 +305,6 @@ export function FeaturePanels({
                       );
                     })()}
                   </div>
-
                 </>
               );
             })()}
