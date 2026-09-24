@@ -7,6 +7,7 @@ import { Accurate } from "./sections/home/Accurate";
 import { HomeHero } from "./sections/home/HomeHero";
 import { Performance } from "./sections/home/Performance";
 import { Secure } from "./sections/home/Secure";
+import { Slogan } from "./sections/home/Slogan";
 import { TechSolution } from "./sections/home/TechSolution";
 import { WallOfLove } from "./sections/home/WallOfLove";
 
@@ -39,6 +40,7 @@ export function HomeSite() {
       <ScrollRail sections={homeSections} />
       <main id="main">
         <HomeHero />
+        <Slogan />
         <TechSolution />
         <Accurate />
         <Performance />

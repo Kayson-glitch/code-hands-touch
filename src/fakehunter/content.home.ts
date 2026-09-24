@@ -38,6 +38,20 @@ export const homeHero = {
 } as const;
 
 /**
+ * The half-screen line between the hero and the technology section. Authored.
+ *
+ * The hero hands the reader the decision; this is why the engine can be
+ * trusted with it. A forgery is built for one reader, the human eye, and the
+ * engine reads it four other ways. The caption names those four, which is
+ * exactly where the next section opens.
+ */
+export const slogan = {
+  lead: "Forged to fool the eye.",
+  accent: "Read by everything else.",
+  reads: ["Pixels", "Layout", "Structure", "Time"],
+} as const;
+
+/**
  * The threshold field under the hero headline.
  *
  * The traffic is simulated and says so on screen. Scores are drawn from a
