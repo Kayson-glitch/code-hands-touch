@@ -58,7 +58,7 @@ export function TechSolution() {
         <div className="grid gap-6 lg:grid-cols-12 lg:items-end">
           <div className="lg:col-span-7">
             <SectionHeader index={techSolution.index} label={techSolution.label} />
-            <h2 className="fh-h2 mt-7">
+            <h2 className="fh-h2 mt-7 text-balance">
               <span className="block">{techSolution.titleTop}</span>
               <span className="block text-[color:var(--fh-acid)]">{techSolution.titleAccent}</span>
             </h2>

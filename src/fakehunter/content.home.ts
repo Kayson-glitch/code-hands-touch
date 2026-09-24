@@ -310,10 +310,10 @@ export const techSolution = {
   label: "Technology & Solution",
   /* Authored. Picks up the four reads the slogan above names, and lands them
      on the one thing the hero said every proof gets: a verdict. */
-  titleTop: "Four reads.",
-  titleAccent: "One verdict.",
+  titleTop: "Four ways to read a proof.",
+  titleAccent: "One verdict, in milliseconds.",
   subtitle:
-    "Pixels, layout, document structure and time, each read for the trace a forger leaves — all inside a single millisecond-scale call.",
+    "Pixels, layout, document structure and time — each read for the trace a forger leaves, and all four run inside a single API call.",
   /** Where the same subject is treated at full depth. */
   more: { label: "The three detection lines in full", href: "/fakehunter/solution#technology" },
   cards: [
