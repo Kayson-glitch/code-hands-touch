@@ -44,9 +44,7 @@ export const platformRagDemoAsset = media("platform-rag-demo.webp");
  * against 507KB as WebP. Indexed by panel order, on the full 800×800 canvas
  * so the margins Figma composed around each subject are preserved.
  */
-export const closingPanelAssets = [1, 2, 3, 4, 5].map((n) =>
-  media(`closing-panel-${n}.svg`),
-);
+export const closingPanelAssets = [1, 2, 3, 4, 5].map((n) => media(`closing-panel-${n}.svg`));
 
 /** Company page — the San Francisco card, from Figma at 2×. */
 export const companySanFranciscoAsset = media("company-san-francisco.webp");

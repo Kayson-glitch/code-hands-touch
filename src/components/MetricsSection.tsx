@@ -3,11 +3,31 @@ import { getLenis } from "@/lib/smoothScroll";
 import { cometAsset, valueAsset, scaleAsset, securityAsset } from "@/lib/media";
 
 const CARDS = [
-  { image: valueAsset.url, title: "{ Outcomes in days }", body: "{ Artemis } handles the infrastructure; your team starts at the business logic. Team focuses on outcomes. Agents ship faster.", value: "+85", unit: "%", outcome: "faster time to value" },
-  { image: scaleAsset.url, title: "{ Predictability at Scale }", body: "Every agent is clearly defined, tested, and validated before deployment, so what works in design does not break in production.", value: "13", unit: "k", outcome: "surprises in production" },
-  { image: securityAsset.url, title: "{ Security + Governance }", body: "Every action stays within approved policies and boundaries, with full visibility into what happened and why.", value: "+90", unit: "%", outcome: "unauthorized agent actions" },
+  {
+    image: valueAsset.url,
+    title: "{ Outcomes in days }",
+    body: "{ Artemis } handles the infrastructure; your team starts at the business logic. Team focuses on outcomes. Agents ship faster.",
+    value: "+85",
+    unit: "%",
+    outcome: "faster time to value",
+  },
+  {
+    image: scaleAsset.url,
+    title: "{ Predictability at Scale }",
+    body: "Every agent is clearly defined, tested, and validated before deployment, so what works in design does not break in production.",
+    value: "13",
+    unit: "k",
+    outcome: "surprises in production",
+  },
+  {
+    image: securityAsset.url,
+    title: "{ Security + Governance }",
+    body: "Every action stays within approved policies and boundaries, with full visibility into what happened and why.",
+    value: "+90",
+    unit: "%",
+    outcome: "unauthorized agent actions",
+  },
 ];
-
 
 const START_Y = 320;
 // Each column gets a substantial, viewport-relative entrance distance so the
@@ -22,7 +42,6 @@ const HOLE_COMPENSATION = 0.4;
 const clamp = (value: number) => Math.max(0, Math.min(1, value));
 // Reference site eases each column's reveal instead of translating linearly.
 const easeOutCubic = (x: number) => 1 - Math.pow(1 - x, 3);
-
 
 export function MetricsSection() {
   const wrapperRef = useRef<HTMLDivElement | null>(null);
@@ -112,9 +131,10 @@ export function MetricsSection() {
         const travelDistance = Math.max(1, columnDistance - revealDistance);
         const artworkProgress = clamp(columnScrolled / revealDistance);
         const cardScrollProgress = clamp((columnScrolled - revealDistance) / travelDistance);
-        const translateY = artworkProgress < 1
-          ? START_Y * (1 - easeOutCubic(artworkProgress))
-          : -copyTop * easeOutCubic(cardScrollProgress);
+        const translateY =
+          artworkProgress < 1
+            ? START_Y * (1 - easeOutCubic(artworkProgress))
+            : -copyTop * easeOutCubic(cardScrollProgress);
         item.style.opacity = String(easeOutCubic(artworkProgress));
         item.style.transform = `translate3d(0, ${translateY}px, 0)`;
       });
@@ -157,7 +177,12 @@ export function MetricsSection() {
             <div className="kore-outcomes__header-inner">
               <img src={cometAsset.url} alt="" className="kore-outcomes__comet" />
               <h2 id="outcomes-heading">
-                What {"{ "}<strong>Artemis</strong>{" } "}<em>changes</em><br />for enterprise AI
+                What {"{ "}
+                <strong>Artemis</strong>
+                {" } "}
+                <em>changes</em>
+                <br />
+                for enterprise AI
               </h2>
             </div>
           </header>
@@ -181,13 +206,25 @@ export function MetricsSection() {
                     className="kore-outcomes__item"
                   >
                     <article className="kore-outcomes__card">
-                      <div className="kore-outcomes__media"><img src={card.image} alt="" /></div>
-                      <div ref={index === 0 ? firstCopyRef : undefined} className="kore-outcomes__copy">
-                        <h3>{card.title}</h3><p>{card.body}</p>
+                      <div className="kore-outcomes__media">
+                        <img src={card.image} alt="" />
+                      </div>
+                      <div
+                        ref={index === 0 ? firstCopyRef : undefined}
+                        className="kore-outcomes__copy"
+                      >
+                        <h3>{card.title}</h3>
+                        <p>{card.body}</p>
                       </div>
                     </article>
-                    <div ref={index === 0 ? firstNumberRef : undefined} className="kore-outcomes__number">
-                      <p className="kore-outcomes__value">{card.value}<span className="kore-outcomes__value-unit">{card.unit}</span></p>
+                    <div
+                      ref={index === 0 ? firstNumberRef : undefined}
+                      className="kore-outcomes__number"
+                    >
+                      <p className="kore-outcomes__value">
+                        {card.value}
+                        <span className="kore-outcomes__value-unit">{card.unit}</span>
+                      </p>
                       <p className="kore-outcomes__label">{card.outcome}</p>
                     </div>
                   </div>

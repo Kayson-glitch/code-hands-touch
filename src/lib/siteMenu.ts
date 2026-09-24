@@ -71,7 +71,11 @@ export const PLATFORM_PRODUCTS: FeaturedItem[] = [
 ];
 
 export const PLATFORM_CAPABILITIES: MenuItem[] = [
-  { title: "AI Mission Control", short: "Mission Control", desc: "Real-time smart dispatch centre" },
+  {
+    title: "AI Mission Control",
+    short: "Mission Control",
+    desc: "Real-time smart dispatch centre",
+  },
   { title: "Human + AI", desc: "Seamless AI–human handoff" },
   { title: "Analytics", desc: "Deep business insights & VOC analysis" },
   { title: "Persona Analysis", desc: "User profiling & personalised service" },

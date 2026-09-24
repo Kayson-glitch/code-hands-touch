@@ -71,7 +71,13 @@ export function DotArrow({
           }
         >
           {CHEVRON_DOTS.map(([c, r]) => (
-            <circle key={`c-${c}-${r}`} cx={c * 2 + 1} cy={r * 2 + 1} r={dotRadius} fill="currentColor" />
+            <circle
+              key={`c-${c}-${r}`}
+              cx={c * 2 + 1}
+              cy={r * 2 + 1}
+              r={dotRadius}
+              fill="currentColor"
+            />
           ))}
         </g>
 
@@ -79,7 +85,13 @@ export function DotArrow({
         {SHAFT_DOTS.map(([c, r]) => {
           if (!connectOnHover) {
             return (
-              <circle key={`s-${c}-${r}`} cx={c * 2 + 1} cy={r * 2 + 1} r={dotRadius} fill="currentColor" />
+              <circle
+                key={`s-${c}-${r}`}
+                cx={c * 2 + 1}
+                cy={r * 2 + 1}
+                r={dotRadius}
+                fill="currentColor"
+              />
             );
           }
           // Rightmost shaft dot (closest to chevron) appears first,

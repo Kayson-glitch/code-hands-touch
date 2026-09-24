@@ -47,9 +47,7 @@ const DOT_ALPHA_PERIOD = 5000;
 const ENTER_MS = 1400;
 const ENTER_WINDOW = 0.35;
 
-const BAYER = [0, 8, 2, 10, 12, 4, 14, 6, 3, 11, 1, 9, 15, 7, 13, 5].map(
-  (v) => (v + 0.5) / 16,
-);
+const BAYER = [0, 8, 2, 10, 12, 4, 14, 6, 3, 11, 1, 9, 15, 7, 13, 5].map((v) => (v + 0.5) / 16);
 
 function inkAt(d: number, stops: Array<[number, number, number]>) {
   const t = Math.min(1, Math.max(0, d));
@@ -154,9 +152,7 @@ export function HalftoneHandStill({
     // without replaying the entrance.
     let enterStart = 0;
     const stops = ink === "dark" ? INK_STOPS_DARK : INK_STOPS_LIGHT;
-    const prefersReduce = window.matchMedia(
-      "(prefers-reduced-motion: reduce)",
-    ).matches;
+    const prefersReduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     const maxR = pitch * 0.5 * DOT_FILL;
 
     /** Rebuild the dot field for the current host size. */
@@ -210,17 +206,7 @@ export function HalftoneHandStill({
       const sx = src ? cropX * baseW : (idx % ATLAS_COLS) * FRAME_W + cropX * FRAME_W;
       const sy = src ? cropY * baseH : Math.floor(idx / ATLAS_COLS) * FRAME_H + cropY * FRAME_H;
       (octx as unknown as { filter: string }).filter = "blur(0.5px)";
-      octx.drawImage(
-        atlas,
-        sx,
-        sy,
-        cropW * baseW,
-        cropH * baseH,
-        0,
-        0,
-        cols,
-        rows,
-      );
+      octx.drawImage(atlas, sx, sy, cropW * baseW, cropH * baseH, 0, 0, cols, rows);
       (octx as unknown as { filter: string }).filter = "none";
       const data = octx.getImageData(0, 0, cols, rows).data;
 
@@ -228,9 +214,7 @@ export function HalftoneHandStill({
       for (let j = 0; j < rows; j++) {
         for (let i = 0; i < cols; i++) {
           const p = (j * cols + i) * 4;
-          const rawLuma =
-            (0.2126 * data[p] + 0.7152 * data[p + 1] + 0.0722 * data[p + 2]) /
-            255;
+          const rawLuma = (0.2126 * data[p] + 0.7152 * data[p + 1] + 0.0722 * data[p + 2]) / 255;
           const luma = 1 - Math.min(1, (1 - rawLuma) * contrast);
           const t = Math.min(1, Math.max(0, (1 - luma - 0.02) / 0.88));
           let density = Math.pow(t, 0.8);
@@ -283,8 +267,7 @@ export function HalftoneHandStill({
       const fluid = fluidRef.current;
       if (fluid && !prefersReduce) fluid.step(dt);
 
-      const enter =
-        prefersReduce || !enterStart ? 1 : Math.min(1, (now - enterStart) / ENTER_MS);
+      const enter = prefersReduce || !enterStart ? 1 : Math.min(1, (now - enterStart) / ENTER_MS);
 
       for (let k = 0; k < dots.length; k++) {
         const dot = dots[k];
@@ -315,8 +298,7 @@ export function HalftoneHandStill({
             ? 1
             : 1 -
               breathWave(
-                (now / DOT_ALPHA_PERIOD) * dot.alphaSpeed +
-                  dot.alphaPhase / (Math.PI * 2),
+                (now / DOT_ALPHA_PERIOD) * dot.alphaSpeed + dot.alphaPhase / (Math.PI * 2),
               ) *
                 DOT_ALPHA_AMP) * fade;
 
@@ -388,13 +370,7 @@ export function HalftoneHandStill({
         const steps = Math.min(12, Math.max(1, Math.round(dist / 14)));
         for (let s = 1; s <= steps; s++) {
           const f = s / steps;
-          fluid.splat(
-            prev.x + (cx - prev.x) * f,
-            prev.y + (cy - prev.y) * f,
-            vx,
-            vy,
-            1 / steps,
-          );
+          fluid.splat(prev.x + (cx - prev.x) * f, prev.y + (cy - prev.y) * f, vx, vy, 1 / steps);
         }
       } else {
         fluid.splat(cx, cy, 0, 0, 1);

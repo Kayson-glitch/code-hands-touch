@@ -1,7 +1,22 @@
 import { Fragment, useEffect, useRef, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import type { LucideIcon } from "lucide-react";
-import { Activity, CalendarCheck, ClipboardCheck, FileWarning, Hourglass, Languages, Lock, MessageCircle, RefreshCw, Route as RouteIcon, ScanSearch, TrendingDown, TrendingUp, UserCheck } from "lucide-react";
+import {
+  Activity,
+  CalendarCheck,
+  ClipboardCheck,
+  FileWarning,
+  Hourglass,
+  Languages,
+  Lock,
+  MessageCircle,
+  RefreshCw,
+  Route as RouteIcon,
+  ScanSearch,
+  TrendingDown,
+  TrendingUp,
+  UserCheck,
+} from "lucide-react";
 import { SiteNav } from "@/components/SiteNav";
 import { whyStoriesAsset } from "@/lib/media";
 import { HalftoneHandStill } from "@/components/HalftoneHandStill";
@@ -43,15 +58,14 @@ export const Route = createFileRoute("/why-synergy/stories")({
 
 /* --------------------------------------------------------------- helpers */
 
-
 const LIME = "#D1E486";
-
-
-
 
 function Hairline({ dark = false }: { dark?: boolean }) {
   return (
-    <div aria-hidden style={{ height: 1, background: dark ? "rgba(255,255,255,0.18)" : "#E1E0E4" }} />
+    <div
+      aria-hidden
+      style={{ height: 1, background: dark ? "rgba(255,255,255,0.18)" : "#E1E0E4" }}
+    />
   );
 }
 
@@ -88,7 +102,8 @@ const STORIES: Story[] = [
       "For multilingual ops teams: root cause, targeted model, validation.",
     ],
     stat: "86%",
-    caption: "India translation accuracy with the targeted model, up from 68% on the general API · 1 month",
+    caption:
+      "India translation accuracy with the targeted model, up from 68% on the general API · 1 month",
     bullets: [
       "Targeted Indian model, no English pivot in the middle",
       "Multi-model voting, tuned to payment and order phrasing",
@@ -277,13 +292,15 @@ function ArticleBlock({
   );
 }
 
-
-
 function StoryArticle({ story, dark = false }: { story: Story; dark?: boolean }) {
   const ink = dark ? "#FFFFFF" : "var(--ink, #0E0B22)";
   const inkMuted = dark ? "rgba(255,255,255,0.5)" : "var(--ink-muted, #7A7885)";
   return (
-    <article id={story.id} style={{ background: dark ? "#000000" : "#FFFFFF" }} data-dark-section={dark || undefined}>
+    <article
+      id={story.id}
+      style={{ background: dark ? "#000000" : "#FFFFFF" }}
+      data-dark-section={dark || undefined}
+    >
       {/* module top hairline — Figma: full-width rule opening every story module */}
       <Hairline dark={dark} />
       <div style={{ padding: `${fluid(60, 28)} ${fluid(60, 24)} 0` }}>
@@ -296,14 +313,10 @@ function StoryArticle({ story, dark = false }: { story: Story; dark?: boolean })
         />
       </div>
 
-
-
       {/* header — eyebrow, rule, 48px title, intro, CTA */}
       <div style={{ padding: `${fluid(80, 40)} ${fluid(60, 24)} 0` }}>
         <Reveal y={32} duration={1600}>
-          <p style={{ margin: 0, fontSize: 12, lineHeight: "20px", color: ink }}>
-            {story.eyebrow}
-          </p>
+          <p style={{ margin: 0, fontSize: 12, lineHeight: "20px", color: ink }}>{story.eyebrow}</p>
           <div style={{ marginTop: 10 }}>
             <Hairline dark={dark} />
           </div>
@@ -445,7 +458,6 @@ function StoriesPage() {
     };
   }, []);
 
-
   return (
     <div className="relative min-h-screen bg-paper">
       <SiteNav revealDelay={0} />
@@ -548,10 +560,7 @@ function StoriesPage() {
                       });
                     } else {
                       window.scrollTo({
-                        top:
-                          target.getBoundingClientRect().top +
-                          window.scrollY -
-                          ANCHOR_OFFSET,
+                        top: target.getBoundingClientRect().top + window.scrollY - ANCHOR_OFFSET,
                         behavior: "smooth",
                       });
                     }
@@ -594,13 +603,11 @@ function StoriesPage() {
             })}
           </nav>
 
-
           {/* content column */}
           <div className="flex min-w-0 flex-1 flex-col overflow-hidden" style={{ gap: 80 }}>
             {STORIES.map((s) => (
               <StoryArticle key={s.id} story={s} dark={s.id === "payment-risk"} />
             ))}
-
           </div>
         </div>
       </section>

@@ -95,7 +95,12 @@ export function GradientHoverHeading({
                 <span
                   // no indent when the trailing block wraps onto its own line on phones
                   className="inline-flex md:ml-[var(--trailing-gap)]"
-                  style={{ "--trailing-gap": `${trailingGap}px`, verticalAlign: "middle" } as CSSProperties}
+                  style={
+                    {
+                      "--trailing-gap": `${trailingGap}px`,
+                      verticalAlign: "middle",
+                    } as CSSProperties
+                  }
                 >
                   {trailing}
                 </span>
@@ -110,7 +115,10 @@ export function GradientHoverHeading({
             <span
               key={i}
               className={hasTrailing ? "flex flex-wrap items-end" : undefined}
-              style={{ display: hasTrailing ? undefined : "block", gap: hasTrailing ? trailingGap : undefined }}
+              style={{
+                display: hasTrailing ? undefined : "block",
+                gap: hasTrailing ? trailingGap : undefined,
+              }}
             >
               {line}
               {hasTrailing && withTrailing ? trailing : null}
@@ -172,9 +180,7 @@ export function GradientHoverHeading({
           WebkitMaskImage: mask,
           maskImage: mask,
           opacity: visible ? 1 : 0,
-          transition: visible
-            ? `opacity ${ENTER_DURATION}ms ease-out`
-            : "opacity 160ms ease-out",
+          transition: visible ? `opacity ${ENTER_DURATION}ms ease-out` : "opacity 160ms ease-out",
         }}
       >
         {ghost}

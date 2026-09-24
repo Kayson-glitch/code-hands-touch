@@ -397,14 +397,22 @@ export function IntroVideo({
   const firedRef = useRef(false);
   const onEndedRef = useRef(onEnded);
   const onProgressRef = useRef(onProgress);
-  useEffect(() => { onEndedRef.current = onEnded; }, [onEnded]);
-  useEffect(() => { onProgressRef.current = onProgress; }, [onProgress]);
+  useEffect(() => {
+    onEndedRef.current = onEnded;
+  }, [onEnded]);
+  useEffect(() => {
+    onProgressRef.current = onProgress;
+  }, [onProgress]);
   const [burnParams, setBurnParams] = useState<BurnParams>(DEFAULT_BURN_PARAMS);
   const burnParamsRef = useRef<BurnParams>(burnParams);
-  useEffect(() => { burnParamsRef.current = burnParams; }, [burnParams]);
+  useEffect(() => {
+    burnParamsRef.current = burnParams;
+  }, [burnParams]);
   const debugEnabled = !!debug;
   const debugRef = useRef(debugEnabled);
-  useEffect(() => { debugRef.current = debugEnabled; }, [debugEnabled]);
+  useEffect(() => {
+    debugRef.current = debugEnabled;
+  }, [debugEnabled]);
   // Exposed to the debug panel so it can jump / finish.
   const targetProgressRef = useRef<(v: number) => void>(() => {});
   const forceFinishRef = useRef<() => void>(() => {});
@@ -583,7 +591,9 @@ export function IntroVideo({
       try {
         if (!video.paused) video.pause();
         if (video.playbackRate !== 1) video.playbackRate = 1;
-      } catch { /* ignore */ }
+      } catch {
+        /* ignore */
+      }
     };
 
     const fire = () => {
@@ -599,9 +609,17 @@ export function IntroVideo({
       if (video.videoWidth && video.videoHeight) {
         uniforms.uVideoRes.value.set(video.videoWidth, video.videoHeight);
       }
-      try { video.pause(); } catch { /* ignore */ }
+      try {
+        video.pause();
+      } catch {
+        /* ignore */
+      }
       // Force decoding of the first frame so the shader doesn't sample black.
-      try { video.currentTime = 0; } catch { /* ignore */ }
+      try {
+        video.currentTime = 0;
+      } catch {
+        /* ignore */
+      }
     };
     video.addEventListener("loadedmetadata", onMeta);
 
@@ -642,10 +660,24 @@ export function IntroVideo({
     }
     if (!adoptedHandoff) {
       // Start paused; play once to force first frame decode on some browsers.
-      video.play().then(() => { try { video.pause(); } catch { /* ignore */ } })
-        .catch(() => { /* ignore */ });
+      video
+        .play()
+        .then(() => {
+          try {
+            video.pause();
+          } catch {
+            /* ignore */
+          }
+        })
+        .catch(() => {
+          /* ignore */
+        });
     } else {
-      try { video.pause(); } catch { /* ignore */ }
+      try {
+        video.pause();
+      } catch {
+        /* ignore */
+      }
     }
 
     // GPU warmup: push one frame through the shader pipeline before the
@@ -653,7 +685,9 @@ export function IntroVideo({
     // the texture-upload / shader-compile cost.
     try {
       if (firstFrameReady) renderer.render(scene, camera);
-    } catch { /* ignore */ }
+    } catch {
+      /* ignore */
+    }
 
     let errorTimer = 0;
     const onError = () => {
@@ -719,7 +753,10 @@ export function IntroVideo({
       // rVFC-less fallback: read currentTime each frame.
       if (!hasRVFC && Number.isFinite(video.currentTime)) {
         const t = video.currentTime;
-        if (t !== mediaTime) { mediaTime = t; mediaFrameDirty = true; }
+        if (t !== mediaTime) {
+          mediaTime = t;
+          mediaFrameDirty = true;
+        }
       }
 
       const videoProgress = Math.min(1, progress / VIDEO_FRACTION);
@@ -737,9 +774,7 @@ export function IntroVideo({
         if (targetProgress < VIDEO_FRACTION) targetProgress = VIDEO_FRACTION;
         if (progress < VIDEO_FRACTION) progress = VIDEO_FRACTION;
       }
-      const burstProgress = burstEngaged
-        ? clamp01((now - burnStartTs) / BURN_AUTO_MS)
-        : 0;
+      const burstProgress = burstEngaged ? clamp01((now - burnStartTs) / BURN_AUTO_MS) : 0;
       // Composite: while bursting, freeze the video-segment contribution at
       // VIDEO_FRACTION so uProgress advances purely with burstProgress.
       const compositeProgress = burstEngaged
@@ -770,7 +805,9 @@ export function IntroVideo({
             else video.currentTime = targetTime;
             mediaTime = targetTime;
             mediaFrameDirty = true;
-          } catch { /* ignore */ }
+          } catch {
+            /* ignore */
+          }
         }
       }
       uniforms.uProgress.value = compositeProgress;
@@ -819,10 +856,12 @@ export function IntroVideo({
       } else if (burstEngaged) {
         mediaFrameDirty = false;
       }
-      const progressChanged = Math.abs(compositeProgress - lastRenderedProgress) > PROGRESS_RENDER_EPSILON;
-      const needsRender = firstFrameReady && !document.hidden && (
-        videoTex.needsUpdate || progressChanged || burnActive || burstProgress > 0
-      );
+      const progressChanged =
+        Math.abs(compositeProgress - lastRenderedProgress) > PROGRESS_RENDER_EPSILON;
+      const needsRender =
+        firstFrameReady &&
+        !document.hidden &&
+        (videoTex.needsUpdate || progressChanged || burnActive || burstProgress > 0);
       if (needsRender) {
         renderer.render(scene, camera);
         lastRenderedProgress = compositeProgress;
@@ -868,7 +907,11 @@ export function IntroVideo({
       running = false;
       cancelAnimationFrame(rafId);
       if (hasRVFC && rvfcId && typeof rvfcVideo.cancelVideoFrameCallback === "function") {
-        try { rvfcVideo.cancelVideoFrameCallback(rvfcId); } catch { /* ignore */ }
+        try {
+          rvfcVideo.cancelVideoFrameCallback(rvfcId);
+        } catch {
+          /* ignore */
+        }
       }
       window.removeEventListener("resize", resize);
       window.removeEventListener("wheel", onWheel);
@@ -886,14 +929,22 @@ export function IntroVideo({
       // Return the adopted element to detached state so the preloader's
       // revoke logic (or React unmount) can safely dispose the URL.
       if (adoptedHandoff && video && video.parentNode) {
-        try { video.parentNode.removeChild(video); } catch { /* ignore */ }
+        try {
+          video.parentNode.removeChild(video);
+        } catch {
+          /* ignore */
+        }
       }
     };
   }, [src, handoffVideo]);
 
   return (
     <div style={{ position: "absolute", inset: 0, background: "#000", overflow: "hidden" }}>
-      <div ref={videoHostRef} aria-hidden style={{ position: "absolute", inset: 0, pointerEvents: "none" }}>
+      <div
+        ref={videoHostRef}
+        aria-hidden
+        style={{ position: "absolute", inset: 0, pointerEvents: "none" }}
+      >
         {!handoffVideo && (
           <video
             ref={videoRef}

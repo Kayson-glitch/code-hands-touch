@@ -127,7 +127,8 @@ export function DotGlobe({
 
         // The square barely tapers with depth — the rim is built by the grid
         // crowding together, not by fatter dots.
-        const side = spacing * (DOT_FILL_LIMB + (DOT_FILL - DOT_FILL_LIMB) * z) * (d.land ? 1 : 0.92);
+        const side =
+          spacing * (DOT_FILL_LIMB + (DOT_FILL - DOT_FILL_LIMB) * z) * (d.land ? 1 : 0.92);
         if (side < 0.24) continue;
         // A fixed light across the disc, as in the reference: the ink builds
         // toward the right, so continents pass through it as the globe turns.

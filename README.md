@@ -13,13 +13,13 @@ bun install
 bun run dev        # http://localhost:8080
 ```
 
-| Command | What it does |
-| --- | --- |
-| `bun run dev` | Dev server on port 8080 |
-| `bun run build` | Production build into `.output` (Cloudflare worker + assets) |
-| `bun run lint` | ESLint, including Prettier as a rule |
-| `bun run format` | Prettier over the repo |
-| `bunx tsc --noEmit` | Type-check without emitting |
+| Command             | What it does                                                 |
+| ------------------- | ------------------------------------------------------------ |
+| `bun run dev`       | Dev server on port 8080                                      |
+| `bun run build`     | Production build into `.output` (Cloudflare worker + assets) |
+| `bun run lint`      | ESLint, including Prettier as a rule                         |
+| `bun run format`    | Prettier over the repo                                       |
+| `bunx tsc --noEmit` | Type-check without emitting                                  |
 
 ## Layout
 

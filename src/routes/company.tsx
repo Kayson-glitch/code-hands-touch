@@ -107,10 +107,22 @@ function FactCard({ value, label }: { value: string; label: string }) {
         border: `1px solid ${HAIRLINE}`,
       }}
     >
-      <p className="font-display whitespace-nowrap" style={{ margin: 0, fontSize: 22, lineHeight: "28px", fontWeight: 400, color: INK }}>
+      <p
+        className="font-display whitespace-nowrap"
+        style={{ margin: 0, fontSize: 22, lineHeight: "28px", fontWeight: 400, color: INK }}
+      >
         <RollingNumber value={value} />
       </p>
-      <p className="uppercase whitespace-nowrap" style={{ margin: "2px 0 0", fontSize: 10, lineHeight: "16px", letterSpacing: "0.12em", color: FAINT }}>
+      <p
+        className="uppercase whitespace-nowrap"
+        style={{
+          margin: "2px 0 0",
+          fontSize: 10,
+          lineHeight: "16px",
+          letterSpacing: "0.12em",
+          color: FAINT,
+        }}
+      >
         {label}
       </p>
     </div>
@@ -135,7 +147,16 @@ function MissionFigure() {
         className="company-float absolute left-0 top-[24%] hidden sm:block"
         style={{ width: 168, padding: 8, background: "#FFFFFF", border: `1px solid ${HAIRLINE}` }}
       >
-        <p className="uppercase" style={{ margin: "0 0 8px", fontSize: 10, lineHeight: "16px", letterSpacing: "0.12em", color: MUTED }}>
+        <p
+          className="uppercase"
+          style={{
+            margin: "0 0 8px",
+            fontSize: 10,
+            lineHeight: "16px",
+            letterSpacing: "0.12em",
+            color: MUTED,
+          }}
+        >
           San Francisco
         </p>
         <img
@@ -191,7 +212,10 @@ function CompanyPage() {
           >
             <Reveal immediate className="flex items-center gap-2">
               <span aria-hidden style={{ width: 8, height: 8, background: VIOLET }} />
-              <span className="uppercase" style={{ fontSize: 11, lineHeight: "18px", letterSpacing: "0.14em", color: MUTED }}>
+              <span
+                className="uppercase"
+                style={{ fontSize: 11, lineHeight: "18px", letterSpacing: "0.14em", color: MUTED }}
+              >
                 Company
               </span>
             </Reveal>
@@ -199,7 +223,12 @@ function CompanyPage() {
             <Reveal immediate delay={120}>
               <h1
                 className="font-display text-ink"
-                style={{ margin: "18px 0 0", fontSize: fluid(60, 36), lineHeight: 1.1, fontWeight: 400 }}
+                style={{
+                  margin: "18px 0 0",
+                  fontSize: fluid(60, 36),
+                  lineHeight: 1.1,
+                  fontWeight: 400,
+                }}
               >
                 {HERO.before}
                 <br />
@@ -219,7 +248,15 @@ function CompanyPage() {
             </Reveal>
 
             <Reveal immediate delay={240}>
-              <p style={{ margin: "20px 0 0", maxWidth: 620, fontSize: 16, lineHeight: "24px", color: MUTED }}>
+              <p
+                style={{
+                  margin: "20px 0 0",
+                  maxWidth: 620,
+                  fontSize: 16,
+                  lineHeight: "24px",
+                  color: MUTED,
+                }}
+              >
                 {HERO.intro}
               </p>
             </Reveal>
@@ -237,7 +274,12 @@ function CompanyPage() {
           <Hairline />
           <div
             className="grid items-center lg:grid-cols-2"
-            style={{ paddingTop: fluid(100, 56), paddingBottom: fluid(100, 56), columnGap: fluid(96, 40), rowGap: fluid(56, 36) }}
+            style={{
+              paddingTop: fluid(100, 56),
+              paddingBottom: fluid(100, 56),
+              columnGap: fluid(96, 40),
+              rowGap: fluid(56, 36),
+            }}
           >
             <Reveal y={24} duration={1600}>
               <h2
@@ -246,7 +288,15 @@ function CompanyPage() {
               >
                 {MISSION.title}
               </h2>
-              <p style={{ margin: "20px 0 0", maxWidth: 480, fontSize: 16, lineHeight: "24px", color: MUTED }}>
+              <p
+                style={{
+                  margin: "20px 0 0",
+                  maxWidth: 480,
+                  fontSize: 16,
+                  lineHeight: "24px",
+                  color: MUTED,
+                }}
+              >
                 {MISSION.body}
               </p>
             </Reveal>
@@ -267,25 +317,33 @@ function CompanyPage() {
               <Reveal y={24} duration={1600}>
                 <h2
                   className="font-display text-ink"
-                  style={{ margin: 0, fontSize: fluid(48, 30), lineHeight: 1.1667, fontWeight: 400 }}
+                  style={{
+                    margin: 0,
+                    fontSize: fluid(48, 30),
+                    lineHeight: 1.1667,
+                    fontWeight: 400,
+                  }}
                 >
                   How We Work
                 </h2>
               </Reveal>
               <Reveal y={24} duration={1600} delay={120}>
                 <p style={{ margin: "18px 0 0", fontSize: 16, lineHeight: "24px", color: MUTED }}>
-                  Synergy.AI isn't just a chatbot. It's a comprehensive automation layer that sits on
-                  top of your existing operational stack.
+                  Synergy.AI isn't just a chatbot. It's a comprehensive automation layer that sits
+                  on top of your existing operational stack.
                 </p>
               </Reveal>
             </div>
 
-            <div
-              className="grid md:grid-cols-3"
-              style={{ marginTop: fluid(64, 40), gap: 16 }}
-            >
+            <div className="grid md:grid-cols-3" style={{ marginTop: fluid(64, 40), gap: 16 }}>
               {PRINCIPLES.map((p, i) => (
-                <Reveal key={p.title} y={24} duration={1400} delay={180 + i * 100} className="min-w-0">
+                <Reveal
+                  key={p.title}
+                  y={24}
+                  duration={1400}
+                  delay={180 + i * 100}
+                  className="min-w-0"
+                >
                   <div
                     className="flex h-full flex-col"
                     style={{
@@ -297,11 +355,19 @@ function CompanyPage() {
                     <span aria-hidden style={{ width: 8, height: 8, background: p.dot }} />
                     <h3
                       className="font-display"
-                      style={{ margin: `${fluid(28, 20)} 0 0`, fontSize: 24, lineHeight: "32px", fontWeight: 400, color: INK }}
+                      style={{
+                        margin: `${fluid(28, 20)} 0 0`,
+                        fontSize: 24,
+                        lineHeight: "32px",
+                        fontWeight: 400,
+                        color: INK,
+                      }}
                     >
                       {p.title}
                     </h3>
-                    <p style={{ margin: "14px 0 0", fontSize: 14, lineHeight: "22px", color: MUTED }}>
+                    <p
+                      style={{ margin: "14px 0 0", fontSize: 14, lineHeight: "22px", color: MUTED }}
+                    >
                       {p.body}
                     </p>
                   </div>
@@ -314,7 +380,10 @@ function CompanyPage() {
 
       {/* ------------------------------------------------------------- CTA */}
       <section style={{ padding: pad }}>
-        <div className="mx-auto w-full max-w-[1200px]" style={{ paddingTop: fluid(100, 56), paddingBottom: fluid(120, 72) }}>
+        <div
+          className="mx-auto w-full max-w-[1200px]"
+          style={{ paddingTop: fluid(100, 56), paddingBottom: fluid(120, 72) }}
+        >
           <Reveal y={24} duration={1600}>
             <div
               className="flex flex-col md:flex-row md:items-end md:justify-between"
@@ -328,12 +397,18 @@ function CompanyPage() {
               <div style={{ maxWidth: 640 }}>
                 <h2
                   className="font-display text-ink"
-                  style={{ margin: 0, fontSize: fluid(48, 30), lineHeight: 1.1667, fontWeight: 400 }}
+                  style={{
+                    margin: 0,
+                    fontSize: fluid(48, 30),
+                    lineHeight: 1.1667,
+                    fontWeight: 400,
+                  }}
                 >
                   <BreakLines text={"Ready to join\nthe mission?"} />
                 </h2>
                 <p style={{ margin: "18px 0 0", fontSize: 14, lineHeight: "22px", color: MUTED }}>
-                  We're hiring across Engineering, Product, and Sales. Come build the future with us.
+                  We're hiring across Engineering, Product, and Sales. Come build the future with
+                  us.
                 </p>
               </div>
               <div className="shrink-0">

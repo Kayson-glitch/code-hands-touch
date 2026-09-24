@@ -28,7 +28,10 @@ export const PANELS: Panel[] = [
         label: "Complex Workflow Handling",
         text: "Handles complex workflows—not just questions—end to end.",
       },
-      { label: "Seamless Human Handoff", text: "Instant context summaries for smooth agent takeover." },
+      {
+        label: "Seamless Human Handoff",
+        text: "Instant context summaries for smooth agent takeover.",
+      },
     ],
   },
   {
@@ -37,10 +40,19 @@ export const PANELS: Panel[] = [
     eyebrow: "Brand Voice",
     title: "Speak in Your Brand Voice, Every Time",
     points: [
-      { label: "Tone Control", text: "Tuned to your style guide, from playful to strictly formal." },
+      {
+        label: "Tone Control",
+        text: "Tuned to your style guide, from playful to strictly formal.",
+      },
       { label: "Grounded Answers", text: "Replies cite your help center, docs and policy pages." },
-      { label: "Multilingual by Default", text: "Answers in 30+ languages without separate content sets." },
-      { label: "Guardrails", text: "Blocks off-topic promises, refunds and claims you never approved." },
+      {
+        label: "Multilingual by Default",
+        text: "Answers in 30+ languages without separate content sets.",
+      },
+      {
+        label: "Guardrails",
+        text: "Blocks off-topic promises, refunds and claims you never approved.",
+      },
     ],
   },
   {
@@ -49,10 +61,22 @@ export const PANELS: Panel[] = [
     eyebrow: "Smart Routing",
     title: "Route Every Conversation to the Right Place",
     points: [
-      { label: "Intent Detection", text: "Reads urgency, sentiment and account value in real time." },
-      { label: "Priority Queues", text: "VIP and at-risk customers reach a human before they churn." },
-      { label: "Skill Matching", text: "Billing, shipping or technical—each ticket finds its expert." },
-      { label: "Zero Repetition", text: "Full history travels with the customer, no retelling required." },
+      {
+        label: "Intent Detection",
+        text: "Reads urgency, sentiment and account value in real time.",
+      },
+      {
+        label: "Priority Queues",
+        text: "VIP and at-risk customers reach a human before they churn.",
+      },
+      {
+        label: "Skill Matching",
+        text: "Billing, shipping or technical—each ticket finds its expert.",
+      },
+      {
+        label: "Zero Repetition",
+        text: "Full history travels with the customer, no retelling required.",
+      },
     ],
   },
   {
@@ -61,10 +85,16 @@ export const PANELS: Panel[] = [
     eyebrow: "Omnichannel",
     title: "One Conversation Across Every Channel",
     points: [
-      { label: "Unified Inbox", text: "Web chat, email, app and social threads live in one timeline." },
+      {
+        label: "Unified Inbox",
+        text: "Web chat, email, app and social threads live in one timeline.",
+      },
       { label: "Shared Context", text: "Start on mobile, finish on desktop—nothing gets lost." },
       { label: "Proactive Nudges", text: "Reaches out on order delays before the customer asks." },
-      { label: "Native Integrations", text: "Connects to your CRM, order system and ticketing in minutes." },
+      {
+        label: "Native Integrations",
+        text: "Connects to your CRM, order system and ticketing in minutes.",
+      },
     ],
   },
   {
@@ -74,7 +104,10 @@ export const PANELS: Panel[] = [
     title: "Turn Support Data Into Product Insight",
     points: [
       { label: "Auto Clustering", text: "Groups recurring questions into themes you can act on." },
-      { label: "Deflection Analytics", text: "Shows exactly which answers save the most agent hours." },
+      {
+        label: "Deflection Analytics",
+        text: "Shows exactly which answers save the most agent hours.",
+      },
       { label: "Quality Scoring", text: "Reviews every conversation, not a 2% random sample." },
       { label: "Continuous Learning", text: "Feeds gaps straight back into your knowledge base." },
     ],
@@ -186,10 +219,7 @@ export function FeaturePanels({
       {PANELS.map((panel, index) => {
         const active = !pinned || index === activeIndex;
         return (
-          <article
-            key={panel.id}
-            className={`artemis-gallery__panel${active ? " is-active" : ""}`}
-          >
+          <article key={panel.id} className={`artemis-gallery__panel${active ? " is-active" : ""}`}>
             {(() => {
               // Simultaneous typing: every field starts at the same moment and
               // types at the same speed.
@@ -242,7 +272,7 @@ export function FeaturePanels({
                       const n = PANELS.length;
                       const pos = tickerPos ?? index;
                       const items = Array.from({ length: n + CLONES * 2 }, (_, k) => {
-                        const real = ((k - CLONES) % n + n) % n;
+                        const real = (((k - CLONES) % n) + n) % n;
                         return { key: k, real, panel: PANELS[real] };
                       });
                       return (
@@ -275,7 +305,6 @@ export function FeaturePanels({
                       );
                     })()}
                   </div>
-
                 </>
               );
             })()}

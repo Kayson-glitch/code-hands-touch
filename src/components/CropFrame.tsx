@@ -72,7 +72,14 @@ export function CropFrame({
           }}
         />
       ))}
-      {marks ? [corner("left", "top"), corner("right", "top"), corner("left", "bottom"), corner("right", "bottom")] : null}
+      {marks
+        ? [
+            corner("left", "top"),
+            corner("right", "top"),
+            corner("left", "bottom"),
+            corner("right", "bottom"),
+          ]
+        : null}
     </div>
   );
 }

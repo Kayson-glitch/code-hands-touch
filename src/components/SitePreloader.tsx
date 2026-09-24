@@ -125,19 +125,30 @@ export function SitePreloader() {
 
     // fonts
     const fonts = document.fonts?.ready;
-    if (fonts) fonts.then(() => { signals.fonts = 1; }).catch(() => { signals.fonts = 1; });
+    if (fonts)
+      fonts
+        .then(() => {
+          signals.fonts = 1;
+        })
+        .catch(() => {
+          signals.fonts = 1;
+        });
     else signals.fonts = 1;
 
     // the hero's frame atlas
     const img = new Image();
-    const artDone = () => { signals.art = 1; };
+    const artDone = () => {
+      signals.art = 1;
+    };
     img.onload = artDone;
     img.onerror = artDone;
     img.src = handsFramesAsset.url;
 
     // everything else
     if (document.readyState === "complete") signals.load = 1;
-    const onLoad = () => { signals.load = 1; };
+    const onLoad = () => {
+      signals.load = 1;
+    };
     window.addEventListener("load", onLoad);
 
     return () => {
@@ -196,7 +207,8 @@ export function SitePreloader() {
           pingArea={[0.36, 0.34, 0.64, 0.66]}
           className="pointer-events-none absolute inset-0"
           style={{
-            maskImage: "linear-gradient(to bottom, transparent 0, #000 18%, #000 62%, transparent 100%)",
+            maskImage:
+              "linear-gradient(to bottom, transparent 0, #000 18%, #000 62%, transparent 100%)",
             WebkitMaskImage:
               "linear-gradient(to bottom, transparent 0, #000 18%, #000 62%, transparent 100%)",
           }}
@@ -210,7 +222,8 @@ export function SitePreloader() {
             backgroundImage:
               "radial-gradient(circle, rgba(14,11,34,0.16) 0 1px, transparent 1.6px)",
             backgroundSize: "20px 20px",
-            maskImage: "linear-gradient(to bottom, transparent 0, #000 18%, #000 62%, transparent 100%)",
+            maskImage:
+              "linear-gradient(to bottom, transparent 0, #000 18%, #000 62%, transparent 100%)",
             WebkitMaskImage:
               "linear-gradient(to bottom, transparent 0, #000 18%, #000 62%, transparent 100%)",
           }}
@@ -241,10 +254,7 @@ export function SitePreloader() {
         </span>
 
         {/* the track sits over the frame, with the fill inset off its rules */}
-        <span
-          className="absolute"
-          style={{ inset: 0, background: TRACK, padding: CELL_INSET }}
-        >
+        <span className="absolute" style={{ inset: 0, background: TRACK, padding: CELL_INSET }}>
           {/* the padded box, so the fill's width is a share of the run it travels */}
           <span ref={trackRef} className="relative block" style={{ width: "100%", height: "100%" }}>
             <span
@@ -268,7 +278,12 @@ export function SitePreloader() {
           the count over. */}
       <span
         className="font-display relative flex items-baseline tabular-nums"
-        style={{ fontSize: "clamp(30px, 3.2vw, 52px)", lineHeight: 1, fontWeight: 400, color: "#0E0B22" }}
+        style={{
+          fontSize: "clamp(30px, 3.2vw, 52px)",
+          lineHeight: 1,
+          fontWeight: 400,
+          color: "#0E0B22",
+        }}
       >
         <span className={`site-preloader-count${live ? " is-live" : ""}`}>
           {live ? Math.round(shown * 100) : null}

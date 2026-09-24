@@ -11,7 +11,6 @@ import { fluid } from "@/lib/fluid";
  * than as illustrations dropped into it.
  */
 
-
 type Tone = {
   ink: string;
   muted: string;
@@ -117,7 +116,9 @@ export function StepDiagram({
                       width: 10,
                       height: 10,
                       background: step.emphasis ? accent : "transparent",
-                      border: step.emphasis ? "none" : `1px solid ${dark ? "rgba(255,255,255,0.6)" : "#0E0B22"}`,
+                      border: step.emphasis
+                        ? "none"
+                        : `1px solid ${dark ? "rgba(255,255,255,0.6)" : "#0E0B22"}`,
                     }}
                   />
                   {!last ? (
@@ -320,7 +321,13 @@ export function StatFigure({
     <div className={className} style={style}>
       <p
         className="font-display whitespace-nowrap"
-        style={{ margin: 0, fontSize: fluid(72, 44), lineHeight: 1.1, fontWeight: 400, color: t.ink }}
+        style={{
+          margin: 0,
+          fontSize: fluid(72, 44),
+          lineHeight: 1.1,
+          fontWeight: 400,
+          color: t.ink,
+        }}
       >
         {value}
         {unit ? (
@@ -329,7 +336,15 @@ export function StatFigure({
           </span>
         ) : null}
       </p>
-      <p style={{ margin: "14px 0 0", fontSize: 13, lineHeight: "20px", color: t.muted, maxWidth: 360 }}>
+      <p
+        style={{
+          margin: "14px 0 0",
+          fontSize: 13,
+          lineHeight: "20px",
+          color: t.muted,
+          maxWidth: 360,
+        }}
+      >
         {caption}
       </p>
     </div>
@@ -339,7 +354,15 @@ export function StatFigure({
 /* ------------------------------------------------------------- stats card */
 
 /** Alternating accent diamond / ink square, the bullet used in every list. */
-export function ListBullet({ diamond, accent, dark = false }: { diamond: boolean; accent: string; dark?: boolean }) {
+export function ListBullet({
+  diamond,
+  accent,
+  dark = false,
+}: {
+  diamond: boolean;
+  accent: string;
+  dark?: boolean;
+}) {
   return (
     <span
       aria-hidden
@@ -363,10 +386,26 @@ export function StatValue({ value, dark = false }: { value: string; dark?: boole
   return (
     <p
       className="font-display whitespace-nowrap"
-      style={{ margin: 0, fontSize: fluid(100, 52), lineHeight: 1.2, fontWeight: 400, color: t.ink }}
+      style={{
+        margin: 0,
+        fontSize: fluid(100, 52),
+        lineHeight: 1.2,
+        fontWeight: 400,
+        color: t.ink,
+      }}
     >
       {match ? <RollingNumber value={digits} /> : digits}
-      {unit ? <span style={{ fontSize: fluid(60, 32), fontWeight: 400, color: dark ? "rgba(255,255,255,0.5)" : "#A1A0A9" }}>{unit}</span> : null}
+      {unit ? (
+        <span
+          style={{
+            fontSize: fluid(60, 32),
+            fontWeight: 400,
+            color: dark ? "rgba(255,255,255,0.5)" : "#A1A0A9",
+          }}
+        >
+          {unit}
+        </span>
+      ) : null}
     </p>
   );
 }
@@ -393,7 +432,11 @@ export function StatsCard({
 }) {
   const t = tone(dark);
   return (
-    <Reveal y={32} duration={1600} style={{ background: dark ? "#0E0B22" : "var(--surface-soft, #F7F7F8)" }}>
+    <Reveal
+      y={32}
+      duration={1600}
+      style={{ background: dark ? "#0E0B22" : "var(--surface-soft, #F7F7F8)" }}
+    >
       <div
         className="relative flex flex-col md:flex-row"
         style={{ padding: `${fluid(56, 36)} ${fluid(40, 16)}`, gap: fluid(40, 20) }}
@@ -401,14 +444,29 @@ export function StatsCard({
         <div className="shrink-0 md:w-[35%]">
           <p
             className="font-sans uppercase"
-            style={{ margin: 0, fontSize: 12, lineHeight: "18px", fontWeight: 500, letterSpacing: "0.08em", color: t.muted }}
+            style={{
+              margin: 0,
+              fontSize: 12,
+              lineHeight: "18px",
+              fontWeight: 500,
+              letterSpacing: "0.08em",
+              color: t.muted,
+            }}
           >
             {label}
           </p>
           <div style={{ marginTop: fluid(20, 14) }}>
             <StatValue value={value} dark={dark} />
           </div>
-          <p style={{ margin: `${fluid(20, 14)} 0 0`, fontSize: 14, lineHeight: "22px", color: t.muted, maxWidth: 340 }}>
+          <p
+            style={{
+              margin: `${fluid(20, 14)} 0 0`,
+              fontSize: 14,
+              lineHeight: "22px",
+              color: t.muted,
+              maxWidth: 340,
+            }}
+          >
             {caption}
           </p>
         </div>
@@ -433,7 +491,14 @@ export function StatsCard({
         <div
           aria-hidden
           className="hidden md:block"
-          style={{ position: "absolute", top: "30%", bottom: "30%", left: "38%", width: 0, borderLeft: `1px dashed ${t.rule}` }}
+          style={{
+            position: "absolute",
+            top: "30%",
+            bottom: "30%",
+            left: "38%",
+            width: 0,
+            borderLeft: `1px dashed ${t.rule}`,
+          }}
         />
       </div>
     </Reveal>

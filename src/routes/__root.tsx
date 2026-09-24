@@ -46,7 +46,13 @@ function HomeLink({ label }: { label: string }) {
     <Link
       to="/"
       className="inline-flex items-center gap-2"
-      style={{ fontSize: 13, lineHeight: "20px", color: INK, borderBottom: `1px solid ${INK}`, paddingBottom: 2 }}
+      style={{
+        fontSize: 13,
+        lineHeight: "20px",
+        color: INK,
+        borderBottom: `1px solid ${INK}`,
+        paddingBottom: 2,
+      }}
     >
       {label}
       <span aria-hidden>&#8594;</span>
@@ -55,17 +61,35 @@ function HomeLink({ label }: { label: string }) {
 }
 
 /** Off-brand fallbacks read as a different product, so both shells stay in the site's paper/ink language. */
-function StatusShell({ eyebrow, title, body, children }: { eyebrow: string; title: string; body: string; children: ReactNode }) {
+function StatusShell({
+  eyebrow,
+  title,
+  body,
+  children,
+}: {
+  eyebrow: string;
+  title: string;
+  body: string;
+  children: ReactNode;
+}) {
   return (
     <div
       className="flex min-h-screen items-center justify-center"
       style={{ background: "#FAFAFA", padding: "0 24px" }}
     >
-      <div style={{ width: "100%", maxWidth: 520, borderTop: `1px solid ${HAIRLINE}`, paddingTop: 24 }}>
+      <div
+        style={{ width: "100%", maxWidth: 520, borderTop: `1px solid ${HAIRLINE}`, paddingTop: 24 }}
+      >
         <Eyebrow>{eyebrow}</Eyebrow>
         <h1
           className="font-display"
-          style={{ margin: "16px 0 0", fontSize: fluid(44, 30), lineHeight: 1.08, fontWeight: 400, color: INK }}
+          style={{
+            margin: "16px 0 0",
+            fontSize: fluid(44, 30),
+            lineHeight: 1.08,
+            fontWeight: 400,
+            color: INK,
+          }}
         >
           {title}
         </h1>
@@ -103,7 +127,13 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
           router.invalidate();
           reset();
         }}
-        style={{ fontSize: 13, lineHeight: "20px", color: INK, borderBottom: `1px solid ${INK}`, paddingBottom: 2 }}
+        style={{
+          fontSize: 13,
+          lineHeight: "20px",
+          color: INK,
+          borderBottom: `1px solid ${INK}`,
+          paddingBottom: 2,
+        }}
       >
         Try again
       </button>
@@ -152,7 +182,6 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         rel: "stylesheet",
         href: "https://api.fontshare.com/v2/css?f[]=clash-display@variable&display=swap",
       },
-
     ],
   }),
   shellComponent: RootShell,

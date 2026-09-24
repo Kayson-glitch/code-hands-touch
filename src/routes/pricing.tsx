@@ -20,7 +20,10 @@ export const Route = createFileRoute("/pricing")({
           "Transparent pricing that scales with your business. Free, Basic, Growth and Enterprise plans, and a calculator for what AI-handled support saves your team.",
       },
       { property: "og:title", content: "Pricing — Synergy.AI" },
-      { property: "og:description", content: "Transparent pricing that scales with your business." },
+      {
+        property: "og:description",
+        content: "Transparent pricing that scales with your business.",
+      },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
@@ -29,7 +32,6 @@ export const Route = createFileRoute("/pricing")({
 });
 
 /* --------------------------------------------------------------- helpers */
-
 
 const INK = "#0E0B22";
 const MUTED = "#7A7885";
@@ -53,9 +55,17 @@ const PANEL = "#ECECEF";
 const money = (n: number) => `$${Math.round(n).toLocaleString("en-US")}`;
 /** $2.8M / $480K style for secondary figures. */
 const compact = (n: number) =>
-  n >= 1_000_000 ? `$${(n / 1_000_000).toFixed(n >= 10_000_000 ? 0 : 1)}M` : n >= 1000 ? `$${Math.round(n / 1000)}K` : money(n);
+  n >= 1_000_000
+    ? `$${(n / 1_000_000).toFixed(n >= 10_000_000 ? 0 : 1)}M`
+    : n >= 1000
+      ? `$${Math.round(n / 1000)}K`
+      : money(n);
 const count = (n: number) =>
-  n >= 1_000_000 ? `${(n / 1_000_000).toFixed(1)}M` : n >= 1000 ? `${Math.round(n / 1000)}K` : `${Math.round(n)}`;
+  n >= 1_000_000
+    ? `${(n / 1_000_000).toFixed(1)}M`
+    : n >= 1000
+      ? `${Math.round(n / 1000)}K`
+      : `${Math.round(n)}`;
 
 /* ------------------------------------------------------------------ data */
 
@@ -108,7 +118,11 @@ const PLANS: Plan[] = [
     dot: ACCENT,
     monthly: null,
     messages: null,
-    features: ["Private deployment · on-site FDE", "SSO, audit log, data residency", "Named support engineer"],
+    features: [
+      "Private deployment · on-site FDE",
+      "SSO, audit log, data residency",
+      "Named support engineer",
+    ],
     cta: "Contact us",
   },
 ];
@@ -125,7 +139,14 @@ type Inputs = {
   rate: number; // % of conversations AI closes end-to-end
 };
 
-const DEFAULTS: Inputs = { agents: 150, costPerAgent: 36_000, conversations: 200_000, growth: 15, years: 3, rate: 55 };
+const DEFAULTS: Inputs = {
+  agents: 150,
+  costPerAgent: 36_000,
+  conversations: 200_000,
+  growth: 15,
+  years: 3,
+  rate: 55,
+};
 
 type Knob = {
   key: keyof Inputs;
@@ -138,12 +159,55 @@ type Knob = {
 };
 
 const KNOBS: Knob[] = [
-  { key: "agents", label: "Support agents today", min: 5, max: 1000, step: 5, format: (v) => `${v}` },
-  { key: "costPerAgent", label: "Fully loaded cost per agent / year", min: 10_000, max: 150_000, step: 1000, format: (v) => money(v) },
-  { key: "conversations", label: "Conversations a month", min: 1000, max: 1_000_000, step: 1000, format: (v) => count(v) },
-  { key: "growth", label: "Expected volume growth / year", min: 0, max: 50, step: 1, format: (v) => `${v}%` },
-  { key: "years", label: "Projection horizon", min: 1, max: 5, step: 1, format: (v) => `${v} ${v === 1 ? "year" : "years"}` },
-  { key: "rate", label: "AI auto-handling rate", hint: "BCGame's current cycle runs at 55%", min: 30, max: 70, step: 1, format: (v) => `${v}%` },
+  {
+    key: "agents",
+    label: "Support agents today",
+    min: 5,
+    max: 1000,
+    step: 5,
+    format: (v) => `${v}`,
+  },
+  {
+    key: "costPerAgent",
+    label: "Fully loaded cost per agent / year",
+    min: 10_000,
+    max: 150_000,
+    step: 1000,
+    format: (v) => money(v),
+  },
+  {
+    key: "conversations",
+    label: "Conversations a month",
+    min: 1000,
+    max: 1_000_000,
+    step: 1000,
+    format: (v) => count(v),
+  },
+  {
+    key: "growth",
+    label: "Expected volume growth / year",
+    min: 0,
+    max: 50,
+    step: 1,
+    format: (v) => `${v}%`,
+  },
+  {
+    key: "years",
+    label: "Projection horizon",
+    min: 1,
+    max: 5,
+    step: 1,
+    format: (v) => `${v} ${v === 1 ? "year" : "years"}`,
+  },
+  {
+    key: "rate",
+    label: "AI auto-handling rate",
+    hint: "BCGame's current cycle runs at 55%",
+    min: 30,
+    max: 70,
+    step: 1,
+    format: (v) => `${v}%`,
+  },
 ];
 
 /** Smallest plan whose monthly allowance covers the AI-handled volume; Enterprise above Growth. */
@@ -277,7 +341,13 @@ function OutlineButton({ label }: { label: string }) {
   );
 }
 
-function BillingToggle({ annual, onChange }: { annual: boolean; onChange: (annual: boolean) => void }) {
+function BillingToggle({
+  annual,
+  onChange,
+}: {
+  annual: boolean;
+  onChange: (annual: boolean) => void;
+}) {
   const seg = (on: boolean, label: string, tag?: string) => (
     <button
       type="button"
@@ -354,10 +424,13 @@ function PlanCard({ plan, annual, index }: { plan: Plan; annual: boolean; index:
   const pick = plan.id === "growth";
   const [hover, setHover] = useState(false);
   const price =
-    plan.monthly === null ? null : annual ? Math.round(plan.monthly * (1 - ANNUAL_DISCOUNT)) : plan.monthly;
+    plan.monthly === null
+      ? null
+      : annual
+        ? Math.round(plan.monthly * (1 - ANNUAL_DISCOUNT))
+        : plan.monthly;
   // The rate behind the price, so every card carries a second, comparable figure.
-  const perThousand =
-    price && plan.messages ? (price / (plan.messages / 1000)).toFixed(2) : null;
+  const perThousand = price && plan.messages ? (price / (plan.messages / 1000)).toFixed(2) : null;
   return (
     <Reveal y={24} duration={1400} delay={160 + index * 100} className="min-w-0">
       <div
@@ -381,7 +454,10 @@ function PlanCard({ plan, annual, index }: { plan: Plan; annual: boolean; index:
 
         <p className="flex items-center" style={{ margin: 0, gap: 8 }}>
           <span aria-hidden style={{ width: 8, height: 8, background: plan.dot }} />
-          <span className="uppercase" style={{ fontSize: 11, lineHeight: "18px", letterSpacing: "0.14em", color: MUTED }}>
+          <span
+            className="uppercase"
+            style={{ fontSize: 11, lineHeight: "18px", letterSpacing: "0.14em", color: MUTED }}
+          >
             {plan.name}
           </span>
           {pick ? (
@@ -405,7 +481,16 @@ function PlanCard({ plan, annual, index }: { plan: Plan; annual: boolean; index:
         <div style={{ marginTop: 22, minHeight: 74 }}>
           {price === null ? (
             <>
-              <p className="font-display" style={{ margin: 0, fontSize: fluid(40, 32), lineHeight: 1.1, fontWeight: 400, color: INK }}>
+              <p
+                className="font-display"
+                style={{
+                  margin: 0,
+                  fontSize: fluid(40, 32),
+                  lineHeight: 1.1,
+                  fontWeight: 400,
+                  color: INK,
+                }}
+              >
                 Custom
               </p>
               <p style={{ margin: "8px 0 0", fontSize: 12, lineHeight: "18px", color: MUTED }}>
@@ -414,12 +499,25 @@ function PlanCard({ plan, annual, index }: { plan: Plan; annual: boolean; index:
             </>
           ) : (
             <>
-              <p className="font-display whitespace-nowrap" style={{ margin: 0, fontSize: fluid(40, 32), lineHeight: 1.1, fontWeight: 400, color: INK }}>
+              <p
+                className="font-display whitespace-nowrap"
+                style={{
+                  margin: 0,
+                  fontSize: fluid(40, 32),
+                  lineHeight: 1.1,
+                  fontWeight: 400,
+                  color: INK,
+                }}
+              >
                 {money(price)}
                 <span style={{ marginLeft: 6, fontSize: 14, color: FAINT }}>/ mo</span>
               </p>
               <p style={{ margin: "8px 0 0", fontSize: 12, lineHeight: "18px", color: MUTED }}>
-                {price === 0 ? "No card needed" : annual ? `Billed annually · ${money(price * 12)} / yr` : "Billed monthly"}
+                {price === 0
+                  ? "No card needed"
+                  : annual
+                    ? `Billed annually · ${money(price * 12)} / yr`
+                    : "Billed monthly"}
               </p>
             </>
           )}
@@ -451,7 +549,9 @@ function PlanCard({ plan, annual, index }: { plan: Plan; annual: boolean; index:
           {plan.features.map((f, i) => (
             <li key={f} className="flex items-start" style={{ gap: 10 }}>
               <Bullet diamond={i % 2 === 0} accent={plan.dot} />
-              <span style={{ fontSize: 14, lineHeight: "22px", color: i === 0 ? INK : MUTED }}>{f}</span>
+              <span style={{ fontSize: 14, lineHeight: "22px", color: i === 0 ? INK : MUTED }}>
+                {f}
+              </span>
             </li>
           ))}
         </ul>
@@ -472,19 +572,31 @@ function PlanCard({ plan, annual, index }: { plan: Plan; annual: boolean; index:
 
 /* --------------------------------------------------------- calculator */
 
-function KnobRow({ knob, value, onChange }: { knob: Knob; value: number; onChange: (v: number) => void }) {
+function KnobRow({
+  knob,
+  value,
+  onChange,
+}: {
+  knob: Knob;
+  value: number;
+  onChange: (v: number) => void;
+}) {
   const [editing, setEditing] = useState<string | null>(null);
   const pct = ((value - knob.min) / (knob.max - knob.min)) * 100;
   const commit = () => {
     if (editing === null) return;
     const n = Number(editing.replace(/[^0-9.]/g, ""));
-    if (!Number.isNaN(n)) onChange(Math.min(knob.max, Math.max(knob.min, Math.round(n / knob.step) * knob.step)));
+    if (!Number.isNaN(n))
+      onChange(Math.min(knob.max, Math.max(knob.min, Math.round(n / knob.step) * knob.step)));
     setEditing(null);
   };
   return (
     <div>
       <div className="flex items-baseline justify-between" style={{ gap: 16 }}>
-        <label htmlFor={`knob-${knob.key}`} style={{ fontSize: 14, lineHeight: "22px", color: INK }}>
+        <label
+          htmlFor={`knob-${knob.key}`}
+          style={{ fontSize: 14, lineHeight: "22px", color: INK }}
+        >
           {knob.label}
         </label>
         {/* the value is typed as readily as it is dragged */}
@@ -525,7 +637,9 @@ function KnobRow({ knob, value, onChange }: { knob: Knob; value: number; onChang
         style={{ "--p": `${pct}%`, marginTop: 4 } as React.CSSProperties}
       />
       {knob.hint ? (
-        <p style={{ margin: "2px 0 0", fontSize: 12, lineHeight: "18px", color: FAINT }}>{knob.hint}</p>
+        <p style={{ margin: "2px 0 0", fontSize: 12, lineHeight: "18px", color: FAINT }}>
+          {knob.hint}
+        </p>
       ) : null}
     </div>
   );
@@ -538,7 +652,11 @@ function YearBars({ years }: { years: ReturnType<typeof estimate>["years"] }) {
     <div>
       <div className="flex items-end" style={{ gap: fluid(20, 12), height: 120 }}>
         {years.map((y) => (
-          <div key={y.year} className="flex flex-1 flex-col items-stretch justify-end" style={{ gap: 6, height: "100%" }}>
+          <div
+            key={y.year}
+            className="flex flex-1 flex-col items-stretch justify-end"
+            style={{ gap: 6, height: "100%" }}
+          >
             <div className="flex flex-1 items-end" style={{ gap: 4 }}>
               <span
                 className="block flex-1"
@@ -559,18 +677,26 @@ function YearBars({ years }: { years: ReturnType<typeof estimate>["years"] }) {
                 }}
               />
             </div>
-            <span className="text-center uppercase" style={{ fontSize: 10, lineHeight: "16px", letterSpacing: "0.12em", color: FAINT }}>
+            <span
+              className="text-center uppercase"
+              style={{ fontSize: 10, lineHeight: "16px", letterSpacing: "0.12em", color: FAINT }}
+            >
               Y{y.year}
             </span>
           </div>
         ))}
       </div>
-      <div className="flex items-center" style={{ gap: 16, marginTop: 12, fontSize: 11, lineHeight: "16px", color: FAINT }}>
+      <div
+        className="flex items-center"
+        style={{ gap: 16, marginTop: 12, fontSize: 11, lineHeight: "16px", color: FAINT }}
+      >
         <span className="inline-flex items-center" style={{ gap: 6 }}>
-          <span aria-hidden style={{ width: 6, height: 6, background: "rgba(14, 11, 34, 0.22)" }} /> Support labour today
+          <span aria-hidden style={{ width: 6, height: 6, background: "rgba(14, 11, 34, 0.22)" }} />{" "}
+          Support labour today
         </span>
         <span className="inline-flex items-center" style={{ gap: 6 }}>
-          <span aria-hidden style={{ width: 6, height: 6, background: ACCENT }} /> With Synergy, plan included
+          <span aria-hidden style={{ width: 6, height: 6, background: ACCENT }} /> With Synergy,
+          plan included
         </span>
       </div>
     </div>
@@ -585,7 +711,10 @@ function Calculator() {
   const set = (key: keyof Inputs) => (v: number) => setInputs((s) => ({ ...s, [key]: v }));
 
   return (
-    <div className="grid lg:grid-cols-[1fr_440px]" style={{ background: SURFACE, border: `1px solid ${RULE}` }}>
+    <div
+      className="grid lg:grid-cols-[1fr_440px]"
+      style={{ background: SURFACE, border: `1px solid ${RULE}` }}
+    >
       {/* inputs */}
       <div className="flex flex-col" style={{ padding: fluid(40, 24), gap: fluid(28, 20) }}>
         {KNOBS.map((k) => (
@@ -595,7 +724,16 @@ function Calculator() {
           type="button"
           className="self-start cursor-pointer"
           onClick={() => setInputs(DEFAULTS)}
-          style={{ padding: 0, background: "none", border: "none", fontSize: 12, lineHeight: "18px", color: FAINT, textDecoration: "underline", textUnderlineOffset: 3 }}
+          style={{
+            padding: 0,
+            background: "none",
+            border: "none",
+            fontSize: 12,
+            lineHeight: "18px",
+            color: FAINT,
+            textDecoration: "underline",
+            textUnderlineOffset: 3,
+          }}
         >
           Reset to the BCGame example
         </button>
@@ -615,20 +753,41 @@ function Calculator() {
       >
         <p className="flex items-center" style={{ margin: 0, gap: 10 }}>
           <span aria-hidden style={{ width: 6, height: 6, background: ACCENT }} />
-          <span className="uppercase" style={{ fontSize: 11, lineHeight: "18px", letterSpacing: "0.14em", color: MUTED }}>
+          <span
+            className="uppercase"
+            style={{ fontSize: 11, lineHeight: "18px", letterSpacing: "0.14em", color: MUTED }}
+          >
             Your estimate
           </span>
         </p>
 
         <div>
-          <p className="uppercase" style={{ margin: 0, fontSize: 10, lineHeight: "16px", letterSpacing: "0.12em", color: FAINT }}>
+          <p
+            className="uppercase"
+            style={{
+              margin: 0,
+              fontSize: 10,
+              lineHeight: "16px",
+              letterSpacing: "0.12em",
+              color: FAINT,
+            }}
+          >
             Saved in year one
           </p>
-          <p className="font-display whitespace-nowrap" style={{ margin: "10px 0 0", fontSize: fluid(56, 40), lineHeight: 1.05, fontWeight: 400 }}>
+          <p
+            className="font-display whitespace-nowrap"
+            style={{
+              margin: "10px 0 0",
+              fontSize: fluid(56, 40),
+              lineHeight: 1.05,
+              fontWeight: 400,
+            }}
+          >
             {money(annual)}
           </p>
           <p style={{ margin: "10px 0 0", fontSize: 13, lineHeight: "20px", color: MUTED }}>
-            {compact(total)} over {inputs.years} {inputs.years === 1 ? "year" : "years"}, after the {result.plan.name} plan
+            {compact(total)} over {inputs.years} {inputs.years === 1 ? "year" : "years"}, after the{" "}
+            {result.plan.name} plan
           </p>
         </div>
 
@@ -636,9 +795,19 @@ function Calculator() {
 
         <ul className="m-0 flex list-none flex-col p-0" style={{ gap: 0 }}>
           {[
-            [`${result.freed} of ${inputs.agents} agents`, "freed for monitoring, VIP and fallback"],
+            [
+              `${result.freed} of ${inputs.agents} agents`,
+              "freed for monitoring, VIP and fallback",
+            ],
             [`${count(result.aiPerYear)} conversations / yr`, "closed by AI end to end"],
-            [result.plan.monthly === null ? "Enterprise" : `${result.plan.name} · ${money(result.plan.monthly)} / mo`, result.plan.monthly === null ? "quoted for your volume" : "plan that covers your AI volume"],
+            [
+              result.plan.monthly === null
+                ? "Enterprise"
+                : `${result.plan.name} · ${money(result.plan.monthly)} / mo`,
+              result.plan.monthly === null
+                ? "quoted for your volume"
+                : "plan that covers your AI volume",
+            ],
           ].map(([v, l], i) => (
             // rows divided by hairlines, so the panel reads as a statement of record
             <li
@@ -650,8 +819,12 @@ function Calculator() {
                 borderTop: i === 0 ? "none" : `1px solid ${RULE_SOFT}`,
               }}
             >
-              <span className="block" style={{ color: INK, fontWeight: 500 }}>{v}</span>
-              <span className="block" style={{ color: MUTED, fontSize: 12, lineHeight: "18px" }}>{l}</span>
+              <span className="block" style={{ color: INK, fontWeight: 500 }}>
+                {v}
+              </span>
+              <span className="block" style={{ color: MUTED, fontSize: 12, lineHeight: "18px" }}>
+                {l}
+              </span>
             </li>
           ))}
         </ul>
@@ -680,7 +853,10 @@ function PricingPage() {
       <header className="relative overflow-hidden">
         <HeroDots />
         <div className="relative" style={{ padding: pad }}>
-          <div className="mx-auto flex w-full max-w-[1200px] flex-col items-center text-center" style={{ paddingTop: fluid(160, 104) }}>
+          <div
+            className="mx-auto flex w-full max-w-[1200px] flex-col items-center text-center"
+            style={{ paddingTop: fluid(160, 104) }}
+          >
             <Reveal immediate>
               <SectionLabel index="01" label="Pricing" accent={ACCENT} />
             </Reveal>
@@ -690,7 +866,12 @@ function PricingPage() {
                 className="font-display text-ink"
                 text={"Choose the plan that's\nright for you"}
                 breakFrom="md"
-                style={{ margin: "16px 0 0", fontSize: fluid(60, 36), lineHeight: 1.1, fontWeight: 400 }}
+                style={{
+                  margin: "16px 0 0",
+                  fontSize: fluid(60, 36),
+                  lineHeight: 1.1,
+                  fontWeight: 400,
+                }}
               />
             </Reveal>
             <Reveal immediate delay={240}>
@@ -703,7 +884,10 @@ function PricingPage() {
             </Reveal>
           </div>
 
-          <div className="mx-auto grid w-full max-w-[1200px] grid-cols-1 sm:grid-cols-2 lg:grid-cols-4" style={{ gap: 16, marginTop: fluid(56, 36), paddingBottom: fluid(96, 56) }}>
+          <div
+            className="mx-auto grid w-full max-w-[1200px] grid-cols-1 sm:grid-cols-2 lg:grid-cols-4"
+            style={{ gap: 16, marginTop: fluid(56, 36), paddingBottom: fluid(96, 56) }}
+          >
             {PLANS.map((p, i) => (
               <PlanCard key={p.id} plan={p} annual={annual} index={i} />
             ))}
@@ -712,7 +896,10 @@ function PricingPage() {
       </header>
 
       {/* ------------------------------------------------------ calculator */}
-      <section className="relative" style={{ borderTop: `1px solid ${RULE_SOFT}`, background: SURFACE_SOFT }}>
+      <section
+        className="relative"
+        style={{ borderTop: `1px solid ${RULE_SOFT}`, background: SURFACE_SOFT }}
+      >
         {/* the Platform module's crop frame: rules inset from the section
             edges, corner squares, ticks fading out to the viewport */}
         {/* the frame stands further off top and bottom, so a band of the
@@ -724,21 +911,42 @@ function PricingPage() {
           rule={RULE}
           mark={SURFACE_SOFT}
         />
-        <div className="relative" style={{ padding: `${fluid(184, 96)} ${fluid(120, 24)} ${fluid(192, 112)}` }}>
+        <div
+          className="relative"
+          style={{ padding: `${fluid(184, 96)} ${fluid(120, 24)} ${fluid(192, 112)}` }}
+        >
           <div className="mx-auto w-full max-w-[1200px]">
-            <div className="flex flex-col md:flex-row md:items-end md:justify-between" style={{ gap: 24 }}>
+            <div
+              className="flex flex-col md:flex-row md:items-end md:justify-between"
+              style={{ gap: 24 }}
+            >
               <Reveal y={24} duration={1600}>
                 <SectionLabel index="02" label="Savings" accent={ACCENT} />
                 <h2
                   className="font-display text-ink"
-                  style={{ margin: "18px 0 0", fontSize: fluid(48, 30), lineHeight: 1.1667, fontWeight: 400 }}
+                  style={{
+                    margin: "18px 0 0",
+                    fontSize: fluid(48, 30),
+                    lineHeight: 1.1667,
+                    fontWeight: 400,
+                  }}
                 >
                   <BreakLines text={"See how much\nyou could save"} />
                 </h2>
               </Reveal>
               <Reveal y={24} duration={1600} delay={120}>
-                <p style={{ margin: 0, maxWidth: 480, fontSize: 14, lineHeight: "22px", color: MUTED }}>
-                  Drag or type. The model is in the open: your team grows with volume, AI closes its share of conversations end to end, and the plan that covers that volume is already deducted.
+                <p
+                  style={{
+                    margin: 0,
+                    maxWidth: 480,
+                    fontSize: 14,
+                    lineHeight: "22px",
+                    color: MUTED,
+                  }}
+                >
+                  Drag or type. The model is in the open: your team grows with volume, AI closes its
+                  share of conversations end to end, and the plan that covers that volume is already
+                  deducted.
                 </p>
               </Reveal>
             </div>

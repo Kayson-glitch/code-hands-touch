@@ -39,7 +39,6 @@ export const Route = createFileRoute("/solution/customer-support")({
 
 /* --------------------------------------------------------------- helpers */
 
-
 /** Page accent — the Solution menu's "Customer service" square. */
 const AMBER = "#EBA753";
 const HAIRLINE = "#E1E0E4";
@@ -201,25 +200,53 @@ function FeatureSection({ feature, flip }: { feature: Feature; flip: boolean }) 
           className="mx-auto flex w-full max-w-[1200px] flex-col md:flex-row md:items-center"
           style={{ gap: fluid(40, 32) }}
         >
-          <div className={`flex flex-1 flex-col ${flip ? "md:order-2" : ""}`} style={{ minWidth: 0 }}>
+          <div
+            className={`flex flex-1 flex-col ${flip ? "md:order-2" : ""}`}
+            style={{ minWidth: 0 }}
+          >
             <Reveal y={24} duration={1600}>
               <h2
                 className="font-display text-ink"
-                style={{ margin: 0, maxWidth: 580, fontSize: fluid(48, 30), lineHeight: 1.1667, fontWeight: 400 }}
+                style={{
+                  margin: 0,
+                  maxWidth: 580,
+                  fontSize: fluid(48, 30),
+                  lineHeight: 1.1667,
+                  fontWeight: 400,
+                }}
               >
                 <BreakLines text={feature.title} />
               </h2>
             </Reveal>
             <Reveal y={24} duration={1600} delay={120}>
-              <p style={{ margin: "20px 0 0", maxWidth: 580, fontSize: 14, lineHeight: "22px", color: MUTED }}>
+              <p
+                style={{
+                  margin: "20px 0 0",
+                  maxWidth: 580,
+                  fontSize: 14,
+                  lineHeight: "22px",
+                  color: MUTED,
+                }}
+              >
                 {feature.body}
               </p>
             </Reveal>
-            <Reveal y={24} duration={1600} delay={240} style={{ marginTop: fluid(40, 28), maxWidth: 580 }}>
+            <Reveal
+              y={24}
+              duration={1600}
+              delay={240}
+              style={{ marginTop: fluid(40, 28), maxWidth: 580 }}
+            >
               <div aria-hidden style={{ height: 1, background: HAIRLINE }} />
               <p
                 className="uppercase"
-                style={{ margin: "20px 0 0", fontSize: 12, lineHeight: "18px", letterSpacing: "0.06em", color: MUTED }}
+                style={{
+                  margin: "20px 0 0",
+                  fontSize: 12,
+                  lineHeight: "18px",
+                  letterSpacing: "0.06em",
+                  color: MUTED,
+                }}
               >
                 Customer experience value
               </p>
@@ -281,7 +308,11 @@ function OutcomeCard({
         }}
       >
         <p className="flex items-start" style={{ margin: 0, gap: 8 }}>
-          <span aria-hidden className="mt-[5px] shrink-0" style={{ width: 8, height: 8, background: dot }} />
+          <span
+            aria-hidden
+            className="mt-[5px] shrink-0"
+            style={{ width: 8, height: 8, background: dot }}
+          />
           <span
             className="uppercase"
             style={{ fontSize: 12, lineHeight: "18px", letterSpacing: "0.06em", color: MUTED }}
@@ -291,7 +322,13 @@ function OutcomeCard({
         </p>
         <p
           className="font-display whitespace-nowrap"
-          style={{ margin: 0, fontSize: fluid(56, 40), lineHeight: 1.1, fontWeight: 400, color: INK }}
+          style={{
+            margin: 0,
+            fontSize: fluid(56, 40),
+            lineHeight: 1.1,
+            fontWeight: 400,
+            color: INK,
+          }}
         >
           {sign}
           <RollingNumber value={value} />
@@ -307,7 +344,10 @@ function Outcomes() {
     <section style={{ borderTop: `1px solid ${HAIRLINE}`, background: "#FAFAFA" }}>
       <div style={{ padding: `${fluid(100, 56)} ${fluid(120, 24)} ${fluid(120, 64)}` }}>
         <div className="mx-auto w-full max-w-[1200px]">
-          <div className="flex flex-col md:flex-row md:items-start md:justify-between" style={{ gap: fluid(24, 24) }}>
+          <div
+            className="flex flex-col md:flex-row md:items-start md:justify-between"
+            style={{ gap: fluid(24, 24) }}
+          >
             <Reveal y={24} duration={1600} className="md:w-1/2">
               <h2
                 className="font-display text-ink"
@@ -317,14 +357,21 @@ function Outcomes() {
               </h2>
             </Reveal>
             <Reveal y={24} duration={1600} delay={120} className="md:w-1/2">
-              <p style={{ margin: 0, maxWidth: 532, fontSize: 14, lineHeight: "22px", color: MUTED }}>{OUTCOMES.body}</p>
+              <p
+                style={{ margin: 0, maxWidth: 532, fontSize: 14, lineHeight: "22px", color: MUTED }}
+              >
+                {OUTCOMES.body}
+              </p>
               <div style={{ marginTop: fluid(32, 24) }}>
                 <RainbowButton label="Book a Demo" />
               </div>
             </Reveal>
           </div>
 
-          <div className="grid grid-cols-2 md:grid-cols-4" style={{ marginTop: fluid(56, 36), gap: 16 }}>
+          <div
+            className="grid grid-cols-2 md:grid-cols-4"
+            style={{ marginTop: fluid(56, 36), gap: 16 }}
+          >
             {OUTCOMES.stats.map((s, i) => (
               <OutcomeCard key={s.label} {...s} index={i} />
             ))}

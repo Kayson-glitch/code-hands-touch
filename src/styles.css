@@ -9,7 +9,8 @@
   --font-display: "Clash Display Variable", "Clash Display", "Montserrat", sans-serif;
 }
 
-html, body {
+html,
+body {
   font-family: var(--font-sans);
   scrollbar-width: none;
   -ms-overflow-style: none;
@@ -68,7 +69,6 @@ body {
   --color-surface-soft: var(--surface-soft);
   --color-surface-inset: var(--surface-inset);
 }
-
 
 /*
  * Design system definition.
@@ -210,27 +210,53 @@ body {
 }
 
 @keyframes synergy-gradient-flow {
-  0%   { background-position: 0% 50%;   background-size: 220% 220%; }
-  25%  { background-position: 40% 45%;  background-size: 260% 240%; }
-  50%  { background-position: 100% 55%; background-size: 300% 260%; }
-  75%  { background-position: 60% 50%;  background-size: 260% 240%; }
-  100% { background-position: 0% 50%;   background-size: 220% 220%; }
+  0% {
+    background-position: 0% 50%;
+    background-size: 220% 220%;
+  }
+  25% {
+    background-position: 40% 45%;
+    background-size: 260% 240%;
+  }
+  50% {
+    background-position: 100% 55%;
+    background-size: 300% 260%;
+  }
+  75% {
+    background-position: 60% 50%;
+    background-size: 260% 240%;
+  }
+  100% {
+    background-position: 0% 50%;
+    background-size: 220% 220%;
+  }
 }
 
 @keyframes rainbow-btn-flow {
-  0%   { background-position: 0%; }
-  100% { background-position: 200%; }
+  0% {
+    background-position: 0%;
+  }
+  100% {
+    background-position: 200%;
+  }
 }
 
-
 @keyframes nav-border-flow {
-  0%   { background-position: 0vw 50%; }
-  100% { background-position: -120vw 50%; }
+  0% {
+    background-position: 0vw 50%;
+  }
+  100% {
+    background-position: -120vw 50%;
+  }
 }
 
 @keyframes btn-border-flow {
-  0%   { background-position: 0% 50%; }
-  100% { background-position: -300% 50%; }
+  0% {
+    background-position: 0% 50%;
+  }
+  100% {
+    background-position: -300% 50%;
+  }
 }
 
 /* Third-screen outcomes module — geometry mirrors the reference interaction. */
@@ -286,9 +312,8 @@ body {
   letter-spacing: 0;
 }
 
-
 .kore-outcomes__header strong {
-  color: #5749FF;
+  color: #5749ff;
   font-weight: 400;
 }
 
@@ -316,7 +341,13 @@ body {
   width: 100%;
   height: 100%;
   clip-path: inset(0 calc((1 - var(--p, 0)) * 100%) 0 0);
-  background-image: linear-gradient(90deg, #137DFF 0%, #FF18AA 33.333%, #FFCD17 66.666%, #137DFF 100%);
+  background-image: linear-gradient(
+    90deg,
+    #137dff 0%,
+    #ff18aa 33.333%,
+    #ffcd17 66.666%,
+    #137dff 100%
+  );
   background-size: 120vw 100%;
   background-repeat: repeat;
   animation: nav-border-flow 9s linear infinite;
@@ -333,7 +364,6 @@ body {
   grid-template-columns: repeat(3, minmax(0, 1fr));
   overflow: hidden;
 }
-
 
 .kore-outcomes__item {
   display: grid;
@@ -362,7 +392,6 @@ body {
   box-shadow: inset -1px 0 0 var(--hairline);
 }
 
-
 .kore-outcomes__media {
   padding: clamp(1rem, 0.8571rem + 0.7143vw, 1.5rem) clamp(1rem, 0.8571rem + 0.7143vw, 1.5rem) 0;
 }
@@ -378,7 +407,8 @@ body {
   display: flex;
   flex-direction: column;
   gap: 1rem;
-  padding: 1.5rem clamp(1rem, 0.8571rem + 0.7143vw, 1.5rem) clamp(1rem, 0.8571rem + 0.7143vw, 1.5rem);
+  padding: 1.5rem clamp(1rem, 0.8571rem + 0.7143vw, 1.5rem)
+    clamp(1rem, 0.8571rem + 0.7143vw, 1.5rem);
 }
 
 .kore-outcomes__copy h3,
@@ -429,7 +459,6 @@ body {
   letter-spacing: 0;
 }
 
-
 .kore-outcomes__footer {
   position: relative;
   padding-block: 3rem;
@@ -444,7 +473,7 @@ body {
 }
 
 .kore-outcomes__footer span {
-  color: #5749FF;
+  color: #5749ff;
 }
 
 .kore-outcomes__footer em {
@@ -494,7 +523,6 @@ body {
     border-right: 1px solid var(--hairline);
   }
 
-
   .kore-outcomes__number {
     display: none;
   }
@@ -531,7 +559,6 @@ body {
   }
 }
 
-
 /* ------------------------------------------------ Lenis smooth scroll (page) */
 html.lenis,
 html.lenis body {
@@ -559,13 +586,12 @@ html.lenis body {
   position: relative;
   z-index: 10;
   width: 100%;
-  background-color: #FAFAFA;
+  background-color: #fafafa;
 }
 
 .artemis-closing__wrapper {
   height: 820vh;
 }
-
 
 .artemis-closing__sticky {
   position: sticky;
@@ -589,7 +615,7 @@ html.lenis body {
   display: flex;
   align-items: center;
   background-color: #000000;
-  color: #FAFAFA;
+  color: #fafafa;
   will-change: clip-path;
 }
 
@@ -600,11 +626,11 @@ html.lenis body {
   font-weight: 400;
   line-height: 0.86;
   letter-spacing: 0;
-  color: #0A0A0A;
+  color: #0a0a0a;
 }
 
 .artemis-closing__invert .artemis-closing__text {
-  color: #FAFAFA;
+  color: #fafafa;
 }
 
 .artemis-closing__text em {
@@ -669,7 +695,8 @@ html.lenis body {
     var(--grid-x-min) + mod(calc(100% - 2 * var(--grid-x-min)), var(--grid-step)) / 2
   );
   --grid-y-inset: calc(
-    var(--grid-y-min) + mod(calc(100% - var(--grid-nav) - 2 * var(--grid-y-min)), var(--grid-step)) / 2
+    var(--grid-y-min) +
+      mod(calc(100% - var(--grid-nav) - 2 * var(--grid-y-min)), var(--grid-step)) / 2
   );
   --grid-y-start: var(--grid-y-inset);
   --grid-y-end: calc(100% - var(--grid-y-inset));
@@ -777,19 +804,31 @@ html.lenis body {
 
 /* Right → left */
 @keyframes artemis-converge-horizontal {
-  from { clip-path: inset(0 0 0 100%); }
-  to { clip-path: inset(0 0 0 0); }
+  from {
+    clip-path: inset(0 0 0 100%);
+  }
+  to {
+    clip-path: inset(0 0 0 0);
+  }
 }
 
 /* Bottom → top */
 @keyframes artemis-converge-vertical {
-  from { clip-path: inset(100% 0 0 0); }
-  to { clip-path: inset(0 0 0 0); }
+  from {
+    clip-path: inset(100% 0 0 0);
+  }
+  to {
+    clip-path: inset(0 0 0 0);
+  }
 }
 
 @keyframes artemis-converge-cross {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -802,8 +841,6 @@ html.lenis body {
   }
 }
 
-
-
 /* Vertical rules */
 .artemis-closing__dots::before {
   content: "";
@@ -813,12 +850,11 @@ html.lenis body {
   left: var(--grid-x-inset);
   right: var(--grid-x-inset);
   background-image:
-    /* inner rules (8%) — same origin and strict 40px pitch */
-    linear-gradient(
-      to right,
-      rgba(255, 255, 255, 0.08) 0 1px,
-      transparent 1px var(--grid-step)
-    );
+    /* inner rules (8%) — same origin and strict 40px pitch */ linear-gradient(
+    to right,
+    rgba(255, 255, 255, 0.08) 0 1px,
+    transparent 1px var(--grid-step)
+  );
   background-repeat: repeat-x;
   background-size: var(--grid-step) 100%;
   background-position: 0 0;
@@ -850,12 +886,11 @@ html.lenis body {
   /* Include the terminal lattice coordinate itself. Without this extra pixel,
      the 1px bottom rule is painted one pixel above the crossing centre. */
   bottom: calc(100% - var(--grid-y-end) - 1px);
-  background-image:
-    linear-gradient(
-      to bottom,
-      rgba(255, 255, 255, 0.08) 0 1px,
-      transparent 1px var(--grid-step)
-    );
+  background-image: linear-gradient(
+    to bottom,
+    rgba(255, 255, 255, 0.08) 0 1px,
+    transparent 1px var(--grid-step)
+  );
   background-repeat: repeat-y;
   background-size: 100% var(--grid-step);
   background-position: 0 0;
@@ -875,7 +910,6 @@ html.lenis body {
     transparent 100%
   );
 }
-
 
 /* ------------------------------------- Feature panels on the closing screen */
 
@@ -964,14 +998,26 @@ html.lenis body {
   animation-delay: 0.12s;
 }
 
-.artemis-gallery__panel.is-active .artemis-gallery__item:nth-child(1) { animation-delay: 0.2s; }
-.artemis-gallery__panel.is-active .artemis-gallery__item:nth-child(2) { animation-delay: 0.28s; }
-.artemis-gallery__panel.is-active .artemis-gallery__item:nth-child(3) { animation-delay: 0.36s; }
-.artemis-gallery__panel.is-active .artemis-gallery__item:nth-child(4) { animation-delay: 0.44s; }
+.artemis-gallery__panel.is-active .artemis-gallery__item:nth-child(1) {
+  animation-delay: 0.2s;
+}
+.artemis-gallery__panel.is-active .artemis-gallery__item:nth-child(2) {
+  animation-delay: 0.28s;
+}
+.artemis-gallery__panel.is-active .artemis-gallery__item:nth-child(3) {
+  animation-delay: 0.36s;
+}
+.artemis-gallery__panel.is-active .artemis-gallery__item:nth-child(4) {
+  animation-delay: 0.44s;
+}
 
 @media (prefers-reduced-motion: reduce) {
-  .artemis-gallery__panel { opacity: 1; }
-  .artemis-gallery__panel.is-active * { animation: none !important; }
+  .artemis-gallery__panel {
+    opacity: 1;
+  }
+  .artemis-gallery__panel.is-active * {
+    animation: none !important;
+  }
 }
 
 .artemis-gallery__row {
@@ -1027,7 +1073,6 @@ html.lenis body {
   color: rgba(255, 255, 255, 0.5);
 }
 
-
 /* Placeholder media block (Figma: 360×480, square corners).
    Sits 80px right of the module's 16% boundary rule. */
 /* Holds a transparent cut-out on the section's black, so there is no box to
@@ -1047,7 +1092,6 @@ html.lenis body {
   object-fit: contain;
   user-select: none;
 }
-
 
 .artemis-gallery__copy {
   display: flex;
@@ -1113,20 +1157,8 @@ html.lenis body {
   max-width: 100%;
   height: 20px;
   overflow: hidden;
-  -webkit-mask-image: linear-gradient(
-    90deg,
-    transparent 0,
-    #000 16%,
-    #000 84%,
-    transparent 100%
-  );
-  mask-image: linear-gradient(
-    90deg,
-    transparent 0,
-    #000 16%,
-    #000 84%,
-    transparent 100%
-  );
+  -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 16%, #000 84%, transparent 100%);
+  mask-image: linear-gradient(90deg, transparent 0, #000 16%, #000 84%, transparent 100%);
 }
 
 .artemis-gallery__ticker {
@@ -1165,11 +1197,11 @@ html.lenis body {
   color: #ffffff;
 }
 
-
 @media (prefers-reduced-motion: reduce) {
-  .artemis-gallery__ticker { transition: none; }
+  .artemis-gallery__ticker {
+    transition: none;
+  }
 }
-
 
 /* Narrow laptops / landscape tablets: panels snap to the 120px lattice inset,
    so the intrinsic 1023px module would overflow the clipped stage. Scale the
@@ -1200,14 +1232,12 @@ html.lenis body {
   }
 }
 
-
 /* Stacked fallback: no pinning, no horizontal travel. */
 
 @media (max-width: 990px) {
   .artemis-closing__dots {
     --grid-x-min: 16px;
   }
-
 
   .artemis-closing__wrapper {
     height: auto !important;
@@ -1266,7 +1296,6 @@ html.lenis body {
     width: 100%;
   }
 
-
   .artemis-gallery__media {
     margin-left: 0;
     width: min(100%, 480px);
@@ -1321,50 +1350,80 @@ html.lenis body {
   }
 }
 
-
 /* Business-impact KPI tabs: selected column's top rule flows like the nav border. */
 .kpi-rule-active {
-  background-image: linear-gradient(90deg, #137DFF 0%, #FF18AA 33.333%, #FFCD17 66.666%, #137DFF 100%);
+  background-image: linear-gradient(
+    90deg,
+    #137dff 0%,
+    #ff18aa 33.333%,
+    #ffcd17 66.666%,
+    #137dff 100%
+  );
   background-size: 120vw 100%;
   background-repeat: repeat;
-  animation: nav-border-flow 14s linear infinite, kpi-rule-extend 12s linear infinite;
+  animation:
+    nav-border-flow 14s linear infinite,
+    kpi-rule-extend 12s linear infinite;
 }
 
 @keyframes kpi-rule-extend {
-  0% { width: 120px; }
-  100% { width: 600px; }
+  0% {
+    width: 120px;
+  }
+  100% {
+    width: 600px;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .kpi-rule-active { animation: none; width: 600px; }
+  .kpi-rule-active {
+    animation: none;
+    width: 600px;
+  }
 }
-
 
 /* Stories sidebar: only the active module carries the flowing brand gradient. */
 .stories-rail-flow {
-  background-image: linear-gradient(90deg, #137DFF 0%, #FF18AA 33.333%, #FFCD17 66.666%, #137DFF 100%);
+  background-image: linear-gradient(
+    90deg,
+    #137dff 0%,
+    #ff18aa 33.333%,
+    #ffcd17 66.666%,
+    #137dff 100%
+  );
   background-size: 120vw 100%;
   background-repeat: repeat;
   animation: nav-border-flow 9s linear infinite;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .stories-rail-flow { animation: none; }
+  .stories-rail-flow {
+    animation: none;
+  }
 }
 
 /* Why Synergy long-form pages: no one-word last lines in copy, even-length
    title lines. Hero titles carry hand-set breaks from md up, so they are only
    balanced where they wrap on their own. */
-.why-synergy p { text-wrap: pretty; }
-.why-synergy h2, .why-synergy h3 { text-wrap: balance; }
+.why-synergy p {
+  text-wrap: pretty;
+}
+.why-synergy h2,
+.why-synergy h3 {
+  text-wrap: balance;
+}
 @media (max-width: 767px) {
-  .why-synergy h1 { text-wrap: balance; }
+  .why-synergy h1 {
+    text-wrap: balance;
+  }
 }
 
 /* Why Synergy step diagram: a vertical timeline below xl (the article column
    is too narrow for four columns beside the index), one column per step
    (--steps, set inline) from xl up. */
-.why-steps { grid-template-columns: minmax(0, 1fr); }
+.why-steps {
+  grid-template-columns: minmax(0, 1fr);
+}
 @media (min-width: 1280px) {
   .why-steps {
     grid-template-columns: repeat(var(--steps, 4), minmax(0, 1fr));
@@ -1384,7 +1443,9 @@ html.lenis body {
   background: transparent;
   cursor: pointer;
 }
-.calc-range:focus-visible { outline: none; }
+.calc-range:focus-visible {
+  outline: none;
+}
 /* Track and handle sit on the page's rule weights, so a row of sliders reads
    as structure rather than six black bars. */
 .calc-range::-webkit-slider-runnable-track {
@@ -1395,8 +1456,14 @@ html.lenis body {
     rgba(14, 11, 34, 0.12) var(--p, 0%) 100%
   );
 }
-.calc-range::-moz-range-track { height: 1px; background: rgba(14, 11, 34, 0.12); }
-.calc-range::-moz-range-progress { height: 1px; background: rgba(14, 11, 34, 0.55); }
+.calc-range::-moz-range-track {
+  height: 1px;
+  background: rgba(14, 11, 34, 0.12);
+}
+.calc-range::-moz-range-progress {
+  height: 1px;
+  background: rgba(14, 11, 34, 0.55);
+}
 .calc-range::-webkit-slider-thumb {
   -webkit-appearance: none;
   appearance: none;
@@ -1406,7 +1473,9 @@ html.lenis body {
   background: #ffffff;
   border: 1px solid rgba(14, 11, 34, 0.55);
   border-radius: 0;
-  transition: transform 160ms ease, border-color 160ms ease;
+  transition:
+    transform 160ms ease,
+    border-color 160ms ease;
 }
 .calc-range::-moz-range-thumb {
   width: 9px;
@@ -1415,9 +1484,13 @@ html.lenis body {
   border: 1px solid rgba(14, 11, 34, 0.55);
   border-radius: 0;
 }
-.calc-range:hover::-webkit-slider-thumb { border-color: #0e0b22; }
+.calc-range:hover::-webkit-slider-thumb {
+  border-color: #0e0b22;
+}
 .calc-range:hover::-webkit-slider-thumb,
-.calc-range:focus-visible::-webkit-slider-thumb { transform: scale(1.25); }
+.calc-range:focus-visible::-webkit-slider-thumb {
+  transform: scale(1.25);
+}
 
 /* First-load bar. The server ships this markup before the bundle lands, so the
    fill creeps on its own until the script takes over; `is-live` then hands the
@@ -1490,7 +1563,11 @@ html.lenis body {
 /* Why Synergy hero copy column. Between lg and xl the halftone subject starts
    60px right of the viewport centre, so the column yields to it instead of
    running underneath. */
-.why-hero-copy { max-width: 680px; }
+.why-hero-copy {
+  max-width: 680px;
+}
 @media (min-width: 1024px) and (max-width: 1279px) {
-  .why-hero-copy { max-width: min(680px, calc(100% - 340px)); }
+  .why-hero-copy {
+    max-width: min(680px, calc(100% - 340px));
+  }
 }

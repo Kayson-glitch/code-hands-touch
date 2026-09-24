@@ -15,8 +15,6 @@ import { RainbowButton } from "@/components/RainbowButton";
 import { BeforeAfter, PullQuote, StatFigure } from "@/components/WhyFigures";
 import { RollingNumber } from "@/components/RollingNumber";
 
-
-
 export const Route = createFileRoute("/why-synergy/business-impact")({
   head: () => ({
     meta: [
@@ -40,9 +38,6 @@ export const Route = createFileRoute("/why-synergy/business-impact")({
 });
 
 /* --------------------------------------------------------------- helpers */
-
-
-
 
 const ACCENT = "#5749FF";
 
@@ -140,16 +135,21 @@ const ARTICLES: Record<"roi" | "impact", ArticleSet> = {
           icon: Coins,
           title: "Analysis of Current Cost Structure",
           body: [
-            { text: "Within the existing agent structure, the vast majority of labour hours are consumed by high-repetition, low-judgement inquiries: order tracking, payment progress, promotion rules, withdrawal status checks. These dominate inbound volume but need almost no human judgement. " },
+            {
+              text: "Within the existing agent structure, the vast majority of labour hours are consumed by high-repetition, low-judgement inquiries: order tracking, payment progress, promotion rules, withdrawal status checks. These dominate inbound volume but need almost no human judgement. ",
+            },
             { text: "During promotional cycles", highlight: true },
-            { text: ", inbound volume multiplies and the team typically copes with temporary hires. Marginal labour cost rises, training cycles stretch, and service quality becomes uneven. The marginal efficiency between labour input and service output keeps falling." },
+            {
+              text: ", inbound volume multiplies and the team typically copes with temporary hires. Marginal labour cost rises, training cycles stretch, and service quality becomes uneven. The marginal efficiency between labour input and service output keeps falling.",
+            },
           ],
         },
         figure: {
           kind: "stat",
           value: "150",
           unit: "agents",
-          caption: "Today's support team · about $1.5M a month in labour cost, most of it on repetitive inquiries",
+          caption:
+            "Today's support team · about $1.5M a month in labour cost, most of it on repetitive inquiries",
         },
       },
       {
@@ -157,9 +157,13 @@ const ARTICLES: Record<"roi" | "impact", ArticleSet> = {
           icon: Users,
           title: "Target Structure: Reallocating Agent Functions",
           body: [
-            { text: "After integration, based on business data from the current observation cycle, the CS team can be optimised to about 50 agents: 20 VIP agents (supervisor-level, dedicated to high-value customers) and 30 general agents. Crucially, the 30 general agents move from front-line Q&A to online data monitoring, anomaly handling and human fallback. " },
+            {
+              text: "After integration, based on business data from the current observation cycle, the CS team can be optimised to about 50 agents: 20 VIP agents (supervisor-level, dedicated to high-value customers) and 30 general agents. Crucially, the 30 general agents move from front-line Q&A to online data monitoring, anomaly handling and human fallback. ",
+            },
             { text: "This 30-agent headcount is a conservative configuration,", highlight: true },
-            { text: " keeping redundancy for sudden load surges. Under this structure the AI system absorbs standardised work, while people concentrate on high-judgement, high-value workflows." },
+            {
+              text: " keeping redundancy for sudden load surges. Under this structure the AI system absorbs standardised work, while people concentrate on high-judgement, high-value workflows.",
+            },
           ],
         },
         figure: {
@@ -213,7 +217,8 @@ const ARTICLES: Record<"roi" | "impact", ArticleSet> = {
           kind: "stat",
           value: "55",
           unit: "%",
-          caption: "Auto-handling rate — conversations closed entirely by AI · reply rate 70% of all messages",
+          caption:
+            "Auto-handling rate — conversations closed entirely by AI · reply rate 70% of all messages",
         },
       },
       {
@@ -226,7 +231,8 @@ const ARTICLES: Record<"roi" | "impact", ArticleSet> = {
           kind: "stat",
           value: "200K",
           unit: "/ mo",
-          caption: "Inbound conversations a month at QPS 20–50 · about 110K of them handled by AI alone",
+          caption:
+            "Inbound conversations a month at QPS 20–50 · about 110K of them handled by AI alone",
         },
       },
       {
@@ -305,7 +311,6 @@ function KpiColumn({
         {data.kicker}
       </p>
 
-
       <p
         className="font-display text-ink"
         style={{
@@ -330,7 +335,6 @@ function KpiColumn({
           lineHeight: "24px",
           color: "var(--ink-faint, #A1A0A9)",
         }}
-
       >
         {data.caption}
       </p>
@@ -370,18 +374,13 @@ function ArticleBlock({
   delay?: number;
   duration?: number;
 }) {
-  const bodyEl = Array.isArray(body) ? (
-    body.map((seg, i) => (
-      <span
-        key={i}
-        style={seg.highlight ? { color: "var(--ink, #0E0B22)" } : undefined}
-      >
-        {seg.text}
-      </span>
-    ))
-  ) : (
-    body
-  );
+  const bodyEl = Array.isArray(body)
+    ? body.map((seg, i) => (
+        <span key={i} style={seg.highlight ? { color: "var(--ink, #0E0B22)" } : undefined}>
+          {seg.text}
+        </span>
+      ))
+    : body;
   return (
     <Reveal delay={delay} y={20} duration={duration}>
       <Icon size={24} strokeWidth={1.5} color={dark ? "#FFFFFF" : "#0E0B22"} />
@@ -458,7 +457,10 @@ const DASH_Y = "repeating-linear-gradient(180deg, #E1E0E4 0 4px, transparent 4px
 function ArticleRows({ rows }: { rows: ArticleRow[] }) {
   const cell = `${fluid(60, 32)} ${fluid(60, 24)}`;
   return (
-    <div className="relative" style={{ borderTop: "1px solid #F1F1F3", borderBottom: "1px solid #F1F1F3" }}>
+    <div
+      className="relative"
+      style={{ borderTop: "1px solid #F1F1F3", borderBottom: "1px solid #F1F1F3" }}
+    >
       {/* centre line */}
       <div
         aria-hidden
@@ -563,7 +565,6 @@ function BusinessImpactPage() {
                 />
               </Reveal>
 
-
               <Reveal immediate delay={240}>
                 <p
                   style={{
@@ -574,8 +575,9 @@ function BusinessImpactPage() {
                     color: "var(--ink-muted, #7A7885)",
                   }}
                 >
-                  BCGame, an iGaming platform serving 22 languages: 55% of 200K monthly conversations
-                  closed by AI at QPS 20–50, with a clear path to lower operating costs.
+                  BCGame, an iGaming platform serving 22 languages: 55% of 200K monthly
+                  conversations closed by AI at QPS 20–50, with a clear path to lower operating
+                  costs.
                 </p>
               </Reveal>
 
@@ -612,8 +614,6 @@ function BusinessImpactPage() {
             </div>
           </div>
 
-
-
           <div className="grid md:grid-cols-2">
             <KpiColumn
               data={KPI_LEFT}
@@ -646,7 +646,6 @@ function BusinessImpactPage() {
               apart into two while the reveals are still travelling. */}
         </Reveal>
       </section>
-
 
       {/* -------------------------------------------------------- article */}
       <section style={{ padding: pad, marginTop: 0 }}>
@@ -716,7 +715,6 @@ function BusinessImpactPage() {
           <div style={{ padding: `${fluid(80, 44)} ${fluid(60, 24)} ${fluid(60, 32)}` }}>
             <ArticleRows rows={article.rows} />
           </div>
-
         </Reveal>
       </section>
 

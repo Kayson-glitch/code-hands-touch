@@ -55,7 +55,8 @@ export function HeroDots() {
       pingArea={[0.2, 0.15, 0.8, 0.85]}
       className="pointer-events-none absolute inset-0"
       style={{
-        maskImage: "linear-gradient(to bottom, transparent 0, #000 18%, #000 62%, transparent 100%)",
+        maskImage:
+          "linear-gradient(to bottom, transparent 0, #000 18%, #000 62%, transparent 100%)",
         WebkitMaskImage:
           "linear-gradient(to bottom, transparent 0, #000 18%, #000 62%, transparent 100%)",
       }}
@@ -90,7 +91,10 @@ export function ProductHero({
           <div style={{ paddingTop: fluid(160, 104), paddingBottom: fluid(100, 64) }}>
             <Reveal immediate className="flex items-center gap-2">
               <span aria-hidden style={{ width: 8, height: 8, background: accent }} />
-              <span className="uppercase" style={{ fontSize: 14, lineHeight: "22px", color: "#7A7885" }}>
+              <span
+                className="uppercase"
+                style={{ fontSize: 14, lineHeight: "22px", color: "#7A7885" }}
+              >
                 {eyebrow}
               </span>
             </Reveal>

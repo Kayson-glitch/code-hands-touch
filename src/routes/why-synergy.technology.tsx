@@ -1,7 +1,28 @@
 import { useEffect, useRef, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import type { LucideIcon } from "lucide-react";
-import { Database, FileWarning, FolderTree, Gauge, Handshake, Layers, Link2, ListFilter, Maximize2, MessageCircle, Network, Radar, Scissors, ShieldCheck, Target, Timer, TriangleAlert, UserCheck, Users, Workflow } from "lucide-react";
+import {
+  Database,
+  FileWarning,
+  FolderTree,
+  Gauge,
+  Handshake,
+  Layers,
+  Link2,
+  ListFilter,
+  Maximize2,
+  MessageCircle,
+  Network,
+  Radar,
+  Scissors,
+  ShieldCheck,
+  Target,
+  Timer,
+  TriangleAlert,
+  UserCheck,
+  Users,
+  Workflow,
+} from "lucide-react";
 import { SiteNav } from "@/components/SiteNav";
 import { whyTechnologyAsset } from "@/lib/media";
 import { HalftoneHandStill } from "@/components/HalftoneHandStill";
@@ -43,15 +64,14 @@ export const Route = createFileRoute("/why-synergy/technology")({
 
 /* --------------------------------------------------------------- helpers */
 
-
 const SKY = "#8CE0FF";
-
-
-
 
 function Hairline({ dark = false }: { dark?: boolean }) {
   return (
-    <div aria-hidden style={{ height: 1, background: dark ? "rgba(255,255,255,0.18)" : "#E1E0E4" }} />
+    <div
+      aria-hidden
+      style={{ height: 1, background: dark ? "rgba(255,255,255,0.18)" : "#E1E0E4" }}
+    />
   );
 }
 
@@ -116,9 +136,14 @@ const MODULES: Module[] = [
         { label: "Question arrives", sub: "Money at stake: top-up, withdrawal, claim" },
         { label: "Knowledge lookup", sub: "Governed scripts, found by precision retrieval" },
         { label: "Inside the boundary?", sub: "A confident match in the knowledge base, or not" },
-        { label: "Answer or hand over", sub: "No match → a person, every time. Never a guess", emphasis: true },
+        {
+          label: "Answer or hand over",
+          sub: "No match → a person, every time. Never a guess",
+          emphasis: true,
+        },
       ],
-      caption: "The boundary rule. Coverage widens as the knowledge base grows; it is never widened by loosening step 03.",
+      caption:
+        "The boundary rule. Coverage widens as the knowledge base grows; it is never widened by loosening step 03.",
     },
     dark: [
       {
@@ -179,9 +204,14 @@ const MODULES: Module[] = [
         { label: "50+ long documents", sub: "Region × time window × pre-/after-sales, mixed" },
         { label: "Configuration Skill", sub: "Structures every document into two layers" },
         { label: "Scripts vs. rules", sub: "Scripts → knowledge base; rules → rules layer" },
-        { label: "Verified entry by entry", sub: "Human review + AI tests; every session tagged", emphasis: true },
+        {
+          label: "Verified entry by entry",
+          sub: "Human review + AI tests; every session tagged",
+          emphasis: true,
+        },
       ],
-      caption: "Governance before retrieval: what to say and what never to do are stored apart, then checked twice.",
+      caption:
+        "Governance before retrieval: what to say and what never to do are stored apart, then checked twice.",
     },
     dark: [
       {
@@ -242,9 +272,14 @@ const MODULES: Module[] = [
         { label: "Customer question", sub: "Close to many passages that differ only in time" },
         { label: "PageIndex locate", sub: "By the document's own structure — no chunking" },
         { label: "Precision embedding", sub: "Highest-precision model as the representation" },
-        { label: "Rerank, coarse → fine", sub: "Self-built two-stage scorer, right passage first", emphasis: true },
+        {
+          label: "Rerank, coarse → fine",
+          sub: "Self-built two-stage scorer, right passage first",
+          emphasis: true,
+        },
       ],
-      caption: "Three retrieval layers. Each scenario carries an explicit boundary, so the stack never over-answers.",
+      caption:
+        "Three retrieval layers. Each scenario carries an explicit boundary, so the stack never over-answers.",
     },
     dark: [
       {
@@ -305,9 +340,14 @@ const MODULES: Module[] = [
         { label: "Fiat ticket arrives", sub: "One of 56 scenarios, deep cross-system branches" },
         { label: "Multi-agent routing", sub: "Cooperating agents split work along the process" },
         { label: "CRM · ERM · orders", sub: "Connected end to end; nothing copied by hand" },
-        { label: "Close or escalate", sub: "Standard steps close; refunds go to a person", emphasis: true },
+        {
+          label: "Close or escalate",
+          sub: "Standard steps close; refunds go to a person",
+          emphasis: true,
+        },
       ],
-      caption: "Orchestration with a human ceiling: high-risk, high-complexity steps are never fully automated.",
+      caption:
+        "Orchestration with a human ceiling: high-risk, high-complexity steps are never fully automated.",
     },
     dark: [
       {
@@ -374,8 +414,6 @@ function ArticleBlock({
     </Reveal>
   );
 }
-
-
 
 function ModuleArticle({ module }: { module: Module }) {
   return (
@@ -647,10 +685,7 @@ function TechnologyPage() {
                       });
                     } else {
                       window.scrollTo({
-                        top:
-                          target.getBoundingClientRect().top +
-                          window.scrollY -
-                          ANCHOR_OFFSET,
+                        top: target.getBoundingClientRect().top + window.scrollY - ANCHOR_OFFSET,
                         behavior: "smooth",
                       });
                     }

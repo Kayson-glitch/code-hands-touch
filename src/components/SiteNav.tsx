@@ -40,7 +40,6 @@ export function SiteNav({
     return () => window.clearTimeout(t);
   }, [revealDelay]);
 
-
   useEffect(() => {
     const onBg = (e: Event) => {
       const detail = (e as CustomEvent<"light" | "dark">).detail;
@@ -76,10 +75,11 @@ export function SiteNav({
       // The nav flips to its dark variant only while the black section is the
       // surface sitting under the bar — the light third screen flips it back.
       const darks = Array.from(document.querySelectorAll("[data-dark-section]"));
-      const dark = darks.find((el) => {
-        const b = el.getBoundingClientRect();
-        return b.top <= 69 && b.bottom > 69;
-      }) ?? null;
+      const dark =
+        darks.find((el) => {
+          const b = el.getBoundingClientRect();
+          return b.top <= 69 && b.bottom > 69;
+        }) ?? null;
       setOnDark(Boolean(dark));
     };
 
@@ -107,7 +107,6 @@ export function SiteNav({
     transition: "color 200ms ease",
   });
 
-
   return (
     <nav
       className="pointer-events-none fixed inset-x-0 top-0 flex flex-col items-stretch"
@@ -131,11 +130,9 @@ export function SiteNav({
           backgroundRepeat: "repeat-x",
           animation: "nav-border-flow 9s linear infinite",
           opacity: barVisible ? 1 : 0,
-          transition:
-            "margin-top 320ms cubic-bezier(0.22,1,0.36,1), opacity 240ms ease",
+          transition: "margin-top 320ms cubic-bezier(0.22,1,0.36,1), opacity 240ms ease",
         }}
       />
-
 
       <div
         className="flex items-center justify-center px-6"
@@ -144,8 +141,7 @@ export function SiteNav({
           borderBottom: `1px solid ${hairline}`,
           background: scrolled || solid ? glassBg : "transparent",
           backdropFilter: scrolled || solid ? "blur(18px) saturate(140%)" : "none",
-          transition:
-            "background 260ms ease-out, backdrop-filter 260ms ease-out",
+          transition: "background 260ms ease-out, backdrop-filter 260ms ease-out",
         }}
       >
         <div className="flex h-full w-full max-w-[1200px] items-center justify-between">
@@ -167,10 +163,7 @@ export function SiteNav({
                 objectFit: "cover",
               }}
             />
-            <span
-              className="font-medium"
-              style={{ fontSize: 16, lineHeight: "24px" }}
-            >
+            <span className="font-medium" style={{ fontSize: 16, lineHeight: "24px" }}>
               Synergy.AI
             </span>
           </Link>
@@ -208,7 +201,6 @@ export function SiteNav({
                 {i === 2 && <SolutionMenu open={hovered === 2} />}
               </li>
             ))}
-
           </ul>
 
           {/* Right actions */}
@@ -251,8 +243,6 @@ export function SiteNav({
     </nav>
   );
 }
-
-
 
 // Spring-ish easing for the panel reveal.
 const PANEL_EASE = "cubic-bezier(0.22, 1, 0.36, 1)";
@@ -431,57 +421,57 @@ function WhySynergyMenu({ open }: { open: boolean }) {
   return (
     <MenuPanel open={open} kicker="/ why synergy">
       <div className="relative" style={{ width: 620, height: 315 }}>
-      <div
-        ref={gridRef}
-        className="grid h-full w-full grid-cols-2 overflow-hidden"
-        style={{
-          border: `1px solid ${MENU_RULE}`,
-        }}
-      >
-        {WHY_SYNERGY_ITEMS.map((it, i) => (
-          <div
-            key={it.title}
-            className="flex cursor-pointer flex-col items-start"
-            onClick={() => {
-              if (it.to) navigate({ to: it.to });
-            }}
-            onMouseEnter={() => setHover(i)}
-            onMouseLeave={() => setHover(null)}
-            style={{
-              padding: 30,
-              gap: 8,
-              background: hover === i ? "var(--surface-soft, #F7F7F8)" : "transparent",
-              borderRight: i % 2 === 0 ? `1px solid ${MENU_RULE}` : "none",
-              borderBottom: i < 2 ? `1px solid ${MENU_RULE}` : "none",
-              ...cellReveal(open, i),
-            }}
-          >
-            <div className="flex items-center" style={{ gap: 8 }}>
-              <span style={{ width: 8, height: 8, background: it.dot, display: "block" }} />
-              <span
-                className="uppercase whitespace-nowrap"
-                style={{ fontSize: 10, lineHeight: "18px", color: "#A1A0A9" }}
-              >
-                {it.kicker}
-              </span>
+        <div
+          ref={gridRef}
+          className="grid h-full w-full grid-cols-2 overflow-hidden"
+          style={{
+            border: `1px solid ${MENU_RULE}`,
+          }}
+        >
+          {WHY_SYNERGY_ITEMS.map((it, i) => (
+            <div
+              key={it.title}
+              className="flex cursor-pointer flex-col items-start"
+              onClick={() => {
+                if (it.to) navigate({ to: it.to });
+              }}
+              onMouseEnter={() => setHover(i)}
+              onMouseLeave={() => setHover(null)}
+              style={{
+                padding: 30,
+                gap: 8,
+                background: hover === i ? "var(--surface-soft, #F7F7F8)" : "transparent",
+                borderRight: i % 2 === 0 ? `1px solid ${MENU_RULE}` : "none",
+                borderBottom: i < 2 ? `1px solid ${MENU_RULE}` : "none",
+                ...cellReveal(open, i),
+              }}
+            >
+              <div className="flex items-center" style={{ gap: 8 }}>
+                <span style={{ width: 8, height: 8, background: it.dot, display: "block" }} />
+                <span
+                  className="uppercase whitespace-nowrap"
+                  style={{ fontSize: 10, lineHeight: "18px", color: "#A1A0A9" }}
+                >
+                  {it.kicker}
+                </span>
+              </div>
+              <div className="flex w-full flex-col items-start" style={{ gap: 8 }}>
+                <p
+                  className="w-full font-medium"
+                  style={{ fontSize: 16, lineHeight: "22px", color: "#000000" }}
+                >
+                  {it.title}
+                </p>
+                <p
+                  className="w-full"
+                  style={{ fontSize: 12, lineHeight: "20px", color: "#7A7885" }}
+                >
+                  {it.desc}
+                </p>
+              </div>
             </div>
-            <div className="flex w-full flex-col items-start" style={{ gap: 8 }}>
-              <p
-                className="w-full font-medium"
-                style={{ fontSize: 16, lineHeight: "22px", color: "#000000" }}
-              >
-                {it.title}
-              </p>
-              <p
-                className="w-full"
-                style={{ fontSize: 12, lineHeight: "20px", color: "#7A7885" }}
-              >
-                {it.desc}
-              </p>
-            </div>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
         {rule ? (
           <div aria-hidden className="pointer-events-none absolute inset-0">
             {/* the grid's one interior crossing */}
@@ -675,47 +665,47 @@ function TwoColumnMenu({
   return (
     <MenuPanel open={open} kicker={kicker} align="center">
       <div className="relative" style={{ width: 690 }}>
-      <div
-        ref={gridRef}
-        className="grid overflow-hidden"
-        style={{
-          gridTemplateColumns: "360px 330px",
-          border: `1px solid ${MENU_RULE}`,
-        }}
-      >
-        <div className="flex flex-col" style={{ borderRight: `1px solid ${MENU_RULE}` }}>
-          {heads ? <ColumnHead label={heads[0]} reveal={cellReveal(open, 0)} /> : null}
-          {left.map((it, i) => (
-            <RichCell
-              key={it.title}
-              item={it}
-              hovered={hover === `l-${i}`}
-              last={i === left.length - 1}
-              reveal={cellReveal(open, i + 1)}
-              onEnter={() => setHover(`l-${i}`)}
-              onLeave={() => setHover(null)}
-              onClick={() => go(it.to)}
-            />
-          ))}
-        </div>
+        <div
+          ref={gridRef}
+          className="grid overflow-hidden"
+          style={{
+            gridTemplateColumns: "360px 330px",
+            border: `1px solid ${MENU_RULE}`,
+          }}
+        >
+          <div className="flex flex-col" style={{ borderRight: `1px solid ${MENU_RULE}` }}>
+            {heads ? <ColumnHead label={heads[0]} reveal={cellReveal(open, 0)} /> : null}
+            {left.map((it, i) => (
+              <RichCell
+                key={it.title}
+                item={it}
+                hovered={hover === `l-${i}`}
+                last={i === left.length - 1}
+                reveal={cellReveal(open, i + 1)}
+                onEnter={() => setHover(`l-${i}`)}
+                onLeave={() => setHover(null)}
+                onClick={() => go(it.to)}
+              />
+            ))}
+          </div>
 
-        <div className="flex flex-col">
-          {heads ? <ColumnHead label={heads[1]} reveal={cellReveal(open, 0)} /> : null}
-          {right.map((it, i) => (
-            <ListRow
-              key={it.title}
-              item={it}
-              index={i}
-              hovered={hover === `r-${i}`}
-              last={i === right.length - 1}
-              reveal={cellReveal(open, i + 2)}
-              onEnter={() => setHover(`r-${i}`)}
-              onLeave={() => setHover(null)}
-              onClick={() => go(it.to)}
-            />
-          ))}
+          <div className="flex flex-col">
+            {heads ? <ColumnHead label={heads[1]} reveal={cellReveal(open, 0)} /> : null}
+            {right.map((it, i) => (
+              <ListRow
+                key={it.title}
+                item={it}
+                index={i}
+                hovered={hover === `r-${i}`}
+                last={i === right.length - 1}
+                reveal={cellReveal(open, i + 2)}
+                onEnter={() => setHover(`r-${i}`)}
+                onLeave={() => setHover(null)}
+                onClick={() => go(it.to)}
+              />
+            ))}
+          </div>
         </div>
-      </div>
         {rule ? (
           <div aria-hidden className="pointer-events-none absolute inset-0">
             {/* where the column rule meets the frame, top and bottom */}
@@ -785,6 +775,5 @@ function Chevron({ flipped }: { flipped?: boolean }) {
     </svg>
   );
 }
-
 
 export default SiteNav;

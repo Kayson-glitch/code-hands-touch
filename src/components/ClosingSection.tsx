@@ -27,7 +27,6 @@ const slideState = (s: number) => {
   return Math.min(states - 1, Math.floor(clamp(s) * states));
 };
 
-
 const Words = () => (
   <p className="artemis-closing__text">
     {"{"}Artemis{"}"}
@@ -179,8 +178,7 @@ export function ClosingSection() {
     if (!pinned) return;
     const snap = { active: false };
     const SNAP_MS = 900;
-    const easeInOut = (x: number) =>
-      x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2;
+    const easeInOut = (x: number) => (x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2);
 
     const bounds = () => {
       const el = wrapperRef.current;
@@ -253,9 +251,7 @@ export function ClosingSection() {
 
   const scale = pinned ? 1 - (1 - TITLE_SCALE) * shrink : TITLE_SCALE;
   const target =
-    state > 0 && offsets[state - 1] !== undefined
-      ? Math.max(0, offsets[state - 1]! - gridX)
-      : 0;
+    state > 0 && offsets[state - 1] !== undefined ? Math.max(0, offsets[state - 1]! - gridX) : 0;
   const x = pinned ? target : 0;
 
   /* Smooth glide between snapped states: instead of a CSS transition (which
@@ -331,8 +327,6 @@ export function ClosingSection() {
     );
   }, [scale, travel, titleW, lead, desktop, gridX]);
 
-
-
   return (
     <section className="artemis-closing" aria-label="Artemis delivers certainty">
       {/* Surface probes: the dark wipe travels bottom-up, so the dock flips to
@@ -341,14 +335,30 @@ export function ClosingSection() {
         <div
           aria-hidden
           data-dark-section=""
-          style={{ position: "fixed", top: 0, left: 0, right: 0, height: 80, pointerEvents: "none", zIndex: -1 }}
+          style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            right: 0,
+            height: 80,
+            pointerEvents: "none",
+            zIndex: -1,
+          }}
         />
       )}
       {inView && !dockCovered && wipe * viewportH > 80 && (
         <div
           aria-hidden
           data-dark-section=""
-          style={{ position: "fixed", bottom: 0, left: 0, right: 0, height: 80, pointerEvents: "none", zIndex: -1 }}
+          style={{
+            position: "fixed",
+            bottom: 0,
+            left: 0,
+            right: 0,
+            height: 80,
+            pointerEvents: "none",
+            zIndex: -1,
+          }}
         />
       )}
       <div
@@ -365,7 +375,9 @@ export function ClosingSection() {
           <div
             className="artemis-closing__invert"
             aria-hidden={pinned && wipe < 0.02 ? "true" : undefined}
-            style={pinned ? { clipPath: `inset(${((1 - wipe) * 100).toFixed(3)}% 0 0 0)` } : undefined}
+            style={
+              pinned ? { clipPath: `inset(${((1 - wipe) * 100).toFixed(3)}% 0 0 0)` } : undefined
+            }
           >
             {/* Dots are inside the pinned stage, so they stay locked while the
                 headline shrinks and the panels slide through. */}
@@ -405,10 +417,18 @@ export function ClosingSection() {
               {/* Pushes the panel group past the right viewport edge, so the
                   first card is dragged in from off-screen instead of sitting
                   next to the shrunken headline. */}
-              <div className="artemis-closing__lead" style={{ flex: `0 0 ${lead}px` }} aria-hidden />
+              <div
+                className="artemis-closing__lead"
+                style={{ flex: `0 0 ${lead}px` }}
+                aria-hidden
+              />
               <FeaturePanels activeIndex={state - 1} pinned={pinned} tickerPos={tickerPos} />
               {/* Trailing room so the last module can also rest on the left grid line. */}
-              <div className="artemis-closing__lead" style={{ flex: `0 0 ${lead}px` }} aria-hidden />
+              <div
+                className="artemis-closing__lead"
+                style={{ flex: `0 0 ${lead}px` }}
+                aria-hidden
+              />
             </div>
           </div>
         </div>

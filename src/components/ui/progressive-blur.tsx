@@ -85,7 +85,6 @@ const ProgressiveBlur = ({
     };
   }, [hiddenWhen, hiddenWhenSelector]);
 
-
   if (hidden) return null;
 
   return (

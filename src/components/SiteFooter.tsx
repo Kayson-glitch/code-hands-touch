@@ -17,7 +17,6 @@ import { dashboardAsset } from "@/lib/media";
  * sits on a higher stacking layer, so scrolling pushes it up over the image.
  */
 
-
 import { fluid } from "@/lib/fluid";
 import { GRADIENT, GRADIENT_STOPS, RainbowButton } from "@/components/RainbowButton";
 
@@ -44,7 +43,6 @@ const CARD_TILT_FROM = 24;
 /** Block + padding on touch widths so the 22px line isn't the whole tap target. */
 const FOOTER_LINK =
   "block cursor-pointer py-2 text-[rgba(255,255,255,0.72)] transition-colors duration-200 hover:text-white md:py-0";
-
 
 /**
  * Footer wordmark: real Montserrat fitted to the container, filled with a
@@ -265,8 +263,7 @@ export function SiteFooter({ cta = true }: { cta?: boolean } = {}) {
       while (rest > 0) {
         const dt = Math.min(1 / 120, rest);
         rest -= dt;
-        reveal.vel +=
-          (-STIFFNESS * (reveal.v - reveal.target) - DAMPING * reveal.vel) * dt;
+        reveal.vel += (-STIFFNESS * (reveal.v - reveal.target) - DAMPING * reveal.vel) * dt;
         reveal.v += reveal.vel * dt;
         if (reveal.v > 1) {
           reveal.v = 1;
@@ -280,8 +277,7 @@ export function SiteFooter({ cta = true }: { cta?: boolean } = {}) {
         reveal.v = reveal.target;
         reveal.vel = 0;
       }
-      mark.style.transform =
-        `translate3d(0, ${restTuck.px + (revealTuck.px - restTuck.px) * reveal.v}px, 0)`;
+      mark.style.transform = `translate3d(0, ${restTuck.px + (revealTuck.px - restTuck.px) * reveal.v}px, 0)`;
       raf = requestAnimationFrame(tick);
     };
     mark.style.transform = `translate3d(0, ${restTuck.px}px, 0)`;
@@ -351,87 +347,87 @@ export function SiteFooter({ cta = true }: { cta?: boolean } = {}) {
     <div className="relative" style={{ zIndex: 20, background: "#FAFAFA" }}>
       {/* ------------------------------------------------------------- CTA */}
       {cta ? (
-      <section className="relative overflow-hidden" style={{ padding: `${fluid(240, 120)} 0 0` }}>
-        {/* Dot field (1px dots, 16% ink, 20px pitch) drawn on a canvas so ambient
+        <section className="relative overflow-hidden" style={{ padding: `${fluid(240, 120)} 0 0` }}>
+          {/* Dot field (1px dots, 16% ink, 20px pitch) drawn on a canvas so ambient
             sonar rings can ripple through it. Toward the footer the same grid
             swells into a grey halftone "shoreline" that echoes the hero hands.
             The layer ends at the footer's top edge so the swell peaks where
             it is actually visible. */}
-        <SonarGrid
-          aria-hidden
-          spacing={20}
-          dotRadius={1}
-          baseOpacity={0.16}
-          peakOpacity={0.7}
-          color="#0E0B22"
-          waveGradient={GRADIENT_STOPS}
-          waveGradientMode="angular"
-          pingEvery={5.5}
-          speed={200}
-          ringWidth={120}
-          amplitude={0.6}
-          interactive={false}
-          seedPing
-          pingArea={[0.2, 0.15, 0.8, 0.85]}
-          shore={{
-            start: 0.55,
-            maxRadius: 3,
-            ink: ["#E6E6E6", "#C8C8C8"],
-            strength: 0.6,
-            noiseScale: 220,
-            noiseMix: 0.35,
-            drift: 0,
-            jitter: 0,
-            breathe: [1, 1],
-          }}
-          className="pointer-events-none absolute inset-x-0 top-0"
-          style={{
-            bottom: footerOverlap,
-            maskImage: "linear-gradient(to bottom, transparent 0, #000 22%, #000 100%)",
-            WebkitMaskImage: "linear-gradient(to bottom, transparent 0, #000 22%, #000 100%)",
-          }}
-        />
+          <SonarGrid
+            aria-hidden
+            spacing={20}
+            dotRadius={1}
+            baseOpacity={0.16}
+            peakOpacity={0.7}
+            color="#0E0B22"
+            waveGradient={GRADIENT_STOPS}
+            waveGradientMode="angular"
+            pingEvery={5.5}
+            speed={200}
+            ringWidth={120}
+            amplitude={0.6}
+            interactive={false}
+            seedPing
+            pingArea={[0.2, 0.15, 0.8, 0.85]}
+            shore={{
+              start: 0.55,
+              maxRadius: 3,
+              ink: ["#E6E6E6", "#C8C8C8"],
+              strength: 0.6,
+              noiseScale: 220,
+              noiseMix: 0.35,
+              drift: 0,
+              jitter: 0,
+              breathe: [1, 1],
+            }}
+            className="pointer-events-none absolute inset-x-0 top-0"
+            style={{
+              bottom: footerOverlap,
+              maskImage: "linear-gradient(to bottom, transparent 0, #000 22%, #000 100%)",
+              WebkitMaskImage: "linear-gradient(to bottom, transparent 0, #000 22%, #000 100%)",
+            }}
+          />
 
-        <div className="relative mx-auto flex w-full max-w-[800px] flex-col items-center px-6 text-center">
-          <Reveal variant="hero">
-            <h2
-              className="font-display"
-              style={{ margin: 0, fontSize: fluid(48, 30), lineHeight: 1.1667, fontWeight: 400 }}
-            >
-              <span className="text-ink-ghost">Get started with the</span>
-              <br />
-              <span className="text-ink">Synergy.AI today</span>
-            </h2>
-          </Reveal>
-          <Reveal variant="hero" delay={150} style={{ marginTop: fluid(40, 28) }}>
-            <RainbowButton label="Book a Demo" />
-          </Reveal>
-        </div>
+          <div className="relative mx-auto flex w-full max-w-[800px] flex-col items-center px-6 text-center">
+            <Reveal variant="hero">
+              <h2
+                className="font-display"
+                style={{ margin: 0, fontSize: fluid(48, 30), lineHeight: 1.1667, fontWeight: 400 }}
+              >
+                <span className="text-ink-ghost">Get started with the</span>
+                <br />
+                <span className="text-ink">Synergy.AI today</span>
+              </h2>
+            </Reveal>
+            <Reveal variant="hero" delay={150} style={{ marginTop: fluid(40, 28) }}>
+              <RainbowButton label="Book a Demo" />
+            </Reveal>
+          </div>
 
-        {/* The footer overlaps the lower portion of the dashboard image via a
+          {/* The footer overlaps the lower portion of the dashboard image via a
             negative margin. Because both move with the scroll, the footer
             enters the viewport around the moment the image is half revealed,
             and at rest the image's top half (incl. its browser chrome) sits
             above the footer while the footer fills the bottom of the viewport.
             An extra offset lifts the image so its top rests just below the
             fixed site nav, keeping the dashboard chrome visible. */}
-        <div className="relative" style={{ marginTop: fluid(72, 40), zIndex: 1 }}>
-          <ContainerScroll
-            rotateFrom={CARD_TILT_FROM}
-            settleAt={settleAt}
-            perspective={800}
-            spring={{ stiffness: 120, damping: 28 }}
-          >
-            <img
-              ref={imgRef}
-              src={dashboardAsset.url}
-              alt="Ask Synergy — AI performance dashboard"
-              className="block h-auto w-full"
-              draggable={false}
-            />
-          </ContainerScroll>
-        </div>
-      </section>
+          <div className="relative" style={{ marginTop: fluid(72, 40), zIndex: 1 }}>
+            <ContainerScroll
+              rotateFrom={CARD_TILT_FROM}
+              settleAt={settleAt}
+              perspective={800}
+              spring={{ stiffness: 120, damping: 28 }}
+            >
+              <img
+                ref={imgRef}
+                src={dashboardAsset.url}
+                alt="Ask Synergy — AI performance dashboard"
+                className="block h-auto w-full"
+                draggable={false}
+              />
+            </ContainerScroll>
+          </div>
+        </section>
       ) : null}
 
       {/* ---------------------------------------------------------- footer */}
@@ -443,7 +439,13 @@ export function SiteFooter({ cta = true }: { cta?: boolean } = {}) {
       >
         <div aria-hidden style={{ height: 2, backgroundImage: GRADIENT, backgroundSize: "200%" }} />
 
-        <div style={{ borderBottom: "1px solid rgba(255,255,255,0.1)", height: 80, boxSizing: "border-box" }}>
+        <div
+          style={{
+            borderBottom: "1px solid rgba(255,255,255,0.1)",
+            height: 80,
+            boxSizing: "border-box",
+          }}
+        >
           <div className="h-full" style={{ padding: pad }}>
             <div className="mx-auto grid h-full w-full max-w-[1200px] grid-cols-2 items-center gap-9 md:grid-cols-4">
               <div className="flex items-center justify-start gap-2">
@@ -458,7 +460,9 @@ export function SiteFooter({ cta = true }: { cta?: boolean } = {}) {
                     objectFit: "cover",
                   }}
                 />
-                <span style={{ color: "#FFFFFF", fontSize: 18, lineHeight: "24px", fontWeight: 500 }}>
+                <span
+                  style={{ color: "#FFFFFF", fontSize: 18, lineHeight: "24px", fontWeight: 500 }}
+                >
                   Synergy.AI
                 </span>
               </div>

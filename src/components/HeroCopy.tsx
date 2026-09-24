@@ -2,12 +2,9 @@ import { useEffect, useState } from "react";
 import { useHeroLayout } from "@/hooks/useHeroLayout";
 import { RainbowButton } from "@/components/RainbowButton";
 
-
 export function HeroCopy() {
   const [visible, setVisible] = useState(false);
   const layout = useHeroLayout();
-
-
 
   useEffect(() => {
     const onBg = (e: Event) => {
@@ -68,11 +65,8 @@ export function HeroCopy() {
         </div>
 
         <RainbowButton label="Book a Demo" className="pointer-events-auto" />
-
-
       </div>
     </div>
-
   );
 }
 

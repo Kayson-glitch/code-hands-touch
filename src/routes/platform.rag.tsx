@@ -34,7 +34,6 @@ export const Route = createFileRoute("/platform/rag")({
 
 /* --------------------------------------------------------------- helpers */
 
-
 /** Page accent — the Platform menu's "Engine" square. */
 const SKY = "#8CE0FF";
 const HAIRLINE = "#E1E0E4";
@@ -116,7 +115,13 @@ function StatTile({
         </p>
         <p
           className="font-display whitespace-nowrap"
-          style={{ margin: 0, fontSize: fluid(40, 32), lineHeight: 1.1, fontWeight: 400, color: "var(--ink, #0E0B22)" }}
+          style={{
+            margin: 0,
+            fontSize: fluid(40, 32),
+            lineHeight: 1.1,
+            fontWeight: 400,
+            color: "var(--ink, #0E0B22)",
+          }}
         >
           {prefix ? <span style={{ color: "#A1A0A9" }}>{prefix}</span> : null}
           <RollingNumber value={value} />
@@ -130,7 +135,13 @@ function StatTile({
 /** The product depiction — the transcript card designed in Figma, exported at 2×. */
 function DemoCard() {
   return (
-    <Reveal y={32} duration={1600} delay={160} className="flex flex-1 md:justify-end" style={{ minWidth: 0 }}>
+    <Reveal
+      y={32}
+      duration={1600}
+      delay={160}
+      className="flex flex-1 md:justify-end"
+      style={{ minWidth: 0 }}
+    >
       <HoverTilt from="left" className="w-full" style={{ maxWidth: 560 }}>
         <img
           src={platformRagDemoAsset.url}
@@ -160,21 +171,26 @@ function RagPage() {
         {/* symmetric: 86px from the section edge to the frame, 80px from the frame to the content */}
         <CropFrame inset={fluid(86, 16)} />
 
-        <div
-          className="relative"
-          style={{ padding: `${fluid(166, 80)} ${fluid(120, 24)}` }}
-        >
+        <div className="relative" style={{ padding: `${fluid(166, 80)} ${fluid(120, 24)}` }}>
           <div
             className="mx-auto flex w-full max-w-[1200px] flex-col md:flex-row md:items-center"
             style={{ gap: fluid(24, 32) }}
           >
             {/* copy + stats */}
-            <div className="flex flex-1 flex-col" style={{ gap: fluid(56, 36), paddingRight: fluid(56, 0) }}>
+            <div
+              className="flex flex-1 flex-col"
+              style={{ gap: fluid(56, 36), paddingRight: fluid(56, 0) }}
+            >
               <div>
                 <Reveal y={24} duration={1600}>
                   <h2
                     className="font-display text-ink"
-                    style={{ margin: 0, fontSize: fluid(48, 30), lineHeight: 1.1667, fontWeight: 400 }}
+                    style={{
+                      margin: 0,
+                      fontSize: fluid(48, 30),
+                      lineHeight: 1.1667,
+                      fontWeight: 400,
+                    }}
                   >
                     <BreakLines text={ENGINE.title} />
                   </h2>

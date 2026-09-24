@@ -138,7 +138,13 @@ const parseRgb = (css: string): Rgb | null => {
 
 const hexToRgb = (hex: string): Rgb => {
   const h = hex.replace("#", "");
-  const v = h.length === 3 ? h.split("").map((c) => c + c).join("") : h;
+  const v =
+    h.length === 3
+      ? h
+          .split("")
+          .map((c) => c + c)
+          .join("")
+      : h;
   const n = parseInt(v, 16);
   return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
 };
@@ -304,7 +310,11 @@ export function SonarGrid({
             if (v > 0) {
               // Vertical swell shaped by drifting noise, so the edge frays
               // unevenly instead of reading as a straight tide line.
-              const n = valueNoise(cx / sh.noiseScale, cy / sh.noiseScale, still ? 0 : tSec * sh.drift);
+              const n = valueNoise(
+                cx / sh.noiseScale,
+                cy / sh.noiseScale,
+                still ? 0 : tSec * sh.drift,
+              );
               const ramp = smooth(Math.min(1, v));
               coverage = Math.min(1, ramp * sh.strength * (1 + sh.noiseMix * (1.1 * n - 0.55)));
               // Scattered dissolve: the faintest cells survive only sometimes.
@@ -327,7 +337,8 @@ export function SonarGrid({
       // Pass 2a: only the dots on a wavefront get their own alpha and radius.
       // With a wave gradient, the ink blends toward the sampled colour as the
       // energy rises, so the ring reads as translucent colour passing through.
-      const waveStops = o.waveGradient && o.waveGradient.length > 0 ? o.waveGradient.map(hexToRgb) : null;
+      const waveStops =
+        o.waveGradient && o.waveGradient.length > 0 ? o.waveGradient.map(hexToRgb) : null;
       const inkRgb = waveStops ? parseRgb(stroke) : null;
       for (let k = 0; k < hot.length; k += 4) {
         const cx = hot[k] ?? 0;
@@ -364,7 +375,10 @@ export function SonarGrid({
           const osc = still ? 0 : Math.sin((tSec / period) * TAU + phase);
           const wobble = 1 + sh.jitter * osc;
           const breathe = sh.breathe[0] + (sh.breathe[1] - sh.breathe[0]) * (0.5 + 0.5 * osc);
-          const radius = Math.max(o.dotRadius, sh.maxRadius * Math.sqrt(coverage)) * wobble * (1 + o.amplitude * energy * 0.5);
+          const radius =
+            Math.max(o.dotRadius, sh.maxRadius * Math.sqrt(coverage)) *
+            wobble *
+            (1 + o.amplitude * energy * 0.5);
           const mix = Math.min(1, coverage);
           const r = Math.round(inkA[0] + (inkB[0] - inkA[0]) * mix);
           const g = Math.round(inkA[1] + (inkB[1] - inkA[1]) * mix);
@@ -393,7 +407,11 @@ export function SonarGrid({
         seeded = true;
         const [x0, y0, x1, y1] = opts.current.pingArea;
         if (opts.current.seedPing && !reduceMotion.matches)
-          addRing(width * (x0 + (x1 - x0) * 0.68), height * (y0 + (y1 - y0) * 0.34), performance.now() - 500);
+          addRing(
+            width * (x0 + (x1 - x0) * 0.68),
+            height * (y0 + (y1 - y0) * 0.34),
+            performance.now() - 500,
+          );
       }
       draw(performance.now());
     };
@@ -414,7 +432,11 @@ export function SonarGrid({
       const o = opts.current;
       if (o.pingEvery > 0 && now >= nextPing) {
         const [x0, y0, x1, y1] = o.pingArea;
-        addRing(width * (x0 + Math.random() * (x1 - x0)), height * (y0 + Math.random() * (y1 - y0)), now);
+        addRing(
+          width * (x0 + Math.random() * (x1 - x0)),
+          height * (y0 + Math.random() * (y1 - y0)),
+          now,
+        );
         nextPing = now + o.pingEvery * 1000;
       }
       draw(now);
@@ -460,7 +482,10 @@ export function SonarGrid({
     resize();
     ro.observe(host);
     io.observe(host);
-    mo.observe(document.documentElement, { attributes: true, attributeFilter: ["class", "style", "data-theme"] });
+    mo.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ["class", "style", "data-theme"],
+    });
     host.addEventListener("pointerdown", onDown);
     document.addEventListener("visibilitychange", onVisibility);
     reduceMotion.addEventListener("change", wake);
@@ -482,13 +507,33 @@ export function SonarGrid({
   // Prop changes while the loop is asleep still repaint immediately.
   React.useEffect(() => {
     refreshRef.current();
-  }, [spacing, dotRadius, baseOpacity, peakOpacity, color, pingEvery, speed, ringWidth, amplitude, interactive, maxRings, pingArea, shore, waveGradient, waveGradientMode]);
+  }, [
+    spacing,
+    dotRadius,
+    baseOpacity,
+    peakOpacity,
+    color,
+    pingEvery,
+    speed,
+    ringWidth,
+    amplitude,
+    interactive,
+    maxRings,
+    pingArea,
+    shore,
+    waveGradient,
+    waveGradientMode,
+  ]);
 
   return (
     <div
       ref={setHost}
       data-slot="sonar-grid"
-      className={cn("relative isolate overflow-hidden", interactive && "cursor-crosshair", className)}
+      className={cn(
+        "relative isolate overflow-hidden",
+        interactive && "cursor-crosshair",
+        className,
+      )}
       {...rest}
     >
       <canvas

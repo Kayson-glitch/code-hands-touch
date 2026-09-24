@@ -47,21 +47,50 @@ const KNOWLEDGE: Intent[] = [
     keywords: ["hello", "hey", "good morning", "good afternoon", "thanks", "thank you"],
     answer:
       "Hi, I'm Synergy's assistant. Ask me anything about resolution speed, brand voice, integrations, routing or pricing—or I can connect you with the team.",
-    followUps: ["What can Synergy do for my support team?", "How fast can it resolve issues?", "Book a demo"],
+    followUps: [
+      "What can Synergy do for my support team?",
+      "How fast can it resolve issues?",
+      "Book a demo",
+    ],
   },
   {
     id: "capabilities",
-    keywords: ["what can", "do for", "capabilit", "feature", "help me", "what is synergy", "what does synergy"],
+    keywords: [
+      "what can",
+      "do for",
+      "capabilit",
+      "feature",
+      "help me",
+      "what is synergy",
+      "what does synergy",
+    ],
     answer:
       "Synergy is an AI support agent that resolves around 93% of routine customer issues instantly, guides new agents with on-brand suggestions, handles multi-step workflows end to end, and hands off to a human with full context when needed.",
-    followUps: ["How fast can it resolve issues?", "Does it integrate with our help desk?", "Book a demo"],
+    followUps: [
+      "How fast can it resolve issues?",
+      "Does it integrate with our help desk?",
+      "Book a demo",
+    ],
   },
   {
     id: "speed",
-    keywords: ["fast", "speed", "resolve", "resolution", "response time", "seconds", "instant", "93"],
+    keywords: [
+      "fast",
+      "speed",
+      "resolve",
+      "resolution",
+      "response time",
+      "seconds",
+      "instant",
+      "93",
+    ],
     answer:
       "Most answers arrive in under 3 seconds. Across customers, roughly 93% of issues are resolved on first contact without a human touching the ticket.",
-    followUps: ["What happens to the other 7%?", "Can it answer in our brand voice?", "Book a demo"],
+    followUps: [
+      "What happens to the other 7%?",
+      "Can it answer in our brand voice?",
+      "Book a demo",
+    ],
   },
   {
     id: "handoff-rest",
@@ -72,7 +101,16 @@ const KNOWLEDGE: Intent[] = [
   },
   {
     id: "brand",
-    keywords: ["brand", "voice", "tone", "style", "sound like", "language", "multilingual", "translate"],
+    keywords: [
+      "brand",
+      "voice",
+      "tone",
+      "style",
+      "sound like",
+      "language",
+      "multilingual",
+      "translate",
+    ],
     answer:
       "Yes. Synergy is tuned to your style guide—from playful to strictly formal—cites your own help center and policy pages, and answers in 30+ languages without separate content sets. Guardrails block promises or refunds you never approved.",
     followUps: ["What guardrails are in place?", "How fast can it resolve issues?", "Book a demo"],
@@ -86,14 +124,35 @@ const KNOWLEDGE: Intent[] = [
   },
   {
     id: "integration",
-    keywords: ["integrat", "help desk", "helpdesk", "zendesk", "intercom", "salesforce", "hubspot", "crm", "api", "connect", "ticket"],
+    keywords: [
+      "integrat",
+      "help desk",
+      "helpdesk",
+      "zendesk",
+      "intercom",
+      "salesforce",
+      "hubspot",
+      "crm",
+      "api",
+      "connect",
+      "ticket",
+    ],
     answer:
       "Synergy connects to your CRM, order system and ticketing tool in minutes, and works across web chat, email, in-app and social in one unified inbox—so context follows the customer everywhere.",
     followUps: ["Which channels are supported?", "How long does setup take?", "Book a demo"],
   },
   {
     id: "channels",
-    keywords: ["channel", "omnichannel", "email", "whatsapp", "social", "in-app", "mobile", "web chat"],
+    keywords: [
+      "channel",
+      "omnichannel",
+      "email",
+      "whatsapp",
+      "social",
+      "in-app",
+      "mobile",
+      "web chat",
+    ],
     answer:
       "Web chat, email, in-app and social threads live in one timeline. A customer can start on mobile and finish on desktop without losing anything, and Synergy can reach out proactively—for example on order delays—before they ask.",
     followUps: ["Does it integrate with our help desk?", "Book a demo"],
@@ -107,14 +166,33 @@ const KNOWLEDGE: Intent[] = [
   },
   {
     id: "routing",
-    keywords: ["rout", "human", "agent", "handoff", "hand off", "escalat", "priority", "vip", "queue"],
+    keywords: [
+      "rout",
+      "human",
+      "agent",
+      "handoff",
+      "hand off",
+      "escalat",
+      "priority",
+      "vip",
+      "queue",
+    ],
     answer:
       "Synergy reads urgency, sentiment and account value in real time, so VIP and at-risk customers reach a human before they churn, and billing, shipping or technical tickets land with the right specialist—with the full history attached.",
     followUps: ["What happens to the other 7%?", "Talk to a human"],
   },
   {
     id: "insight",
-    keywords: ["insight", "analytic", "report", "data", "dashboard", "quality", "metric", "measure"],
+    keywords: [
+      "insight",
+      "analytic",
+      "report",
+      "data",
+      "dashboard",
+      "quality",
+      "metric",
+      "measure",
+    ],
     answer:
       "Recurring questions are clustered into themes you can act on, deflection analytics show which answers save the most agent hours, and every conversation is quality-scored—not a 2% random sample. Gaps feed straight back into your knowledge base.",
     followUps: ["How fast can it resolve issues?", "Book a demo"],
@@ -160,7 +238,7 @@ const FALLBACK: Intent = {
 const CAPTURE_PROMPT =
   "Happy to help with that. First, could you share your work email? That way a specialist can follow up if you need to step away.";
 const CAPTURE_RETRY =
-  "That doesn't look like an email address—could you double-check it? You can also type \"skip\" to continue without one.";
+  'That doesn\'t look like an email address—could you double-check it? You can also type "skip" to continue without one.';
 const CAPTURE_SKIPPED = "No problem, we can continue without it.";
 
 const EMAIL_RE = /[^\s@]+@[^\s@]+\.[^\s@]{2,}/;
@@ -169,7 +247,8 @@ const SKIP_RE = /^\s*(skip|no|no thanks|not now|later|nope)\b/i;
 function matchIntent(text: string): Intent {
   const q = text.toLowerCase();
   if (/^\s*(hi|hey|hello|yo)\b[\s!.,]*$/.test(q)) return KNOWLEDGE[0]!;
-  if (/\b(demo|talk to|human|sales|contact)\b/.test(q) && !/handoff|hand off|route/.test(q)) return HANDOFF;
+  if (/\b(demo|talk to|human|sales|contact)\b/.test(q) && !/handoff|hand off|route/.test(q))
+    return HANDOFF;
   let best: Intent | null = null;
   let bestScore = 0;
   for (const intent of KNOWLEDGE) {
@@ -539,16 +618,22 @@ export function FinChatDock({ alwaysVisible = false }: { alwaysVisible?: boolean
   };
 
   const pushAssistant = (text: string, followUps?: string[]) => {
-    setMessages((m) => [...m, { id: nextId(), role: "assistant", text, followUps, streaming: true }]);
+    setMessages((m) => [
+      ...m,
+      { id: nextId(), role: "assistant", text, followUps, streaming: true },
+    ]);
   };
 
   const reply = (text: string, followUps?: string[]) => {
     setTyping(true);
     // First token lands after a short "thinking" pause; the rest streams.
-    replyTimeoutRef.current = window.setTimeout(() => {
-      setTyping(false);
-      pushAssistant(text, followUps);
-    }, 480 + Math.random() * 320);
+    replyTimeoutRef.current = window.setTimeout(
+      () => {
+        setTyping(false);
+        pushAssistant(text, followUps);
+      },
+      480 + Math.random() * 320,
+    );
   };
 
   const ask = (raw: string) => {
@@ -583,7 +668,10 @@ export function FinChatDock({ alwaysVisible = false }: { alwaysVisible?: boolean
       const other = matchIntent(text);
       if (other !== FALLBACK && other.id !== "greeting") {
         setLead((l) => ({ ...l, attempts: l.attempts + 1 }));
-        reply(`${other.answer} And whenever you're ready, drop your work email so a specialist can follow up.`, other.followUps);
+        reply(
+          `${other.answer} And whenever you're ready, drop your work email so a specialist can follow up.`,
+          other.followUps,
+        );
         return;
       }
       setLead((l) => ({ ...l, attempts: l.attempts + 1 }));
@@ -597,7 +685,8 @@ export function FinChatDock({ alwaysVisible = false }: { alwaysVisible?: boolean
       reply(CAPTURE_PROMPT);
       return;
     }
-    const answer = lead.stage === "declined" ? intent.answerNoEmail ?? intent.answer : intent.answer;
+    const answer =
+      lead.stage === "declined" ? (intent.answerNoEmail ?? intent.answer) : intent.answer;
     reply(answer, intent.followUps);
   };
 
@@ -665,7 +754,13 @@ export function FinChatDock({ alwaysVisible = false }: { alwaysVisible?: boolean
   const glassShadow = onDark ? "0 24px 60px rgba(0,0,0,0.35)" : "0 24px 60px rgba(14,11,34,0.12)";
   const userBubbleBg = onDark ? "rgba(255,255,255,0.16)" : "rgba(14,11,34,0.06)";
   const chipBorder = onDark ? "1px solid rgba(255,255,255,0.18)" : "1px solid rgba(14,11,34,0.12)";
-  const sendBg = hasText ? (onDark ? "#FFFFFF" : "#0E0B22") : onDark ? "rgba(255,255,255,0.35)" : "#C7C6CD";
+  const sendBg = hasText
+    ? onDark
+      ? "#FFFFFF"
+      : "#0E0B22"
+    : onDark
+      ? "rgba(255,255,255,0.35)"
+      : "#C7C6CD";
   const sendIcon = hasText && onDark ? "#0E0B22" : "#FFFFFF";
   const iconBtnHover = onDark ? "hover:bg-white/[0.08]" : "hover:bg-black/[0.04]";
 
@@ -747,14 +842,25 @@ export function FinChatDock({ alwaysVisible = false }: { alwaysVisible?: boolean
             {/* Header */}
             <div
               className="flex items-center justify-between"
-              style={{ padding: "16px 16px 10px 20px", fontSize: 13, lineHeight: "18px", color: textMain }}
+              style={{
+                padding: "16px 16px 10px 20px",
+                fontSize: 13,
+                lineHeight: "18px",
+                color: textMain,
+              }}
             >
               <span className="inline-flex items-center gap-2.5">
                 <img
                   src={logo.url}
                   alt=""
                   aria-hidden
-                  style={{ width: 22, height: 22, borderRadius: 999, objectFit: "cover", display: "block" }}
+                  style={{
+                    width: 22,
+                    height: 22,
+                    borderRadius: 999,
+                    objectFit: "cover",
+                    display: "block",
+                  }}
                 />
                 <span style={{ fontWeight: 500 }}>Synergy assistant</span>
                 <span
@@ -804,7 +910,14 @@ export function FinChatDock({ alwaysVisible = false }: { alwaysVisible?: boolean
                   "linear-gradient(to bottom, transparent 0, #000 12px, #000 calc(100% - 16px), transparent 100%)",
               }}
             >
-              <div style={{ color: textMain, fontSize: 14, lineHeight: "22px", padding: "8px 4px 12px" }}>
+              <div
+                style={{
+                  color: textMain,
+                  fontSize: 14,
+                  lineHeight: "22px",
+                  padding: "8px 4px 12px",
+                }}
+              >
                 {GREETING.map((line) => (
                   <p key={line} style={{ margin: 0 }}>
                     {line}
@@ -856,7 +969,10 @@ export function FinChatDock({ alwaysVisible = false }: { alwaysVisible?: boolean
               )}
 
               {showFollowUps && (
-                <div className="flex flex-wrap gap-2" style={{ padding: "4px 0 0 4px", animation: "finRise 320ms ease-out both" }}>
+                <div
+                  className="flex flex-wrap gap-2"
+                  style={{ padding: "4px 0 0 4px", animation: "finRise 320ms ease-out both" }}
+                >
                   {lastAssistant!.followUps!.map((f) => (
                     <button
                       key={f}

@@ -14,9 +14,7 @@ import { MetricsSection } from "@/components/MetricsSection";
 import { ClosingSection } from "@/components/ClosingSection";
 import { SiteFooter } from "@/components/SiteFooter";
 
-
 import { introVideoAsset as videoAsset } from "@/lib/media";
-
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -128,7 +126,6 @@ function Index() {
           <div style={{ marginTop: `-${100}vh`, position: "relative", zIndex: 30 }}>
             <SiteFooter />
           </div>
-
 
           {/* Always pinned to bottom, unaffected by parallax */}
           <FinChatDock />

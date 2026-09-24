@@ -6,7 +6,6 @@ import { getLenis } from "@/lib/smoothScroll";
 
 import { INTRO_ENABLED } from "@/components/intro/introConfig";
 
-
 /**
  * Halftone dot-matrix hands, scrubbed by scroll.
  *
@@ -73,19 +72,10 @@ const HOLD_FRAMES = 4;
 const GHOST_ALPHA = 0.1;
 const GHOST_ALPHA_MAX = 0.2;
 
-
-
-
-
-
-
-
-
-
 /** 4x4 ordered dither matrix, normalised to 0..1 — breaks up flat banding. */
-export const BAYER = [
-  0, 8, 2, 10, 12, 4, 14, 6, 3, 11, 1, 9, 15, 7, 13, 5,
-].map((v) => (v + 0.5) / 16);
+export const BAYER = [0, 8, 2, 10, 12, 4, 14, 6, 3, 11, 1, 9, 15, 7, 13, 5].map(
+  (v) => (v + 0.5) / 16,
+);
 
 /**
  * Static per-cell attributes of the dot grid. Every video frame is sampled
@@ -133,11 +123,7 @@ export function dyeAt(t: number): [number, number, number] {
   const f = seg === 0 ? x / 0.5 : (x - 0.5) / 0.5;
   const a = DYE_STOPS[seg];
   const b = DYE_STOPS[seg + 1];
-  return [
-    a[0] + (b[0] - a[0]) * f,
-    a[1] + (b[1] - a[1]) * f,
-    a[2] + (b[2] - a[2]) * f,
-  ];
+  return [a[0] + (b[0] - a[0]) * f, a[1] + (b[1] - a[1]) * f, a[2] + (b[2] - a[2]) * f];
 }
 
 /**
@@ -243,9 +229,7 @@ export class FluidField {
     const b = f[k + 1];
     const c = f[k + cols];
     const e = f[k + cols + 1];
-    return (
-      a * (1 - fx) * (1 - fy) + b * fx * (1 - fy) + c * (1 - fx) * fy + e * fx * fy
-    );
+    return a * (1 - fx) * (1 - fy) + b * fx * (1 - fy) + c * (1 - fx) * fy + e * fx * fy;
   }
 
   /** Dye coverage at a canvas-space point. */
@@ -253,7 +237,6 @@ export class FluidField {
     return this.bilinear(this.d, px / this.cellW, py / this.cellH);
   }
 }
-
 
 function loadImage(src: string): Promise<HTMLImageElement> {
   return new Promise((resolve, reject) => {
@@ -405,7 +388,6 @@ export function HalftoneHandsFooter({
   // Scroll-driven playhead: target frame from scroll, eased current frame.
   const playheadRef = useRef({ target: 0, current: 0 });
 
-
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -483,7 +465,6 @@ export function HalftoneHandsFooter({
       recomputeBand();
     };
 
-
     loadImage(handsFramesAsset.url).then((img) => {
       imageRef.current = img;
       resize();
@@ -519,10 +500,8 @@ export function HalftoneHandsFooter({
 
     const frameSpan = () => Math.max(420, window.innerHeight * 1.15);
 
-
     // Distance over which the post-roll hold consumes HOLD_FRAMES video frames.
     const holdSpan = () => frameSpan() * (HOLD_FRAMES / FRAME_COUNT);
-
 
     // Seconds to close ~63% of the remaining distance.
     const SMOOTH_TAU = 0.16;
@@ -558,7 +537,6 @@ export function HalftoneHandsFooter({
       const clampedDy = Math.max(-maxPx, Math.min(maxPx, dy));
 
       if (goingDown) {
-
         // Phase A: scrub through the 49 video frames.
         if (progressRef.target < 1) {
           const step = clampedDy / frameSpan();
@@ -580,7 +558,6 @@ export function HalftoneHandsFooter({
         }
         return false;
       }
-
 
       // Going up: snap back out of the second screen first.
       if (window.scrollY > 0 && window.scrollY <= snapTarget() + 2) {
@@ -610,8 +587,7 @@ export function HalftoneHandsFooter({
     const snapTarget = () => window.innerHeight;
     const snapState = { active: false, from: 0, to: 0, t0: 0, raf: 0 };
     const SNAP_MS = 900;
-    const easeInOut = (x: number) =>
-      x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2;
+    const easeInOut = (x: number) => (x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2);
 
     const snapTo = (to: number) => {
       if (snapState.active) return;
@@ -648,15 +624,12 @@ export function HalftoneHandsFooter({
       snapState.raf = requestAnimationFrame(tick);
     };
 
-
-
     // ---------------------------------------------------------- ghost preview
     // On entry the last frame is shown at 10% as a hint of what's coming, with
     // the scroll hint on top. It fades out as soon as the sequence advances and
     // fades back in when the user rewinds all the way to the entry state.
     const ghost = { in: 0, out: 1, atEntry: true };
     const markScrollIntent = () => {};
-
 
     const onWheel = (e: WheelEvent) => {
       if (stageRef.current !== "hands") {
@@ -690,11 +663,6 @@ export function HalftoneHandsFooter({
     };
     window.addEventListener("keydown", onKeyIntent, { passive: true });
 
-
-
-
-
-
     let lastMove: { x: number; y: number; t: number } | null = null;
     const onMove = (e: MouseEvent) => {
       const rect = canvas.getBoundingClientRect();
@@ -719,13 +687,7 @@ export function HalftoneHandsFooter({
           const steps = Math.min(12, Math.max(1, Math.round(dist / 14)));
           for (let s = 1; s <= steps; s++) {
             const f = s / steps;
-            fluid.splat(
-              prev.x + (cx - prev.x) * f,
-              prev.y + (cy - prev.y) * f,
-              vx,
-              vy,
-              1 / steps,
-            );
+            fluid.splat(prev.x + (cx - prev.x) * f, prev.y + (cy - prev.y) * f, vx, vy, 1 / steps);
           }
         } else {
           fluid.splat(cx, cy, 0, 0, 1);
@@ -742,7 +704,6 @@ export function HalftoneHandsFooter({
       window.addEventListener("mousemove", onMove, { passive: true });
       window.addEventListener("mouseleave", onLeave);
     }
-
 
     // Half-pitch is the theoretical maximum where neighbouring dots touch.
     const maxR = pitch * 0.5 * DOT_FILL;
@@ -764,15 +725,9 @@ export function HalftoneHandsFooter({
         ph.current = ph.target;
       } else {
         // Residual glide: the flick keeps feeding the target briefly, then decays.
-        const applyGlide = (
-          ref: typeof progressRef,
-          span: () => number,
-        ) => {
+        const applyGlide = (ref: typeof progressRef, span: () => number) => {
           if (Math.abs(ref.vel) > 1e-4) {
-            ref.target = Math.min(
-              1,
-              Math.max(0, ref.target + ref.vel * dt * 0.25),
-            );
+            ref.target = Math.min(1, Math.max(0, ref.target + ref.vel * dt * 0.25));
             ref.vel *= Math.exp(-dt / 0.12);
           } else {
             ref.vel = 0;
@@ -829,12 +784,7 @@ export function HalftoneHandsFooter({
        * Paint the grid at coverage lerp(a, b, t). `ghost` skips the dye,
        * square-off and per-dot breathing (the entry preview is a flat tint).
        */
-      const paintField = (
-        a: Float32Array,
-        b: Float32Array,
-        t: number,
-        ghost: boolean,
-      ) => {
+      const paintField = (a: Float32Array, b: Float32Array, t: number, ghost: boolean) => {
         const g = grid;
         if (!g) return;
         const n = g.cols * g.rows;
@@ -886,9 +836,7 @@ export function HalftoneHandsFooter({
           // ease-in-out swell rather than a sharp flash.
           const dotAlpha = prefersReduce
             ? 1
-            : 1 -
-              breathWave((now / DOT_ALPHA_PERIOD) * g.speed[k] + g.phase[k]) *
-                DOT_ALPHA_AMP;
+            : 1 - breathWave((now / DOT_ALPHA_PERIOD) * g.speed[k] + g.phase[k]) * DOT_ALPHA_AMP;
           ctx.globalAlpha = dotAlpha * vis;
 
           // Value carries volume alongside area: light grey on the paper-facing
@@ -936,14 +884,10 @@ export function HalftoneHandsFooter({
           holdRef.target <= 0.002;
         if (atEntry !== ghost.atEntry) {
           ghost.atEntry = atEntry;
-          window.dispatchEvent(
-            new CustomEvent("hands-entry-state", { detail: { atEntry } }),
-          );
+          window.dispatchEvent(new CustomEvent("hands-entry-state", { detail: { atEntry } }));
         }
         ghost.in = Math.min(1, ghost.in + dt / 0.8);
-        ghost.out = atEntry
-          ? Math.min(1, ghost.out + dt / 1.2)
-          : Math.max(0, ghost.out - dt / 1.2);
+        ghost.out = atEntry ? Math.min(1, ghost.out + dt / 1.2) : Math.max(0, ghost.out - dt / 1.2);
         // Opacity breathes 10% -> 20% in sync with the scroll-hint arrow
         // bounce (2.8s, min at cycle ends, max at mid-cycle).
         const gPhase = (now / 2800) % 1;
@@ -981,9 +925,6 @@ export function HalftoneHandsFooter({
       window.removeEventListener("touchmove", onTouchMove);
       window.removeEventListener("keydown", onKeyIntent);
 
-
-
-
       window.removeEventListener("mousemove", onMove);
       window.removeEventListener("mouseleave", onLeave);
     };
@@ -997,9 +938,7 @@ export function HalftoneHandsFooter({
 
   useEffect(() => {
     if (typeof window === "undefined") return;
-    window.dispatchEvent(
-      new CustomEvent("app-bg-change", { detail: bgDark ? "dark" : "light" }),
-    );
+    window.dispatchEvent(new CustomEvent("app-bg-change", { detail: bgDark ? "dark" : "light" }));
   }, [bgDark]);
 
   // Intro sealed: reveal the nav immediately and set the page background,
@@ -1012,23 +951,17 @@ export function HalftoneHandsFooter({
     document.body.style.backgroundColor = "#FAFAFA";
     const raf = requestAnimationFrame(() => {
       window.dispatchEvent(new CustomEvent("app-bg-change", { detail: "dark" }));
-      window.dispatchEvent(
-        new CustomEvent("app-nav-visibility", { detail: "visible" }),
-      );
+      window.dispatchEvent(new CustomEvent("app-nav-visibility", { detail: "visible" }));
     });
     return () => cancelAnimationFrame(raf);
   }, []);
-
-
 
   const handleIntroProgress = (info: IntroProgressInfo) => {
     setBurstProgress(info.burstProgress);
     if (!navHiddenRef.current && info.burstProgress > 0) {
       navHiddenRef.current = true;
       if (typeof window !== "undefined") {
-        window.dispatchEvent(
-          new CustomEvent("app-nav-visibility", { detail: "hidden" }),
-        );
+        window.dispatchEvent(new CustomEvent("app-nav-visibility", { detail: "hidden" }));
       }
     }
   };
@@ -1037,9 +970,7 @@ export function HalftoneHandsFooter({
     if (stageRef.current !== "orb") return;
     setBgDark(true);
     if (typeof window !== "undefined") {
-      window.dispatchEvent(
-        new CustomEvent("app-nav-visibility", { detail: "visible" }),
-      );
+      window.dispatchEvent(new CustomEvent("app-nav-visibility", { detail: "visible" }));
     }
     if (typeof document !== "undefined") {
       document.documentElement.style.backgroundColor = "#FAFAFA";
@@ -1076,8 +1007,6 @@ export function HalftoneHandsFooter({
         Synergy.AI — Revenue-Driven AI Support
       </h1>
 
-      
-
       <canvas
         ref={canvasRef}
         aria-hidden
@@ -1108,9 +1037,6 @@ export function HalftoneHandsFooter({
           />
         </div>
       )}
-
-
-
     </section>
   );
 }

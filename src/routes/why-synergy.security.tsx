@@ -1,10 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import {
-  Server,
-  ShieldCheck,
-  Handshake,
-  LifeBuoy,
-} from "lucide-react";
+import { Server, ShieldCheck, Handshake, LifeBuoy } from "lucide-react";
 import { SiteNav } from "@/components/SiteNav";
 import { whySecurityAsset, whySecurityPortraitAsset } from "@/lib/media";
 import { HalftoneHandStill } from "@/components/HalftoneHandStill";
@@ -41,15 +36,15 @@ export const Route = createFileRoute("/why-synergy/security")({
 
 /* --------------------------------------------------------------- helpers */
 
-
 /** Page accent (Figma 1564:85144). */
 const AMBER = "#EBA753";
 
-
-
 function Hairline({ dark = false }: { dark?: boolean }) {
   return (
-    <div aria-hidden style={{ height: 1, background: dark ? "rgba(255,255,255,0.18)" : "#E1E0E4" }} />
+    <div
+      aria-hidden
+      style={{ height: 1, background: dark ? "rgba(255,255,255,0.18)" : "#E1E0E4" }}
+    />
   );
 }
 
@@ -59,8 +54,7 @@ type Block = { icon: typeof Server; title: string; body: string; divider: boolea
 
 const TESTIMONIAL = {
   lead: "Synergy runs inside our own AWS account, ",
-  rest:
-    "so customer and transaction data never leave our boundary. When we needed changes, their FDE team flew in and sat with us until it shipped — and the model kept getting better every week after that.",
+  rest: "so customer and transaction data never leave our boundary. When we needed changes, their FDE team flew in and sat with us until it shipped — and the model kept getting better every week after that.",
   name: "Natalie Hurst",
   role: "Sr. Director of Customer Success",
 };
@@ -149,8 +143,16 @@ function ArticleBlock({
 /** Stand-in customer wordmark in the 140×24 logo slot: square mark + set name. */
 function CustomerWordmark() {
   return (
-    <div className="flex items-center" style={{ height: 24, gap: 8, color: "#0E0B22" }} aria-label="BCGame">
-      <span aria-hidden className="grid shrink-0 place-items-center" style={{ width: 24, height: 24, background: "#0E0B22" }}>
+    <div
+      className="flex items-center"
+      style={{ height: 24, gap: 8, color: "#0E0B22" }}
+      aria-label="BCGame"
+    >
+      <span
+        aria-hidden
+        className="grid shrink-0 place-items-center"
+        style={{ width: 24, height: 24, background: "#0E0B22" }}
+      >
         <span style={{ width: 10, height: 10, border: "2px solid #FFFFFF" }} />
       </span>
       <span
@@ -169,7 +171,10 @@ function TestimonialCard() {
     <Reveal y={32} duration={1600} style={{ background: "#FAFAFA" }}>
       <div
         className="flex flex-col md:flex-row"
-        style={{ padding: `${fluid(24, 16)} ${fluid(40, 20)} ${fluid(24, 16)} ${fluid(24, 16)}`, gap: fluid(40, 24) }}
+        style={{
+          padding: `${fluid(24, 16)} ${fluid(40, 20)} ${fluid(24, 16)} ${fluid(24, 16)}`,
+          gap: fluid(40, 24),
+        }}
       >
         {/* portrait — Figma 280×392; a pre-blurred stand-in until the customer supplies one */}
         <img
@@ -199,8 +204,12 @@ function TestimonialCard() {
           </blockquote>
 
           <div>
-            <p style={{ margin: 0, fontSize: 14, lineHeight: "22px", color: "#000000" }}>{TESTIMONIAL.name}</p>
-            <p style={{ margin: 0, fontSize: 12, lineHeight: "20px", color: "#A1A0A9" }}>{TESTIMONIAL.role}</p>
+            <p style={{ margin: 0, fontSize: 14, lineHeight: "22px", color: "#000000" }}>
+              {TESTIMONIAL.name}
+            </p>
+            <p style={{ margin: 0, fontSize: 12, lineHeight: "20px", color: "#A1A0A9" }}>
+              {TESTIMONIAL.role}
+            </p>
           </div>
         </div>
       </div>
@@ -241,7 +250,10 @@ function SecurityPage() {
             >
               <Reveal immediate className="flex items-center gap-2">
                 <span aria-hidden style={{ width: 8, height: 8, background: AMBER }} />
-                <span className="uppercase" style={{ fontSize: 14, lineHeight: "22px", color: "#7A7885" }}>
+                <span
+                  className="uppercase"
+                  style={{ fontSize: 14, lineHeight: "22px", color: "#7A7885" }}
+                >
                   commitment
                 </span>
               </Reveal>
@@ -272,8 +284,8 @@ function SecurityPage() {
                     color: "var(--ink-muted, #7A7885)",
                   }}
                 >
-                  Private infrastructure keeps data under customer control, backed by on-site expertise
-                  after launch.
+                  Private infrastructure keeps data under customer control, backed by on-site
+                  expertise after launch.
                 </p>
               </Reveal>
 
@@ -298,7 +310,14 @@ function SecurityPage() {
           {/* header — eyebrow, rule, 48px title, intro, CTA */}
           <div style={{ padding: `${fluid(100, 56)} ${fluid(60, 24)} 0` }}>
             <Reveal y={32} duration={1600}>
-              <p style={{ margin: 0, fontSize: 12, lineHeight: "20px", color: "var(--ink, #0E0B22)" }}>
+              <p
+                style={{
+                  margin: 0,
+                  fontSize: 12,
+                  lineHeight: "20px",
+                  color: "var(--ink, #0E0B22)",
+                }}
+              >
                 {HEADER.eyebrow}
               </p>
               <div style={{ marginTop: 10 }}>
@@ -312,7 +331,12 @@ function SecurityPage() {
                 <div style={{ maxWidth: 760, minWidth: 0 }}>
                   <h2
                     className="font-display"
-                    style={{ margin: 0, fontSize: fluid(48, 30), lineHeight: "1.1667", fontWeight: 400 }}
+                    style={{
+                      margin: 0,
+                      fontSize: fluid(48, 30),
+                      lineHeight: "1.1667",
+                      fontWeight: 400,
+                    }}
                   >
                     <span style={{ color: AMBER }}>{HEADER.titleAccent}</span>
                     <span className="text-ink">{HEADER.titleRest}</span>

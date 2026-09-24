@@ -7,8 +7,7 @@ const handsPairAsset = { url: "/media/hands-pair.png" };
 // good-fella.com's ASCII footer (recovered by hooking their canvas atlas).
 // Ordering follows the Paul Bourke density ramp, with the digits 0/1/8 slotted
 // in at their approximate visual weight.
-const RAMP =
-  " .`'^\",:;Il!i1><~+_-?][}{)(|\\/tfjrxnuvczXYUJCLQOZ0mwqpdbkhao*#MW8&%B@$";
+const RAMP = " .`'^\",:;Il!i1><~+_-?][}{)(|\\/tfjrxnuvczXYUJCLQOZ0mwqpdbkhao*#MW8&%B@$";
 const RAMP_LEN = RAMP.length;
 
 type Cell = {
@@ -85,15 +84,15 @@ const introEase = (t: number) => 1 - Math.pow(1 - t, 3);
 // v=0 top..1 bottom). Calibrated against hands-pair.png: human arm enters
 // bottom-left horizontally, robot arm enters top-right diagonally.
 const ARM_SKELETON_L: [number, number][] = [
-  [0.00, 0.66], // shoulder/root at left edge
+  [0.0, 0.66], // shoulder/root at left edge
   [0.12, 0.62], // upper forearm
   [0.28, 0.52], // elbow area
-  [0.40, 0.44], // wrist
+  [0.4, 0.44], // wrist
   [0.48, 0.48], // fingertip
 ];
 const ARM_SKELETON_R: [number, number][] = [
-  [1.00, 0.15], // shoulder/root at top-right
-  [0.90, 0.28], // upper arm
+  [1.0, 0.15], // shoulder/root at top-right
+  [0.9, 0.28], // upper arm
   [0.78, 0.38], // elbow
   [0.62, 0.44], // wrist
   [0.52, 0.48], // fingertip
@@ -208,9 +207,7 @@ function sampleImage(
       if (a < 0.18) continue;
       // Premultiply luma by alpha so non-premultiplied PNG edges (where RGB
       // is dark but alpha low) don't read as "deep shadow" jaggies.
-      const y =
-        (a * (0.2126 * data[p] + 0.7152 * data[p + 1] + 0.0722 * data[p + 2])) /
-        255;
+      const y = (a * (0.2126 * data[p] + 0.7152 * data[p + 1] + 0.0722 * data[p + 2])) / 255;
       if (y > 0.04) raws.push({ i, j, y, a });
     }
   }
@@ -354,11 +351,7 @@ export function AsciiHandsFooter() {
       const bandW = w;
       const bandH = bandW / imgAR;
       const bandY = h * 0.5 - bandH * 0.5;
-      const sampled = sampleImage(
-        img,
-        { x: 0, y: bandY, w: bandW, h: bandH },
-        false,
-      );
+      const sampled = sampleImage(img, { x: 0, y: bandY, w: bandW, h: bandH }, false);
       cellsRef.current = sampled.cells;
       gridRef.current = sampled.grid;
     };
@@ -481,10 +474,7 @@ export function AsciiHandsFooter() {
       let introProgress = 1;
       if (!introDoneRef.current) {
         if (introVisibleRef.current && introStartRef.current != null) {
-          const raw = Math.min(
-            1,
-            Math.max(0, (now - introStartRef.current) / INTRO_DURATION_MS),
-          );
+          const raw = Math.min(1, Math.max(0, (now - introStartRef.current) / INTRO_DURATION_MS));
           introProgress = introEase(raw);
           if (raw >= 1) introDoneRef.current = true;
         } else {
@@ -500,8 +490,7 @@ export function AsciiHandsFooter() {
       mouseSpeedRef.current *= Math.exp(-dt / 120);
       const speedK = Math.min(1, mouseSpeedRef.current / SPEED_REF);
       const discLerp = DISC_LERP_MIN + (DISC_LERP_MAX - DISC_LERP_MIN) * speedK;
-      const intensityLerp =
-        INTENSITY_LERP_MIN + (INTENSITY_LERP_MAX - INTENSITY_LERP_MIN) * speedK;
+      const intensityLerp = INTENSITY_LERP_MIN + (INTENSITY_LERP_MAX - INTENSITY_LERP_MIN) * speedK;
 
       // Disable hover reveal disc while the arms are still growing in.
       const targetIntensity = m.active && !prefersReduce && !intro ? 1 : 0;
@@ -564,7 +553,9 @@ export function AsciiHandsFooter() {
 
       // Highlight tint the revealed cells migrate toward. A soft near-white
       // with a lavender purple bias to match the #C5A9FF base color scheme.
-      const HR = 250, HG = 245, HB = 255;
+      const HR = 250,
+        HG = 245,
+        HB = 255;
 
       for (let k = 0; k < cells.length; k++) {
         const c = cells[k];
@@ -588,19 +579,14 @@ export function AsciiHandsFooter() {
             // add small ±1px jitter for a spatter feel.
             const frontK = 1 - frontDist / INTRO_FRONT_WIDTH; // 1 at front, 0 behind
             const seed = grid
-              ? grid.seed[
+              ? (grid.seed[
                   Math.floor((c.y - grid.originY) / CELL_H) * grid.cols +
                     Math.floor((c.x - grid.originX) / CELL_W)
-                ] ?? 0.5
+                ] ?? 0.5)
               : 0.5;
-            const scramble = fract(
-              Math.sin((seed + introProgress * 3.7) * 12.9898) * 43758.5453,
-            );
-            const scrambleOffset = Math.floor(
-              (scramble - 0.5) * RAMP_LEN * 0.5 * frontK,
-            );
-            const finalIdx =
-              ((c.idx + scrambleOffset) % RAMP_LEN + RAMP_LEN) % RAMP_LEN;
+            const scramble = fract(Math.sin((seed + introProgress * 3.7) * 12.9898) * 43758.5453);
+            const scrambleOffset = Math.floor((scramble - 0.5) * RAMP_LEN * 0.5 * frontK);
+            const finalIdx = (((c.idx + scrambleOffset) % RAMP_LEN) + RAMP_LEN) % RAMP_LEN;
             ch = glyphAt(finalIdx);
             const blend = frontK * 0.6;
             r += (HR - r) * blend;
@@ -635,31 +621,20 @@ export function AsciiHandsFooter() {
           // lobes elongate along the arm axis (low freq along arm, high across).
           const localI = i * armDx + j * armDy;
           const localJ = -i * armDy + j * armDx;
-          const midFreq =
-            Math.sin(localI * 0.3 + localJ * 0.9 + seed * 1.5) * GOOEY_NOISE * 5;
+          const midFreq = Math.sin(localI * 0.3 + localJ * 0.9 + seed * 1.5) * GOOEY_NOISE * 5;
           // Slow time wobble so the edge "breathes" rather than flickers.
           const wobble = prefersReduce
             ? 0
             : Math.sin(timeSec * 0.5 + seed * 6.28318) * GOOEY_NOISE * 0.6;
           // High-frequency spatial hash — creates the fine chipped/broken texture.
-          const highFreq =
-            (fract(Math.sin(seed * 45.7) * 123.45) - 0.5) * GOOEY_NOISE * 1.0;
-          const microFract =
-            (fract(Math.sin(seed * 137.9) * 437.58) - 0.5) * GOOEY_NOISE * 0.5;
+          const highFreq = (fract(Math.sin(seed * 45.7) * 123.45) - 0.5) * GOOEY_NOISE * 1.0;
+          const microFract = (fract(Math.sin(seed * 137.9) * 437.58) - 0.5) * GOOEY_NOISE * 0.5;
           const distorted =
-            d +
-            lowFreq +
-            midFreq * dirW +
-            wobble +
-            highFreq * dirW +
-            microFract * dirW;
+            d + lowFreq + midFreq * dirW + wobble + highFreq * dirW + microFract * dirW;
 
           if (distorted < rHi) {
             // gooeyBlend = 1 - smoothstep(rLo, rHi, distorted)
-            const tt = Math.min(
-              1,
-              Math.max(0, (distorted - rLo) / Math.max(1e-4, rHi - rLo)),
-            );
+            const tt = Math.min(1, Math.max(0, (distorted - rLo) / Math.max(1e-4, rHi - rLo)));
             const gooey = 1 - tt * tt * (3 - 2 * tt);
             // sharpBlend = smoothstep(0, 0.15, gooey) — drives color and glyph swap.
             const sh = Math.min(1, Math.max(0, gooey / 0.15));
@@ -676,22 +651,14 @@ export function AsciiHandsFooter() {
               // the glyph stays perfectly upright.
               const raw = (seed - 0.5) * 2;
               const shapedPhase = Math.sign(raw) * Math.pow(Math.abs(raw), 1.4);
-              revealTilt =
-                shapedPhase *
-                ((REVEAL_TILT_MAX_DEG * Math.PI) / 180) *
-                sharp;
+              revealTilt = shapedPhase * ((REVEAL_TILT_MAX_DEG * Math.PI) / 180) * sharp;
               // Scramble character index by hash(cell + scrambleSeed). Unlike
               // the base render, we do NOT gate by luminance — every cell
               // inside the disc participates so dark silhouette cells surface
               // as visible glyphs (matches source's ASCIIEffect scramble).
-              const scramble = fract(
-                Math.sin((seed + scrambleSeed) * 12.9898) * 43758.5453,
-              );
-              const scrambleOffset = Math.floor(
-                (scramble - 0.5) * RAMP_LEN * 0.25 * sharpL,
-              );
-              const finalIdx =
-                ((c.idx + scrambleOffset) % RAMP_LEN + RAMP_LEN) % RAMP_LEN;
+              const scramble = fract(Math.sin((seed + scrambleSeed) * 12.9898) * 43758.5453);
+              const scrambleOffset = Math.floor((scramble - 0.5) * RAMP_LEN * 0.25 * sharpL);
+              const finalIdx = (((c.idx + scrambleOffset) % RAMP_LEN) + RAMP_LEN) % RAMP_LEN;
               ch = glyphAt(finalIdx);
 
               // Blend base purple → cool highlight, weighted by luminance so
@@ -705,7 +672,7 @@ export function AsciiHandsFooter() {
 
         // Per-cell depth parallax: brighter (foreground) cells drift more,
         // dark cells hold back — reads as pseudo-3D layering.
-        const depth = hoverActive ? 0.30 + bb * 0.55 + c.armT * 0.45 : 1;
+        const depth = hoverActive ? 0.3 + bb * 0.55 + c.armT * 0.45 : 1;
         const cellOffX = offX * depth;
         const cellOffY = offY * depth;
 
@@ -801,12 +768,7 @@ export function AsciiHandsFooter() {
         </span>
       </div>
 
-      <canvas
-        ref={canvasRef}
-        aria-hidden
-        className="absolute inset-0 h-full w-full"
-      />
-
+      <canvas ref={canvasRef} aria-hidden className="absolute inset-0 h-full w-full" />
     </section>
   );
 }
