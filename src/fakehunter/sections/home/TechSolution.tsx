@@ -58,9 +58,6 @@ export function TechSolution() {
         <div className="grid gap-6 lg:grid-cols-12 lg:items-end">
           <div className="lg:col-span-7">
             <SectionHeader index={techSolution.index} label={techSolution.label} />
-            {/* The site sets this title in two lines with the second in acid.
-                Kept, because the split is the message: technology, and what it
-                is for. */}
             <h2 className="fh-h2 mt-7">
               <span className="block">{techSolution.titleTop}</span>
               <span className="block text-[color:var(--fh-acid)]">{techSolution.titleAccent}</span>

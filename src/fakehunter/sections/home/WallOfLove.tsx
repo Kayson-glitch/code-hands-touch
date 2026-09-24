@@ -58,7 +58,10 @@ export function WallOfLove() {
         <div className="grid gap-6 lg:grid-cols-12 lg:items-end">
           <div className="lg:col-span-6">
             <SectionHeader index={wallOfLove.index} label={wallOfLove.label} />
-            <h2 className="fh-h2 mt-7">{wallOfLove.title}</h2>
+            <h2 className="fh-h2 mt-7">
+              <span className="block">{wallOfLove.titleTop}</span>
+              <span className="block text-[color:var(--fh-acid)]">{wallOfLove.titleAccent}</span>
+            </h2>
           </div>
           <p className="fh-body lg:col-span-5 lg:col-start-8">{wallOfLove.description}</p>
         </div>

@@ -180,13 +180,9 @@ export function Accurate() {
             label={accurate.label}
             className="mx-auto max-w-[22rem] text-left"
           />
-          <h2 className="fh-h2 mt-8 uppercase">
-            <span className="block">{accurate.titleLine1}</span>
-            <span className="block">
-              {accurate.titleWhite}{" "}
-              <span className="text-[color:var(--fh-acid)]">{accurate.titleHighlight}</span>
-              {accurate.titleTail}
-            </span>
+          <h2 className="fh-h2 mt-8 text-balance">
+            <span className="block">{accurate.titleTop}</span>
+            <span className="block text-[color:var(--fh-acid)]">{accurate.titleAccent}</span>
           </h2>
           <p className="fh-body mx-auto mt-6 max-w-[34rem]">{accurate.subtitle}</p>
         </div>

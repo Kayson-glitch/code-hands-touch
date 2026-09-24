@@ -52,10 +52,9 @@ export function Secure() {
             label={secure.label}
             className="w-full max-w-[20rem] text-left"
           />
-          <h2 className="fh-h2 mt-9 max-w-[54rem] uppercase">
-            {secure.titlePrefix}{" "}
-            <span className="text-[color:var(--fh-acid)]">{secure.titleHighlight}</span>{" "}
-            {secure.titleSuffix}
+          <h2 className="fh-h2 mt-9 max-w-[54rem] text-balance">
+            <span className="block">{secure.titleTop}</span>
+            <span className="block text-[color:var(--fh-acid)]">{secure.titleAccent}</span>
           </h2>
         </div>
 

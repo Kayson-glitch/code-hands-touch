@@ -248,7 +248,10 @@ export const detector = {
 export const wallOfLove = {
   index: "04",
   label: "Wall Of Love",
-  title: "Wall of Love.",
+  /* Authored. The customers here are the people who set the lines the hero
+     hands you — so the title says that, in their idiom. */
+  titleTop: "From the teams",
+  titleAccent: "who hold the line.",
   description:
     "Risk, credit and finance teams in the markets where payment-proof forgery is worst.",
   quotes: [
@@ -305,13 +308,12 @@ export const wallOfLove = {
 export const techSolution = {
   index: "01",
   label: "Technology & Solution",
-  titleTop: "TECHNOLOGY",
-  titleAccent: "& SOLUTION",
-  /* Authored. The site repeats the first card's description here, which leaves
-     the section itself unexplained and the card redundant. This says what the
-     set of cards has in common instead. */
+  /* Authored. Picks up the four reads the slogan above names, and lands them
+     on the one thing the hero said every proof gets: a verdict. */
+  titleTop: "Four reads.",
+  titleAccent: "One verdict.",
   subtitle:
-    "Four forensic reads — pixels, layout, document structure and time — running inside a single millisecond-scale call.",
+    "Pixels, layout, document structure and time, each read for the trace a forger leaves — all inside a single millisecond-scale call.",
   /** Where the same subject is treated at full depth. */
   more: { label: "The three detection lines in full", href: "/fakehunter/solution#technology" },
   cards: [
@@ -352,11 +354,13 @@ export const techSolution = {
 
 export const accurate = {
   index: "02",
-  label: "Why Are We Most Accurate",
-  titleLine1: "why are we",
-  titleWhite: "most",
-  titleHighlight: "accurate",
-  titleTail: "?",
+  label: "Why It’s Accurate",
+  /* Authored. The site asks "why are we most accurate?" and leaves the cards
+     to answer; the title answers instead. Its two halves are the three cards:
+     pretraining and adversarial data (trained on real fraud), and the
+     side-by-side benchmark (measured against the best). */
+  titleTop: "Trained on real fraud.",
+  titleAccent: "Measured against the best.",
   /* Authored, lightly: the site's own sentence says the right thing in a
      grammar that stumbles on the way out. Same claim, read aloud cleanly. */
   subtitle:
@@ -397,15 +401,14 @@ export const accurate = {
 export const performance = {
   index: "03",
   label: "Sustained Performance",
-  titleTop: "Sustained",
-  titleAccent: "Performance",
-  /* The site closes this title with "We Make It Possible." and subtitles it
-     "Multimodal Payment Voucher Verification Solution." — a slogan and a noun
-     phrase, neither of which says anything about the four numbers underneath.
-     Dropped in favour of one line about where the numbers come from, which is
-     the only question a reader has at this point. Authored. */
-  subtitle:
-    "Measured on live payment traffic across all three detection lines, not on a curated benchmark set.",
+  /* Authored. The site titles this "Sustained Performance — We Make It
+     Possible." and subtitles it "Multimodal Payment Voucher Verification
+     Solution.", none of which says anything about the four numbers underneath.
+     The title now says what "sustained" means for them — where they were
+     measured — and the subtitle says what they cover. */
+  titleTop: "Proven in production,",
+  titleAccent: "not in a lab.",
+  subtitle: "Four measurements from live payment traffic, across images, PDFs and video.",
   cards: [
     {
       id: "hit-rate",
@@ -454,9 +457,10 @@ export const secure = {
   index: "05",
   label: "Start Now",
   badge: "Start Now",
-  titlePrefix: "LET",
-  titleHighlight: "FAKEHUNTER.AI",
-  titleSuffix: "SECURE YOUR BUSINESS.",
+  /* Authored. Closes on the hero's own question, now put to the reader: the
+     lines are theirs, and both buttons below are ways to find out where. */
+  titleTop: "Where would you",
+  titleAccent: "draw the lines?",
   /* The closing pair sends you to the two things there are to do: try it, or
      read the case in full. "Book a Demo" already sits in the header. */
   demoCta: "Try the product demo",
