@@ -10,20 +10,34 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as WhySynergyRouteImport } from './routes/why-synergy'
+import { Route as FakehunterRouteImport } from './routes/fakehunter'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as FakehunterIndexRouteImport } from './routes/fakehunter.index'
 import { Route as WhySynergyTechnologyRouteImport } from './routes/why-synergy.technology'
 import { Route as WhySynergyStoriesRouteImport } from './routes/why-synergy.stories'
 import { Route as WhySynergyBusinessImpactRouteImport } from './routes/why-synergy.business-impact'
+import { Route as FakehunterSolutionRouteImport } from './routes/fakehunter.solution'
+import { Route as FakehunterDemoRouteImport } from './routes/fakehunter.demo'
 
 const WhySynergyRoute = WhySynergyRouteImport.update({
   id: '/why-synergy',
   path: '/why-synergy',
   getParentRoute: () => rootRouteImport,
 } as any)
+const FakehunterRoute = FakehunterRouteImport.update({
+  id: '/fakehunter',
+  path: '/fakehunter',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
+} as any)
+const FakehunterIndexRoute = FakehunterIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => FakehunterRoute,
 } as any)
 const WhySynergyTechnologyRoute = WhySynergyTechnologyRouteImport.update({
   id: '/technology',
@@ -41,55 +55,88 @@ const WhySynergyBusinessImpactRoute =
     path: '/business-impact',
     getParentRoute: () => WhySynergyRoute,
   } as any)
+const FakehunterSolutionRoute = FakehunterSolutionRouteImport.update({
+  id: '/solution',
+  path: '/solution',
+  getParentRoute: () => FakehunterRoute,
+} as any)
+const FakehunterDemoRoute = FakehunterDemoRouteImport.update({
+  id: '/demo',
+  path: '/demo',
+  getParentRoute: () => FakehunterRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/fakehunter': typeof FakehunterRouteWithChildren
   '/why-synergy': typeof WhySynergyRouteWithChildren
+  '/fakehunter/demo': typeof FakehunterDemoRoute
+  '/fakehunter/solution': typeof FakehunterSolutionRoute
   '/why-synergy/business-impact': typeof WhySynergyBusinessImpactRoute
   '/why-synergy/stories': typeof WhySynergyStoriesRoute
   '/why-synergy/technology': typeof WhySynergyTechnologyRoute
+  '/fakehunter/': typeof FakehunterIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/why-synergy': typeof WhySynergyRouteWithChildren
+  '/fakehunter/demo': typeof FakehunterDemoRoute
+  '/fakehunter/solution': typeof FakehunterSolutionRoute
   '/why-synergy/business-impact': typeof WhySynergyBusinessImpactRoute
   '/why-synergy/stories': typeof WhySynergyStoriesRoute
   '/why-synergy/technology': typeof WhySynergyTechnologyRoute
+  '/fakehunter': typeof FakehunterIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/fakehunter': typeof FakehunterRouteWithChildren
   '/why-synergy': typeof WhySynergyRouteWithChildren
+  '/fakehunter/demo': typeof FakehunterDemoRoute
+  '/fakehunter/solution': typeof FakehunterSolutionRoute
   '/why-synergy/business-impact': typeof WhySynergyBusinessImpactRoute
   '/why-synergy/stories': typeof WhySynergyStoriesRoute
   '/why-synergy/technology': typeof WhySynergyTechnologyRoute
+  '/fakehunter/': typeof FakehunterIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/fakehunter'
     | '/why-synergy'
+    | '/fakehunter/demo'
+    | '/fakehunter/solution'
     | '/why-synergy/business-impact'
     | '/why-synergy/stories'
     | '/why-synergy/technology'
+    | '/fakehunter/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/why-synergy'
+    | '/fakehunter/demo'
+    | '/fakehunter/solution'
     | '/why-synergy/business-impact'
     | '/why-synergy/stories'
     | '/why-synergy/technology'
+    | '/fakehunter'
   id:
     | '__root__'
     | '/'
+    | '/fakehunter'
     | '/why-synergy'
+    | '/fakehunter/demo'
+    | '/fakehunter/solution'
     | '/why-synergy/business-impact'
     | '/why-synergy/stories'
     | '/why-synergy/technology'
+    | '/fakehunter/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  FakehunterRoute: typeof FakehunterRouteWithChildren
   WhySynergyRoute: typeof WhySynergyRouteWithChildren
 }
 
@@ -102,12 +149,26 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof WhySynergyRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/fakehunter': {
+      id: '/fakehunter'
+      path: '/fakehunter'
+      fullPath: '/fakehunter'
+      preLoaderRoute: typeof FakehunterRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/fakehunter/': {
+      id: '/fakehunter/'
+      path: '/'
+      fullPath: '/fakehunter/'
+      preLoaderRoute: typeof FakehunterIndexRouteImport
+      parentRoute: typeof FakehunterRoute
     }
     '/why-synergy/technology': {
       id: '/why-synergy/technology'
@@ -130,8 +191,38 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof WhySynergyBusinessImpactRouteImport
       parentRoute: typeof WhySynergyRoute
     }
+    '/fakehunter/solution': {
+      id: '/fakehunter/solution'
+      path: '/solution'
+      fullPath: '/fakehunter/solution'
+      preLoaderRoute: typeof FakehunterSolutionRouteImport
+      parentRoute: typeof FakehunterRoute
+    }
+    '/fakehunter/demo': {
+      id: '/fakehunter/demo'
+      path: '/demo'
+      fullPath: '/fakehunter/demo'
+      preLoaderRoute: typeof FakehunterDemoRouteImport
+      parentRoute: typeof FakehunterRoute
+    }
   }
 }
+
+interface FakehunterRouteChildren {
+  FakehunterDemoRoute: typeof FakehunterDemoRoute
+  FakehunterSolutionRoute: typeof FakehunterSolutionRoute
+  FakehunterIndexRoute: typeof FakehunterIndexRoute
+}
+
+const FakehunterRouteChildren: FakehunterRouteChildren = {
+  FakehunterDemoRoute: FakehunterDemoRoute,
+  FakehunterSolutionRoute: FakehunterSolutionRoute,
+  FakehunterIndexRoute: FakehunterIndexRoute,
+}
+
+const FakehunterRouteWithChildren = FakehunterRoute._addFileChildren(
+  FakehunterRouteChildren,
+)
 
 interface WhySynergyRouteChildren {
   WhySynergyBusinessImpactRoute: typeof WhySynergyBusinessImpactRoute
@@ -151,6 +242,7 @@ const WhySynergyRouteWithChildren = WhySynergyRoute._addFileChildren(
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  FakehunterRoute: FakehunterRouteWithChildren,
   WhySynergyRoute: WhySynergyRouteWithChildren,
 }
 export const routeTree = rootRouteImport

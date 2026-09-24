@@ -1,0 +1,496 @@
+/* ==========================================================================
+   FakeHunter.AI — corporate site design language
+   Minimal dark "geek/forensics" system built on a single accent: #E1F056.
+   Everything is scoped under [data-fh] so the other prototypes in this repo
+   keep their own tokens.
+   ========================================================================== */
+
+[data-fh] {
+  /* Surfaces — a short, deliberate ramp. Nothing between these values. */
+  --fh-void: #060607;
+  --fh-bg: #0a0a0b;
+  --fh-surface: #111113;
+  --fh-raised: #16161a;
+  --fh-line: rgba(255, 255, 255, 0.09);
+  --fh-line-strong: rgba(255, 255, 255, 0.16);
+
+  /* Ink */
+  --fh-ink: #f4f4f2;
+  --fh-ink-dim: rgba(244, 244, 242, 0.62);
+  --fh-ink-faint: rgba(244, 244, 242, 0.38);
+  --fh-ink-ghost: rgba(244, 244, 242, 0.2);
+
+  /* The one accent. Used for state, never for decoration. */
+  --fh-acid: #e1f056;
+  --fh-acid-dim: rgba(225, 240, 86, 0.5);
+  --fh-acid-ghost: rgba(225, 240, 86, 0.12);
+
+  /* Verdict colours — only ever appear on a verdict. */
+  --fh-forged: #ff5a4d;
+  --fh-forged-ghost: rgba(255, 90, 77, 0.1);
+  --fh-genuine: #4ade80;
+  --fh-genuine-ghost: rgba(74, 222, 128, 0.1);
+
+  /* Rhythm */
+  --fh-gutter: clamp(1.25rem, 5vw, 5.5rem);
+  --fh-max: 1440px;
+  --fh-rail: 40px;
+
+  /* One easing for entrances, one for physical motion. */
+  --fh-ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --fh-ease-snap: cubic-bezier(0.34, 1.32, 0.64, 1);
+
+  /* Red Hat Display carries all the prose: display sizes down to the small
+     tracked labels, where the technical voice comes from case and tracking
+     rather than a second typeface. */
+  --font-fh-sans: "Red Hat Display", ui-sans-serif, system-ui, sans-serif;
+  /* Smooch Sans is reserved for measured values. Condensed and tall, it
+     reads as an instrument readout and keeps every number on the page
+     visually separate from the argument around it. */
+  --font-fh-figure: "Smooch Sans", "Red Hat Display", ui-sans-serif, sans-serif;
+
+  /* Two weights, and only two, across both families. Hierarchy comes from
+     size, colour and case; a third weight only ever added noise. No italics
+     either — emphasis is carried by ink colour. */
+  --fh-w-regular: 400;
+  --fh-w-medium: 500;
+
+  background-color: var(--fh-bg);
+  color: var(--fh-ink);
+  font-family: var(--font-fh-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+[data-fh] ::selection {
+  background: var(--fh-acid);
+  color: #0a0a0b;
+}
+
+[data-fh] :focus-visible {
+  outline: 1px solid var(--fh-acid);
+  outline-offset: 3px;
+}
+
+/* --------------------------------------------------------------- primitives */
+
+.fh-shell {
+  width: 100%;
+  max-width: var(--fh-max);
+  margin-inline: auto;
+  padding-inline: var(--fh-gutter);
+}
+
+/* Technical label: the instrument voice of the system. Small, tracked and
+   uppercase — the job a mono face used to do here, done with case and
+   spacing so the site stays on one family. */
+.fh-label {
+  font-size: 0.6875rem;
+  font-weight: var(--fh-w-medium);
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  font-variant-numeric: tabular-nums;
+}
+
+.fh-h1 {
+  font-size: clamp(2.35rem, 5.4vw, 4.75rem);
+  font-weight: var(--fh-w-medium);
+  line-height: 0.98;
+  letter-spacing: -0.022em;
+}
+
+.fh-h2 {
+  font-size: clamp(2rem, 4.2vw, 3.5rem);
+  font-weight: var(--fh-w-medium);
+  line-height: 1.04;
+  letter-spacing: -0.02em;
+}
+
+.fh-h3 {
+  font-size: clamp(1.125rem, 1.6vw, 1.5rem);
+  font-weight: var(--fh-w-medium);
+  line-height: 1.25;
+  letter-spacing: -0.01em;
+}
+
+.fh-body {
+  font-size: clamp(0.9375rem, 1.05vw, 1.0625rem);
+  line-height: 1.6;
+  color: var(--fh-ink-dim);
+}
+
+[data-fh] em,
+[data-fh] i {
+  font-style: normal;
+}
+
+.fh-body em {
+  color: var(--fh-ink);
+}
+
+/* Numerals must never reflow while they animate. */
+.fh-tnum {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
+}
+
+/**
+ * Measured value. Anything the engine reports — accuracy, throughput, price,
+ * timecode, a document's amount — is set in this, so a number is always
+ * recognisable as a number before it is read.
+ *
+ * Smooch Sans runs tall and narrow with a very large x-height, so at a given
+ * font-size it reads noticeably bigger than the surrounding Red Hat Display.
+ * Call sites compensate with `em` sizing rather than hard-coded values.
+ */
+.fh-figure {
+  font-family: var(--font-fh-figure);
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
+  letter-spacing: 0.01em;
+}
+
+/* ------------------------------------------------------------- corner frame */
+/* Four 10px crosshair brackets. The survey-marker motif that runs through the
+   whole site: it frames anything the engine has "looked at". */
+.fh-frame {
+  position: relative;
+}
+
+/* Carrier for the two lower brackets. Absolute so it never becomes a flex or
+   grid item in the layouts that use Frame as their container. */
+.fh-frame > .fh-frame-b {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.fh-frame::before,
+.fh-frame::after,
+.fh-frame > .fh-frame-b::before,
+.fh-frame > .fh-frame-b::after {
+  content: "";
+  position: absolute;
+  width: 9px;
+  height: 9px;
+  border: 1px solid var(--fh-ink-ghost);
+  transition: border-color 420ms var(--fh-ease-out);
+  pointer-events: none;
+}
+
+.fh-frame::before {
+  top: -1px;
+  left: -1px;
+  border-right: 0;
+  border-bottom: 0;
+}
+.fh-frame::after {
+  top: -1px;
+  right: -1px;
+  border-left: 0;
+  border-bottom: 0;
+}
+.fh-frame > .fh-frame-b::before {
+  bottom: -1px;
+  left: -1px;
+  border-right: 0;
+  border-top: 0;
+}
+.fh-frame > .fh-frame-b::after {
+  bottom: -1px;
+  right: -1px;
+  border-left: 0;
+  border-top: 0;
+}
+
+.fh-frame[data-lit="true"]::before,
+.fh-frame[data-lit="true"]::after,
+.fh-frame[data-lit="true"] > .fh-frame-b::before,
+.fh-frame[data-lit="true"] > .fh-frame-b::after {
+  border-color: var(--fh-acid);
+}
+
+/* ------------------------------------------------------------------ surfaces */
+
+.fh-card {
+  position: relative;
+  background: var(--fh-surface);
+  border: 1px solid var(--fh-line);
+  transition:
+    border-color 420ms var(--fh-ease-out),
+    background-color 420ms var(--fh-ease-out),
+    transform 520ms var(--fh-ease-out);
+}
+
+.fh-card:hover {
+  border-color: var(--fh-line-strong);
+  background: var(--fh-raised);
+}
+
+/* The lattice the whole site is drawn on. Two 1px gradients at 4% — present
+   enough to read as graph paper, quiet enough to ignore. */
+.fh-grid-bg {
+  background-image:
+    linear-gradient(to right, rgba(255, 255, 255, 0.04) 0 1px, transparent 1px 100%),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.04) 0 1px, transparent 1px 100%);
+  background-size: 64px 64px;
+}
+
+/* ------------------------------------------------------------------ buttons */
+
+.fh-btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.625rem;
+  padding: 0.875rem 1.5rem;
+  font-size: 0.75rem;
+  font-weight: var(--fh-w-medium);
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  border: 1px solid transparent;
+  cursor: pointer;
+  overflow: hidden;
+  transition:
+    color 320ms var(--fh-ease-out),
+    border-color 320ms var(--fh-ease-out),
+    background-color 320ms var(--fh-ease-out);
+}
+
+.fh-btn > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* The wipe: a fill that sweeps in from the left, like the scan beam. */
+.fh-btn::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background: var(--fh-acid);
+  transform: scaleX(0);
+  transform-origin: left center;
+  transition: transform 460ms var(--fh-ease-out);
+}
+
+.fh-btn:hover::before,
+.fh-btn:focus-visible::before {
+  transform: scaleX(1);
+}
+
+/* Buttons rest in white and only turn acid under the hand. The accent marks
+   state — something live, something chosen — and a button at rest is neither. */
+.fh-btn--primary {
+  background: var(--fh-ink);
+  color: #0a0a0b;
+}
+
+.fh-btn--ghost {
+  border-color: var(--fh-line-strong);
+  color: var(--fh-ink);
+}
+
+.fh-btn--ghost:hover,
+.fh-btn--ghost:focus-visible {
+  color: #0a0a0b;
+  border-color: var(--fh-acid);
+}
+
+.fh-btn__arrow {
+  transition: transform 460ms var(--fh-ease-out);
+}
+
+.fh-btn:hover .fh-btn__arrow {
+  transform: translateX(4px);
+}
+
+/* --------------------------------------------------------------- scan reveal */
+/* Headline entrance: an acid beam sweeps across and the text is unmasked
+   behind it, so the type reads as something the scanner just resolved. */
+@keyframes fh-beam {
+  0% {
+    transform: translateX(-100%);
+    opacity: 0;
+  }
+  12% {
+    opacity: 1;
+  }
+  88% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+}
+
+.fh-scan {
+  position: relative;
+  display: block;
+  overflow: hidden;
+}
+
+/* A tight band, not a wash — on a three-line headline a wide gradient reads
+   as a flare rather than a scan. */
+.fh-scan__beam {
+  position: absolute;
+  inset-block: -0.2em;
+  left: 0;
+  width: 100%;
+  pointer-events: none;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(225, 240, 86, 0.03) 45%,
+    rgba(225, 240, 86, 0.4) 50%,
+    rgba(225, 240, 86, 0.03) 55%,
+    transparent 100%
+  );
+}
+
+.fh-scan[data-shown="true"] .fh-scan__beam {
+  animation: fh-beam 900ms var(--fh-ease-out) forwards;
+}
+
+/* Front-loaded: most of the headline lands in the first third, so a reader
+   arriving mid-sweep sees a nearly complete line rather than half a word. */
+.fh-scan__text {
+  display: block;
+  clip-path: inset(0 100% 0 0);
+  transition: clip-path 780ms cubic-bezier(0.25, 0.7, 0.2, 1) 70ms;
+}
+
+.fh-scan[data-shown="true"] .fh-scan__text {
+  clip-path: inset(0 0 0 0);
+}
+
+/* ------------------------------------------------------------------ marquee */
+
+@keyframes fh-marquee {
+  from {
+    transform: translate3d(0, 0, 0);
+  }
+  to {
+    transform: translate3d(-50%, 0, 0);
+  }
+}
+
+.fh-marquee__track {
+  display: flex;
+  width: max-content;
+  animation: fh-marquee var(--fh-marquee-duration, 48s) linear infinite;
+  animation-play-state: var(--fh-marquee-state, running);
+}
+
+/* ------------------------------------------------------------- dashed rules */
+
+.fh-dashed-x {
+  height: 1px;
+  width: 100%;
+  background-image: linear-gradient(
+    to right,
+    var(--fh-line-strong) 0 4px,
+    transparent 4px 9px
+  );
+  background-size: 9px 1px;
+}
+
+/* ------------------------------------------------------------------- pulses */
+
+@keyframes fh-pulse-ring {
+  0% {
+    transform: scale(0.85);
+    opacity: 0.7;
+  }
+  100% {
+    transform: scale(2.2);
+    opacity: 0;
+  }
+}
+
+@keyframes fh-dash-flow {
+  to {
+    stroke-dashoffset: -24;
+  }
+}
+
+/* Mount-time rise. Used where a `key` change should replay the entrance —
+   switching a tab has to feel like new evidence arriving, not a text swap. */
+@keyframes fh-rise {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fh-blink {
+  0%,
+  46% {
+    opacity: 1;
+  }
+  47%,
+  100% {
+    opacity: 0.15;
+  }
+}
+
+.fh-blink {
+  animation: fh-blink 1.4s steps(1, end) infinite;
+}
+
+/* A control that has not been touched yet lifts a few pixels now and then,
+   so it reads as something to grab. Stops for good on first use. */
+@keyframes fh-nudge {
+  0%,
+  70%,
+  100% {
+    transform: translateY(0);
+  }
+  80% {
+    transform: translateY(-4px);
+  }
+  90% {
+    transform: translateY(2px);
+  }
+}
+
+.fh-nudge {
+  animation: fh-nudge 2.6s var(--fh-ease-out) 1.6s infinite;
+}
+
+/* ------------------------------------------------------------ grain overlay */
+/* Static film grain. Fixed, 3.5% — it only has to break up the flat black. */
+.fh-grain {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  pointer-events: none;
+  opacity: 0.035;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* ----------------------------------------------------------- reduced motion */
+
+@media (prefers-reduced-motion: reduce) {
+  [data-fh] *,
+  [data-fh] *::before,
+  [data-fh] *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+
+  .fh-scan__text {
+    clip-path: none !important;
+  }
+
+  .fh-grain {
+    display: none;
+  }
+}
