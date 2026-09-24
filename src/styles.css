@@ -1,0 +1,38 @@
+@import "tailwindcss" source(none);
+@source "../src";
+@import "./styles/fakehunter.css";
+
+html,
+body {
+  margin: 0;
+  background-color: #0a0a0b;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+html::-webkit-scrollbar,
+body::-webkit-scrollbar {
+  display: none;
+}
+
+/* ------------------------------------------------ Lenis smooth scroll (page) */
+html.lenis,
+html.lenis body {
+  height: auto;
+}
+
+.lenis.lenis-smooth {
+  scroll-behavior: auto !important;
+}
+
+.lenis.lenis-smooth [data-lenis-prevent] {
+  overscroll-behavior: contain;
+}
+
+.lenis.lenis-stopped {
+  overflow: clip;
+}
+
+.lenis.lenis-smooth iframe {
+  pointer-events: none;
+}
